@@ -2,7 +2,6 @@
 project_name = "AttendanceApp"
 bundle = "com.om.edu"
 version = "1.0.0"
-author = "Omani Educator"
 
 [tool.briefcase.app.attendanceapp]
 formal_name = "Student Attendance"
@@ -15,6 +14,7 @@ requires = [
     "fpdf2",
 ]
 
-[tool.briefcase.app.attendanceapp.ios]
-# متطلبات خاصة بنظام iOS
-frameworks = []
+# الحقول المطلوبة/المستحسنة
+author = "Your Name"
+url = "https://github.com/USERNAME/REPO"
+license = "MIT"
