@@ -1,0 +1,79 @@
+name: Build iOS App
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - 'main.py'
+      - 'requirements.txt'
+      - '.github/workflows/**'
+
+jobs:
+  build-ios:
+    runs-on: macos-14
+    env:
+      APP_NAME: "StudentBehavior"
+      
+    steps:
+      # 1. تحميل الكود
+      - name: 📥 تحميل المشروع
+        uses: actions/checkout@v4
+      
+      # 2. إعداد Python
+      - name: 🐍 إعداد Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      
+      # 3. تثبيت المكتبات
+      - name: 📦 تثبيت المتطلبات
+        run: |
+          pip install -r requirements.txt
+      
+      # 4. إعداد Flutter
+      - name: 🚀 إعداد Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: '3.22.0'
+          channel: 'stable'
+      
+      # 5. تثبيت CocoaPods
+      - name: 📱 تثبيت CocoaPods
+        run: |
+          sudo gem install cocoapods
+          pod setup
+      
+      # 6. بناء تطبيق iOS
+      - name: 🔨 بناء تطبيق iOS
+        run: |
+          flet build ipa . \
+            --project "$APP_NAME" \
+            --org "com.education" \
+            --ios-language "ar" \
+            --ios-country "SA" \
+            --verbose
+      
+      # 7. إصلاح الشاشة البيضاء
+      - name: ⚡ إصلاح iOS
+        run: |
+          # تعطيل Impeller
+          find . -name "Info.plist" | head -1 | while read plist; do
+            /usr/libexec/PlistBuddy -c "Add :FLTEnableImpeller bool false" "$plist"
+          done
+      
+      # 8. تجميع IPA
+      - name: 📦 تجميع IPA
+        run: |
+          mkdir -p Payload
+          find . -name "*.app" -type d | head -1 | while read app; do
+            cp -r "$app" Payload/
+            zip -qr "تطبيق_سلوكيات_الطلبة.ipa" Payload
+          done
+      
+      # 9. رفع الناتج
+      - name: ⬆️ رفع التطبيق
+        uses: actions/upload-artifact@v4
+        with:
+          name: تطبيق-iOS
+          path: "*.ipa"
