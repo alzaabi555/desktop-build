@@ -1,4 +1,4 @@
-name: بناء iOS
+name: بناء تطبيق iOS
 
 on:
   workflow_dispatch:
@@ -8,24 +8,55 @@ jobs:
     runs-on: macos-latest
     
     steps:
-      - uses: actions/checkout@v3
-      
-      - uses: actions/setup-python@v4
+      # الخطوة 1: تحميل الكود من GitHub
+      - name: 📥 تحميل المشروع
+        uses: actions/checkout@v4  # تم التحديث من @v3
+        
+      # الخطوة 2: إعداد Python
+      - name: 🐍 إعداد Python
+        uses: actions/setup-python@v4
         with:
           python-version: '3.11'
-      
-      - run: |
+          
+      # الخطوة 3: تثبيت المكتبات المطلوبة
+      - name: 📦 تثبيت المكتبات
+        run: |
           pip install flet==0.22.1
           pip install openpyxl==3.1.2
-      
-      - uses: subosito/flutter-action@v2
+          pip install et-xmlfile==1.1.0
+          
+      # الخطوة 4: إعداد Flutter
+      - name: 🚀 إعداد Flutter
+        uses: subosito/flutter-action@v2
         with:
           flutter-version: '3.22.0'
-      
-      - run: |
-          flet build ipa --project "StudentApp" --org "com.school"
-      
-      - uses: actions/upload-artifact@v3
+          
+      # الخطوة 5: بناء تطبيق iOS
+      - name: 🔨 بناء تطبيق iOS
+        run: |
+          flet build ipa --project "StudentApp" --org "com.school" --verbose
+          
+      # الخطوة 6: تجميع ملف IPA (اختياري إذا لم يعمل التجميع التلقائي)
+      - name: 📦 تجميع ملف IPA يدويًا
+        run: |
+          # البحث عن ملف التطبيق
+          APP_PATH=$(find . -name "*.app" -type d | head -n1)
+          
+          if [ -n "$APP_PATH" ]; then
+            echo "📱 وجدت التطبيق في: $APP_PATH"
+            mkdir -p Payload
+            cp -r "$APP_PATH" Payload/
+            zip -qr "StudentApp.ipa" Payload
+            echo "✅ تم إنشاء ملف IPA"
+          else
+            echo "⚠️ لم يتم العثور على ملف التطبيق"
+          fi
+          
+      # الخطوة 7: رفع ملف IPA إلى GitHub (المهم: تم التحديث من v3 إلى v4)
+      - name: ⬆️ رفع التطبيق النهائي
+        uses: actions/upload-artifact@v4  # كان @v3 - تم التصحيح
         with:
-          name: StudentApp-iOS
-          path: build/ios/ipa/*.ipa
+          name: تطبيق-iOS
+          path: |
+            StudentApp.ipa
+            build/ios/ipa/*.ipa
