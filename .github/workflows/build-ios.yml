@@ -1,4 +1,4 @@
-name: بناء تطبيق iOS
+name: بناء iOS
 
 on:
   workflow_dispatch:
@@ -6,44 +6,26 @@ on:
 jobs:
   build:
     runs-on: macos-latest
-    env:
-      APP_NAME: "StudentBehavior"
-      
+    
     steps:
-      - name: 📥 تحميل المشروع
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v3
       
-      - name: 🐍 إعداد Python
-        uses: actions/setup-python@v5
+      - uses: actions/setup-python@v4
         with:
           python-version: '3.11'
       
-      - name: 📦 تثبيت المكتبات
-        run: |
-          pip install 'flet[cli]' --upgrade
-          pip install -r requirements.txt
+      - run: |
+          pip install flet==0.22.1
+          pip install openpyxl==3.1.2
       
-      - name: 🚀 إعداد Flutter
-        uses: subosito/flutter-action@v2
+      - uses: subosito/flutter-action@v2
         with:
           flutter-version: '3.22.0'
-          channel: 'stable'
       
-      - name: 🔨 بناء تطبيق iOS
-        run: |
-          flet build ipa --project "$APP_NAME" --org "com.education" --verbose
+      - run: |
+          flet build ipa --project "StudentApp" --org "com.school"
       
-      - name: 📦 تجميع IPA يدويًا
-        run: |
-          APP_BUNDLE=$(find . -name "*.app" -type d | head -n1)
-          if [ -n "$APP_BUNDLE" ]; then
-            mkdir -p Payload
-            cp -r "$APP_BUNDLE" Payload/
-            zip -qr "$APP_NAME.ipa" Payload
-          fi
-      
-      - name: ⬆️ رفع التطبيق النهائي
-        uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v3
         with:
-          name: تطبيق-iOS
-          path: "*.ipa"
+          name: StudentApp-iOS
+          path: build/ios/ipa/*.ipa
