@@ -53,7 +53,6 @@
     },
     "win": {
       "target": "nsis",
-      "icon": "icon.png",
       "legalTrademarks": "Rased App",
       "verifyUpdateCodeSignature": false,
       "requestedExecutionLevel": "asInvoker"
@@ -65,8 +64,6 @@
       "createDesktopShortcut": true,
       "createStartMenuShortcut": true,
       "shortcutName": "راصد",
-      "installerIcon": "icon.png",
-      "uninstallerIcon": "icon.png",
       "uninstallDisplayName": "راصد - إزالة التثبيت",
       "runAfterFinish": true
     },
