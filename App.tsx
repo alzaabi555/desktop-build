@@ -1,5 +1,5 @@
-import React, { useState, useEffect, Suspense } from 'react';
-import { Student, ScheduleDay } from './types';
+import React, { useState, useEffect, Suspense, useRef } from 'react';
+import { Student, ScheduleDay, PeriodTime } from './types';
 import Dashboard from './components/Dashboard';
 import StudentList from './components/StudentList';
 import AttendanceTracker from './components/AttendanceTracker';
@@ -8,6 +8,7 @@ import StudentReport from './components/StudentReport';
 import ExcelImport from './components/ExcelImport';
 import NoorPlatform from './components/NoorPlatform';
 import { App as CapApp } from '@capacitor/app';
+import { LocalNotifications } from '@capacitor/local-notifications';
 import { 
   Users, 
   CalendarCheck, 
@@ -26,25 +27,46 @@ import {
   Share,
   Globe,
   Upload,
-  AlertTriangle
+  AlertTriangle,
+  Bell,
+  BookOpen,
+  RefreshCcw,
+  MapPin
 } from 'lucide-react';
 
 // Toast Notification Component
-const Toast = ({ message, type, onClose }: { message: string, type: 'success' | 'error' | 'info', onClose: () => void }) => {
+const Toast = ({ message, type, onClose }: { message: string, type: 'success' | 'error' | 'info' | 'bell', onClose: () => void }) => {
   useEffect(() => {
-    const timer = setTimeout(onClose, 3000);
+    const timer = setTimeout(onClose, 4000);
     return () => clearTimeout(timer);
   }, [onClose]);
 
-  const bg = type === 'success' ? 'bg-emerald-600/90' : type === 'error' ? 'bg-rose-600/90' : 'bg-blue-600/90';
+  const bg = type === 'success' ? 'bg-emerald-600/95' : type === 'error' ? 'bg-rose-600/95' : type === 'bell' ? 'bg-amber-500/95' : 'bg-blue-600/95';
+  const Icon = type === 'bell' ? Bell : (type === 'success' ? CheckCircle2 : (type === 'error' ? AlertTriangle : Info));
 
   return (
-    <div className={`fixed top-safe left-1/2 transform -translate-x-1/2 ${bg} backdrop-blur-md text-white px-6 py-3 rounded-full shadow-2xl z-[200] flex items-center gap-2 animate-in slide-in-from-top-2 duration-300 border border-white/10 mt-4`}>
-      {type === 'success' ? <CheckCircle2 className="w-4 h-4" /> : type === 'error' ? <AlertTriangle className="w-4 h-4" /> : <Info className="w-4 h-4" />}
-      <span className="text-xs font-black">{message}</span>
+    <div className={`fixed top-4 left-1/2 transform -translate-x-1/2 ${bg} backdrop-blur-md text-white px-6 py-4 rounded-2xl shadow-2xl z-[200] flex items-center gap-3 animate-in slide-in-from-top-4 duration-300 border border-white/10 max-w-[90vw]`}>
+      <div className="bg-white/20 p-2 rounded-full">
+         <Icon className="w-5 h-5" />
+      </div>
+      <span className="text-sm font-bold">{message}</span>
     </div>
   );
 };
+
+const OMAN_GOVERNORATES = [
+  "مسقط",
+  "ظفار",
+  "مسندم",
+  "البريمي",
+  "الداخلية",
+  "شمال الباطنة",
+  "جنوب الباطنة",
+  "جنوب الشرقية",
+  "شمال الشرقية",
+  "الظاهرة",
+  "الوسطى"
+];
 
 const App: React.FC = () => {
   const [activeTab, setActiveTab] = useState(() => {
@@ -75,28 +97,61 @@ const App: React.FC = () => {
     } catch { return []; }
   });
 
+  // Schedule State - Ensure 8 periods structure
   const [schedule, setSchedule] = useState<ScheduleDay[]>(() => {
-    try {
-      const saved = localStorage.getItem('scheduleData');
-      if (saved) return JSON.parse(saved);
-    } catch {}
-    return [
+    const defaultSchedule = [
       { dayName: 'الأحد', periods: Array(8).fill('') },
       { dayName: 'الاثنين', periods: Array(8).fill('') },
       { dayName: 'الثلاثاء', periods: Array(8).fill('') },
       { dayName: 'الأربعاء', periods: Array(8).fill('') },
       { dayName: 'الخميس', periods: Array(8).fill('') },
     ];
+
+    try {
+      const saved = localStorage.getItem('scheduleData');
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        if (Array.isArray(parsed)) {
+            return parsed.map((day: any) => ({
+                ...day,
+                periods: Array.isArray(day.periods) 
+                    ? (day.periods.length === 8 
+                        ? day.periods 
+                        : [...day.periods, ...Array(Math.max(0, 8 - day.periods.length)).fill('')].slice(0, 8))
+                    : Array(8).fill('')
+            }));
+        }
+      }
+    } catch {}
+    return defaultSchedule;
   });
 
+  const [periodTimes, setPeriodTimes] = useState<PeriodTime[]>(() => {
+    const defaultTimes = Array(8).fill(null).map((_, i) => ({ periodNumber: i + 1, startTime: '', endTime: '' }));
+    try {
+      const saved = localStorage.getItem('periodTimes');
+      if (saved) {
+          const parsed = JSON.parse(saved);
+          if (Array.isArray(parsed)) {
+              const merged = defaultTimes.map((def, i) => parsed[i] || def);
+              return merged;
+          }
+      }
+    } catch {}
+    return defaultTimes;
+  });
+
+  // إضافة حقل المحافظة (governorate)
   const [teacherInfo, setTeacherInfo] = useState(() => {
     try {
       return {
         name: localStorage.getItem('teacherName') || '',
-        school: localStorage.getItem('schoolName') || ''
+        school: localStorage.getItem('schoolName') || '',
+        subject: localStorage.getItem('subjectName') || '',
+        governorate: localStorage.getItem('governorate') || ''
       };
     } catch {
-      return { name: '', school: '' };
+      return { name: '', school: '', subject: '', governorate: '' };
     }
   });
 
@@ -107,7 +162,104 @@ const App: React.FC = () => {
   const [isSetupComplete, setIsSetupComplete] = useState(!!teacherInfo.name && !!teacherInfo.school);
   const [selectedStudentId, setSelectedStudentId] = useState<string | null>(null);
   const [showSettingsModal, setShowSettingsModal] = useState(false);
-  const [toast, setToast] = useState<{message: string, type: 'success' | 'error' | 'info'} | null>(null);
+  const [toast, setToast] = useState<{message: string, type: 'success' | 'error' | 'info' | 'bell'} | null>(null);
+
+  const bellAudioRef = useRef<HTMLAudioElement | null>(null);
+
+  useEffect(() => {
+    bellAudioRef.current = new Audio('https://assets.mixkit.co/active_storage/sfx/1085/1085-preview.mp3');
+  }, []);
+
+  useEffect(() => {
+      const checkTime = () => {
+          const now = new Date();
+          const currentTime = now.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' }); 
+          const currentDay = now.getDay(); 
+
+          if (currentDay > 4) return;
+
+          periodTimes.forEach(p => {
+              if (p.startTime === currentTime || p.endTime === currentTime) {
+                   const type = p.startTime === currentTime ? 'بداية' : 'نهاية';
+                   setToast({ message: `حان موعد ${type} الحصة ${p.periodNumber}`, type: 'bell' });
+                   if (bellAudioRef.current) {
+                       bellAudioRef.current.play().catch(e => console.log('Audio play failed', e));
+                   }
+              }
+          });
+      };
+
+      const interval = setInterval(checkTime, 1000 * 30);
+      return () => clearInterval(interval);
+  }, [periodTimes]);
+
+  useEffect(() => {
+    const scheduleNotifications = async () => {
+        try {
+            const perm = await LocalNotifications.requestPermissions();
+            if (perm.display !== 'granted') return;
+
+            const pending = await LocalNotifications.getPending();
+            if (pending.notifications.length > 0) {
+                await LocalNotifications.cancel(pending);
+            }
+
+            const now = new Date();
+            const currentDay = now.getDay();
+            if (currentDay > 4) return;
+
+            const notifsToSchedule: any[] = [];
+            let idCounter = 1000;
+
+            const createDateFromTime = (timeStr: string, offsetMinutes: number) => {
+                if (!timeStr) return null;
+                const [h, m] = timeStr.split(':').map(Number);
+                const d = new Date();
+                d.setHours(h);
+                d.setMinutes(m + offsetMinutes);
+                d.setSeconds(0);
+                return d;
+            };
+
+            periodTimes.forEach(p => {
+                if (p.startTime) {
+                    const notifyTime = createDateFromTime(p.startTime, -5);
+                    if (notifyTime && notifyTime > now) {
+                        notifsToSchedule.push({
+                            id: idCounter++,
+                            title: 'تنبيه الحصص 🔔',
+                            body: `الحصة ${p.periodNumber} تبدأ بعد 5 دقائق`,
+                            schedule: { at: notifyTime },
+                            sound: 'beep.wav'
+                        });
+                    }
+                }
+
+                if (p.endTime) {
+                    const notifyTime = createDateFromTime(p.endTime, -5);
+                    if (notifyTime && notifyTime > now) {
+                         notifsToSchedule.push({
+                            id: idCounter++,
+                            title: 'تنبيه الحصص 🔔',
+                            body: `الحصة ${p.periodNumber} تنتهي بعد 5 دقائق`,
+                            schedule: { at: notifyTime },
+                            sound: 'beep.wav'
+                        });
+                    }
+                }
+            });
+
+            if (notifsToSchedule.length > 0) {
+                await LocalNotifications.schedule({ notifications: notifsToSchedule });
+            }
+
+        } catch (e) {
+            console.error('Error scheduling notifications:', e);
+        }
+    };
+
+    scheduleNotifications();
+  }, [periodTimes]);
 
   useEffect(() => {
     let backButtonListener: any;
@@ -123,14 +275,12 @@ const App: React.FC = () => {
             }
         });
       } catch (e) {
-        // تجاهل الخطأ
       }
     };
     setupBackButton();
     return () => { if(backButtonListener) backButtonListener.remove(); };
   }, [showSettingsModal, activeTab]);
 
-  // Save data on change
   useEffect(() => {
     const saveData = () => {
         try {
@@ -139,7 +289,10 @@ const App: React.FC = () => {
             localStorage.setItem('activeTab', activeTab);
             localStorage.setItem('teacherName', teacherInfo.name);
             localStorage.setItem('schoolName', teacherInfo.school);
+            localStorage.setItem('subjectName', teacherInfo.subject);
+            localStorage.setItem('governorate', teacherInfo.governorate); // حفظ المحافظة
             localStorage.setItem('scheduleData', JSON.stringify(schedule));
+            localStorage.setItem('periodTimes', JSON.stringify(periodTimes));
             localStorage.setItem('viewSheetUrl', viewSheetUrl);
             localStorage.setItem('currentSemester', currentSemester);
         } catch (e) {
@@ -149,12 +302,11 @@ const App: React.FC = () => {
 
     saveData();
 
-    // إضافة مستمع لحدث إغلاق الصفحة (مهم لنسخة الكمبيوتر)
     window.addEventListener('beforeunload', saveData);
     return () => {
         window.removeEventListener('beforeunload', saveData);
     };
-  }, [students, classes, activeTab, teacherInfo, schedule, viewSheetUrl, currentSemester]);
+  }, [students, classes, activeTab, teacherInfo, schedule, viewSheetUrl, currentSemester, periodTimes]);
 
   const handleUpdateStudent = (updatedStudent: Student) => {
     setStudents(prev => prev.map(s => s.id === updatedStudent.id ? updatedStudent : s));
@@ -188,7 +340,7 @@ const App: React.FC = () => {
 
   const handleBackupData = async () => {
     try {
-      const dataToSave = { teacherInfo, students, classes, schedule, exportDate: new Date().toISOString() };
+      const dataToSave = { teacherInfo, students, classes, schedule, periodTimes, exportDate: new Date().toISOString() };
       const fileName = `madrasati_backup_${new Date().toISOString().split('T')[0]}.json`;
       const file = new File([JSON.stringify(dataToSave, null, 2)], fileName, { type: 'application/json' });
 
@@ -219,10 +371,11 @@ const App: React.FC = () => {
         try {
             const json = JSON.parse(event.target?.result as string);
             if (!json.students || !Array.isArray(json.students)) throw new Error('ملف غير صالح');
-            setTeacherInfo(json.teacherInfo || { name: '', school: '' });
+            setTeacherInfo(json.teacherInfo || { name: '', school: '', subject: '', governorate: '' });
             setStudents(json.students || []);
             setClasses(json.classes || []);
             setSchedule(json.schedule || []);
+            if(json.periodTimes) setPeriodTimes(json.periodTimes);
             setToast({ message: 'تم استعادة البيانات', type: 'success' });
             setShowSettingsModal(false);
         } catch (error) { setToast({ message: 'ملف غير صالح', type: 'error' }); }
@@ -236,7 +389,10 @@ const App: React.FC = () => {
     setIsSetupComplete(true);
   };
 
-  // Nav Items Configuration
+  const handleResetSetup = () => {
+    setTeacherInfo({ name: '', school: '', subject: '', governorate: '' });
+  };
+
   const navItems = [
     { id: 'dashboard', icon: BarChart3, label: 'الرئيسية' },
     { id: 'attendance', icon: CalendarCheck, label: 'الحضور' }, 
@@ -248,53 +404,91 @@ const App: React.FC = () => {
   if (!isSetupComplete) {
     return (
       <div className="min-h-screen w-full flex flex-col items-center justify-center bg-white px-8 animate-in fade-in duration-700" style={{direction: 'rtl'}}>
-        <div className="mb-8 p-4 rounded-3xl shadow-xl shadow-blue-100 bg-white ring-4 ring-blue-50">
+        <div className="mb-6 p-4 rounded-3xl shadow-xl shadow-blue-100 bg-white ring-4 ring-blue-50">
            <img src="icon.png" className="w-24 h-24 object-contain" alt="شعار التطبيق" onError={(e) => { e.currentTarget.src = ''; e.currentTarget.className='hidden'; }} />
            <School className="text-blue-600 w-16 h-16 hidden first:block" /> 
         </div>
 
         <h1 className="text-3xl font-black text-slate-800 mb-2 tracking-tight">راصد</h1>
-        <p className="text-sm text-slate-400 font-bold mb-12 text-center">قم بإعداد هويتك التعليمية للبدء</p>
-        <form onSubmit={handleStartApp} className="w-full max-w-sm space-y-5">
-          <div className="space-y-2">
-            <label className="text-[11px] font-black text-slate-400 mr-2">اسم المعلم / المعلمة</label>
+        <p className="text-sm text-slate-400 font-bold mb-8 text-center">قم بإعداد هويتك التعليمية للبدء</p>
+        
+        <form onSubmit={handleStartApp} className="w-full max-w-sm space-y-3">
+          <div className="space-y-1">
+            <label className="text-[10px] font-black text-slate-400 mr-2">اسم المعلم / المعلمة</label>
             <input 
                 type="text" 
-                className="w-full bg-slate-50 rounded-2xl py-4 px-5 text-sm font-bold outline-none border-2 border-transparent focus:border-blue-500/20 focus:bg-white transition-all text-slate-800 placeholder:text-slate-300" 
-                placeholder="" 
+                className="w-full bg-slate-50 rounded-2xl py-3 px-5 text-sm font-bold outline-none border-2 border-transparent focus:border-blue-500/20 focus:bg-white transition-all text-slate-800 placeholder:text-slate-300" 
                 value={teacherInfo.name} 
                 onChange={(e) => setTeacherInfo({...teacherInfo, name: e.target.value})}
                 autoComplete="off"
             />
           </div>
-          <div className="space-y-2">
-            <label className="text-[11px] font-black text-slate-400 mr-2">اسم المدرسة</label>
+          <div className="space-y-1">
+            <label className="text-[10px] font-black text-slate-400 mr-2">المادة الدراسية</label>
             <input 
                 type="text" 
-                className="w-full bg-slate-50 rounded-2xl py-4 px-5 text-sm font-bold outline-none border-2 border-transparent focus:border-blue-500/20 focus:bg-white transition-all text-slate-800 placeholder:text-slate-300" 
-                placeholder="" 
+                className="w-full bg-slate-50 rounded-2xl py-3 px-5 text-sm font-bold outline-none border-2 border-transparent focus:border-blue-500/20 focus:bg-white transition-all text-slate-800 placeholder:text-slate-300" 
+                placeholder="مثال: اللغة العربية"
+                value={teacherInfo.subject} 
+                onChange={(e) => setTeacherInfo({...teacherInfo, subject: e.target.value})}
+                autoComplete="off"
+            />
+          </div>
+           <div className="space-y-1">
+            <label className="text-[10px] font-black text-slate-400 mr-2">المحافظة التعليمية</label>
+            <div className="relative">
+                <select 
+                    className="w-full bg-slate-50 rounded-2xl py-3 px-5 text-sm font-bold outline-none border-2 border-transparent focus:border-blue-500/20 focus:bg-white transition-all text-slate-800 appearance-none"
+                    value={teacherInfo.governorate}
+                    onChange={(e) => setTeacherInfo({...teacherInfo, governorate: e.target.value})}
+                >
+                    <option value="">اختر المحافظة...</option>
+                    {OMAN_GOVERNORATES.map(gov => (
+                        <option key={gov} value={gov}>{gov}</option>
+                    ))}
+                </select>
+                <div className="absolute left-4 top-1/2 -translate-y-1/2 pointer-events-none text-slate-400">
+                    <MapPin className="w-4 h-4" />
+                </div>
+            </div>
+          </div>
+          <div className="space-y-1">
+            <label className="text-[10px] font-black text-slate-400 mr-2">اسم المدرسة</label>
+            <input 
+                type="text" 
+                className="w-full bg-slate-50 rounded-2xl py-3 px-5 text-sm font-bold outline-none border-2 border-transparent focus:border-blue-500/20 focus:bg-white transition-all text-slate-800 placeholder:text-slate-300" 
                 value={teacherInfo.school} 
                 onChange={(e) => setTeacherInfo({...teacherInfo, school: e.target.value})}
                 autoComplete="off"
             />
           </div>
-          <button 
-            type="submit" 
-            disabled={!teacherInfo.name || !teacherInfo.school} 
-            className="w-full py-4 bg-blue-600 text-white rounded-2xl font-black text-sm active:scale-95 flex items-center justify-center gap-2 mt-4 shadow-lg shadow-blue-200 disabled:opacity-50 disabled:shadow-none transition-all"
-          >
-            بدء الاستخدام <CheckCircle2 className="w-5 h-5" />
-          </button>
+
+          <div className="flex gap-2 pt-2">
+              <button 
+                type="button"
+                onClick={handleResetSetup}
+                className="p-3.5 bg-rose-50 text-rose-600 rounded-2xl hover:bg-rose-100 transition-colors"
+                title="إعادة تعيين البيانات"
+              >
+                  <RefreshCcw className="w-5 h-5" />
+              </button>
+              <button 
+                type="submit" 
+                disabled={!teacherInfo.name || !teacherInfo.school} 
+                className="flex-1 py-3.5 bg-blue-600 text-white rounded-2xl font-black text-sm active:scale-95 flex items-center justify-center gap-2 shadow-lg shadow-blue-200 disabled:opacity-50 disabled:shadow-none transition-all"
+              >
+                بدء الاستخدام <CheckCircle2 className="w-5 h-5" />
+              </button>
+          </div>
         </form>
       </div>
     );
   }
 
   return (
-    <div className="flex h-screen bg-[#f2f2f7] overflow-hidden" style={{direction: 'rtl'}}>
+    <div className="flex h-screen bg-[#f2f2f7] overflow-hidden select-none" style={{direction: 'rtl'}}>
       {toast && <Toast message={toast.message} type={toast.type} onClose={() => setToast(null)} />}
 
-      {/* DESKTOP SIDEBAR (Visible ONLY on md and up) */}
       <aside className="hidden md:flex w-64 bg-white border-l border-gray-200 flex-col h-full shrink-0 z-20">
          <div className="p-6 flex flex-col items-center border-b border-gray-100">
              <div className="w-16 h-16 bg-blue-50 rounded-2xl flex items-center justify-center mb-3">
@@ -326,21 +520,22 @@ const App: React.FC = () => {
          </div>
       </aside>
 
-      {/* MAIN CONTENT AREA */}
       <div className="flex-1 flex flex-col h-full overflow-hidden relative">
-        {/* Dynamic padding: pb increased on mobile for bottom bar, reduced on desktop */}
-        <main className="flex-1 overflow-y-auto pb-[calc(80px+var(--sab))] md:pb-6 pt-[var(--sat)] md:pt-6 px-4 md:px-8 scrollbar-thin">
+        <main className="flex-1 overflow-y-auto pb-[calc(80px+var(--sab))] md:pb-6 pt-[var(--sat)] md:pt-6 px-4 md:px-8 scrollbar-thin scroll-smooth">
           <div className="max-w-full md:max-w-6xl mx-auto h-full pt-2 md:pt-0">
             <Suspense fallback={<div className="flex items-center justify-center h-40"><div className="w-6 h-6 border-2 border-blue-600 border-t-transparent rounded-full animate-spin"></div></div>}>
               {activeTab === 'dashboard' && (
                 <Dashboard 
                   students={students} 
-                  teacherInfo={teacherInfo} 
+                  teacherInfo={teacherInfo}
+                  onUpdateTeacherInfo={setTeacherInfo} 
                   schedule={schedule}
                   onUpdateSchedule={setSchedule}
                   onSelectStudent={(s) => { setSelectedStudentId(s.id); setActiveTab('report'); }} 
                   onNavigate={(tab) => setActiveTab(tab)}
                   onOpenSettings={() => setShowSettingsModal(true)}
+                  periodTimes={periodTimes}
+                  setPeriodTimes={setPeriodTimes}
                 />
               )}
               {activeTab === 'students' && (
@@ -352,6 +547,8 @@ const App: React.FC = () => {
                   onUpdateStudent={handleUpdateStudent} 
                   onViewReport={(s) => { setSelectedStudentId(s.id); setActiveTab('report'); }}
                   onSwitchToImport={() => setActiveTab('import')}
+                  currentSemester={currentSemester}
+                  onSemesterChange={setCurrentSemester}
                 />
               )}
               {activeTab === 'attendance' && <AttendanceTracker students={students} classes={classes} setStudents={setStudents} />}
@@ -369,10 +566,12 @@ const App: React.FC = () => {
               {activeTab === 'noor' && <NoorPlatform />}
               {activeTab === 'report' && selectedStudentId && (
                 <div className="animate-in slide-in-from-right duration-300 max-w-3xl mx-auto">
-                  <button onClick={() => setActiveTab('students')} className="mb-4 flex items-center gap-1.5 text-blue-600 font-bold text-xs bg-blue-50 w-fit px-3 py-1.5 rounded-full"><ChevronLeft className="w-4 h-4" /> العودة للقائمة</button>
+                  <button onClick={() => setActiveTab('students')} className="mb-4 flex items-center gap-1.5 text-blue-600 font-bold text-xs bg-blue-50 w-fit px-3 py-1.5 rounded-full hover:bg-blue-100 transition-colors"><ChevronLeft className="w-4 h-4" /> العودة للقائمة</button>
                   <StudentReport 
                     student={students.find(s => s.id === selectedStudentId)!} 
-                    onUpdateStudent={handleUpdateStudent} // Pass update function
+                    onUpdateStudent={handleUpdateStudent} 
+                    currentSemester={currentSemester}
+                    teacherInfo={teacherInfo}
                   />
                 </div>
               )}
@@ -380,9 +579,7 @@ const App: React.FC = () => {
           </div>
         </main>
 
-        {/* MOBILE BOTTOM NAVBAR (Visible ONLY on Mobile/Tablet) */}
-        {/* iOS Style: Translucent background, thin border, refined icons */}
-        <nav className="md:hidden fixed bottom-0 left-0 right-0 bg-[#f2f2f7]/85 backdrop-blur-xl border-t border-gray-300/50 pb-[max(20px,env(safe-area-inset-bottom))] z-50 shadow-[0_-1px_3px_rgba(0,0,0,0.05)]">
+        <nav className="md:hidden fixed bottom-0 left-0 right-0 bg-[#f2f2f7]/90 backdrop-blur-xl border-t border-gray-300/50 pb-[max(20px,env(safe-area-inset-bottom))] z-50 shadow-[0_-1px_3px_rgba(0,0,0,0.05)]">
           <div className="flex justify-around items-center h-14 max-w-lg mx-auto">
             {navItems.map(item => (
               <button 
@@ -398,10 +595,8 @@ const App: React.FC = () => {
         </nav>
       </div>
 
-      {/* Shared Settings Modal (Responsive) */}
       {showSettingsModal && (
         <div className="fixed inset-0 bg-black/40 backdrop-blur-sm z-[100] flex items-end sm:items-center justify-center sm:p-6 animate-in fade-in duration-200" onClick={() => setShowSettingsModal(false)}>
-           {/* Mobile: Bottom Sheet | Desktop: Centered Modal */}
            <div className="bg-white w-full sm:max-w-sm rounded-t-[2rem] sm:rounded-[2rem] p-6 shadow-2xl relative overflow-hidden flex flex-col max-h-[90vh] animate-in slide-in-from-bottom duration-300" onClick={e => e.stopPropagation()}>
               <div className="w-12 h-1.5 bg-gray-200 rounded-full mx-auto mb-6 sm:hidden" />
               
@@ -414,7 +609,7 @@ const App: React.FC = () => {
                     <Info className="text-white w-8 h-8" />
                  </div>
                  <h2 className="text-xl font-black text-gray-900 mb-0.5">حول التطبيق</h2>
-                 <p className="text-[10px] font-bold text-blue-600 bg-blue-50 px-3 py-1 rounded-full mb-3">الإصدار 3.0</p>
+                 <p className="text-[10px] font-bold text-blue-600 bg-blue-50 px-3 py-1 rounded-full mb-3">الإصدار 3.1</p>
                  
                  <div className="space-y-0.5 mb-4">
                     <p className="text-[10px] font-bold text-gray-400">تصميم وتطوير</p>
