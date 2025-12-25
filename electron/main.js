@@ -21,6 +21,11 @@ function createWindow() {
     }
   });
 
+  // مسح الكاش عند بدء التشغيل لضمان تحميل أحدث نسخة من ملفات التطبيق
+  mainWindow.webContents.session.clearCache().then(() => {
+     console.log('Cache cleared successfully');
+  });
+
   // تحميل ملفات التطبيق المبنية (نفس الملفات التي يستخدمها الموبايل)
   mainWindow.loadFile(path.join(__dirname, '../www/index.html'));
 
