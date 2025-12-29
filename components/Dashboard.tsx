@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Student, ScheduleDay, PeriodTime } from '../types';
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip } from 'recharts';
@@ -278,7 +279,7 @@ const Dashboard: React.FC<DashboardProps> = ({ students = [], teacherInfo, onUpd
       {/* Edit Info Modal */}
       {isEditingInfo && (
           <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-md z-[120] flex items-center justify-center p-6 animate-in fade-in duration-200" onClick={() => setIsEditingInfo(false)}>
-              <div className="bg-white w-full max-w-sm rounded-[2.5rem] p-8 shadow-2xl animate-in zoom-in-95 border border-white/50" onClick={e => e.stopPropagation()}>
+              <div className="bg-white w-full max-w-sm rounded-[2.5rem] p-8 shadow-2xl animate-in zoom-in-95 border border-white/50 max-h-[90vh] overflow-y-auto" onClick={e => e.stopPropagation()}>
                   <div className="flex justify-between items-center mb-6">
                       <h3 className="font-black text-lg text-gray-900">تعديل البيانات</h3>
                       <button onClick={() => setIsEditingInfo(false)} className="p-2 bg-gray-100 rounded-full hover:bg-gray-200"><X className="w-5 h-5 text-gray-500"/></button>
@@ -311,8 +312,8 @@ const Dashboard: React.FC<DashboardProps> = ({ students = [], teacherInfo, onUpd
 
       {/* Edit Schedule Modal */}
       {isEditingSchedule && (
-        <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-md z-[100] flex items-end sm:items-center justify-center" onClick={() => setIsEditingSchedule(false)}>
-           <div className="bg-white w-full max-w-md h-[85vh] sm:h-auto rounded-t-[3rem] sm:rounded-[3rem] p-8 shadow-2xl flex flex-col border border-white/50" onClick={e => e.stopPropagation()}>
+        <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-md z-[100] flex items-end md:items-center justify-center" onClick={() => setIsEditingSchedule(false)}>
+           <div className="bg-white w-full max-w-md h-[85vh] md:h-auto md:max-h-[90vh] rounded-t-[3rem] md:rounded-[3rem] p-8 shadow-2xl flex flex-col border border-white/50" onClick={e => e.stopPropagation()}>
               <div className="flex justify-between items-center mb-6">
                  <h3 className="font-black text-lg text-gray-900">تعديل الجدول</h3>
                  <button onClick={() => setIsEditingSchedule(false)} className="p-2 bg-gray-100 rounded-full hover:bg-gray-200"><X className="w-5 h-5 text-gray-500" /></button>
@@ -349,8 +350,8 @@ const Dashboard: React.FC<DashboardProps> = ({ students = [], teacherInfo, onUpd
 
       {/* Edit Time Settings Modal */}
       {showTimeSettings && (
-         <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-md z-[110] flex items-end sm:items-center justify-center" onClick={() => setShowTimeSettings(false)}>
-            <div className="bg-white w-full max-w-sm h-[80vh] sm:h-auto rounded-t-[3rem] sm:rounded-[3rem] p-8 shadow-2xl flex flex-col border border-white/50" onClick={e => e.stopPropagation()}>
+         <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-md z-[110] flex items-end md:items-center justify-center" onClick={() => setShowTimeSettings(false)}>
+            <div className="bg-white w-full max-w-sm h-[80vh] md:h-auto md:max-h-[90vh] rounded-t-[3rem] md:rounded-[3rem] p-8 shadow-2xl flex flex-col border border-white/50" onClick={e => e.stopPropagation()}>
                <div className="flex justify-between items-center mb-6">
                    <h3 className="font-black text-lg text-gray-900 flex items-center gap-2"><Clock className="w-6 h-6 text-indigo-600"/> التوقيت</h3>
                    <button onClick={() => setShowTimeSettings(false)} className="p-2 bg-gray-100 rounded-full hover:bg-gray-200"><X className="w-5 h-5 text-gray-500" /></button>

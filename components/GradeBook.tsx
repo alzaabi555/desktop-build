@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { Student, GradeRecord } from '../types';
 import { Plus, Search, X, Trash2, Settings, Check, FileSpreadsheet, Loader2, Info, Edit2, Download, AlertTriangle, Eye } from 'lucide-react';
@@ -708,7 +709,7 @@ const GradeBook: React.FC<GradeBookProps> = ({ students, classes, onUpdateStuden
 
       {showAddGrade && (
         <div className="fixed inset-0 bg-black/60 backdrop-blur-md z-[120] flex items-center justify-center p-4" onClick={() => setShowAddGrade(null)}>
-          <div className="bg-white w-full max-w-md h-[90vh] rounded-[2rem] p-6 shadow-2xl flex flex-col relative" onClick={e => e.stopPropagation()}>
+          <div className="bg-white w-full max-w-md h-[90vh] md:h-auto md:max-h-[90vh] rounded-[2rem] p-6 shadow-2xl flex flex-col relative" onClick={e => e.stopPropagation()}>
              
              <div className="flex justify-between items-center mb-4 shrink-0">
                 <div>

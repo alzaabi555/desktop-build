@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect, useRef } from 'react';
 import { Student, BehaviorType } from '../types';
 import { Search, ThumbsUp, ThumbsDown, FileBarChart, X, UserPlus, Filter, Edit, FileSpreadsheet, GraduationCap, ChevronLeft, Clock, Download, MessageCircle, Smartphone, Loader2, Sparkles, Shuffle, Settings, Trash2, Check, PenSquare, ChevronDown, UserX, MoveRight, LogOut, SlidersHorizontal, MoreHorizontal, Plus } from 'lucide-react';
@@ -418,8 +419,8 @@ const StudentList: React.FC<StudentListProps> = ({ students, classes, onAddClass
 
       {/* 4. Add Student Modal */}
       {showManualAddModal && (
-          <div className="fixed inset-0 z-[60] flex items-end sm:items-center justify-center bg-black/50 backdrop-blur-sm" onClick={() => setShowManualAddModal(false)}>
-              <div className="bg-white w-full sm:max-w-md rounded-t-[2rem] sm:rounded-[2rem] p-6 shadow-xl animate-in slide-in-from-bottom duration-300" onClick={e => e.stopPropagation()}>
+          <div className="fixed inset-0 z-[60] flex items-end md:items-center justify-center bg-black/50 backdrop-blur-sm" onClick={() => setShowManualAddModal(false)}>
+              <div className="bg-white w-full md:w-auto md:min-w-[400px] sm:max-w-md rounded-t-[2rem] md:rounded-[2rem] p-6 shadow-xl animate-in slide-in-from-bottom duration-300" onClick={e => e.stopPropagation()}>
                   <div className="flex justify-between items-center mb-6">
                       <h3 className="font-black text-lg text-gray-900">طالب جديد</h3>
                       <button onClick={() => setShowManualAddModal(false)} className="p-2 bg-gray-100 rounded-full"><X className="w-5 h-5 text-gray-500"/></button>
