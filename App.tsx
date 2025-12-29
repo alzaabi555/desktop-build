@@ -1,4 +1,5 @@
-import React, { Component, useState, useEffect, Suspense, useRef } from 'react';
+
+import React, { useState, useEffect, Suspense, useRef } from 'react';
 import { Student, ScheduleDay, PeriodTime, Group } from './types';
 import Dashboard from './components/Dashboard';
 import StudentList from './components/StudentList';
@@ -51,7 +52,7 @@ interface ErrorBoundaryState {
 }
 
 // --- Error Boundary Component ---
-class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundaryState> {
+class ErrorBoundary extends React.Component<ErrorBoundaryProps, ErrorBoundaryState> {
   state: ErrorBoundaryState = { hasError: false, errorMsg: '' };
 
   static getDerivedStateFromError(error: any): ErrorBoundaryState {
@@ -836,8 +837,8 @@ const AppContent: React.FC = () => {
       </div>
 
       {showSettingsModal && (
-        <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-md z-[100] flex items-end sm:items-center justify-center sm:p-6 animate-in fade-in duration-300" onClick={() => setShowSettingsModal(false)}>
-           <div className="bg-white/95 backdrop-blur-xl w-full sm:max-w-sm rounded-t-[2.5rem] sm:rounded-[2.5rem] p-8 shadow-2xl relative overflow-hidden flex flex-col max-h-[90vh] animate-in slide-in-from-bottom duration-300 border border-white/50" onClick={e => e.stopPropagation()}>
+        <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-md z-[100] flex items-end md:items-center justify-center sm:p-6 animate-in fade-in duration-300" onClick={() => setShowSettingsModal(false)}>
+           <div className="bg-white/95 backdrop-blur-xl w-full sm:max-w-sm rounded-t-[2.5rem] sm:rounded-[2.5rem] p-8 shadow-2xl relative overflow-hidden flex flex-col max-h-[90vh] md:max-h-[85vh] md:h-auto animate-in slide-in-from-bottom duration-300 border border-white/50" onClick={e => e.stopPropagation()}>
               <div className="w-12 h-1.5 bg-gray-200 rounded-full mx-auto mb-8 sm:hidden" />
               
               <div className="absolute top-0 right-0 p-6 z-10 hidden sm:block">
