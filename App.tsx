@@ -85,7 +85,7 @@ class ErrorBoundary extends React.Component<ErrorBoundaryProps, ErrorBoundarySta
   componentDidCatch(error: Error, errorInfo: ErrorInfo) { console.error("Uncaught error:", error, errorInfo); }
   render() {
     if (this.state.hasError) return <div className="p-10 text-center"><h1>حدث خطأ غير متوقع.</h1><button onClick={() => window.location.reload()} className="mt-4 bg-blue-500 text-white px-4 py-2 rounded">إعادة تحميل</button></div>;
-    return this.props.children;
+    return (this as any).props.children;
   }
 }
 
@@ -309,26 +309,21 @@ const AppContent: React.FC = () => {
       }
   };
 
-  // --- NEW: Fix for Developer WhatsApp Contact on iOS (Deep Link First) ---
+  // --- NEW: Fix for Developer WhatsApp Contact ---
+  // Using https://api.whatsapp.com directly is more reliable as a Universal Link on modern OS
   const handleContactDeveloper = async () => {
       const phone = '96899834455';
-      const webUrl = `https://api.whatsapp.com/send?phone=${phone}`;
-      const appUrl = `whatsapp://send?phone=${phone}`;
+      const universalUrl = `https://api.whatsapp.com/send?phone=${phone}`;
       
       try {
           if (Capacitor.isNativePlatform()) {
-              // Try opening app directly first
-              try {
-                  await Browser.open({ url: appUrl });
-              } catch (err) {
-                  // Fallback to web link if app not installed or fails
-                  await Browser.open({ url: webUrl });
-              }
+              await Browser.open({ url: universalUrl });
           } else {
-              window.open(webUrl, '_blank');
+              window.open(universalUrl, '_blank');
           }
       } catch (e) {
-          window.open(webUrl, '_blank');
+          console.error("WhatsApp Error", e);
+          window.open(universalUrl, '_blank');
       }
   };
 
@@ -593,7 +588,7 @@ const AppContent: React.FC = () => {
                      تواصل مع المطور (واتساب)
                  </button>
                  
-                 <p className="text-[9px] text-slate-300 dark:text-white/20 font-bold tracking-widest">Version 3.4.0 (DeepLink Update)</p>
+                 <p className="text-[9px] text-slate-300 dark:text-white/20 font-bold tracking-widest">Version 3.4.0 (Universal Links)</p>
              </div>
          </div>
       </Modal>
