@@ -127,11 +127,17 @@ const AttendanceTracker: React.FC<AttendanceTrackerProps> = ({ students, classes
       const msg = encodeURIComponent(`السلام عليكم، نود إشعاركم بأن الطالب ${student.name} تم تسجيل حالة: *${statusText}* اليوم (${dateText}). نرجو المتابعة.`);
       
       if (method === 'whatsapp') {
-          const universalUrl = `https://api.whatsapp.com/send?phone=${cleanPhone}&text=${msg}`;
-          try {
-              if (Capacitor.isNativePlatform()) await Browser.open({ url: universalUrl });
-              else window.open(universalUrl, '_blank');
-          } catch (e) { window.open(universalUrl, '_blank'); }
+          // --- WINDOWS ELECTRON NUCLEAR SOLUTION ---
+          if (window.electron) {
+             window.electron.openExternal(`whatsapp://send?phone=${cleanPhone}&text=${msg}`);
+          } else {
+             // Android / iOS / Web
+             const universalUrl = `https://api.whatsapp.com/send?phone=${cleanPhone}&text=${msg}`;
+             try {
+                 if (Capacitor.isNativePlatform()) await Browser.open({ url: universalUrl });
+                 else window.open(universalUrl, '_blank');
+             } catch (e) { window.open(universalUrl, '_blank'); }
+          }
       } else {
           window.location.href = `sms:${cleanPhone}?body=${msg}`;
       }
