@@ -19,7 +19,7 @@ export interface Group {
   color: string; // Tailwind color class prefix (e.g., 'emerald')
 }
 
-export type AttendanceStatus = 'present' | 'absent' | 'late';
+export type AttendanceStatus = 'present' | 'absent' | 'late' | 'truant';
 
 export interface AttendanceRecord {
   date: string;
