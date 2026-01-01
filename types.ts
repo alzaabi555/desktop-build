@@ -16,17 +16,15 @@ export interface Student {
 export interface Group {
   id: string;
   name: string;
-  color: string; // Tailwind color class prefix (e.g., 'emerald')
+  color: string; // Tailwind color
 }
-
-export type AttendanceStatus = 'present' | 'absent' | 'late' | 'truant';
 
 export interface AttendanceRecord {
   date: string;
   status: AttendanceStatus;
 }
 
-export type BehaviorType = 'positive' | 'negative';
+export type AttendanceStatus = 'present' | 'absent' | 'late' | 'truant';
 
 export interface BehaviorRecord {
   id: string;
@@ -34,37 +32,43 @@ export interface BehaviorRecord {
   type: BehaviorType;
   description: string;
   points: number;
-  semester?: '1' | '2'; 
+  semester?: '1' | '2';
 }
+
+export type BehaviorType = 'positive' | 'negative';
 
 export interface GradeRecord {
   id: string;
   subject: string;
-  category: string;
+  category: string; // "short_test_1", "project", etc.
   score: number;
   maxScore: number;
   date: string;
-  semester: '1' | '2'; 
+  semester?: '1' | '2';
 }
 
 export interface ScheduleDay {
   dayName: string;
-  periods: string[]; 
+  periods: string[]; // Array of class names or subjects for 8 periods
 }
 
 export interface PeriodTime {
   periodNumber: number;
-  startTime: string; 
-  endTime: string;   
+  startTime: string; // "07:30"
+  endTime: string;   // "08:10"
 }
 
 export interface AssessmentTool {
-    id: string;
-    name: string;
-    maxScore: number;
+  id: string;
+  name: string;
+  maxScore: number;
 }
 
-export interface AppState {
-  students: Student[];
-  selectedStudentId: string | null;
+// --- Electron Bridge Type Definition ---
+declare global {
+  interface Window {
+    electron?: {
+      openExternal: (url: string) => Promise<void>;
+    };
+  }
 }
