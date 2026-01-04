@@ -1,6 +1,6 @@
 
 import React, { useRef, useState } from 'react';
-import { Save, Upload, Trash2, AlertTriangle, CheckCircle2, Database, Download, RefreshCw, FileJson } from 'lucide-react';
+import { Save, Upload, Trash2, AlertTriangle, Database, Download, RefreshCw, FileJson } from 'lucide-react';
 import { useApp } from '../context/AppContext';
 import { useTheme } from '../context/ThemeContext';
 import { Filesystem, Directory, Encoding } from '@capacitor/filesystem';
@@ -119,8 +119,6 @@ const Settings: React.FC = () => {
     if (confirmation === 'حذف') {
         setLoading('reset');
         localStorage.clear();
-        // Preserve theme preference if desired, otherwise clear all
-        // localStorage.setItem('app-theme', ...); 
         setTimeout(() => window.location.reload(), 1000);
     }
   };
@@ -129,7 +127,9 @@ const Settings: React.FC = () => {
     <div className="space-y-8 pb-20 animate-in fade-in slide-in-from-bottom-4 duration-500 text-slate-900 dark:text-white">
       
       {/* Header */}
-      <div className="glass-heavy p-6 rounded-[2.5rem] border border-white/20 shadow-xl flex items-center justify-between">
+      <div 
+        className="glass-heavy p-6 rounded-[2.5rem] border border-white/20 shadow-xl flex items-center justify-between select-none transition-transform"
+      >
         <div>
             <h1 className="text-2xl font-black text-glow">إدارة البيانات</h1>
             <p className="text-xs font-bold text-slate-500 dark:text-white/60 mt-1">النسخ الاحتياطي والاستعادة وتصفير النظام</p>

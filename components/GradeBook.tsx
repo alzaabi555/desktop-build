@@ -1,16 +1,13 @@
 
 import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { Student, GradeRecord, AssessmentTool } from '../types';
-import { Plus, Search, X, Trash2, Settings, Check, Loader2, Edit2, Printer, FileSpreadsheet, FileUp, Download, AlertTriangle, Wand2, Calculator } from 'lucide-react';
+import { Plus, Search, X, Trash2, Settings, Check, Loader2, Edit2, FileSpreadsheet, FileUp, Wand2 } from 'lucide-react';
 import Modal from './Modal';
-import { useTheme } from '../context/ThemeContext';
 import { useApp } from '../context/AppContext';
-import { Filesystem, Directory, Encoding } from '@capacitor/filesystem';
+import { Filesystem, Directory } from '@capacitor/filesystem';
 import { Share } from '@capacitor/share';
 import { Capacitor } from '@capacitor/core';
 import * as XLSX from 'xlsx';
-
-declare var html2pdf: any;
 
 interface GradeBookProps {
   students: Student[];
@@ -46,7 +43,6 @@ const GradeBook: React.FC<GradeBookProps> = ({
   
   const [isImporting, setIsImporting] = useState(false);
   const [isExporting, setIsExporting] = useState(false);
-  const [isGeneratingPdf, setIsGeneratingPdf] = useState(false);
   
   const fileInputRef = useRef<HTMLInputElement>(null);
   
@@ -63,9 +59,13 @@ const GradeBook: React.FC<GradeBookProps> = ({
   const [score, setScore] = useState('');
 
   const styles = {
-      card: 'glass-card border border-white/20 rounded-2xl',
-      pill: 'rounded-xl',
-      header: 'glass-heavy border-b border-white/20 shadow-sm backdrop-blur-xl rounded-[0_0_2rem_2rem] mb-4',
+      card: `
+        glass-card border border-white/20 rounded-[1.8rem] 
+        hover:border-indigo-400/30 hover:shadow-lg hover:shadow-indigo-500/10 hover:-translate-y-1 hover:bg-white/10
+        transition-all duration-300 relative overflow-hidden backdrop-blur-md
+      `,
+      pill: 'rounded-xl border border-white/20 shadow-sm',
+      header: 'glass-heavy border-b border-white/20 shadow-lg backdrop-blur-xl rounded-[0_0_2.5rem_2.5rem] mb-6',
   };
 
   useEffect(() => {
@@ -77,7 +77,6 @@ const GradeBook: React.FC<GradeBookProps> = ({
 
   const cleanText = (text: string) => { if (!text) return ''; return String(text).trim(); };
   
-  // Normalize Arabic text for better matching (remove Hamzas, Tatweel, etc.)
   const normalizeText = (text: string) => {
       if (!text) return '';
       return String(text)
@@ -86,12 +85,11 @@ const GradeBook: React.FC<GradeBookProps> = ({
           .replace(/[أإآ]/g, 'ا')
           .replace(/ة/g, 'ه')
           .replace(/ى/g, 'ي')
-          .replace(/[ـ]/g, ''); // Remove Tatweel
+          .replace(/[ـ]/g, ''); 
   };
 
   const extractNumericScore = (val: any): number | null => { 
       if (val === undefined || val === null || val === '') return null; 
-      // Convert to string, remove non-numeric chars except dot
       const strVal = String(val).trim(); 
       const cleanNum = strVal.replace(/[^0-9.]/g, ''); 
       const num = Number(cleanNum); 
@@ -269,7 +267,6 @@ const GradeBook: React.FC<GradeBookProps> = ({
       }
   };
 
-  // --- IMPROVED IMPORT LOGIC ---
   const handleImportExcel = async (e: React.ChangeEvent<HTMLInputElement>) => {
       const file = e.target.files?.[0];
       if (!file) return;
@@ -279,17 +276,14 @@ const GradeBook: React.FC<GradeBookProps> = ({
           const workbook = XLSX.read(data, { type: 'array' });
           const firstSheet = workbook.Sheets[workbook.SheetNames[0]];
           
-          // Use raw: false to get formatted strings
           const jsonData = XLSX.utils.sheet_to_json(firstSheet, { defval: "" }) as any[];
           if (jsonData.length === 0) throw new Error('الملف فارغ');
           
           const headers = Object.keys(jsonData[0]);
           
-          // 1. Identify "Name" Column dynamically
           const nameKeywords = ['الاسم', 'اسم الطالب', 'name', 'student', 'full name', 'المتعلم', 'student name'];
           const nameKey = headers.find(h => nameKeywords.some(kw => normalizeText(h).includes(normalizeText(kw)))) || headers[0];
 
-          // 2. Identify "Grade" Columns (Exclude Name, ID, Totals, etc)
           const excludedExact = ['م', '#', 'id', 'no', 'number', 'رقم'];
           const excludedPartial = ['مجموع', 'total', 'تقدير', 'rank', 'average', 'معدل', 'نتيجة', 'result'];
           
@@ -301,7 +295,6 @@ const GradeBook: React.FC<GradeBookProps> = ({
               return true;
           });
 
-          // 3. Update Tools Context
           let updatedTools = [...tools];
           potentialTools.forEach(h => {
               const cleanH = cleanText(h);
@@ -311,10 +304,8 @@ const GradeBook: React.FC<GradeBookProps> = ({
           });
           setAssessmentTools(updatedTools);
           
-          // 4. Map Grades to Students
           let updatedCount = 0;
           setStudents(prev => prev.map(s => {
-              // Fuzzy search for student
               const row = jsonData.find((r: any) => {
                   const rName = String(r[nameKey] || '').trim();
                   return normalizeText(rName) === normalizeText(s.name);
@@ -328,9 +319,7 @@ const GradeBook: React.FC<GradeBookProps> = ({
                   const val = extractNumericScore(row[headerStr]);
                   if (val !== null) {
                       const toolName = cleanText(headerStr);
-                      // Remove existing grade for this tool/semester
                       newGrades = newGrades.filter(g => !(g.category.trim() === toolName && (g.semester || '1') === (currentSemester || '1')));
-                      // Add new grade
                       newGrades.unshift({
                           id: Math.random().toString(36).substr(2, 9),
                           subject: teacherInfo?.subject || 'عام',
@@ -355,21 +344,14 @@ const GradeBook: React.FC<GradeBookProps> = ({
       }
   };
 
-  // --- IMPROVED EXPORT LOGIC ---
-  // Calculates columns dynamically based on what DATA actually exists
   const getActiveColumns = () => {
     const columns = new Set<string>();
-    
-    // 1. Add explicitly defined tools
     tools.forEach(t => columns.add(t.name.trim()));
-
-    // 2. Scan students for any other grade categories present in THIS semester
     filteredStudents.forEach(s => {
         getSemesterGrades(s, currentSemester).forEach(g => {
             if (g.category) columns.add(g.category.trim());
         });
     });
-
     return Array.from(columns).sort();
   };
 
@@ -383,7 +365,6 @@ const GradeBook: React.FC<GradeBookProps> = ({
               const row: any = { 'الاسم': student.name, 'الصف': student.classes[0] || '' };
               const semGrades = getSemesterGrades(student, currentSemester);
               
-              // Dynamic Columns
               activeColumns.forEach(colName => {
                   const grade = semGrades.find(g => g.category.trim() === colName);
                   row[colName] = grade ? grade.score : '';
@@ -409,121 +390,6 @@ const GradeBook: React.FC<GradeBookProps> = ({
       } catch (error) { console.error(error); alert('خطأ في التصدير'); } finally { setIsExporting(false); }
   };
 
-  const getBase64Image = async (url: string): Promise<string> => {
-      try {
-          const response = await fetch(url);
-          const blob = await response.blob();
-          return new Promise((resolve) => {
-              const reader = new FileReader();
-              reader.onloadend = () => resolve(reader.result as string);
-              reader.readAsDataURL(blob);
-          });
-      } catch (e) { return ''; }
-  };
-
-  const handlePrintGradeReport = async () => {
-      if (filteredStudents.length === 0) { alert('لا يوجد بيانات للطباعة'); return; }
-      setIsGeneratingPdf(true);
-
-      const logoBase64 = await getBase64Image('icon.png'); 
-      // Use the robust column detection
-      const activeColumns = getActiveColumns();
-
-      const element = document.createElement('div');
-      element.setAttribute('dir', 'rtl');
-      element.style.fontFamily = 'Tajawal, sans-serif';
-      element.style.padding = '20px';
-      element.style.backgroundColor = '#fff';
-      element.style.color = '#000';
-
-      const toolHeaders = activeColumns.map(name => `<th style="border:1px solid #000; padding:5px; font-size:10px;">${name}</th>`).join('');
-      
-      const rows = filteredStudents.map((s, i) => {
-          const semGrades = getSemesterGrades(s, currentSemester);
-          const toolCells = activeColumns.map(name => {
-              const g = semGrades.find(grade => grade.category.trim() === name);
-              return `<td style="border:1px solid #000; padding:5px; text-align:center;">${g ? g.score : '-'}</td>`;
-          }).join('');
-          
-          const total = semGrades.reduce((acc, g) => acc + (Number(g.score) || 0), 0);
-          const symbol = getGradeSymbol(total);
-
-          return `
-            <tr>
-                <td style="border:1px solid #000; padding:5px; text-align:center;">${i + 1}</td>
-                <td style="border:1px solid #000; padding:5px; font-weight:bold;">${s.name}</td>
-                ${toolCells}
-                <td style="border:1px solid #000; padding:5px; text-align:center; font-weight:bold; background:#f0f0f0;">${total}</td>
-                <td style="border:1px solid #000; padding:5px; text-align:center;">${symbol}</td>
-            </tr>
-          `;
-      }).join('');
-
-      element.innerHTML = `
-        <div style="text-align: center; margin-bottom: 20px;">
-            <img src="${logoBase64}" style="width: 80px; height: auto; margin-bottom: 10px; display: block; margin-left: auto; margin-right: auto;" />
-            <h3 style="margin: 5px 0; font-size: 16px; font-weight: bold;">سلطنة عمان</h3>
-            <h3 style="margin: 2px 0; font-size: 16px; font-weight: bold;">وزارة التربية والتعليم</h3>
-            <h3 style="margin: 2px 0; font-size: 16px; font-weight: bold;">المديرية العامة للتربية والتعليم لمحافظة ${teacherInfo?.governorate || '.........'}</h3>
-            <h3 style="margin: 2px 0; font-size: 16px; font-weight: bold;">مدرسة ${teacherInfo?.school || '..................'}</h3>
-            <div style="margin-top: 15px; border-top: 1px solid #000; width: 100%;"></div>
-            <h2 style="margin: 15px 0 5px 0; font-size: 20px; font-weight: bold;">سجل الدرجات - الفصل الدراسي ${currentSemester}</h2>
-            <p style="margin: 0; font-size: 14px;">المادة: ${teacherInfo?.subject || '.....'} | الصف: ${selectedClass === 'all' ? 'جميع الفصول' : selectedClass}</p>
-        </div>
-        <table style="width: 100%; border-collapse: collapse; font-size: 12px; border: 1px solid #000;">
-            <thead>
-                <tr style="background-color: #eee;">
-                    <th style="border:1px solid #000; padding:5px; width:40px;">#</th>
-                    <th style="border:1px solid #000; padding:5px;">اسم الطالب</th>
-                    ${toolHeaders}
-                    <th style="border:1px solid #000; padding:5px; width:60px;">المجموع</th>
-                    <th style="border:1px solid #000; padding:5px; width:50px;">التقدير</th>
-                </tr>
-            </thead>
-            <tbody>
-                ${rows}
-            </tbody>
-        </table>
-        <div style="margin-top: 40px; display: flex; justify-content: space-between; font-weight: bold; font-size: 14px; padding: 0 50px;">
-            <div style="text-align: center;">معلم المادة<br/>${teacherInfo?.name || ''}</div>
-            <div style="text-align: center;">يعتمد،، مدير المدرسة<br/>....................</div>
-        </div>
-      `;
-
-      if (typeof html2pdf !== 'undefined') {
-          const opt = {
-              margin: 10,
-              filename: `GradeReport_Sem${currentSemester}.pdf`,
-              image: { type: 'jpeg', quality: 0.98 },
-              html2canvas: { scale: 2 },
-              jsPDF: { unit: 'mm', format: 'a4', orientation: 'landscape' }
-          };
-          try {
-              const worker = html2pdf().set(opt).from(element).toPdf();
-              if (Capacitor.isNativePlatform()) {
-                  const pdfBase64 = await worker.output('datauristring');
-                  const base64Data = pdfBase64.split(',')[1];
-                  const result = await Filesystem.writeFile({
-                      path: opt.filename,
-                      data: base64Data,
-                      directory: Directory.Cache
-                  });
-                  await Share.share({ title: 'سجل الدرجات', url: result.uri });
-              } else {
-                  worker.save();
-              }
-          } catch (e) {
-              console.error(e);
-              alert('خطأ في إنشاء التقرير');
-          } finally {
-              setIsGeneratingPdf(false);
-          }
-      } else {
-          alert('مكتبة PDF غير متوفرة');
-          setIsGeneratingPdf(false);
-      }
-  };
-
   return (
     <div className="flex flex-col h-[calc(100vh-80px)] text-slate-900 dark:text-white pb-20">
         
@@ -531,22 +397,19 @@ const GradeBook: React.FC<GradeBookProps> = ({
         <div className={styles.header}>
             <div className="p-4 pt-6">
                 <div className="flex justify-between items-center mb-4">
-                    <h1 className="text-2xl font-black text-slate-800 dark:text-white">سجل الدرجات</h1>
+                    <h1 className="text-2xl font-black text-slate-800 dark:text-white drop-shadow-sm">سجل الدرجات</h1>
                     <div className="flex gap-2">
-                        <label className="w-10 h-10 rounded-full glass-icon text-emerald-600 dark:text-emerald-400 active:scale-95 transition-transform flex items-center justify-center cursor-pointer" title="استيراد Excel">
+                        <label className="w-10 h-10 rounded-full glass-icon text-emerald-600 dark:text-emerald-400 active:scale-95 transition-transform flex items-center justify-center cursor-pointer shadow-md border border-white/20 hover:scale-105" title="استيراد Excel">
                              {isImporting ? <Loader2 className="w-5 h-5 animate-spin"/> : <FileUp className="w-5 h-5"/>}
                              <input type="file" ref={fileInputRef} onChange={handleImportExcel} accept=".xlsx, .xls" className="hidden" />
                         </label>
-                        <button onClick={handleExportExcel} disabled={isExporting} className="w-10 h-10 rounded-full glass-icon text-indigo-600 dark:text-indigo-400 active:scale-95 transition-transform" title="تصدير Excel">
+                        <button onClick={handleExportExcel} disabled={isExporting} className="w-10 h-10 rounded-full glass-icon text-indigo-600 dark:text-indigo-400 active:scale-95 transition-transform shadow-md border border-white/20 hover:scale-105" title="تصدير Excel">
                             {isExporting ? <Loader2 className="w-5 h-5 animate-spin"/> : <FileSpreadsheet className="w-5 h-5"/>}
                         </button>
-                        <button onClick={handlePrintGradeReport} disabled={isGeneratingPdf} className="w-10 h-10 rounded-full glass-icon text-blue-600 dark:text-blue-400 active:scale-95 transition-transform" title="طباعة PDF">
-                            {isGeneratingPdf ? <Loader2 className="w-5 h-5 animate-spin"/> : <Printer className="w-5 h-5"/>}
-                        </button>
-                        <button onClick={handleClearGrades} className="w-10 h-10 rounded-full glass-icon text-rose-600 dark:text-rose-400 active:scale-95 transition-transform" title="حذف درجات الفصل الحالي">
+                        <button onClick={handleClearGrades} className="w-10 h-10 rounded-full glass-icon text-rose-600 dark:text-rose-400 active:scale-95 transition-transform shadow-md border border-white/20 hover:scale-105" title="حذف درجات الفصل الحالي">
                             <Trash2 className="w-5 h-5"/>
                         </button>
-                        <button onClick={() => setShowToolsManager(true)} className="w-10 h-10 rounded-full glass-icon text-slate-600 dark:text-white/80 active:scale-95 transition-transform" title="إعدادات أدوات التقويم">
+                        <button onClick={() => setShowToolsManager(true)} className="w-10 h-10 rounded-full glass-icon text-slate-600 dark:text-white/80 active:scale-95 transition-transform shadow-md border border-white/20 hover:scale-105" title="إعدادات أدوات التقويم">
                             <Settings className="w-5 h-5"/>
                         </button>
                     </div>
@@ -555,9 +418,9 @@ const GradeBook: React.FC<GradeBookProps> = ({
                 {/* Filters */}
                 <div className="flex items-center justify-between gap-3 mb-2">
                     <div className="flex gap-2 overflow-x-auto no-scrollbar pb-1 max-w-[70%]">
-                        <button onClick={() => setSelectedClass('all')} className={`px-4 py-2 text-xs font-bold whitespace-nowrap transition-all ${selectedClass === 'all' ? 'bg-indigo-600 text-white shadow-md' : 'glass-card text-slate-600 dark:text-white/60'} ${styles.pill}`}>الكل</button>
+                        <button onClick={() => setSelectedClass('all')} className={`px-4 py-2 text-xs font-bold whitespace-nowrap transition-all ${selectedClass === 'all' ? 'bg-indigo-600 text-white shadow-indigo-500/30' : 'glass-card text-slate-600 dark:text-white/60 hover:bg-white/10'} ${styles.pill}`}>الكل</button>
                         {classes.map(c => (
-                            <button key={c} onClick={() => setSelectedClass(c)} className={`px-4 py-2 text-xs font-bold whitespace-nowrap transition-all ${selectedClass === c ? 'bg-indigo-600 text-white shadow-md' : 'glass-card text-slate-600 dark:text-white/60'} ${styles.pill}`}>{c}</button>
+                            <button key={c} onClick={() => setSelectedClass(c)} className={`px-4 py-2 text-xs font-bold whitespace-nowrap transition-all ${selectedClass === c ? 'bg-indigo-600 text-white shadow-indigo-500/30' : 'glass-card text-slate-600 dark:text-white/60 hover:bg-white/10'} ${styles.pill}`}>{c}</button>
                         ))}
                     </div>
                     
@@ -576,7 +439,7 @@ const GradeBook: React.FC<GradeBookProps> = ({
                         placeholder="بحث عن طالب..." 
                         value={searchTerm}
                         onChange={(e) => setSearchTerm(e.target.value)}
-                        className="w-full glass-input rounded-xl py-2 pr-9 pl-4 text-xs font-bold outline-none border border-white/10 focus:border-indigo-500/50 text-slate-900 dark:text-white" 
+                        className="w-full glass-input rounded-xl py-2 pr-9 pl-4 text-xs font-bold outline-none border border-white/10 focus:border-indigo-500/50 text-slate-900 dark:text-white shadow-inner" 
                     />
                 </div>
             </div>
@@ -587,7 +450,7 @@ const GradeBook: React.FC<GradeBookProps> = ({
                     <button 
                         key={tool.id}
                         onClick={() => { setBulkFillTool(tool); setBulkScore(''); }}
-                        className="px-3 py-1.5 glass-card rounded-lg text-[10px] font-bold text-slate-600 dark:text-white/70 whitespace-nowrap hover:bg-white/10 border border-white/10 flex items-center gap-1 active:scale-95"
+                        className="px-3 py-1.5 glass-card rounded-lg text-[10px] font-bold text-slate-600 dark:text-white/70 whitespace-nowrap hover:bg-white/10 border border-white/10 flex items-center gap-1 active:scale-95 shadow-sm"
                     >
                         <Wand2 className="w-3 h-3 text-indigo-400" />
                         رصد {tool.name}
@@ -607,18 +470,21 @@ const GradeBook: React.FC<GradeBookProps> = ({
                         const totalScore = semGrades.reduce((sum, g) => sum + (Number(g.score) || 0), 0);
 
                         return (
-                            <div key={student.id} onClick={() => setShowAddGrade({ student })} className={`${styles.card} p-4 flex items-center justify-between cursor-pointer active:scale-[0.99] transition-all hover:bg-white/5`}>
-                                <div className="flex items-center gap-3">
-                                    <div className="w-10 h-10 rounded-full glass-icon flex items-center justify-center font-bold text-slate-700 dark:text-white/80 overflow-hidden shadow-sm border border-white/10">
+                            <div key={student.id} onClick={() => setShowAddGrade({ student })} className={`${styles.card} p-4 flex items-center justify-between cursor-pointer active:scale-[0.99] group`}>
+                                {/* Shimmer Effect */}
+                                <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/5 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-1000 ease-in-out pointer-events-none"></div>
+
+                                <div className="flex items-center gap-3 relative z-10">
+                                    <div className="w-12 h-12 rounded-full glass-icon flex items-center justify-center font-bold text-slate-700 dark:text-white/80 overflow-hidden shadow-md border border-white/20 group-hover:border-indigo-300/50">
                                         {student.avatar ? <img src={student.avatar} className="w-full h-full object-cover"/> : student.name.charAt(0)}
                                     </div>
                                     <div>
-                                        <h3 className="text-sm font-black text-slate-800 dark:text-white">{student.name}</h3>
-                                        <div className="flex items-center gap-2 mt-0.5">
+                                        <h3 className="text-sm font-black text-slate-800 dark:text-white group-hover:text-indigo-500 dark:group-hover:text-indigo-300 transition-colors">{student.name}</h3>
+                                        <div className="flex items-center gap-2 mt-1">
                                             {tools.slice(0, 3).map(tool => {
                                                 const grade = semGrades.find(g => g.category.trim() === tool.name.trim());
                                                 return (
-                                                    <span key={tool.id} className="text-[9px] px-1.5 py-0.5 rounded glass-card border-none text-slate-500 dark:text-white/60">
+                                                    <span key={tool.id} className="text-[9px] px-2 py-0.5 rounded-lg glass-card border border-white/10 text-slate-500 dark:text-white/60">
                                                         {tool.name}: {grade ? grade.score : '-'}
                                                     </span>
                                                 )
@@ -626,8 +492,8 @@ const GradeBook: React.FC<GradeBookProps> = ({
                                         </div>
                                     </div>
                                 </div>
-                                <div className="text-center bg-white/5 px-3 py-1 rounded-xl border border-white/10">
-                                    <span className={`block text-lg font-black ${getSymbolColor(totalScore)}`}>{totalScore}</span>
+                                <div className="text-center bg-white/5 px-3 py-1.5 rounded-xl border border-white/10 shadow-inner group-hover:bg-white/10 transition-colors relative z-10">
+                                    <span className={`block text-xl font-black ${getSymbolColor(totalScore)}`}>{totalScore}</span>
                                     <span className="text-[9px] font-bold text-slate-400 dark:text-white/40">{getGradeSymbol(totalScore)}</span>
                                 </div>
                             </div>
@@ -668,7 +534,7 @@ const GradeBook: React.FC<GradeBookProps> = ({
                             type="number" 
                             autoFocus
                             placeholder="الدرجة" 
-                            className="flex-1 glass-input rounded-xl p-3 text-center text-lg font-black outline-none border border-white/10 focus:border-indigo-500 text-slate-900 dark:text-white"
+                            className="flex-1 glass-input rounded-xl p-3 text-center text-lg font-black outline-none border border-white/10 focus:border-indigo-500 text-slate-900 dark:text-white shadow-inner"
                             value={score}
                             onChange={(e) => setScore(e.target.value)}
                         />
@@ -753,7 +619,7 @@ const GradeBook: React.FC<GradeBookProps> = ({
         <Modal isOpen={!!bulkFillTool} onClose={() => { setBulkFillTool(null); setBulkScore(''); }} className="max-w-xs rounded-[2rem]">
             {bulkFillTool && (
                 <div className="text-center">
-                    <div className="w-12 h-12 glass-icon rounded-full flex items-center justify-center mx-auto mb-3 text-indigo-500">
+                    <div className="w-12 h-12 glass-icon rounded-full flex items-center justify-center mx-auto mb-3 text-indigo-500 shadow-md border border-white/20">
                         <Wand2 className="w-6 h-6" />
                     </div>
                     <h3 className="font-black text-lg text-slate-900 dark:text-white mb-1">رصد جماعي</h3>
@@ -764,7 +630,7 @@ const GradeBook: React.FC<GradeBookProps> = ({
                         type="number" 
                         autoFocus
                         placeholder="الدرجة" 
-                        className="w-full glass-input rounded-xl p-3 text-center text-lg font-black outline-none border border-white/10 focus:border-indigo-500 mb-4 text-slate-900 dark:text-white"
+                        className="w-full glass-input rounded-xl p-3 text-center text-lg font-black outline-none border border-white/10 focus:border-indigo-500 mb-4 text-slate-900 dark:text-white shadow-inner"
                         value={bulkScore}
                         onChange={(e) => setBulkScore(e.target.value)}
                     />
