@@ -1,3 +1,4 @@
+
 {
   "name": "student-manager-app",
   "version": "3.3.0",
@@ -8,7 +9,7 @@
   },
   "main": "electron/main.js",
   "scripts": {
-    "build": "npx esbuild index.tsx --bundle --outfile=www/index.js --format=esm --jsx=automatic --minify --target=es2020 && cp index.html manifest.json www/ && (cp icon.png www/ || true) && (cp noor_logo.png www/ || true) && (cp oman_logo.png www/ || true)",
+    "build": "npx esbuild index.tsx --bundle --outfile=www/index.js --format=esm --jsx=automatic --minify --target=es2020 --external:@capacitor/* --external:react --external:react-dom --external:recharts --external:lucide-react --external:framer-motion --external:xlsx --external:html2canvas --external:jspdf --external:@google/genai && cp index.html manifest.json www/ && (cp icon.png www/ || true) && (cp noor_logo.png www/ || true) && (cp oman_logo.png www/ || true)",
     "prebuild": "mkdir -p www",
     "sync": "npx cap sync",
     "add-android": "npx cap add android",
@@ -24,6 +25,7 @@
     "@capacitor/core": "^6.2.0",
     "@capacitor/filesystem": "^6.0.0",
     "@capacitor/share": "^6.0.0",
+    "@capacitor/clipboard": "^6.0.0",
     "@capacitor/ios": "^6.2.0",
     "@capacitor/browser": "^6.0.0",
     "@capacitor/local-notifications": "^6.0.0",
@@ -34,7 +36,9 @@
     "react-dom": "18.2.0",
     "recharts": "^2.12.7",
     "xlsx": "^0.18.5",
-    "framer-motion": "^10.16.4"
+    "framer-motion": "^10.16.4",
+    "html2canvas": "^1.4.1",
+    "jspdf": "^2.5.1"
   },
   "devDependencies": {
     "@capacitor/cli": "^6.2.0",
