@@ -31,7 +31,9 @@
     "html2canvas": "^1.4.1",
     "jspdf": "^2.5.2",
     "html2pdf.js": "^0.10.1",
-    "pdfjs-dist": "^3.11.174"
+    "pdfjs-dist": "^3.11.174",
+    "dompurify": "^3.0.8",
+    "canvg": "^4.0.1"
   },
   "devDependencies": {
     "@capacitor/cli": "^6.0.0",
