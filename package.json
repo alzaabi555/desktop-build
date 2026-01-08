@@ -47,6 +47,7 @@
   "build": {
     "appId": "com.madrasati.app",
     "productName": "راصد",
+    "npmRebuild": false,
     "directories": {
       "output": "dist"
     },
