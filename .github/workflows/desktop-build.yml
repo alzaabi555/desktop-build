@@ -1,3 +1,4 @@
+
 name: Build Windows Desktop App (EXE)
 
 on:
@@ -18,9 +19,9 @@ jobs:
         with:
           node-version: 18
 
-      # تثبيت المكتبات اللازمة
+      # تثبيت المكتبات اللازمة مع تجاهل الاختيارية (مثل canvas) لتجنب أخطاء البناء
       - name: Install Dependencies
-        run: npm install
+        run: npm install --no-optional
 
       # بناء تطبيق سطح المكتب (يقوم ببناء الويب ثم تحويله لملف exe)
       # يتم استخدام الأمر الذي أضفناه سابقاً في package.json
