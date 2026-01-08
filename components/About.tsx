@@ -1,3 +1,4 @@
+
 import React, { useState, useRef } from 'react';
 import { Users, Phone } from 'lucide-react';
 import BrandLogo from './BrandLogo';
@@ -34,7 +35,7 @@ const About: React.FC = () => {
       {/* Clickable Logo Container with Secret Trigger */}
       <div 
         onClick={handleLogoClick}
-        className="w-40 h-40 glass-heavy rounded-[3rem] shadow-2xl flex items-center justify-center mb-8 border border-white/20 p-4 relative group cursor-pointer active:scale-95 transition-transform select-none"
+        className="w-40 h-40 glass-heavy rounded-[3rem] shadow-2xl flex items-center justify-center mb-8 border border-white/20 p-4 relative group cursor-pointer active:scale-95 transition-transform select-none shimmer-hover"
       >
           <div className="absolute inset-0 bg-gradient-to-tr from-indigo-500/20 to-purple-500/20 rounded-[3rem] blur-xl opacity-50 group-hover:opacity-100 transition-opacity"></div>
           <BrandLogo className="w-full h-full relative z-10" showText={false} />
@@ -48,7 +49,7 @@ const About: React.FC = () => {
       </div>
       
       <h1 className="text-5xl font-black mb-2 tracking-tighter text-glow">تطبيق راصد</h1>
-      <p className="glass-card px-6 py-2 rounded-full text-slate-500 dark:text-white/60 font-black text-xs mb-10 border-none shadow-sm">V 3.3.0 • إصدار الزجاج الفائق</p>
+      <p className="glass-card px-6 py-2 rounded-full text-slate-500 dark:text-white/60 font-black text-xs mb-10 border-none shadow-sm">V 3.6.0 • الإصدار الملكي</p>
       
       <div className="glass-heavy border border-white/10 rounded-[3rem] p-10 max-w-md w-full text-center shadow-2xl backdrop-blur-xl">
           <h2 className="text-xl font-black text-slate-800 dark:text-white mb-8 relative inline-block">
@@ -57,7 +58,7 @@ const About: React.FC = () => {
           </h2>
           
           <div className="flex flex-col gap-4">
-              <div className="flex items-center gap-5 p-5 glass-card rounded-[2rem] hover:bg-white/10 transition-transform duration-300 hover:-translate-y-1 border border-white/5">
+              <div className="flex items-center gap-5 p-5 glass-card rounded-[2rem] hover:bg-white/10 transition-transform duration-300 hover:-translate-y-1 border border-white/5 shimmer-hover">
                   <div className="w-16 h-16 bg-indigo-500/10 rounded-2xl flex items-center justify-center text-indigo-500 dark:text-indigo-300 shadow-sm shrink-0 border border-indigo-500/20">
                       <Users className="w-8 h-8" />
                   </div>
@@ -67,7 +68,7 @@ const About: React.FC = () => {
                   </div>
               </div>
 
-              <div className="flex items-center gap-5 p-5 glass-card rounded-[2rem] hover:bg-white/10 transition-transform duration-300 hover:-translate-y-1 border border-white/5">
+              <div className="flex items-center gap-5 p-5 glass-card rounded-[2rem] hover:bg-white/10 transition-transform duration-300 hover:-translate-y-1 border border-white/5 shimmer-hover">
                   <div className="w-16 h-16 bg-emerald-500/10 rounded-2xl flex items-center justify-center text-emerald-500 dark:text-emerald-300 shadow-sm shrink-0 border border-emerald-500/20">
                       <Phone className="w-8 h-8" />
                   </div>
