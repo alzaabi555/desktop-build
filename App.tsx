@@ -75,8 +75,8 @@ const AppContent: React.FC = () => {
   // Handle Activation Logic
   const handleActivation = (code: string) => {
       const validCode = generateValidCode(deviceId);
-      // Backdoor for demo/testing or exact match
-      if (code === validCode || code === 'OMAN-2025-RASED') {
+      // Master Code & Device Code Check
+      if (code === validCode || code === 'OMAN-MASTER-2026') {
           localStorage.setItem('rased_activated', 'true');
           setIsActivated(true);
           return true;
@@ -197,16 +197,13 @@ const AppContent: React.FC = () => {
       { id: 'about', label: 'حول التطبيق', icon: Info },
   ];
 
-  // Logic to determine if "More" is active (if active tab is not in the main 4 items)
   const isMoreActive = !mobileNavItems.some(item => item.id === activeTab);
 
   return (
     <div className="flex h-screen bg-[#111827] font-sans overflow-hidden text-gray-100">
         
-        {/* --- DESKTOP SIDEBAR (Visible only on md+) --- */}
+        {/* --- DESKTOP SIDEBAR --- */}
         <aside className="hidden md:flex w-72 flex-col bg-[#1f2937] border-l border-gray-700 z-50 shadow-2xl transition-all h-full">
-            
-            {/* Sidebar Header */}
             <div className="p-8 flex items-center gap-4">
                 <div className="w-12 h-12">
                     <BrandLogo className="w-full h-full" showText={false} />
@@ -217,7 +214,6 @@ const AppContent: React.FC = () => {
                 </div>
             </div>
 
-            {/* Teacher Info Card */}
             <div className="px-6 mb-6">
                 <div className="p-4 bg-[#374151] rounded-2xl flex items-center gap-3 border border-gray-600 shadow-sm">
                     <div className="w-10 h-10 rounded-full bg-[#4b5563] flex items-center justify-center overflow-hidden border border-gray-500 shadow-sm shrink-0">
@@ -230,7 +226,6 @@ const AppContent: React.FC = () => {
                 </div>
             </div>
 
-            {/* Navigation Links */}
             <nav className="flex-1 overflow-y-auto px-4 space-y-1.5 custom-scrollbar pb-4">
                 {desktopNavItems.map(item => {
                     const isActive = activeTab === item.id;
@@ -252,7 +247,6 @@ const AppContent: React.FC = () => {
                 })}
             </nav>
 
-            {/* Sidebar Footer */}
             <div className="p-6 text-center border-t border-gray-700">
                 <p className="text-[10px] font-bold text-gray-500">الإصدار 3.6.0</p>
             </div>
@@ -260,9 +254,9 @@ const AppContent: React.FC = () => {
 
         {/* --- MAIN CONTENT AREA --- */}
         <main className="flex-1 flex flex-col h-full overflow-hidden relative bg-[#111827]">
-            {/* Removed top padding here to eliminate gap. Padding/Safe Area is now handled in individual components' headers */}
+            {/* Main Scroll Container */}
             <div 
-                className="flex-1 overflow-y-auto overflow-x-hidden custom-scrollbar pb-28 md:pb-8 px-4 md:px-8"
+                className="flex-1 overflow-y-auto overflow-x-hidden custom-scrollbar pb-28 md:pb-8 px-4 md:px-8 pt-safe"
                 id="main-scroll-container"
             >
                 <div className="max-w-5xl mx-auto w-full min-h-full">
@@ -270,7 +264,7 @@ const AppContent: React.FC = () => {
                 </div>
             </div>
 
-            {/* --- MOBILE TAB BAR (Floating Design) --- */}
+            {/* --- MOBILE TAB BAR --- */}
             <div className="md:hidden fixed bottom-0 left-0 right-0 z-50 h-[60px] bg-[#1f2937] rounded-t-[2.5rem] shadow-[0_-10px_30px_rgba(0,0,0,0.4)] flex justify-around items-end pb-2 border-t border-white/5">
                 {mobileNavItems.map((item) => {
                     const isActive = activeTab === item.id;
@@ -280,7 +274,6 @@ const AppContent: React.FC = () => {
                             onClick={() => handleNavigate(item.id)}
                             className="relative w-full h-full flex flex-col items-center justify-end group pb-1"
                         >
-                            {/* Floating Active Indicator (The Bubble) */}
                             <span 
                                 className={`
                                     absolute top-0 transition-all duration-500 cubic-bezier(0.4, 0, 0.2, 1)
@@ -293,7 +286,6 @@ const AppContent: React.FC = () => {
                                {isActive && <item.icon className="w-6 h-6 text-white animate-in fade-in zoom-in duration-300" strokeWidth={2.5} />}
                             </span>
 
-                            {/* Inactive Icon (Standard position) */}
                             <span 
                                 className={`
                                     transition-all duration-300 mb-1 group-hover:scale-110 group-active:scale-95
@@ -306,7 +298,6 @@ const AppContent: React.FC = () => {
                                 <item.icon className="w-6 h-6" strokeWidth={2} />
                             </span>
 
-                            {/* Label */}
                             <span 
                                 className={`
                                     text-[10px] font-black transition-all duration-300 
@@ -319,7 +310,6 @@ const AppContent: React.FC = () => {
                     );
                 })}
                 
-                {/* More Menu Button */}
                 <button
                     onClick={() => setShowMoreMenu(true)}
                     className="relative w-full h-full flex flex-col items-center justify-end group pb-1"
@@ -360,7 +350,6 @@ const AppContent: React.FC = () => {
             </div>
         </main>
 
-        {/* --- MOBILE MORE MENU MODAL --- */}
         <Modal isOpen={showMoreMenu} onClose={() => setShowMoreMenu(false)} className="max-w-md rounded-[2rem] mb-28 md:hidden">
             <div className="text-center mb-6">
                 <div className="w-12 h-1 bg-gray-600 rounded-full mx-auto mb-4"></div>
