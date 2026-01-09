@@ -463,8 +463,8 @@ const Reports: React.FC = () => {
             : `background-color: #ffffff; border: 15px double #059669;`;
 
           const headerHtml = `
-            <div style="width:100%; text-align:center; display:flex; flex-direction:column; align-items:center; margin-bottom:15px; color:#000;">
-                ${teacherInfo.ministryLogo ? `<img src="${teacherInfo.ministryLogo}" style="height:80px; width:auto; object-fit:contain; margin-bottom:10px;" />` : ''}
+            <div style="width:100%; text-align:center; display:flex; flex-direction:column; align-items:center; margin-bottom:5px; color:#000;">
+                ${teacherInfo.ministryLogo ? `<img src="${teacherInfo.ministryLogo}" style="height:60px; width:auto; object-fit:contain; margin-bottom:5px;" />` : ''}
                 <h3 style="font-weight:bold; font-size:14px; margin:1px;">سلطنة عمان</h3>
                 <h3 style="font-weight:bold; font-size:14px; margin:1px;">وزارة التربية والتعليم</h3>
                 <h3 style="font-weight:bold; font-size:14px; margin:1px;">مدرسة ${teacherInfo.school}</h3>
@@ -481,26 +481,27 @@ const Reports: React.FC = () => {
                     <div style="position:absolute; bottom:20px; right:20px; width:50px; height:50px; border-bottom:5px solid #059669; border-right:5px solid #059669;"></div>
                 ` : ''}
                 
-                <div style="z-index:10; width:95%; height:100%; display:flex; flex-direction:column; justify-content:center; background:rgba(255,255,255,0.92); padding:30px; border-radius:30px; box-shadow:none; color: #000000 !important;">
+                <div style="z-index:10; width:95%; height:100%; display:flex; flex-direction:column; justify-content:flex-start; background:rgba(255,255,255,0.92); padding:30px; padding-top:10px; border-radius:30px; box-shadow:none; color: #000000 !important;">
                     ${headerHtml}
-                    <div style="flex:1; display:flex; flex-direction:column; justify-content:center; align-items:center;">
-                        <h1 style="font-size:42px; color:#047857 !important; margin-bottom:20px; font-weight:900; font-family:'Tajawal', serif;">${certificateSettings.title}</h1>
-                        <p style="font-size:22px; line-height:1.8; margin-bottom:20px; font-weight:bold; color:#374151 !important;">${body}</p>
+                    <div style="flex:1; display:flex; flex-direction:column; justify-content:center; align-items:center; margin-top:-20px;">
+                        <h1 style="font-size:48px; color:#047857 !important; margin-bottom:15px; font-weight:900; font-family:'Tajawal', serif;">${certificateSettings.title}</h1>
                         
-                        ${!hasPlaceholder ? `<h2 style="font-size:38px; color:#000000 !important; margin:10px 0; font-weight:900; text-decoration:underline; text-decoration-color:#059669; text-underline-offset: 8px;">${s.name}</h2>` : ''}
+                        ${!hasPlaceholder ? `<h2 style="font-size:42px; color:#000000 !important; margin:10px 0 20px 0; font-weight:900; text-decoration:underline; text-decoration-color:#059669; text-underline-offset: 8px;">${s.name}</h2>` : ''}
+
+                        <p style="font-size:24px; line-height:1.6; margin-bottom:20px; font-weight:bold; color:#374151 !important; max-width:80%;">${body}</p>
                     </div>
                     
-                    <div style="margin-top:30px; display:flex; justify-content:space-between; width:100%; padding:0 10px; color: #000000 !important; align-items:flex-end;">
+                    <div style="margin-top:20px; display:flex; justify-content:space-between; width:100%; padding:0 20px; color: #000000 !important; align-items:flex-end;">
                         <div style="text-align:center; width:30%;">
-                            <p style="font-size:16px; color:#000000 !important; margin-bottom:40px; font-weight:bold;">معلم المادة</p>
-                            <p style="font-size:18px; font-weight:900; color:#000000 !important;">${teacherInfo.name}</p>
+                            <p style="font-size:18px; color:#000000 !important; margin-bottom:40px; font-weight:bold;">معلم المادة</p>
+                            <p style="font-size:20px; font-weight:900; color:#000000 !important;">${teacherInfo.name}</p>
                         </div>
                         <div style="text-align:center; width:40%;">
-                            ${teacherInfo.stamp ? `<img src="${teacherInfo.stamp}" style="width:110px; opacity:0.8; mix-blend-mode:multiply; transform: rotate(-10deg);" />` : ''}
+                            ${teacherInfo.stamp ? `<img src="${teacherInfo.stamp}" style="width:120px; opacity:0.8; mix-blend-mode:multiply; transform: rotate(-10deg);" />` : ''}
                         </div>
                         <div style="text-align:center; width:30%;">
-                            <p style="font-size:16px; color:#000000 !important; margin-bottom:40px; font-weight:bold;">مدير المدرسة</p>
-                            <p style="font-size:18px; font-weight:900; color:#000000 !important;">....................</p>
+                            <p style="font-size:18px; color:#000000 !important; margin-bottom:40px; font-weight:bold;">مدير المدرسة</p>
+                            <p style="font-size:20px; font-weight:900; color:#000000 !important;">....................</p>
                         </div>
                     </div>
                 </div>

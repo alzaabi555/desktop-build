@@ -246,7 +246,8 @@ const Dashboard: React.FC<DashboardProps> = ({
         <div className="space-y-4 pb-20 text-gray-100 animate-in fade-in duration-500">
             
             {/* 1. Top Section: Teacher Profile Card (Sticky Header) */}
-            <div className="sticky top-0 z-40 pt-safe -mx-4 -mt-4 px-4 bg-[#111827] shadow-lg">
+            {/* Removed negative margins to prevent overlap with status bar */}
+            <div className="sticky top-0 z-40 bg-[#111827]">
                 <div className="glass-heavy bg-[#1f2937] p-4 md:p-6 pt-4 relative overflow-hidden rounded-b-[2rem] border-b border-gray-700 group">
                     <div className="relative z-10 flex items-center justify-between">
                         <button 
@@ -289,7 +290,7 @@ const Dashboard: React.FC<DashboardProps> = ({
             </div>
 
             {/* Schedule Card (Dark Gray) */}
-            <div className="glass-card bg-[#1f2937] rounded-[2.5rem] p-4 border border-gray-700 shadow-xl relative mt-4">
+            <div className="glass-card bg-[#1f2937] rounded-[2.5rem] p-4 border border-gray-700 shadow-xl relative mt-4 mx-1">
                 <div className="flex justify-between items-center mb-3">
                     <div className="flex items-center gap-2">
                         <button onClick={() => setShowScheduleModal(true)} className="w-8 h-8 glass-icon rounded-full text-gray-300 hover:bg-gray-700 transition-colors border border-gray-600 shadow-sm shimmer-hover">

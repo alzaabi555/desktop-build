@@ -45,7 +45,7 @@ const StudentItem = React.memo(({ student, onAction, currentSemester }: {
         <motion.div 
             initial={{ opacity: 0, y: 15 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.3 }}
             className="group flex flex-col sm:flex-row sm:items-center justify-between p-4 mb-3 rounded-[1.5rem] gap-4 sm:gap-0 relative overflow-hidden transition-all duration-300
-            glass-card bg-[#1f2937] hover:bg-[#374151] shadow-sm hover:shadow-md border border-gray-700 shimmer-hover"
+            glass-card bg-[#1f2937] hover:bg-[#374151] shadow-sm hover:shadow-md border border-indigo-500/40 shimmer-hover"
         >
             {/* Cleaner visual separation - Left Border Accent based on grade */}
             <div className={`absolute left-0 top-0 bottom-0 w-1.5 ${totalScore >= 90 ? 'bg-emerald-500' : totalScore >= 50 ? 'bg-indigo-500' : 'bg-rose-500'}`}></div>
@@ -298,8 +298,8 @@ const StudentList: React.FC<StudentListProps> = ({ students, classes, onAddClass
         </AnimatePresence>
 
         {/* Sticky Header - Adjusted Layout */}
-        <div className="sticky top-0 z-30 pb-2 glass-heavy bg-[#1f2937] border-b border-gray-700 shadow-md pt-safe -mx-4 px-4 -mt-4">
-            <div className="flex justify-between items-center mb-4 pt-4">
+        <div className="sticky top-0 z-30 pb-2 glass-heavy bg-[#1f2937] border-b border-gray-700 shadow-md -mx-4 px-4 -mt-4">
+            <div className="flex justify-between items-center mb-4 pt-safe mt-4">
                 <h1 className="text-2xl font-black text-white tracking-tight drop-shadow-sm">قائمة الطلاب</h1>
                 <div className="flex gap-2">
                     <button onClick={() => setShowManualAddModal(true)} className="w-10 h-10 rounded-2xl glass-icon bg-[#374151] text-indigo-400 active:scale-95 transition-all shadow-md border border-gray-600 shimmer-hover" title="إضافة طالب">
@@ -329,7 +329,6 @@ const StudentList: React.FC<StudentListProps> = ({ students, classes, onAddClass
                 {/* 2. Classes (Sub-level) + Search */}
                 <div className="flex items-center gap-3">
                     <div className="flex gap-2 overflow-x-auto no-scrollbar pb-1 max-w-[65%]">
-                        <button onClick={() => setSelectedClass('all')} className={`px-4 py-2 text-xs font-black whitespace-nowrap transition-all rounded-xl border shadow-sm ${selectedClass === 'all' ? 'bg-indigo-600 text-white border-indigo-700 shadow-indigo-500/30' : 'glass-card bg-[#374151] border-gray-600 hover:bg-[#111827] text-gray-300'}`}>الكل</button>
                         {visibleClasses.map(c => (
                             <button key={c} onClick={() => setSelectedClass(c)} className={`px-4 py-2 text-xs font-black whitespace-nowrap transition-all rounded-xl border shadow-sm ${selectedClass === c ? 'bg-indigo-600 text-white border-indigo-700 shadow-indigo-500/30' : 'glass-card bg-[#374151] border-gray-600 hover:bg-[#111827] text-gray-300'}`}>{c}</button>
                         ))}

@@ -57,7 +57,7 @@ const GradeBook: React.FC<GradeBookProps> = ({
 
   const styles = {
       card: `
-        glass-card border border-white/10 rounded-[1.8rem] 
+        glass-card border border-indigo-500/40 rounded-[1.8rem] 
         hover:border-indigo-400/50 hover:shadow-lg hover:shadow-indigo-500/20 hover:-translate-y-1 hover:bg-[#374151]
         transition-all duration-300 relative overflow-hidden backdrop-blur-md bg-[#1f2937]
       `,
@@ -453,7 +453,6 @@ const GradeBook: React.FC<GradeBookProps> = ({
 
                 {/* Classes */}
                 <div className="flex gap-2 overflow-x-auto no-scrollbar pb-1">
-                    <button onClick={() => setSelectedClass('all')} className={`px-4 py-2 text-xs font-bold whitespace-nowrap transition-all ${selectedClass === 'all' ? 'bg-indigo-600 text-white shadow-indigo-500/50' : 'glass-card text-white hover:bg-white/10'} ${styles.pill}`}>الكل</button>
                     {visibleClasses.map(c => (
                         <button key={c} onClick={() => setSelectedClass(c)} className={`px-4 py-2 text-xs font-bold whitespace-nowrap transition-all ${selectedClass === c ? 'bg-indigo-600 text-white shadow-indigo-500/50' : 'glass-card text-white hover:bg-white/10'} ${styles.pill}`}>{c}</button>
                     ))}

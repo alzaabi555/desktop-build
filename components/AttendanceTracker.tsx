@@ -202,10 +202,10 @@ const AttendanceTracker: React.FC<AttendanceTrackerProps> = ({ students, classes
     <div className="flex flex-col h-full text-gray-100 relative animate-in fade-in duration-500">
         
         {/* Sticky Header - Adjusted for safe area and removed gap */}
-        <div className="sticky top-0 z-30 pb-2 glass-heavy bg-[#1f2937] border-b border-gray-700 shadow-md pt-safe -mx-4 px-4 -mt-4">
+        <div className="sticky top-0 z-30 pb-2 glass-heavy bg-[#1f2937] border-b border-gray-700 shadow-md -mx-4 px-4 -mt-4">
             
             {/* Title & Actions */}
-            <div className="flex justify-between items-center mb-4 pt-4">
+            <div className="flex justify-between items-center mb-4 pt-safe mt-4">
                 <h1 className="text-2xl font-black tracking-tight text-white">سجل الغياب</h1>
                 <button onClick={handleExportDailyExcel} disabled={isExportingExcel} className="w-10 h-10 glass-icon bg-[#374151] border border-gray-600 rounded-full text-emerald-500 shadow-sm flex items-center justify-center active:scale-95 transition-transform hover:bg-[#4b5563]" title="تصدير سجل شهري">
                      {isExportingExcel ? <Loader2 className="w-5 h-5 animate-spin"/> : <Share2 className="w-5 h-5"/>}
@@ -234,7 +234,6 @@ const AttendanceTracker: React.FC<AttendanceTrackerProps> = ({ students, classes
                 )}
 
                 <div className="flex items-center gap-2 overflow-x-auto no-scrollbar pb-1">
-                    <button onClick={() => setClassFilter('all')} className={`px-5 py-2 text-xs font-bold whitespace-nowrap rounded-xl transition-all border ${classFilter === 'all' ? 'bg-indigo-600 text-white border-indigo-700 shadow-md' : 'glass-card bg-[#374151] text-gray-300 border-gray-600 hover:bg-[#4b5563]'}`}>الكل</button>
                     {visibleClasses.map(c => (
                         <button key={c} onClick={() => setClassFilter(c)} className={`px-5 py-2 text-xs font-bold whitespace-nowrap rounded-xl transition-all border ${classFilter === c ? 'bg-indigo-600 text-white border-indigo-700 shadow-md' : 'glass-card bg-[#374151] text-gray-300 border-gray-600 hover:bg-[#4b5563]'}`}>{c}</button>
                     ))}
@@ -279,7 +278,7 @@ const AttendanceTracker: React.FC<AttendanceTrackerProps> = ({ students, classes
                                     group flex items-center justify-between p-4 rounded-2xl border transition-all duration-300 relative overflow-hidden shimmer-hover
                                     ${status 
                                         ? 'bg-[#374151] border-indigo-500/30 shadow-[0_0_15px_rgba(99,102,241,0.15)]' 
-                                        : 'bg-[#1f2937] border-gray-700 hover:bg-[#374151] hover:border-indigo-500/50 hover:shadow-lg hover:shadow-indigo-500/10'
+                                        : 'bg-[#1f2937] border-indigo-500/40 hover:bg-[#374151] hover:border-indigo-500/50 hover:shadow-lg hover:shadow-indigo-500/10'
                                     }
                                 `}
                             >
