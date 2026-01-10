@@ -25,6 +25,7 @@ const Reports: React.FC = () => {
               if (match) grades.add(match[1]);
           }
       });
+      if (grades.size === 0 && classes.length > 0) return ['عام']; 
       return Array.from(grades).sort();
   }, [students, classes]);
 
@@ -134,23 +135,17 @@ const Reports: React.FC = () => {
       return 'هـ';
   };
 
-  // --- ROBUST PDF GENERATOR ---
+  // --- PDF GENERATOR ---
   const generateAndSharePDF = async (htmlContent: string, filename: string, landscape = false) => {
       setIsGeneratingPdf(true);
       
+      // CRITICAL FIX: Temporarily unlock body scrolling for PDF generation
+      // This solves the blank page issue caused by 'position: fixed' on body
+      document.body.classList.add('printing-mode');
+      document.documentElement.classList.add('printing-mode');
+
       const container = document.createElement('div');
       container.className = 'force-print-style';
-      // Inline styles to guarantee visibility even if body has conflicting styles
-      container.style.cssText = `
-          position: fixed; 
-          top: 0; 
-          left: 0; 
-          width: ${landscape ? '297mm' : '210mm'}; 
-          z-index: 99999; 
-          background: white !important; 
-          color: black !important;
-          visibility: visible !important;
-      `;
       container.innerHTML = htmlContent;
       document.body.appendChild(container);
 
@@ -163,14 +158,14 @@ const Reports: React.FC = () => {
               useCORS: true, 
               logging: false,
               letterRendering: true,
-              backgroundColor: '#ffffff',
-              windowWidth: landscape ? 1200 : 800
+              backgroundColor: '#ffffff'
           },
           jsPDF: { 
               unit: 'mm', 
               format: 'a4', 
               orientation: landscape ? 'landscape' : 'portrait' 
-          }
+          },
+          pagebreak: { mode: ['avoid-all', 'css', 'legacy'] } 
       };
 
       try {
@@ -189,11 +184,14 @@ const Reports: React.FC = () => {
           alert('خطأ في إنشاء PDF'); 
       } finally { 
           if (document.body.contains(container)) document.body.removeChild(container);
+          // Restore body locking
+          document.body.classList.remove('printing-mode');
+          document.documentElement.classList.remove('printing-mode');
           setIsGeneratingPdf(false); 
       }
   };
 
-  // --- 1. CLASS REPORTS (Full Logic) ---
+  // --- 1. PRINT ALL STUDENTS REPORTS (BULK) ---
   const handlePrintClassReports = async () => {
       if (filteredStudentsForStudentTab.length === 0) return alert('لا يوجد طلاب في هذا الفصل');
       
@@ -204,6 +202,7 @@ const Reports: React.FC = () => {
       let allPagesHtml = '';
 
       filteredStudentsForStudentTab.forEach((student) => {
+          // Logic from StudentReport.tsx
           const behaviors = (student.behaviors || []).filter(b => !b.semester || b.semester === (currentSemester || '1'));
           const currentSemesterGrades = (student.grades || []).filter(g => !g.semester || g.semester === (currentSemester || '1'));
           
@@ -220,9 +219,9 @@ const Reports: React.FC = () => {
                   continuousSum += score;
                   continuousRows += `
                     <tr>
-                        <td style="border:1px solid #000; padding:8px; text-align:right; color: black;">${teacherInfo.subject || 'المادة'}</td>
-                        <td style="border:1px solid #000; padding:8px; text-align:center; background-color:#ffedd5; color: black;">${tool.name}</td>
-                        <td style="border:1px solid #000; padding:8px; text-align:center; font-weight:bold; color: black;">${g ? g.score : '-'}</td>
+                        <td style="border:1px solid #000; padding:8px; text-align:right;">${teacherInfo.subject || 'المادة'}</td>
+                        <td style="border:1px solid #000; padding:8px; text-align:center; background-color:#ffedd5;">${tool.name}</td>
+                        <td style="border:1px solid #000; padding:8px; text-align:center; font-weight:bold;">${g ? g.score : '-'}</td>
                     </tr>
                   `;
               });
@@ -231,9 +230,9 @@ const Reports: React.FC = () => {
                   continuousSum += (Number(g.score) || 0);
                   continuousRows += `
                     <tr>
-                        <td style="border:1px solid #000; padding:8px; text-align:right; color: black;">${g.subject}</td>
-                        <td style="border:1px solid #000; padding:8px; text-align:center; color: black;">${g.category}</td>
-                        <td style="border:1px solid #000; padding:8px; text-align:center; font-weight:bold; color: black;">${g.score}</td>
+                        <td style="border:1px solid #000; padding:8px; text-align:right;">${g.subject}</td>
+                        <td style="border:1px solid #000; padding:8px; text-align:center;">${g.category}</td>
+                        <td style="border:1px solid #000; padding:8px; text-align:center; font-weight:bold;">${g.score}</td>
                     </tr>
                   `;
               });
@@ -246,9 +245,9 @@ const Reports: React.FC = () => {
               finalScore = g ? Number(g.score) : 0;
               finalRow = `
                 <tr>
-                    <td style="border:1px solid #000; padding:8px; text-align:right; color: black;">${teacherInfo.subject || 'المادة'}</td>
-                    <td style="border:1px solid #000; padding:8px; text-align:center; background-color:#fce7f3; color: black;">${finalTool.name} (40)</td>
-                    <td style="border:1px solid #000; padding:8px; text-align:center; font-weight:bold; color: black;">${g ? g.score : '-'}</td>
+                    <td style="border:1px solid #000; padding:8px; text-align:right;">${teacherInfo.subject || 'المادة'}</td>
+                    <td style="border:1px solid #000; padding:8px; text-align:center; background-color:#fce7f3;">${finalTool.name} (40)</td>
+                    <td style="border:1px solid #000; padding:8px; text-align:center; font-weight:bold;">${g ? g.score : '-'}</td>
                 </tr>
               `;
           }
@@ -259,8 +258,9 @@ const Reports: React.FC = () => {
 
           allPagesHtml += `
             <div style="page-break-after: always; padding: 40px; font-family: 'Tajawal', sans-serif; direction: rtl; background: white; color: black; box-sizing: border-box; height: 100vh; position: relative;">
+                
                 <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:20px; border-bottom:2px solid #eee; padding-bottom:20px;">
-                    <div style="text-align:center; width:33%; color: black;">
+                    <div style="text-align:center; width:33%;">
                         <p style="margin:0; font-weight:bold;">سلطنة عمان</p>
                         <p style="margin:0; font-weight:bold;">وزارة التربية والتعليم</p>
                         <p style="margin:0; font-weight:bold; font-size:10px;">محافظة ${teacherInfo.governorate}</p>
@@ -268,16 +268,17 @@ const Reports: React.FC = () => {
                     </div>
                     <div style="text-align:center; width:33%;">
                         ${teacherInfo.ministryLogo ? `<img src="${teacherInfo.ministryLogo}" style="height:60px; object-fit:contain;" />` : ''}
-                        <h2 style="font-weight:900; text-decoration:underline; margin-top:10px; color: black;">تقرير مستوى طالب</h2>
+                        <h2 style="font-weight:900; text-decoration:underline; margin-top:10px;">تقرير مستوى طالب</h2>
                     </div>
-                    <div style="text-align:left; width:33%; font-size:12px; font-weight:bold; color: black;">
+                    <div style="text-align:left; width:33%; font-size:12px; font-weight:bold;">
                         <p>العام الدراسي: ${teacherInfo.academicYear}</p>
                         <p>الفصل: ${currentSemester === '1' ? 'الأول' : 'الثاني'}</p>
                         <p>التاريخ: ${new Date().toLocaleDateString('en-GB')}</p>
                     </div>
                 </div>
+
                 <div style="background:#f8fafc; border:1px solid #cbd5e1; padding:15px; border-radius:10px; margin-bottom:20px; display:flex; justify-content:space-between; align-items:center;">
-                    <div style="flex:1; color: black;">
+                    <div style="flex:1;">
                         <div style="display:flex; gap:20px; margin-bottom:10px;">
                             <div><span style="color:#64748b; font-size:10px;">الاسم:</span> <strong style="font-size:16px;">${student.name}</strong></div>
                             <div style="width:1px; background:#cbd5e1;"></div>
@@ -289,30 +290,32 @@ const Reports: React.FC = () => {
                         </div>
                     </div>
                 </div>
-                <h3 style="font-weight:bold; font-size:16px; margin-bottom:10px; border-bottom:1px solid #000; padding-bottom:5px; color: black;">التحصيل الدراسي</h3>
-                <table style="width:100%; border-collapse:collapse; margin-bottom:20px; font-size:12px; color: black;">
+
+                <h3 style="font-weight:bold; font-size:16px; margin-bottom:10px; border-bottom:1px solid #000; padding-bottom:5px;">التحصيل الدراسي</h3>
+                <table style="width:100%; border-collapse:collapse; margin-bottom:20px; font-size:12px;">
                     <thead>
                         <tr style="background:#f1f5f9;">
-                            <th style="border:1px solid #000; padding:8px; color: black;">المادة</th>
-                            <th style="border:1px solid #000; padding:8px; color: black;">أداة التقويم</th>
-                            <th style="border:1px solid #000; padding:8px; color: black;">الدرجة</th>
+                            <th style="border:1px solid #000; padding:8px;">المادة</th>
+                            <th style="border:1px solid #000; padding:8px;">أداة التقويم</th>
+                            <th style="border:1px solid #000; padding:8px;">الدرجة</th>
                         </tr>
                     </thead>
                     <tbody>
                         ${continuousRows}
                         <tr style="background:#eff6ff; font-weight:bold;">
-                            <td colspan="2" style="border:1px solid #000; padding:8px; text-align:center; color: black;">المجموع (60)</td>
-                            <td style="border:1px solid #000; padding:8px; text-align:center; color: black;">${continuousSum}</td>
+                            <td colspan="2" style="border:1px solid #000; padding:8px; text-align:center;">المجموع (60)</td>
+                            <td style="border:1px solid #000; padding:8px; text-align:center;">${continuousSum}</td>
                         </tr>
                         ${finalRow}
                     </tbody>
                     <tfoot>
                         <tr style="background:#f1f5f9;">
-                            <td colspan="2" style="border:1px solid #000; padding:8px; font-weight:900; text-align:right; color: black;">المجموع الكلي</td>
-                            <td style="border:1px solid #000; padding:8px; font-weight:900; text-align:center; font-size:14px; color: black;">${totalScore}</td>
+                            <td colspan="2" style="border:1px solid #000; padding:8px; font-weight:900; text-align:right;">المجموع الكلي</td>
+                            <td style="border:1px solid #000; padding:8px; font-weight:900; text-align:center; font-size:14px;">${totalScore}</td>
                         </tr>
                     </tfoot>
                 </table>
+
                 <div style="display:flex; gap:15px; margin-bottom:20px;">
                     <div style="flex:1; border:1px solid #cbd5e1; padding:10px; border-radius:8px; text-align:center;">
                         <span style="display:block; font-size:10px; color:#64748b;">أيام الغياب</span>
@@ -323,7 +326,8 @@ const Reports: React.FC = () => {
                         <span style="font-weight:900; color:#9333ea; font-size:18px;">${truantCount}</span>
                     </div>
                 </div>
-                <div style="position:absolute; bottom:40px; left:40px; right:40px; display:flex; justify-content:space-between; align-items:flex-end; color: black;">
+
+                <div style="position:absolute; bottom:40px; left:40px; right:40px; display:flex; justify-content:space-between; align-items:flex-end;">
                     <div style="text-align:center;">
                         <p style="font-weight:bold; margin-bottom:30px;">معلم المادة</p>
                         <p>${teacherInfo.name}</p>
@@ -343,7 +347,7 @@ const Reports: React.FC = () => {
       await generateAndSharePDF(allPagesHtml, `Class_Report_${stClass}.pdf`, false);
   };
 
-  // --- 2. GRADE BOOK REPORT (Restored Original Logic) ---
+  // --- 2. GRADES RECORD PRINT ---
   const handlePrintGradeReport = async () => {
       if (filteredStudentsForGrades.length === 0) return alert('لا يوجد طلاب في هذا الفصل');
       
@@ -352,25 +356,25 @@ const Reports: React.FC = () => {
       const finalTool = assessmentTools.find(t => t.name.trim() === finalExamName);
 
       let headerHtml = `
-        <th style="width:30px; background-color:#e5e7eb; border:1px solid #000; color:black;">م</th>
-        <th style="background-color:#e5e7eb; border:1px solid #000; color:black;">اسم الطالب</th>
+        <th style="width:30px;">م</th>
+        <th>اسم الطالب</th>
       `;
       
       continuousTools.forEach(t => {
-          headerHtml += `<th style="background-color:#ffedd5; border:1px solid #000; color:black; font-size:10px;">${t.name}</th>`;
+          headerHtml += `<th style="background-color:#ffedd5 !important; color:#000 !important;">${t.name}</th>`;
       });
 
       headerHtml += `
-        <th style="width:60px; background-color:#dbeafe; border:1px solid #000; color:black; font-weight:bold;">المجموع (60)</th>
+        <th style="width:60px; background-color:#dbeafe !important; color:#000 !important; border-right: 2px solid #000 !important;">المجموع (60)</th>
       `;
 
       if (finalTool) {
-          headerHtml += `<th style="width:70px; background-color:#fce7f3; border:1px solid #000; color:black; font-size:10px;">${finalTool.name} (40)</th>`;
+          headerHtml += `<th style="width:70px; background-color:#fce7f3 !important; color:#000 !important;">${finalTool.name} (40)</th>`;
       }
 
       headerHtml += `
-        <th style="width:60px; background-color:#e5e7eb; border:1px solid #000; color:black; font-weight:bold;">المجموع الكلي</th>
-        <th style="width:40px; background-color:#e5e7eb; border:1px solid #000; color:black;">التقدير</th>
+        <th style="width:60px; background-color:#e5e7eb !important; color:#000 !important;">المجموع الكلي</th>
+        <th style="width:40px;">التقدير</th>
       `;
 
       let rowsHtml = '';
@@ -384,7 +388,7 @@ const Reports: React.FC = () => {
               const g = semGrades.find(gr => gr.category.trim() === tool.name.trim());
               const val = g ? Number(g.score) : 0;
               continuousSum += val;
-              continuousCells += `<td style="border:1px solid #000; text-align:center; color:black;">${g ? g.score : '-'}</td>`;
+              continuousCells += `<td>${g ? g.score : '-'}</td>`;
           });
 
           const finalExamGrade = finalTool ? semGrades.find(gr => gr.category.trim() === finalTool.name.trim()) : null;
@@ -392,20 +396,28 @@ const Reports: React.FC = () => {
           const totalScore = continuousSum + finalExamScore;
 
           rowsHtml += `
-            <tr style="page-break-inside: avoid;">
-                <td style="border:1px solid #000; text-align:center; color:black;">${i + 1}</td>
-                <td style="border:1px solid #000; text-align:right; padding-right:8px; font-weight:bold; color:black;">${s.name}</td>
+            <tr style="page-break-inside: avoid; break-inside: avoid;">
+                <td>${i + 1}</td>
+                <td style="text-align: right; padding-right: 8px; font-weight:bold;">${s.name}</td>
                 ${continuousCells}
-                <td style="border:1px solid #000; text-align:center; font-weight:bold; background-color:#eff6ff; color:black;">${continuousSum}</td>
-                ${finalTool ? `<td style="border:1px solid #000; text-align:center; background-color:#fdf2f8; color:black;">${finalExamGrade ? finalExamGrade.score : '-'}</td>` : ''}
-                <td style="border:1px solid #000; text-align:center; font-weight:900; background-color:#f3f4f6; color:black;">${totalScore}</td>
-                <td style="border:1px solid #000; text-align:center; color:black;">${getGradeSymbol(totalScore)}</td>
+                <td style="font-weight:900; background-color:#eff6ff !important; border-right: 2px solid #000 !important;">${continuousSum}</td>
+                ${finalTool ? `<td style="font-weight:900; background-color:#fdf2f8 !important;">${finalExamGrade ? finalExamGrade.score : '-'}</td>` : ''}
+                <td style="font-weight:900; background-color:#f3f4f6 !important;">${totalScore}</td>
+                <td>${getGradeSymbol(totalScore)}</td>
             </tr>
           `;
       });
 
       const html = `
-        <div style="padding:20px; font-family:'Tajawal', sans-serif; direction:rtl; background:white; color:black;">
+        <div id="report-content-print" class="force-print-style" style="padding:20px; font-family:'Tajawal', sans-serif; width:100%; color:black !important; background:white !important; direction:rtl;">
+            <style>
+              .force-print-style table { width: 100%; border-collapse: collapse; margin-top: 10px; border: 2px solid #000; color: #000 !important; font-size: 10px; }
+              .force-print-style th { background-color: #e5e7eb; color: #000 !important; font-weight: bold; padding: 6px; border: 1px solid #000; }
+              .force-print-style td { padding: 4px; border: 1px solid #000; text-align: center; color: #000 !important; }
+              tr { page-break-inside: avoid !important; break-inside: avoid !important; }
+              td, th { page-break-inside: avoid !important; break-inside: avoid !important; }
+            </style>
+
             <div style="text-align:center; margin-bottom:15px; border-bottom:2px solid #000; padding-bottom:10px;">
                 <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
                     <div style="text-align:right;">
@@ -427,7 +439,7 @@ const Reports: React.FC = () => {
                 </div>
             </div>
             
-            <table style="width:100%; border-collapse:collapse; font-size:10px;">
+            <table>
                 <thead><tr>${headerHtml}</tr></thead>
                 <tbody>${rowsHtml}</tbody>
             </table>
@@ -442,7 +454,7 @@ const Reports: React.FC = () => {
       await generateAndSharePDF(html, `Grades_Record_${gradesClass}.pdf`, true);
   };
 
-  // --- 3. CERTIFICATES (Restored Original Logic) ---
+  // --- CERTIFICATES PRINT LOGIC ---
   const printCertificates = async () => {
       const targets = filteredStudentsForCert.filter(s => selectedCertStudents.includes(s.id));
       if (targets.length === 0) return;
@@ -468,7 +480,7 @@ const Reports: React.FC = () => {
           `;
 
           pagesHtml += `
-            <div style="width:297mm; height:210mm; position:relative; ${bgStyle} padding:20px; box-sizing:border-box; display:flex; flex-direction:column; align-items:center; text-align:center; page-break-after: always; color:#000000 !important; background-color:#fff;">
+            <div class="force-print-style" style="width:100%; height:100vh; position:relative; ${bgStyle} padding:20px; box-sizing:border-box; display:flex; flex-direction:column; align-items:center; text-align:center; page-break-after: always; color:#000000 !important; background-color:#fff;">
                 ${!certificateSettings.backgroundImage ? `
                     <div style="position:absolute; top:25px; left:25px; right:25px; bottom:25px; border: 2px solid #059669; pointer-events:none;"></div>
                     <div style="position:absolute; top:20px; left:20px; width:50px; height:50px; border-top:5px solid #059669; border-left:5px solid #059669;"></div>
@@ -519,6 +531,7 @@ const Reports: React.FC = () => {
     }
   };
 
+  // --- 3. SUMMON LETTER PRINT LOGIC ---
   const handlePrintSummon = async () => {
       const studentName = availableStudentsForSummon.find(s=>s.id===summonStudentId)?.name || '';
       if (!studentName) { alert('يرجى اختيار الطالب أولاً'); return; }
@@ -533,7 +546,7 @@ const Reports: React.FC = () => {
         : '';
 
       const html = `
-        <div style="padding:50px; font-family:'Tajawal', serif; color:#000000 !important; background:#ffffff !important; direction:rtl; text-align:right;">
+        <div class="force-print-style" style="padding:50px; font-family:'Tajawal', serif; color:#000000 !important; background:#ffffff !important; direction:rtl; text-align:right; width:100%; height:100%;">
             <div style="text-align:center; margin-bottom:40px;">
                 ${teacherInfo.ministryLogo ? `<img src="${teacherInfo.ministryLogo}" style="width:60px; height:auto; margin:0 auto 15px auto; display:block;" />` : ''}
                 <h3 style="font-weight:bold; font-size:16px; margin:5px; color:#000000 !important;">سلطنة عمان</h3>
@@ -589,17 +602,38 @@ const Reports: React.FC = () => {
   };
 
   const handleSendSummonWhatsApp = async () => {
-    // ... (WhatsApp logic remains unchanged) ...
     const student = availableStudentsForSummon.find(s => s.id === summonStudentId);
-    if (!student || !student.parentPhone) { alert('لا يوجد رقم هاتف مسجل لولي الأمر'); return; }
+    if (!student || !student.parentPhone) {
+        alert('لا يوجد رقم هاتف مسجل لولي الأمر');
+        return;
+    }
+
     let cleanPhone = student.parentPhone.replace(/[^0-9]/g, '');
-    if (!cleanPhone || cleanPhone.length < 5) { alert('رقم الهاتف غير صحيح'); return; }
+    if (!cleanPhone || cleanPhone.length < 5) {
+        alert('رقم الهاتف غير صحيح');
+        return;
+    }
+    
     if (cleanPhone.startsWith('00')) cleanPhone = cleanPhone.substring(2);
     if (cleanPhone.length === 8) cleanPhone = '968' + cleanPhone;
     else if (cleanPhone.length === 9 && cleanPhone.startsWith('0')) cleanPhone = '968' + cleanPhone.substring(1);
+
     const msg = encodeURIComponent(`السلام عليكم، ولي أمر الطالب ${student.name}.\nنود إفادتكم بضرورة الحضور للمدرسة يوم ${summonDate} الساعة ${summonTime}.\nالسبب: ${getReasonText()}`);
-    if (window.electron) { window.electron.openExternal(`whatsapp://send?phone=${cleanPhone}&text=${msg}`); } 
-    else { const universalUrl = `https://api.whatsapp.com/send?phone=${cleanPhone}&text=${msg}`; try { if (Capacitor.isNativePlatform()) { await Browser.open({ url: universalUrl }); } else { window.open(universalUrl, '_blank'); } } catch (e) { window.open(universalUrl, '_blank'); } }
+
+    if (window.electron) {
+        window.electron.openExternal(`whatsapp://send?phone=${cleanPhone}&text=${msg}`);
+    } else {
+        const universalUrl = `https://api.whatsapp.com/send?phone=${cleanPhone}&text=${msg}`;
+        try {
+            if (Capacitor.isNativePlatform()) {
+                await Browser.open({ url: universalUrl });
+            } else {
+                window.open(universalUrl, '_blank');
+            }
+        } catch (e) {
+            window.open(universalUrl, '_blank');
+        }
+    }
   };
 
   const tabItems = [
@@ -615,7 +649,6 @@ const Reports: React.FC = () => {
 
   return (
     <div className="flex flex-col w-full max-w-5xl mx-auto space-y-6 pb-20">
-      {/* ... (UI code remains mostly the same, ensuring buttons point to restored handlers) ... */}
       <div className="flex items-center gap-4 pt-4 px-2 mb-2">
         <div className="w-14 h-14 glass-icon rounded-2xl flex items-center justify-center text-rose-500 shadow-lg border border-rose-500/20"><FileSpreadsheet size={30} /></div>
         <div><h2 className="text-3xl font-black text-white tracking-tight">مركز التقارير</h2><p className="text-gray-400 text-xs font-bold mt-1">طباعة الكشوفات والشهادات والاستدعاءات</p></div>
@@ -635,6 +668,7 @@ const Reports: React.FC = () => {
             <div className="space-y-6 animate-in fade-in slide-in-from-bottom-2 duration-300">
                  <div className="pb-4 border-b border-white/10 flex items-center gap-3"><div className="p-2 bg-indigo-900/30 rounded-xl text-indigo-400"><User size={20}/></div><div><h3 className="font-black text-lg text-white">تقرير الطالب الشامل</h3><p className="text-gray-400 text-xs font-bold">عرض وطباعة تقرير مفصل</p></div></div>
                 
+                {/* Hierarchy Filter */}
                 <div className="space-y-4">
                     {availableGrades.length > 0 && (
                         <div className="flex gap-2 overflow-x-auto no-scrollbar pb-1">
@@ -660,7 +694,6 @@ const Reports: React.FC = () => {
                 </div>
             </div>
         )}
-        
         {activeTab === 'grades_record' && (
             <div className="space-y-6 animate-in fade-in slide-in-from-bottom-2 duration-300">
                 <div className="pb-4 border-b border-white/10 flex items-center gap-3"><div className="p-2 bg-amber-900/30 rounded-xl text-amber-400"><BarChart3 size={20}/></div><div><h3 className="font-black text-lg text-white">سجل الدرجات</h3><p className="text-gray-400 text-xs font-bold">طباعة كشف درجات كامل</p></div></div>
@@ -678,7 +711,6 @@ const Reports: React.FC = () => {
                 <div className="flex justify-end pt-6"><button onClick={handlePrintGradeReport} disabled={isGeneratingPdf} className="bg-amber-500 disabled:opacity-50 text-white px-8 py-4 rounded-2xl font-black text-xs flex items-center gap-2 shadow-lg shadow-amber-500/30 hover:bg-amber-600 active:scale-95 transition-all w-full md:w-auto justify-center">{isGeneratingPdf ? <Loader2 className="animate-spin w-4 h-4"/> : <Printer size={18} />} طباعة السجل</button></div>
             </div>
         )}
-        
         {activeTab === 'certificates' && (
             <div className="space-y-6 animate-in fade-in slide-in-from-bottom-2 duration-300">
                 <div className="flex justify-between items-start pb-4 border-b border-white/10"><div className="flex items-center gap-3"><div className="p-2 bg-emerald-900/30 rounded-xl text-emerald-400"><Award size={20}/></div><div><h3 className="font-black text-lg text-white">شهادات التفوق</h3><p className="text-gray-400 text-xs font-bold">طباعة شهادات تقدير</p></div></div><button onClick={() => setShowCertSettingsModal(true)} className="p-3 bg-white/5 hover:bg-white/10 rounded-xl transition-colors text-white"><Settings className="w-5 h-5" /></button></div>
@@ -699,8 +731,6 @@ const Reports: React.FC = () => {
                 <div className="flex justify-end pt-6 border-t border-white/10 mt-2"><button onClick={printCertificates} disabled={isGeneratingPdf || selectedCertStudents.length === 0} className="bg-emerald-600 disabled:opacity-50 text-white px-8 py-4 rounded-2xl font-black text-xs flex items-center gap-2 shadow-lg shadow-emerald-500/30 hover:bg-emerald-700 active:scale-95 transition-all w-full md:w-auto justify-center">{isGeneratingPdf ? <Loader2 className="animate-spin w-4 h-4"/> : <Award size={18} />} طباعة الشهادات</button></div>
             </div>
         )}
-        
-        {/* Summon tab UI (unchanged) ... */}
         {activeTab === 'summon' && (
             <div className="space-y-6 animate-in fade-in slide-in-from-bottom-2 duration-300">
                 <div className="pb-4 border-b border-white/10 flex items-center gap-3"><div className="p-2 bg-rose-900/30 rounded-xl text-rose-400"><FileWarning size={20}/></div><div><h3 className="font-black text-lg text-white">استدعاء ولي أمر</h3><p className="text-gray-400 text-xs font-bold">إنشاء خطاب رسمي</p></div></div>
@@ -730,7 +760,6 @@ const Reports: React.FC = () => {
         )}
       </div>
 
-      {/* Summon Preview Modal (Using same robust PDF generator logic) */}
       {showSummonPreview && (
         <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/80 backdrop-blur-sm p-4" onClick={() => setShowSummonPreview(false)}>
             <div className="bg-white w-full max-w-4xl h-[90vh] rounded-2xl flex flex-col overflow-hidden" onClick={e => e.stopPropagation()}>

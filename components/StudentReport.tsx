@@ -1,12 +1,12 @@
 
 import React, { useState } from 'react';
-import { Student, GradeRecord } from '../types';
-import { Award, AlertCircle, Trash2, Loader2, FileText, LayoutList, ArrowRight, Printer, CalendarX, DoorOpen } from 'lucide-react';
+import { Student } from '../types';
+import { Award, AlertCircle, Trash2, Loader2, FileText, LayoutList, ArrowRight, Printer } from 'lucide-react';
 import { Filesystem, Directory } from '@capacitor/filesystem';
 import { Share } from '@capacitor/share';
 import { Capacitor } from '@capacitor/core';
 import { useApp } from '../context/AppContext';
-import html2pdf from 'html2pdf.js'; // Explicit import to fix "library not ready"
+import html2pdf from 'html2pdf.js';
 
 interface StudentReportProps {
   student: Student;
@@ -17,7 +17,7 @@ interface StudentReportProps {
 }
 
 const StudentReport: React.FC<StudentReportProps> = ({ student, onUpdateStudent, currentSemester, teacherInfo, onBack }) => {
-  const { assessmentTools, certificateSettings } = useApp();
+  const { assessmentTools } = useApp();
   const [isGeneratingPdf, setIsGeneratingPdf] = useState(false);
   
   const behaviors = (student.behaviors || []).filter(b => !b.semester || b.semester === (currentSemester || '1'));
@@ -66,35 +66,58 @@ const StudentReport: React.FC<StudentReportProps> = ({ student, onUpdateStudent,
       }
   };
 
-  const exportPDF = async (element: HTMLElement, filename: string, setLoader: (val: boolean) => void, orientation: 'portrait' | 'landscape' = 'portrait') => {
-    setLoader(true);
-    const opt = {
-        margin: 0,
-        filename: filename,
-        image: { type: 'jpeg', quality: 1.0 },
-        html2canvas: { scale: 2, useCORS: true, letterRendering: true, scrollY: 0 },
-        jsPDF: { unit: 'mm', format: 'a4', orientation: orientation }
-    };
-
-    try {
-        const worker = html2pdf().set(opt).from(element).toPdf();
-        if (Capacitor.isNativePlatform()) {
-             const pdfBase64 = await worker.output('datauristring');
-             const base64Data = pdfBase64.split(',')[1];
-             const result = await Filesystem.writeFile({ path: filename, data: base64Data, directory: Directory.Cache });
-             await Share.share({ title: filename, url: result.uri, dialogTitle: 'مشاركة/حفظ' });
-        } else {
-             worker.save();
-        }
-    } catch (err) { console.error('PDF Error:', err); } finally { setLoader(false); }
-  };
-
   const handlePrintReport = async () => {
       const element = document.getElementById('report-content');
-      if (element) {
-          await exportPDF(element, `Report_${student.name}.pdf`, setIsGeneratingPdf);
-      } else {
+      if (!element) {
           alert('خطأ في تحديد محتوى التقرير');
+          return;
+      }
+
+      setIsGeneratingPdf(true);
+
+      // --- CRITICAL FIX FOR BLANK PAGES ---
+      // Temporarily unlock the body/html overflow so html2pdf can scroll and capture everything
+      document.body.classList.add('printing-mode');
+      document.documentElement.classList.add('printing-mode');
+
+      const opt = {
+          margin: 0,
+          filename: `Report_${student.name}.pdf`,
+          image: { type: 'jpeg', quality: 0.98 },
+          html2canvas: { 
+              scale: 2, 
+              useCORS: true, 
+              logging: false, 
+              letterRendering: true,
+              scrollY: 0,
+              windowWidth: 800 // Force width to ensure layout consistency
+          },
+          jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
+      };
+
+      try {
+          const worker = html2pdf().set(opt).from(element).toPdf();
+          
+          if (Capacitor.isNativePlatform()) {
+               const pdfBase64 = await worker.output('datauristring');
+               const base64Data = pdfBase64.split(',')[1];
+               const result = await Filesystem.writeFile({ 
+                   path: `Report_${student.name}.pdf`, 
+                   data: base64Data, 
+                   directory: Directory.Cache 
+               });
+               await Share.share({ title: `Report_${student.name}`, url: result.uri });
+          } else {
+               worker.save();
+          }
+      } catch (err) { 
+          console.error('PDF Error:', err); 
+          alert('حدث خطأ أثناء إنشاء ملف PDF');
+      } finally { 
+          // --- RESTORE SCROLL LOCK ---
+          document.body.classList.remove('printing-mode');
+          document.documentElement.classList.remove('printing-mode');
+          setIsGeneratingPdf(false); 
       }
   };
 
