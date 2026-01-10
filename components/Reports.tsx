@@ -1,5 +1,5 @@
 import React, { useState, useMemo, useEffect } from 'react';
-import { Printer, FileSpreadsheet, User, Award, BarChart3, Check, Settings, FileWarning, Share2, ChevronDown, X, FileText, Loader2, ListChecks, Eye, Layers, ArrowLeft, ArrowRight } from 'lucide-react';
+import { Printer, FileSpreadsheet, User, Award, BarChart3, Check, Settings, FileWarning, ChevronDown, FileText, Loader2, ListChecks, Eye, Layers, ArrowRight, ArrowLeft } from 'lucide-react';
 import { useApp } from '../context/AppContext';
 import { Student } from '../types';
 import StudentReport from './StudentReport';
@@ -9,7 +9,7 @@ import { Share } from '@capacitor/share';
 import { Capacitor } from '@capacitor/core';
 import html2pdf from 'html2pdf.js';
 
-// --- 1. مكون المعاينة والطباعة (المحرك) ---
+// --- 1. مكون المعاينة والطباعة (نفس المنطق الناجح) ---
 const PrintPreviewModal: React.FC<{ 
     isOpen: boolean; 
     onClose: () => void; 
@@ -24,10 +24,10 @@ const PrintPreviewModal: React.FC<{
         if (!element) return;
 
         setIsPrinting(true);
+        // التمرير للأعلى لضمان التقاط البداية
         const scrollContainer = document.getElementById('preview-scroll-container');
         if (scrollContainer) scrollContainer.scrollTop = 0;
 
-        // إعدادات دقيقة لتفادي المشاكل
         const opt = {
             margin: 5,
             filename: `${title.replace(/\s/g, '_')}.pdf`,
@@ -37,11 +37,13 @@ const PrintPreviewModal: React.FC<{
                 useCORS: true, 
                 logging: false,
                 backgroundColor: '#ffffff',
-                windowWidth: landscape ? 1123 : 794 // A4 Pixel sizes
+                // هنا التعديل: توسيع العرض إذا كانت شهادة (Landscape)
+                windowWidth: landscape ? 1123 : 794 
             },
             jsPDF: { 
                 unit: 'mm', 
                 format: 'a4', 
+                // هنا التعديل: توجيه الصفحة
                 orientation: landscape ? 'landscape' : 'portrait' 
             },
             pagebreak: { mode: ['avoid-all', 'css', 'legacy'] }
@@ -63,7 +65,7 @@ const PrintPreviewModal: React.FC<{
             }
         } catch (e) {
             console.error("Print Error:", e);
-            alert('حدث خطأ أثناء إنشاء ملف الطباعة.');
+            alert('حدث خطأ أثناء الطباعة.');
         } finally {
             setIsPrinting(false);
         }
@@ -73,13 +75,13 @@ const PrintPreviewModal: React.FC<{
 
     return (
         <div className="fixed inset-0 z-[9999] bg-black/95 backdrop-blur-sm flex flex-col animate-in fade-in duration-200">
-            {/* Top Bar */}
+            {/* الشريط العلوي */}
             <div className="bg-slate-900 text-white p-4 flex justify-between items-center border-b border-white/10 shrink-0 shadow-xl">
                 <div className="flex items-center gap-3">
                     <button onClick={onClose} className="p-2 hover:bg-white/10 rounded-full transition-colors"><ArrowRight className="w-6 h-6" /></button>
                     <div>
                         <h3 className="font-bold text-lg">{title}</h3>
-                        <p className="text-xs text-slate-400">{landscape ? 'عرضي (Landscape)' : 'طولي (Portrait)'}</p>
+                        <p className="text-xs text-slate-400">{landscape ? 'وضع أفقي (Landscape)' : 'وضع عمودي (Portrait)'}</p>
                     </div>
                 </div>
                 <button 
@@ -92,13 +94,13 @@ const PrintPreviewModal: React.FC<{
                 </button>
             </div>
 
-            {/* Content Area */}
+            {/* منطقة العرض */}
             <div id="preview-scroll-container" className="flex-1 overflow-auto bg-slate-800 p-4 md:p-8 flex justify-center">
                 <div 
                     id="preview-content-area" 
                     className="bg-white text-black shadow-2xl origin-top"
                     style={{ 
-                        // Fix dimensions strictly for A4
+                        // أبعاد ثابتة لورقة A4 حسب الوضعية
                         width: landscape ? '297mm' : '210mm', 
                         minHeight: landscape ? '210mm' : '297mm',
                         padding: '10mm',
@@ -116,7 +118,6 @@ const PrintPreviewModal: React.FC<{
 // --- 2. القوالب (Templates) ---
 
 const GradesTemplate = ({ students, tools, finalTool, teacherInfo, semester, gradeClass }: any) => {
-    // Safety check
     if (!students || students.length === 0) return <div>لا توجد بيانات</div>;
 
     return (
@@ -192,7 +193,7 @@ const CertificatesTemplate = ({ students, settings, teacherInfo }: any) => {
             {students.map((s: any) => {
                 const body = settings.bodyText.replace(/(الطالبة|الطالب)/g, `<span style="font-weight:900; font-size: 1.2em; color: #065f46; margin: 0 5px;">${s.name}</span>`);
                 
-                // Landscape Certificate Style
+                // تصميم الشهادة ليكون مناسباً للوضع الأفقي (Landscape)
                 const bgStyle = settings.backgroundImage 
                     ? { backgroundImage: `url('${settings.backgroundImage}')`, backgroundSize: 'cover', backgroundPosition: 'center' }
                     : { border: '15px double #059669' };
@@ -250,11 +251,12 @@ const SummonTemplate = ({ student, teacherInfo, data }: any) => {
 
             <h2 className="text-center text-3xl font-black underline mb-8">استدعاء ولي أمر</h2>
 
-            <p className="text-lg leading-loose text-justify mb-6">
+            <p className="text-xl leading-loose text-justify mb-6">
                 السلام عليكم ورحمة الله وبركاته،،،<br/>
                 نود إفادتكم بضرورة الحضور إلى المدرسة يوم <strong>{data.date}</strong> الساعة <strong>{data.time}</strong>، وذلك لمناقشة الأمر التالي:
             </p>
 
+            {/* هنا يظهر السبب الذي تم اختياره أو كتابته */}
             <div className="bg-gray-100 border-2 border-black p-5 text-center text-xl font-bold rounded-xl mb-8 shadow-sm">
                 {data.reason}
             </div>
@@ -279,7 +281,7 @@ const SummonTemplate = ({ student, teacherInfo, data }: any) => {
     );
 };
 
-// --- المكون الرئيسي ---
+// --- المكون الرئيسي (Reports) ---
 const Reports: React.FC = () => {
   const { students, setStudents, classes, teacherInfo, currentSemester, assessmentTools, certificateSettings, setCertificateSettings } = useApp();
   const [activeTab, setActiveTab] = useState<'student_report' | 'grades_record' | 'certificates' | 'summon'>('student_report');
@@ -303,7 +305,7 @@ const Reports: React.FC = () => {
   const [summonClass, setSummonClass] = useState<string>('');
   const [summonStudentId, setSummonStudentId] = useState<string>('');
   
-  // بيانات الاستدعاء + السبب الخاص
+  // بيانات الاستدعاء + السبب الخاص (تمت إعادته)
   const [summonData, setSummonData] = useState({ 
       date: new Date().toISOString().split('T')[0], 
       time: '09:00', 
@@ -316,7 +318,7 @@ const Reports: React.FC = () => {
   // Preview State
   const [previewData, setPreviewData] = useState<{ isOpen: boolean; title: string; content: React.ReactNode; landscape?: boolean }>({ isOpen: false, title: '', content: null });
 
-  // Helpers
+  // Helpers & Effects
   const availableGrades = useMemo(() => {
       const grades = new Set<string>();
       students.forEach(s => {
@@ -371,6 +373,7 @@ const Reports: React.FC = () => {
     const continuousTools = assessmentTools.filter(t => t.name.trim() !== finalExamName);
     const finalTool = assessmentTools.find(t => t.name.trim() === finalExamName);
     
+    // Landscape is vital for Grades
     setPreviewData({ 
         isOpen: true, 
         title: 'سجل الدرجات', 
@@ -383,6 +386,7 @@ const Reports: React.FC = () => {
     const targets = filteredStudentsForCert.filter(s => selectedCertStudents.includes(s.id));
     if (targets.length === 0) return;
     
+    // Landscape is vital for Certificates
     setPreviewData({ 
         isOpen: true, 
         title: 'شهادات التقدير', 
@@ -471,15 +475,19 @@ const Reports: React.FC = () => {
         {activeTab === 'certificates' && (
             <div className="space-y-6">
                 <div className="flex justify-between items-center pb-4 border-b border-slate-100"><h3 className="font-black text-lg text-slate-800">شهادات التقدير</h3><button onClick={() => setShowCertSettingsModal(true)} className="p-2 bg-slate-100 rounded-lg text-slate-600"><Settings size={18}/></button></div>
+                {/* Filters */}
                 <div className="space-y-4">
                     <div className="flex gap-2 overflow-x-auto pb-1">{availableGrades.map(g => <button key={g} onClick={() => setCertGrade(g)} className={`px-4 py-1.5 text-xs font-bold rounded-xl border ${certGrade === g ? 'bg-emerald-600 text-white' : 'bg-slate-100 text-slate-600'}`}>صف {g}</button>)}</div>
                     <select value={certClass} onChange={(e) => { setCertClass(e.target.value); setSelectedCertStudents([]); }} className="w-full p-4 bg-slate-50 border border-slate-200 rounded-2xl font-bold text-slate-700">{getClassesForGrade(certGrade).map(c => <option key={c} value={c}>{c}</option>)}</select>
                 </div>
+                {/* Student Selection */}
                 <div className="space-y-2">
                     <div className="flex justify-between px-2"><label className="text-xs font-bold text-slate-500">الطلاب ({selectedCertStudents.length})</label><button onClick={selectAllCertStudents} className="text-xs font-bold text-emerald-600">تحديد الكل</button></div>
                     <div className="grid grid-cols-2 gap-2 max-h-60 overflow-y-auto p-1 custom-scrollbar">
                         {filteredStudentsForCert.map(s => (
-                            <button key={s.id} onClick={() => toggleCertStudent(s.id)} className={`p-3 rounded-xl border text-xs font-bold flex justify-between ${selectedCertStudents.includes(s.id) ? 'bg-emerald-600 text-white border-emerald-600' : 'bg-white border-slate-200 text-slate-600'}`}>{s.name} {selectedCertStudents.includes(s.id) && <Check size={14}/>}</button>
+                            <button key={s.id} onClick={() => toggleCertStudent(s.id)} className={`p-3 rounded-xl border text-xs font-bold flex justify-between ${selectedCertStudents.includes(s.id) ? 'bg-emerald-600 text-white border-emerald-600' : 'bg-white border-slate-200 text-slate-600'}`}>
+                                {s.name} {selectedCertStudents.includes(s.id) && <Check size={14}/>}
+                            </button>
                         ))}
                     </div>
                 </div>
@@ -497,8 +505,8 @@ const Reports: React.FC = () => {
                      <select value={summonStudentId} onChange={(e) => setSummonStudentId(e.target.value)} className="p-4 bg-slate-50 border border-slate-200 rounded-2xl font-bold text-slate-700"><option value="">الطالب...</option>{availableStudentsForSummon.map(s => <option key={s.id} value={s.id}>{s.name}</option>)}</select>
                 </div>
                 
+                {/* Reason Selection */}
                 <div className="space-y-2">
-                    <label className="text-xs font-bold text-slate-500">سبب الاستدعاء</label>
                     <div className="flex flex-wrap gap-2">{[{ id: 'absence', label: 'غياب' }, { id: 'truant', label: 'تسرب' }, { id: 'behavior', label: 'سلوك' }, { id: 'level', label: 'مستوى' }, { id: 'other', label: 'أخرى (اكتب السبب)' }].map((r) => (<button key={r.id} onClick={() => setSummonData({...summonData, reasonType: r.id})} className={`px-4 py-2 rounded-xl text-xs font-bold border ${summonData.reasonType === r.id ? 'bg-rose-600 text-white' : 'bg-slate-50 text-slate-600'}`}>{r.label}</button>))}</div>
                     
                     {/* The Fixed Custom Reason Input */}
