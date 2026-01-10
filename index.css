@@ -92,35 +92,34 @@ html, body {
 
 /* 
    ==========================================================================
-   ISOLATED PRINT CONTAINER (The Real Fix)
-   This forces a "Clean Slate" for the PDF generator without touching body.
+   ISOLATED PRINT CONTAINER (FIXED VERSION)
    ========================================================================== 
 */
 .pdf-export-container {
-    position: fixed;
+    /* Changed from fixed to absolute to avoid cropping/blank issues */
+    position: absolute; 
     top: 0;
     left: 0;
+    /* Move it off-screen but keep it rendered */
+    z-index: -1000; 
     width: 210mm; /* A4 Width */
     min-height: 297mm;
     background-color: #ffffff !important;
     color: #000000 !important;
-    z-index: 99999;
     padding: 0;
     margin: 0;
     box-sizing: border-box;
     font-family: 'Tajawal', sans-serif;
-    overflow: visible !important;
-    pointer-events: none; /* Prevent interaction while printing */
 }
 
-/* Force ALL children to be black text on white bg */
+/* CRITICAL FIX: 
+   Removed "background-color: transparent !important" 
+   We want styles defined in JS/HTML (like table row colors) to persist.
+*/
 .pdf-export-container * {
-    color: #000000 !important;
-    background-color: transparent !important;
+    color: #000000 !important; /* Force text black */
     text-shadow: none !important;
     box-shadow: none !important;
-    border-color: #000000 !important;
-    -webkit-text-fill-color: #000000 !important;
     print-color-adjust: exact;
     -webkit-print-color-adjust: exact;
 }
@@ -132,14 +131,6 @@ html, body {
     border: 1px solid #000000 !important;
     border-collapse: collapse !important;
 }
-
-/* Ensure background colors for headers print correctly (using important) */
-.pdf-export-container .bg-gray-100 { background-color: #f3f4f6 !important; }
-.pdf-export-container .bg-orange-100 { background-color: #ffedd5 !important; }
-.pdf-export-container .bg-blue-100 { background-color: #dbeafe !important; }
-.pdf-export-container .bg-pink-100 { background-color: #fce7f3 !important; }
-.pdf-export-container .bg-green-100 { background-color: #dcfce7 !important; }
-.pdf-export-container .bg-red-100 { background-color: #fee2e2 !important; }
 
 /* Hide unwanted elements */
 .pdf-export-container button,
