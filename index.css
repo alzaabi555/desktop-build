@@ -90,85 +90,59 @@ html, body {
 }
 .shimmer-hover:hover::before { transform: translateX(100%); }
 
-/* ==========================================================================
-   PRINTING MODE (THE FIX)
-   These rules activate ONLY when generating PDF, forcing High Contrast (Black on White)
-   ========================================================================== */
-
-/* 1. Unlock Body/HTML */
-.printing-mode body, 
-.printing-mode html {
-    position: static !important;
-    overflow: visible !important;
-    height: auto !important;
-    width: 100% !important;
-    background-color: white !important;
-    color: black !important;
-}
-
-/* 2. Force Container Styles */
-.printing-mode .force-print-style,
-.printing-mode #report-content {
+/* 
+   ==========================================================================
+   ISOLATED PRINT CONTAINER (The Real Fix)
+   This forces a "Clean Slate" for the PDF generator without touching body.
+   ========================================================================== 
+*/
+.pdf-export-container {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 210mm; /* A4 Width */
+    min-height: 297mm;
     background-color: #ffffff !important;
     color: #000000 !important;
-    box-shadow: none !important;
-    border: none !important;
+    z-index: 99999;
+    padding: 0;
+    margin: 0;
+    box-sizing: border-box;
+    font-family: 'Tajawal', sans-serif;
+    overflow: visible !important;
+    pointer-events: none; /* Prevent interaction while printing */
 }
 
-/* 3. AGGRESSIVE TEXT COLOR OVERRIDE (Fixes White Name Issue) */
-.printing-mode .force-print-style *,
-.printing-mode #report-content * {
-    color: #000000 !important; /* Force ALL text to black */
-    background-color: transparent !important; /* Remove dark backgrounds */
+/* Force ALL children to be black text on white bg */
+.pdf-export-container * {
+    color: #000000 !important;
+    background-color: transparent !important;
     text-shadow: none !important;
     box-shadow: none !important;
     border-color: #000000 !important;
-    --tw-text-opacity: 1 !important;
     -webkit-text-fill-color: #000000 !important;
+    print-color-adjust: exact;
+    -webkit-print-color-adjust: exact;
 }
 
-/* 4. Specific overrides for elements that might have high specificity */
-.printing-mode .text-white,
-.printing-mode .text-slate-900,
-.printing-mode .text-gray-100,
-.printing-mode h1, 
-.printing-mode h2, 
-.printing-mode h3, 
-.printing-mode span, 
-.printing-mode p, 
-.printing-mode div {
-    color: #000000 !important;
+/* Restore borders for tables */
+.pdf-export-container table, 
+.pdf-export-container th, 
+.pdf-export-container td {
+    border: 1px solid #000000 !important;
+    border-collapse: collapse !important;
 }
 
-/* 5. Handle Tables Borders in Print Mode */
-.printing-mode table, 
-.printing-mode th, 
-.printing-mode td {
-    border-color: #000000 !important;
-    color: #000000 !important;
-}
+/* Ensure background colors for headers print correctly (using important) */
+.pdf-export-container .bg-gray-100 { background-color: #f3f4f6 !important; }
+.pdf-export-container .bg-orange-100 { background-color: #ffedd5 !important; }
+.pdf-export-container .bg-blue-100 { background-color: #dbeafe !important; }
+.pdf-export-container .bg-pink-100 { background-color: #fce7f3 !important; }
+.pdf-export-container .bg-green-100 { background-color: #dcfce7 !important; }
+.pdf-export-container .bg-red-100 { background-color: #fee2e2 !important; }
 
-/* 6. Hide Elements not needed in print */
-.printing-mode button,
-.printing-mode .no-print {
+/* Hide unwanted elements */
+.pdf-export-container button,
+.pdf-export-container .no-print {
     display: none !important;
-}
-
-/* --- NATIVE PRINT MEDIA QUERY (Backup) --- */
-@media print {
-  @page { margin: 0; size: auto; }
-  html, body {
-    position: static !important; overflow: visible !important; height: auto !important;
-    width: 100% !important; background-color: #ffffff !important; color: #000000 !important;
-  }
-  #root, nav, aside, .no-print, header, .header-actions, .ios-tab-bar, button { display: none !important; }
-  .force-print-style {
-    display: block !important; position: absolute !important; left: 0 !important; top: 0 !important;
-    width: 100% !important; height: auto !important; z-index: 9999;
-    background-color: #ffffff !important; color: #000000 !important;
-  }
-  .force-print-style * {
-      color: #000000 !important; background-color: transparent !important;
-      text-shadow: none !important; box-shadow: none !important; border-color: #000000 !important;
-  }
 }
