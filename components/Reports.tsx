@@ -25,7 +25,6 @@ const Reports: React.FC = () => {
               if (match) grades.add(match[1]);
           }
       });
-      // REMOVED "GENERAL" FALLBACK: Return empty array if no specific grades found to hide the filter
       return Array.from(grades).sort();
   }, [students, classes]);
 
@@ -135,14 +134,23 @@ const Reports: React.FC = () => {
       return 'هـ';
   };
 
-  // --- PDF GENERATOR ---
+  // --- ROBUST PDF GENERATOR ---
   const generateAndSharePDF = async (htmlContent: string, filename: string, landscape = false) => {
       setIsGeneratingPdf(true);
       
       const container = document.createElement('div');
       container.className = 'force-print-style';
-      // Inline styles to strictly force white background and black text on the container level
-      container.style.cssText = 'position: absolute; top: -9999px; left: -9999px; width: 100%; color: black !important; background: white !important;';
+      // Inline styles to guarantee visibility even if body has conflicting styles
+      container.style.cssText = `
+          position: fixed; 
+          top: 0; 
+          left: 0; 
+          width: ${landscape ? '297mm' : '210mm'}; 
+          z-index: 99999; 
+          background: white !important; 
+          color: black !important;
+          visibility: visible !important;
+      `;
       container.innerHTML = htmlContent;
       document.body.appendChild(container);
 
@@ -155,14 +163,14 @@ const Reports: React.FC = () => {
               useCORS: true, 
               logging: false,
               letterRendering: true,
-              backgroundColor: '#ffffff' // Crucial for non-transparent PDF
+              backgroundColor: '#ffffff',
+              windowWidth: landscape ? 1200 : 800
           },
           jsPDF: { 
               unit: 'mm', 
               format: 'a4', 
               orientation: landscape ? 'landscape' : 'portrait' 
-          },
-          pagebreak: { mode: ['avoid-all', 'css', 'legacy'] } 
+          }
       };
 
       try {
@@ -185,7 +193,7 @@ const Reports: React.FC = () => {
       }
   };
 
-  // --- 1. PRINT ALL STUDENTS REPORTS (BULK) ---
+  // --- 1. CLASS REPORTS (Full Logic) ---
   const handlePrintClassReports = async () => {
       if (filteredStudentsForStudentTab.length === 0) return alert('لا يوجد طلاب في هذا الفصل');
       
@@ -196,7 +204,6 @@ const Reports: React.FC = () => {
       let allPagesHtml = '';
 
       filteredStudentsForStudentTab.forEach((student) => {
-          // Logic from StudentReport.tsx
           const behaviors = (student.behaviors || []).filter(b => !b.semester || b.semester === (currentSemester || '1'));
           const currentSemesterGrades = (student.grades || []).filter(g => !g.semester || g.semester === (currentSemester || '1'));
           
@@ -252,7 +259,6 @@ const Reports: React.FC = () => {
 
           allPagesHtml += `
             <div style="page-break-after: always; padding: 40px; font-family: 'Tajawal', sans-serif; direction: rtl; background: white; color: black; box-sizing: border-box; height: 100vh; position: relative;">
-                
                 <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:20px; border-bottom:2px solid #eee; padding-bottom:20px;">
                     <div style="text-align:center; width:33%; color: black;">
                         <p style="margin:0; font-weight:bold;">سلطنة عمان</p>
@@ -270,7 +276,6 @@ const Reports: React.FC = () => {
                         <p>التاريخ: ${new Date().toLocaleDateString('en-GB')}</p>
                     </div>
                 </div>
-
                 <div style="background:#f8fafc; border:1px solid #cbd5e1; padding:15px; border-radius:10px; margin-bottom:20px; display:flex; justify-content:space-between; align-items:center;">
                     <div style="flex:1; color: black;">
                         <div style="display:flex; gap:20px; margin-bottom:10px;">
@@ -284,7 +289,6 @@ const Reports: React.FC = () => {
                         </div>
                     </div>
                 </div>
-
                 <h3 style="font-weight:bold; font-size:16px; margin-bottom:10px; border-bottom:1px solid #000; padding-bottom:5px; color: black;">التحصيل الدراسي</h3>
                 <table style="width:100%; border-collapse:collapse; margin-bottom:20px; font-size:12px; color: black;">
                     <thead>
@@ -309,7 +313,6 @@ const Reports: React.FC = () => {
                         </tr>
                     </tfoot>
                 </table>
-
                 <div style="display:flex; gap:15px; margin-bottom:20px;">
                     <div style="flex:1; border:1px solid #cbd5e1; padding:10px; border-radius:8px; text-align:center;">
                         <span style="display:block; font-size:10px; color:#64748b;">أيام الغياب</span>
@@ -320,7 +323,6 @@ const Reports: React.FC = () => {
                         <span style="font-weight:900; color:#9333ea; font-size:18px;">${truantCount}</span>
                     </div>
                 </div>
-
                 <div style="position:absolute; bottom:40px; left:40px; right:40px; display:flex; justify-content:space-between; align-items:flex-end; color: black;">
                     <div style="text-align:center;">
                         <p style="font-weight:bold; margin-bottom:30px;">معلم المادة</p>
@@ -341,10 +343,8 @@ const Reports: React.FC = () => {
       await generateAndSharePDF(allPagesHtml, `Class_Report_${stClass}.pdf`, false);
   };
 
-  // ... (Other functions like handlePrintGradeReport remain but use generateAndSharePDF)
-
+  // --- 2. GRADE BOOK REPORT (Restored Original Logic) ---
   const handlePrintGradeReport = async () => {
-      // ... (Same logic as existing, just ensuring colors are black)
       if (filteredStudentsForGrades.length === 0) return alert('لا يوجد طلاب في هذا الفصل');
       
       const finalExamName = "الامتحان النهائي";
@@ -352,25 +352,25 @@ const Reports: React.FC = () => {
       const finalTool = assessmentTools.find(t => t.name.trim() === finalExamName);
 
       let headerHtml = `
-        <th style="width:30px;">م</th>
-        <th>اسم الطالب</th>
+        <th style="width:30px; background-color:#e5e7eb; border:1px solid #000; color:black;">م</th>
+        <th style="background-color:#e5e7eb; border:1px solid #000; color:black;">اسم الطالب</th>
       `;
       
       continuousTools.forEach(t => {
-          headerHtml += `<th style="background-color:#ffedd5 !important; color:#000 !important;">${t.name}</th>`;
+          headerHtml += `<th style="background-color:#ffedd5; border:1px solid #000; color:black; font-size:10px;">${t.name}</th>`;
       });
 
       headerHtml += `
-        <th style="width:60px; background-color:#dbeafe !important; color:#000 !important; border-right: 2px solid #000 !important;">المجموع (60)</th>
+        <th style="width:60px; background-color:#dbeafe; border:1px solid #000; color:black; font-weight:bold;">المجموع (60)</th>
       `;
 
       if (finalTool) {
-          headerHtml += `<th style="width:70px; background-color:#fce7f3 !important; color:#000 !important;">${finalTool.name} (40)</th>`;
+          headerHtml += `<th style="width:70px; background-color:#fce7f3; border:1px solid #000; color:black; font-size:10px;">${finalTool.name} (40)</th>`;
       }
 
       headerHtml += `
-        <th style="width:60px; background-color:#e5e7eb !important; color:#000 !important;">المجموع الكلي</th>
-        <th style="width:40px;">التقدير</th>
+        <th style="width:60px; background-color:#e5e7eb; border:1px solid #000; color:black; font-weight:bold;">المجموع الكلي</th>
+        <th style="width:40px; background-color:#e5e7eb; border:1px solid #000; color:black;">التقدير</th>
       `;
 
       let rowsHtml = '';
@@ -384,7 +384,7 @@ const Reports: React.FC = () => {
               const g = semGrades.find(gr => gr.category.trim() === tool.name.trim());
               const val = g ? Number(g.score) : 0;
               continuousSum += val;
-              continuousCells += `<td>${g ? g.score : '-'}</td>`;
+              continuousCells += `<td style="border:1px solid #000; text-align:center; color:black;">${g ? g.score : '-'}</td>`;
           });
 
           const finalExamGrade = finalTool ? semGrades.find(gr => gr.category.trim() === finalTool.name.trim()) : null;
@@ -392,28 +392,20 @@ const Reports: React.FC = () => {
           const totalScore = continuousSum + finalExamScore;
 
           rowsHtml += `
-            <tr style="page-break-inside: avoid; break-inside: avoid;">
-                <td>${i + 1}</td>
-                <td style="text-align: right; padding-right: 8px; font-weight:bold;">${s.name}</td>
+            <tr style="page-break-inside: avoid;">
+                <td style="border:1px solid #000; text-align:center; color:black;">${i + 1}</td>
+                <td style="border:1px solid #000; text-align:right; padding-right:8px; font-weight:bold; color:black;">${s.name}</td>
                 ${continuousCells}
-                <td style="font-weight:900; background-color:#eff6ff !important; border-right: 2px solid #000 !important;">${continuousSum}</td>
-                ${finalTool ? `<td style="font-weight:900; background-color:#fdf2f8 !important;">${finalExamGrade ? finalExamGrade.score : '-'}</td>` : ''}
-                <td style="font-weight:900; background-color:#f3f4f6 !important;">${totalScore}</td>
-                <td>${getGradeSymbol(totalScore)}</td>
+                <td style="border:1px solid #000; text-align:center; font-weight:bold; background-color:#eff6ff; color:black;">${continuousSum}</td>
+                ${finalTool ? `<td style="border:1px solid #000; text-align:center; background-color:#fdf2f8; color:black;">${finalExamGrade ? finalExamGrade.score : '-'}</td>` : ''}
+                <td style="border:1px solid #000; text-align:center; font-weight:900; background-color:#f3f4f6; color:black;">${totalScore}</td>
+                <td style="border:1px solid #000; text-align:center; color:black;">${getGradeSymbol(totalScore)}</td>
             </tr>
           `;
       });
 
       const html = `
-        <div id="report-content-print" class="force-print-style" style="padding:20px; font-family:'Tajawal', sans-serif; width:100%; color:black !important; background:white !important; direction:rtl;">
-            <style>
-              .force-print-style table { width: 100%; border-collapse: collapse; margin-top: 10px; border: 2px solid #000; color: #000 !important; font-size: 10px; }
-              .force-print-style th { background-color: #e5e7eb; color: #000 !important; font-weight: bold; padding: 6px; border: 1px solid #000; }
-              .force-print-style td { padding: 4px; border: 1px solid #000; text-align: center; color: #000 !important; }
-              tr { page-break-inside: avoid !important; break-inside: avoid !important; }
-              td, th { page-break-inside: avoid !important; break-inside: avoid !important; }
-            </style>
-
+        <div style="padding:20px; font-family:'Tajawal', sans-serif; direction:rtl; background:white; color:black;">
             <div style="text-align:center; margin-bottom:15px; border-bottom:2px solid #000; padding-bottom:10px;">
                 <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
                     <div style="text-align:right;">
@@ -435,7 +427,7 @@ const Reports: React.FC = () => {
                 </div>
             </div>
             
-            <table>
+            <table style="width:100%; border-collapse:collapse; font-size:10px;">
                 <thead><tr>${headerHtml}</tr></thead>
                 <tbody>${rowsHtml}</tbody>
             </table>
@@ -450,11 +442,8 @@ const Reports: React.FC = () => {
       await generateAndSharePDF(html, `Grades_Record_${gradesClass}.pdf`, true);
   };
 
-  // ... (Certificates and Summon stay mostly same but using generateAndSharePDF)
-  // Re-implementing only changed parts to save token space if needed, but for correctness I'll keep the component structure.
-  
+  // --- 3. CERTIFICATES (Restored Original Logic) ---
   const printCertificates = async () => {
-      // ... same logic as before ...
       const targets = filteredStudentsForCert.filter(s => selectedCertStudents.includes(s.id));
       if (targets.length === 0) return;
 
@@ -479,7 +468,7 @@ const Reports: React.FC = () => {
           `;
 
           pagesHtml += `
-            <div class="force-print-style" style="width:100%; height:100vh; position:relative; ${bgStyle} padding:20px; box-sizing:border-box; display:flex; flex-direction:column; align-items:center; text-align:center; page-break-after: always; color:#000000 !important; background-color:#fff;">
+            <div style="width:297mm; height:210mm; position:relative; ${bgStyle} padding:20px; box-sizing:border-box; display:flex; flex-direction:column; align-items:center; text-align:center; page-break-after: always; color:#000000 !important; background-color:#fff;">
                 ${!certificateSettings.backgroundImage ? `
                     <div style="position:absolute; top:25px; left:25px; right:25px; bottom:25px; border: 2px solid #059669; pointer-events:none;"></div>
                     <div style="position:absolute; top:20px; left:20px; width:50px; height:50px; border-top:5px solid #059669; border-left:5px solid #059669;"></div>
@@ -531,7 +520,6 @@ const Reports: React.FC = () => {
   };
 
   const handlePrintSummon = async () => {
-      // ... Summon print logic ...
       const studentName = availableStudentsForSummon.find(s=>s.id===summonStudentId)?.name || '';
       if (!studentName) { alert('يرجى اختيار الطالب أولاً'); return; }
 
@@ -545,7 +533,7 @@ const Reports: React.FC = () => {
         : '';
 
       const html = `
-        <div class="force-print-style" style="padding:50px; font-family:'Tajawal', serif; color:#000000 !important; background:#ffffff !important; direction:rtl; text-align:right; width:100%; height:100%;">
+        <div style="padding:50px; font-family:'Tajawal', serif; color:#000000 !important; background:#ffffff !important; direction:rtl; text-align:right;">
             <div style="text-align:center; margin-bottom:40px;">
                 ${teacherInfo.ministryLogo ? `<img src="${teacherInfo.ministryLogo}" style="width:60px; height:auto; margin:0 auto 15px auto; display:block;" />` : ''}
                 <h3 style="font-weight:bold; font-size:16px; margin:5px; color:#000000 !important;">سلطنة عمان</h3>
@@ -601,7 +589,7 @@ const Reports: React.FC = () => {
   };
 
   const handleSendSummonWhatsApp = async () => {
-    // ... WhatsApp logic ...
+    // ... (WhatsApp logic remains unchanged) ...
     const student = availableStudentsForSummon.find(s => s.id === summonStudentId);
     if (!student || !student.parentPhone) { alert('لا يوجد رقم هاتف مسجل لولي الأمر'); return; }
     let cleanPhone = student.parentPhone.replace(/[^0-9]/g, '');
@@ -627,6 +615,7 @@ const Reports: React.FC = () => {
 
   return (
     <div className="flex flex-col w-full max-w-5xl mx-auto space-y-6 pb-20">
+      {/* ... (UI code remains mostly the same, ensuring buttons point to restored handlers) ... */}
       <div className="flex items-center gap-4 pt-4 px-2 mb-2">
         <div className="w-14 h-14 glass-icon rounded-2xl flex items-center justify-center text-rose-500 shadow-lg border border-rose-500/20"><FileSpreadsheet size={30} /></div>
         <div><h2 className="text-3xl font-black text-white tracking-tight">مركز التقارير</h2><p className="text-gray-400 text-xs font-bold mt-1">طباعة الكشوفات والشهادات والاستدعاءات</p></div>
@@ -646,7 +635,6 @@ const Reports: React.FC = () => {
             <div className="space-y-6 animate-in fade-in slide-in-from-bottom-2 duration-300">
                  <div className="pb-4 border-b border-white/10 flex items-center gap-3"><div className="p-2 bg-indigo-900/30 rounded-xl text-indigo-400"><User size={20}/></div><div><h3 className="font-black text-lg text-white">تقرير الطالب الشامل</h3><p className="text-gray-400 text-xs font-bold">عرض وطباعة تقرير مفصل</p></div></div>
                 
-                {/* Hierarchy Filter */}
                 <div className="space-y-4">
                     {availableGrades.length > 0 && (
                         <div className="flex gap-2 overflow-x-auto no-scrollbar pb-1">
@@ -673,7 +661,6 @@ const Reports: React.FC = () => {
             </div>
         )}
         
-        {/* Other tabs follow the same logic but code truncated to fit response... */}
         {activeTab === 'grades_record' && (
             <div className="space-y-6 animate-in fade-in slide-in-from-bottom-2 duration-300">
                 <div className="pb-4 border-b border-white/10 flex items-center gap-3"><div className="p-2 bg-amber-900/30 rounded-xl text-amber-400"><BarChart3 size={20}/></div><div><h3 className="font-black text-lg text-white">سجل الدرجات</h3><p className="text-gray-400 text-xs font-bold">طباعة كشف درجات كامل</p></div></div>
@@ -692,7 +679,6 @@ const Reports: React.FC = () => {
             </div>
         )}
         
-        {/* Certificate and Summon tabs also have logic for General Button removed via availableGrades changes above */}
         {activeTab === 'certificates' && (
             <div className="space-y-6 animate-in fade-in slide-in-from-bottom-2 duration-300">
                 <div className="flex justify-between items-start pb-4 border-b border-white/10"><div className="flex items-center gap-3"><div className="p-2 bg-emerald-900/30 rounded-xl text-emerald-400"><Award size={20}/></div><div><h3 className="font-black text-lg text-white">شهادات التفوق</h3><p className="text-gray-400 text-xs font-bold">طباعة شهادات تقدير</p></div></div><button onClick={() => setShowCertSettingsModal(true)} className="p-3 bg-white/5 hover:bg-white/10 rounded-xl transition-colors text-white"><Settings className="w-5 h-5" /></button></div>
@@ -714,6 +700,7 @@ const Reports: React.FC = () => {
             </div>
         )}
         
+        {/* Summon tab UI (unchanged) ... */}
         {activeTab === 'summon' && (
             <div className="space-y-6 animate-in fade-in slide-in-from-bottom-2 duration-300">
                 <div className="pb-4 border-b border-white/10 flex items-center gap-3"><div className="p-2 bg-rose-900/30 rounded-xl text-rose-400"><FileWarning size={20}/></div><div><h3 className="font-black text-lg text-white">استدعاء ولي أمر</h3><p className="text-gray-400 text-xs font-bold">إنشاء خطاب رسمي</p></div></div>
@@ -731,7 +718,6 @@ const Reports: React.FC = () => {
                         <div className="space-y-2"><label className="text-[10px] font-black text-gray-400 mr-2">الطالب</label><div className="relative"><select value={summonStudentId} onChange={(e) => setSummonStudentId(e.target.value)} className="w-full p-4 glass-input rounded-2xl text-sm font-bold outline-none appearance-none cursor-pointer text-white bg-[#111827]"><option value="">اختر...</option>{availableStudentsForSummon.map(s => <option key={s.id} value={s.id}>{s.name}</option>)}</select><ChevronDown className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none" /></div></div>
                     </div>
                 </div>
-                {/* ... Summon Form Fields ... */}
                 <div className="space-y-2"><label className="text-[10px] font-black text-gray-400 mr-2">سبب الاستدعاء</label><div className="flex flex-wrap gap-2">{[{ id: 'absence', label: 'تكرار الغياب' }, { id: 'truant', label: 'تسرب حصص' }, { id: 'behavior', label: 'سلوكيات' }, { id: 'level', label: 'تدني مستوى' }, { id: 'other', label: 'آخر ..' }].map((reason) => (<button key={reason.id} onClick={() => setReasonType(reason.id)} className={`px-4 py-2.5 rounded-xl text-[10px] font-black transition-all border ${reasonType === reason.id ? 'bg-rose-600 text-white border-rose-600 shadow-md transform scale-105' : 'glass-input text-gray-300 border-transparent hover:bg-white/10'}`}>{reason.label}</button>))}</div>{reasonType === 'other' && (<textarea value={customReason} onChange={(e) => setCustomReason(e.target.value)} placeholder="اكتب السبب هنا..." className="w-full p-4 glass-input rounded-2xl text-sm mt-2 resize-none h-24 outline-none border border-white/10 focus:border-rose-500 transition-colors text-white" />)}</div>
                 <div className="space-y-2 border-t border-white/10 pt-4"><label className="text-[10px] font-black text-gray-400 mr-2 flex items-center gap-2"><ListChecks className="w-3 h-3" /> الإجراءات المتخذة مسبقاً</label><div className="grid grid-cols-2 gap-2">{availableProcedures.map((proc) => (<button key={proc} onClick={() => toggleProcedure(proc)} className={`p-3 rounded-xl text-[10px] font-bold text-right transition-all border flex items-center justify-between ${takenProcedures.includes(proc) ? 'bg-indigo-600/20 border-indigo-500 text-indigo-200' : 'glass-card border-white/5 text-gray-400 hover:bg-white/5'}`}>{proc}{takenProcedures.includes(proc) && <Check className="w-3 h-3 text-indigo-400" />}</button>))}</div></div>
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
@@ -744,7 +730,7 @@ const Reports: React.FC = () => {
         )}
       </div>
 
-      {/* ... Summon Preview Modal (Same as before) ... */}
+      {/* Summon Preview Modal (Using same robust PDF generator logic) */}
       {showSummonPreview && (
         <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/80 backdrop-blur-sm p-4" onClick={() => setShowSummonPreview(false)}>
             <div className="bg-white w-full max-w-4xl h-[90vh] rounded-2xl flex flex-col overflow-hidden" onClick={e => e.stopPropagation()}>
@@ -764,7 +750,6 @@ const Reports: React.FC = () => {
         </div>
       )}
 
-      {/* Cert Settings Modal */}
       <Modal isOpen={showCertSettingsModal} onClose={() => setShowCertSettingsModal(false)} className="max-w-md rounded-[2rem]">
           <div className="text-center"><h3 className="font-black text-lg mb-4 text-white">إعدادات الشهادة</h3><div className="space-y-3"><div><label className="block text-xs font-bold text-gray-400 mb-1 text-right">عنوان الشهادة</label><input type="text" value={tempCertSettings.title} onChange={(e) => setTempCertSettings({...tempCertSettings, title: e.target.value})} className="w-full p-3 glass-input rounded-xl text-sm font-bold outline-none text-white bg-[#111827]" /></div><div><label className="block text-xs font-bold text-gray-400 mb-1 text-right">نص الشهادة</label><textarea value={tempCertSettings.bodyText} onChange={(e) => setTempCertSettings({...tempCertSettings, bodyText: e.target.value})} className="w-full p-3 glass-input rounded-xl text-sm font-bold outline-none h-24 resize-none text-white bg-[#111827]" /></div><div className="flex gap-2 mt-4 pt-2"><button onClick={() => setShowCertSettingsModal(false)} className="flex-1 py-3 text-gray-400 font-bold text-xs hover:bg-white/5 rounded-xl">إلغاء</button><button onClick={handleSaveCertSettings} className="flex-[2] py-3 bg-indigo-600 text-white rounded-xl font-black text-sm shadow-lg">حفظ الإعدادات</button></div></div></div>
       </Modal>
