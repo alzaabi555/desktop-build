@@ -20,6 +20,8 @@ interface AppContextType {
   setStudents: React.Dispatch<React.SetStateAction<Student[]>>;
   classes: string[];
   setClasses: React.Dispatch<React.SetStateAction<string[]>>;
+  hiddenClasses: string[]; // NEW: For hiding classes
+  setHiddenClasses: React.Dispatch<React.SetStateAction<string[]>>; // NEW
   groups: Group[];
   setGroups: React.Dispatch<React.SetStateAction<Group[]>>;
   schedule: ScheduleDay[];
@@ -53,6 +55,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   
   const [students, setStudents] = useState<Student[]>([]);
   const [classes, setClasses] = useState<string[]>([]);
+  const [hiddenClasses, setHiddenClasses] = useState<string[]>([]); // Initial State
   const [groups, setGroups] = useState<Group[]>([
       { id: 'g1', name: 'الصقور', color: 'emerald' }, 
       { id: 'g2', name: 'النمور', color: 'orange' }, 
@@ -111,6 +114,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
                     data = {
                         students: JSON.parse(lsStudents),
                         classes: JSON.parse(localStorage.getItem('classesData') || '[]'),
+                        hiddenClasses: JSON.parse(localStorage.getItem('hiddenClasses') || '[]'),
                         groups: JSON.parse(localStorage.getItem('groupsData') || '[]'),
                         schedule: JSON.parse(localStorage.getItem('scheduleData') || '[]'),
                         periodTimes: JSON.parse(localStorage.getItem('periodTimes') || '[]'),
@@ -134,6 +138,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
             if (data) {
                 if(data.students) setStudents(data.students);
                 if(data.classes) setClasses(data.classes);
+                if(data.hiddenClasses) setHiddenClasses(data.hiddenClasses); // Load hidden classes
                 if(data.groups && data.groups.length > 0) setGroups(data.groups);
                 if(data.schedule && data.schedule.length > 0) setSchedule(data.schedule);
                 if(data.periodTimes && data.periodTimes.length > 0) setPeriodTimes(data.periodTimes);
@@ -158,12 +163,14 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     if (isInitialLoad.current) return;
     if (saveTimeoutRef.current) clearTimeout(saveTimeoutRef.current);
 
+    // INCREASED DEBOUNCE TO 3000ms to reduce freeze on Windows during frequent updates
     saveTimeoutRef.current = setTimeout(async () => {
         const dataToSave = {
-            version: '3.3.0',
+            version: '3.6.0',
             timestamp: new Date().toISOString(),
             students,
             classes,
+            hiddenClasses, // Save hidden classes
             groups,
             schedule,
             periodTimes,
@@ -189,9 +196,11 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         } 
         
         try {
+            // Using a try-catch block for LocalStorage as it is synchronous and can block UI
             if (jsonString.length < 4500000) {
                 localStorage.setItem('studentData', JSON.stringify(students));
                 localStorage.setItem('classesData', JSON.stringify(classes));
+                localStorage.setItem('hiddenClasses', JSON.stringify(hiddenClasses)); // Persist
                 localStorage.setItem('groupsData', JSON.stringify(groups));
                 localStorage.setItem('scheduleData', JSON.stringify(schedule));
                 localStorage.setItem('periodTimes', JSON.stringify(periodTimes));
@@ -203,20 +212,21 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
                 localStorage.setItem('teacherAvatar', teacherInfo.avatar || '');
             }
         } catch (e) {
-            console.error('LocalStorage Quota Exceeded');
+            console.error('LocalStorage Quota Exceeded or Error');
         }
 
-    }, 2000);
+    }, 3000); // Wait 3 seconds of inactivity before saving to avoid UI freeze
 
     return () => {
         if (saveTimeoutRef.current) clearTimeout(saveTimeoutRef.current);
     };
-  }, [students, classes, groups, schedule, periodTimes, teacherInfo, currentSemester, assessmentTools, certificateSettings]);
+  }, [students, classes, hiddenClasses, groups, schedule, periodTimes, teacherInfo, currentSemester, assessmentTools, certificateSettings]);
 
   return (
     <AppContext.Provider value={{
         students, setStudents,
         classes, setClasses,
+        hiddenClasses, setHiddenClasses,
         groups, setGroups,
         schedule, setSchedule,
         periodTimes, setPeriodTimes,
