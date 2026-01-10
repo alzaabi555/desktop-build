@@ -75,24 +75,29 @@ const StudentReport: React.FC<StudentReportProps> = ({ student, onUpdateStudent,
 
       setIsGeneratingPdf(true);
 
-      // --- ROBUST ISOLATED PRINT METHOD ---
-      // We clone the element and put it into a dedicated print container
-      // that is completely isolated from the app's dark theme styles.
       const container = document.createElement('div');
       container.className = 'pdf-export-container';
       
       // Clone the report content
       const contentClone = element.cloneNode(true) as HTMLElement;
       
-      // Ensure the clone inherits the correct black text styles by removing any app-specific classes that might conflict
+      // Force styles on the clone to override app dark theme
       contentClone.style.backgroundColor = 'white';
       contentClone.style.color = 'black';
+      contentClone.style.width = '100%';
+      contentClone.style.height = 'auto';
+      contentClone.style.margin = '0';
+      contentClone.style.boxShadow = 'none';
+      contentClone.style.border = 'none'; // Remove the thick border if unwanted in print
       
       container.appendChild(contentClone);
       document.body.appendChild(container);
 
+      // CRITICAL DELAY
+      await new Promise(resolve => setTimeout(resolve, 500));
+
       const opt = {
-          margin: 0,
+          margin: 10, // Add some margin
           filename: `Report_${student.name}.pdf`,
           image: { type: 'jpeg', quality: 0.98 },
           html2canvas: { 
@@ -101,6 +106,7 @@ const StudentReport: React.FC<StudentReportProps> = ({ student, onUpdateStudent,
               logging: false, 
               letterRendering: true,
               scrollY: 0,
+              backgroundColor: '#ffffff',
               windowWidth: 800
           },
           jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }

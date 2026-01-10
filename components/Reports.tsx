@@ -135,22 +135,25 @@ const Reports: React.FC = () => {
       return 'هـ';
   };
 
-  // --- PDF GENERATOR (THE FIXED VERSION) ---
+  // --- PDF GENERATOR (FIXED VERSION WITH DELAY) ---
   const generateAndSharePDF = async (htmlContent: string, filename: string, landscape = false) => {
       setIsGeneratingPdf(true);
       
-      // Create an ISOLATED container.
-      // We do NOT modify body classes. We rely on the container's CSS to force white/black.
+      // Create container
       const container = document.createElement('div');
-      container.className = 'pdf-export-container'; // Defined in index.css
+      container.className = 'pdf-export-container';
       
-      // Inline styles to ensure it overrides EVERYTHING
+      // Force dimensions for landscape if needed
       if (landscape) {
           container.style.width = '297mm';
       }
       
       container.innerHTML = htmlContent;
       document.body.appendChild(container);
+
+      // CRITICAL FIX: Wait for the browser to paint the DOM
+      // This prevents the "White Page" issue
+      await new Promise(resolve => setTimeout(resolve, 500));
 
       const opt = {
           margin: [5, 5, 5, 5],
@@ -161,8 +164,12 @@ const Reports: React.FC = () => {
               useCORS: true, 
               logging: false,
               letterRendering: true,
-              backgroundColor: '#ffffff', // Force white background for canvas
-              windowWidth: landscape ? 1200 : 800
+              backgroundColor: '#ffffff', // Ensures white background
+              windowWidth: landscape ? 1200 : 800,
+              // Fix for some scrolling issues causing blank tops
+              scrollY: 0,
+              x: 0,
+              y: 0
           },
           jsPDF: { 
               unit: 'mm', 
@@ -178,7 +185,11 @@ const Reports: React.FC = () => {
           if (Capacitor.isNativePlatform()) {
               const pdfBase64 = await worker.output('datauristring');
               const base64Data = pdfBase64.split(',')[1];
-              const result = await Filesystem.writeFile({ path: filename, data: base64Data, directory: Directory.Cache });
+              const result = await Filesystem.writeFile({ 
+                  path: filename, 
+                  data: base64Data, 
+                  directory: Directory.Cache 
+              });
               await Share.share({ title: filename, url: result.uri });
           } else { 
               worker.save(); 
@@ -349,7 +360,6 @@ const Reports: React.FC = () => {
   };
 
   // --- 2. GRADES RECORD PRINT ---
-  // Ensuring the logic for columns/rows is exactly what was working before
   const handlePrintGradeReport = async () => {
       if (filteredStudentsForGrades.length === 0) return alert('لا يوجد طلاب في هذا الفصل');
       
@@ -752,7 +762,7 @@ const Reports: React.FC = () => {
                     </div>
                 </div>
                 <div className="space-y-2"><label className="text-[10px] font-black text-gray-400 mr-2">سبب الاستدعاء</label><div className="flex flex-wrap gap-2">{[{ id: 'absence', label: 'تكرار الغياب' }, { id: 'truant', label: 'تسرب حصص' }, { id: 'behavior', label: 'سلوكيات' }, { id: 'level', label: 'تدني مستوى' }, { id: 'other', label: 'آخر ..' }].map((reason) => (<button key={reason.id} onClick={() => setReasonType(reason.id)} className={`px-4 py-2.5 rounded-xl text-[10px] font-black transition-all border ${reasonType === reason.id ? 'bg-rose-600 text-white border-rose-600 shadow-md transform scale-105' : 'glass-input text-gray-300 border-transparent hover:bg-white/10'}`}>{reason.label}</button>))}</div>{reasonType === 'other' && (<textarea value={customReason} onChange={(e) => setCustomReason(e.target.value)} placeholder="اكتب السبب هنا..." className="w-full p-4 glass-input rounded-2xl text-sm mt-2 resize-none h-24 outline-none border border-white/10 focus:border-rose-500 transition-colors text-white" />)}</div>
-                <div className="space-y-2 border-t border-white/10 pt-4"><label className="text-[10px] font-black text-gray-400 mr-2 flex items-center gap-2"><ListChecks className="w-3 h-3" /> الإجراءات المتخذة مسبقاً</label><div className="grid grid-cols-2 gap-2">{availableProcedures.map((proc) => (<button key={proc} onClick={() => toggleProcedure(proc)} className={`p-3 rounded-xl text-[10px] font-bold text-right transition-all border flex items-center justify-between ${takenProcedures.includes(proc) ? 'bg-indigo-600/20 border-indigo-500 text-indigo-200' : 'glass-card border-white/5 text-gray-400 hover:bg-white/5'}`}>{proc}{takenProcedures.includes(proc) && <Check className="w-3 h-3 text-indigo-400" />}</button>))}</div></div>
+                <div className="space-y-2 border-t border-white/10 pt-4"><label className="text-[10px] font-black text-gray-400 mr-2 flex items-center gap-2"><ListChecks className="w-3 h-3" /> الإجراءات المتخذة مسبقاً</label><div className="grid grid-cols-2 gap-2">{availableProcedures.map((proc) => (<button key={proc} onClick={() => toggleProcedure(proc)} className={`p-3 rounded-xl text-[10px] font-bold text-right transition-all border flex items-center justify-between ${takenProcedures.includes(proc) ? 'bg-indigo-600/20 border-indigo-500 text-indigo-200' : 'glass-card border-white/5 text-gray-400 hover:bg-white/10'}`}>{proc}{takenProcedures.includes(proc) && <Check className="w-3 h-3 text-indigo-400" />}</button>))}</div></div>
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                      <div className="space-y-1"><label className="text-[10px] font-black text-gray-400 mr-2">تاريخ الإصدار</label><input type="date" value={issueDate} onChange={(e) => setIssueDate(e.target.value)} className="w-full p-3 glass-input rounded-xl text-xs font-bold outline-none text-white bg-[#111827]" /></div>
                      <div className="space-y-1"><label className="text-[10px] font-black text-gray-400 mr-2">تاريخ الحضور</label><input type="date" value={summonDate} onChange={(e) => setSummonDate(e.target.value)} className="w-full p-3 glass-input rounded-xl text-xs font-bold outline-none text-white bg-[#111827]" /></div>
