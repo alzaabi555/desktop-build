@@ -135,28 +135,20 @@ const Reports: React.FC = () => {
       return 'هـ';
   };
 
-  // --- PDF GENERATOR (ROBUST) ---
+  // --- PDF GENERATOR (THE FIXED VERSION) ---
   const generateAndSharePDF = async (htmlContent: string, filename: string, landscape = false) => {
       setIsGeneratingPdf(true);
       
-      // CRITICAL FIX: Unlock body and force light theme
-      document.body.classList.add('printing-mode');
-      document.documentElement.classList.add('printing-mode');
-
+      // Create an ISOLATED container.
+      // We do NOT modify body classes. We rely on the container's CSS to force white/black.
       const container = document.createElement('div');
-      container.className = 'force-print-style';
-      // Inline styles to guarantee visibility and white background
-      container.style.cssText = `
-          position: fixed; 
-          top: 0; 
-          left: 0; 
-          width: ${landscape ? '297mm' : '210mm'}; 
-          z-index: 99999; 
-          background: white !important; 
-          color: black !important;
-          visibility: visible !important;
-          overflow: visible !important;
-      `;
+      container.className = 'pdf-export-container'; // Defined in index.css
+      
+      // Inline styles to ensure it overrides EVERYTHING
+      if (landscape) {
+          container.style.width = '297mm';
+      }
+      
       container.innerHTML = htmlContent;
       document.body.appendChild(container);
 
@@ -169,7 +161,7 @@ const Reports: React.FC = () => {
               useCORS: true, 
               logging: false,
               letterRendering: true,
-              backgroundColor: '#ffffff',
+              backgroundColor: '#ffffff', // Force white background for canvas
               windowWidth: landscape ? 1200 : 800
           },
           jsPDF: { 
@@ -196,13 +188,12 @@ const Reports: React.FC = () => {
           alert('خطأ في إنشاء PDF'); 
       } finally { 
           if (document.body.contains(container)) document.body.removeChild(container);
-          document.body.classList.remove('printing-mode');
-          document.documentElement.classList.remove('printing-mode');
           setIsGeneratingPdf(false); 
       }
   };
 
   // --- 1. PRINT ALL STUDENTS REPORTS (BULK) ---
+  // Using explicit styles in the HTML string to guarantee Black Text
   const handlePrintClassReports = async () => {
       if (filteredStudentsForStudentTab.length === 0) return alert('لا يوجد طلاب في هذا الفصل');
       
@@ -229,9 +220,9 @@ const Reports: React.FC = () => {
                   continuousSum += score;
                   continuousRows += `
                     <tr>
-                        <td style="border:1px solid #000; padding:8px; text-align:right; color: black;">${teacherInfo.subject || 'المادة'}</td>
-                        <td style="border:1px solid #000; padding:8px; text-align:center; background-color:#ffedd5; color: black;">${tool.name}</td>
-                        <td style="border:1px solid #000; padding:8px; text-align:center; font-weight:bold; color: black;">${g ? g.score : '-'}</td>
+                        <td style="border:1px solid #000; padding:8px; text-align:right;">${teacherInfo.subject || 'المادة'}</td>
+                        <td style="border:1px solid #000; padding:8px; text-align:center; background-color:#ffedd5;">${tool.name}</td>
+                        <td style="border:1px solid #000; padding:8px; text-align:center; font-weight:bold;">${g ? g.score : '-'}</td>
                     </tr>
                   `;
               });
@@ -240,9 +231,9 @@ const Reports: React.FC = () => {
                   continuousSum += (Number(g.score) || 0);
                   continuousRows += `
                     <tr>
-                        <td style="border:1px solid #000; padding:8px; text-align:right; color: black;">${g.subject}</td>
-                        <td style="border:1px solid #000; padding:8px; text-align:center; color: black;">${g.category}</td>
-                        <td style="border:1px solid #000; padding:8px; text-align:center; font-weight:bold; color: black;">${g.score}</td>
+                        <td style="border:1px solid #000; padding:8px; text-align:right;">${g.subject}</td>
+                        <td style="border:1px solid #000; padding:8px; text-align:center;">${g.category}</td>
+                        <td style="border:1px solid #000; padding:8px; text-align:center; font-weight:bold;">${g.score}</td>
                     </tr>
                   `;
               });
@@ -255,9 +246,9 @@ const Reports: React.FC = () => {
               finalScore = g ? Number(g.score) : 0;
               finalRow = `
                 <tr>
-                    <td style="border:1px solid #000; padding:8px; text-align:right; color: black;">${teacherInfo.subject || 'المادة'}</td>
-                    <td style="border:1px solid #000; padding:8px; text-align:center; background-color:#fce7f3; color: black;">${finalTool.name} (40)</td>
-                    <td style="border:1px solid #000; padding:8px; text-align:center; font-weight:bold; color: black;">${g ? g.score : '-'}</td>
+                    <td style="border:1px solid #000; padding:8px; text-align:right;">${teacherInfo.subject || 'المادة'}</td>
+                    <td style="border:1px solid #000; padding:8px; text-align:center; background-color:#fce7f3;">${finalTool.name} (40)</td>
+                    <td style="border:1px solid #000; padding:8px; text-align:center; font-weight:bold;">${g ? g.score : '-'}</td>
                 </tr>
               `;
           }
@@ -267,87 +258,87 @@ const Reports: React.FC = () => {
           const truantCount = (student.attendance || []).filter(a => a.status === 'truant').length;
 
           allPagesHtml += `
-            <div style="page-break-after: always; padding: 40px; font-family: 'Tajawal', sans-serif; direction: rtl; background: white; color: black !important; box-sizing: border-box; height: 100vh; position: relative;">
+            <div style="page-break-after: always; padding: 40px; font-family: 'Tajawal', sans-serif; direction: rtl; background: white; color: black; box-sizing: border-box; height: 100vh; position: relative;">
                 
                 <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:20px; border-bottom:2px solid #eee; padding-bottom:20px;">
-                    <div style="text-align:center; width:33%; color: black;">
-                        <p style="margin:0; font-weight:bold; color: black;">سلطنة عمان</p>
-                        <p style="margin:0; font-weight:bold; color: black;">وزارة التربية والتعليم</p>
-                        <p style="margin:0; font-weight:bold; font-size:10px; color: black;">محافظة ${teacherInfo.governorate}</p>
-                        <p style="margin:0; font-weight:bold; font-size:10px; color: black;">مدرسة ${teacherInfo.school}</p>
+                    <div style="text-align:center; width:33%;">
+                        <p style="margin:0; font-weight:bold;">سلطنة عمان</p>
+                        <p style="margin:0; font-weight:bold;">وزارة التربية والتعليم</p>
+                        <p style="margin:0; font-weight:bold; font-size:10px;">محافظة ${teacherInfo.governorate}</p>
+                        <p style="margin:0; font-weight:bold; font-size:10px;">مدرسة ${teacherInfo.school}</p>
                     </div>
                     <div style="text-align:center; width:33%;">
                         ${teacherInfo.ministryLogo ? `<img src="${teacherInfo.ministryLogo}" style="height:60px; object-fit:contain;" />` : ''}
-                        <h2 style="font-weight:900; text-decoration:underline; margin-top:10px; color: black;">تقرير مستوى طالب</h2>
+                        <h2 style="font-weight:900; text-decoration:underline; margin-top:10px;">تقرير مستوى طالب</h2>
                     </div>
-                    <div style="text-align:left; width:33%; font-size:12px; font-weight:bold; color: black;">
-                        <p style="color: black;">العام الدراسي: ${teacherInfo.academicYear}</p>
-                        <p style="color: black;">الفصل: ${currentSemester === '1' ? 'الأول' : 'الثاني'}</p>
-                        <p style="color: black;">التاريخ: ${new Date().toLocaleDateString('en-GB')}</p>
+                    <div style="text-align:left; width:33%; font-size:12px; font-weight:bold;">
+                        <p>العام الدراسي: ${teacherInfo.academicYear}</p>
+                        <p>الفصل: ${currentSemester === '1' ? 'الأول' : 'الثاني'}</p>
+                        <p>التاريخ: ${new Date().toLocaleDateString('en-GB')}</p>
                     </div>
                 </div>
 
                 <div style="background:#f8fafc; border:1px solid #cbd5e1; padding:15px; border-radius:10px; margin-bottom:20px; display:flex; justify-content:space-between; align-items:center;">
-                    <div style="flex:1; color: black;">
+                    <div style="flex:1;">
                         <div style="display:flex; gap:20px; margin-bottom:10px;">
-                            <div><span style="color:black; font-size:10px;">الاسم:</span> <strong style="font-size:16px; color:black;">${student.name}</strong></div>
+                            <div><span style="color:#64748b; font-size:10px;">الاسم:</span> <strong style="font-size:16px;">${student.name}</strong></div>
                             <div style="width:1px; background:#cbd5e1;"></div>
-                            <div><span style="color:black; font-size:10px;">الصف:</span> <strong style="font-size:16px; color:black;">${student.classes[0]}</strong></div>
+                            <div><span style="color:#64748b; font-size:10px;">الصف:</span> <strong style="font-size:16px;">${student.classes[0]}</strong></div>
                         </div>
                         <div style="display:flex; gap:10px;">
-                            <span style="background:#dcfce7; color:black; padding:2px 8px; border-radius:4px; font-size:10px; font-weight:bold;">إيجابي: ${totalPositive}</span>
-                            <span style="background:#ffe4e6; color:black; padding:2px 8px; border-radius:4px; font-size:10px; font-weight:bold;">سلبي: ${totalNegative}</span>
+                            <span style="background:#dcfce7; color:#15803d; padding:2px 8px; border-radius:4px; font-size:10px; font-weight:bold;">إيجابي: ${totalPositive}</span>
+                            <span style="background:#ffe4e6; color:#be123c; padding:2px 8px; border-radius:4px; font-size:10px; font-weight:bold;">سلبي: ${totalNegative}</span>
                         </div>
                     </div>
                 </div>
 
-                <h3 style="font-weight:bold; font-size:16px; margin-bottom:10px; border-bottom:1px solid #000; padding-bottom:5px; color: black;">التحصيل الدراسي</h3>
-                <table style="width:100%; border-collapse:collapse; margin-bottom:20px; font-size:12px; color: black;">
+                <h3 style="font-weight:bold; font-size:16px; margin-bottom:10px; border-bottom:1px solid #000; padding-bottom:5px;">التحصيل الدراسي</h3>
+                <table style="width:100%; border-collapse:collapse; margin-bottom:20px; font-size:12px;">
                     <thead>
                         <tr style="background:#f1f5f9;">
-                            <th style="border:1px solid #000; padding:8px; color: black;">المادة</th>
-                            <th style="border:1px solid #000; padding:8px; color: black;">أداة التقويم</th>
-                            <th style="border:1px solid #000; padding:8px; color: black;">الدرجة</th>
+                            <th style="border:1px solid #000; padding:8px;">المادة</th>
+                            <th style="border:1px solid #000; padding:8px;">أداة التقويم</th>
+                            <th style="border:1px solid #000; padding:8px;">الدرجة</th>
                         </tr>
                     </thead>
                     <tbody>
                         ${continuousRows}
                         <tr style="background:#eff6ff; font-weight:bold;">
-                            <td colspan="2" style="border:1px solid #000; padding:8px; text-align:center; color: black;">المجموع (60)</td>
-                            <td style="border:1px solid #000; padding:8px; text-align:center; color: black;">${continuousSum}</td>
+                            <td colspan="2" style="border:1px solid #000; padding:8px; text-align:center;">المجموع (60)</td>
+                            <td style="border:1px solid #000; padding:8px; text-align:center;">${continuousSum}</td>
                         </tr>
                         ${finalRow}
                     </tbody>
                     <tfoot>
                         <tr style="background:#f1f5f9;">
-                            <td colspan="2" style="border:1px solid #000; padding:8px; font-weight:900; text-align:right; color: black;">المجموع الكلي</td>
-                            <td style="border:1px solid #000; padding:8px; font-weight:900; text-align:center; font-size:14px; color: black;">${totalScore}</td>
+                            <td colspan="2" style="border:1px solid #000; padding:8px; font-weight:900; text-align:right;">المجموع الكلي</td>
+                            <td style="border:1px solid #000; padding:8px; font-weight:900; text-align:center; font-size:14px;">${totalScore}</td>
                         </tr>
                     </tfoot>
                 </table>
 
                 <div style="display:flex; gap:15px; margin-bottom:20px;">
                     <div style="flex:1; border:1px solid #cbd5e1; padding:10px; border-radius:8px; text-align:center;">
-                        <span style="display:block; font-size:10px; color:black;">أيام الغياب</span>
-                        <span style="font-weight:900; color:black; font-size:18px;">${absenceCount}</span>
+                        <span style="display:block; font-size:10px; color:#64748b;">أيام الغياب</span>
+                        <span style="font-weight:900; color:#e11d48; font-size:18px;">${absenceCount}</span>
                     </div>
                     <div style="flex:1; border:1px solid #cbd5e1; padding:10px; border-radius:8px; text-align:center;">
-                        <span style="display:block; font-size:10px; color:black;">الهروب (التسرب)</span>
-                        <span style="font-weight:900; color:black; font-size:18px;">${truantCount}</span>
+                        <span style="display:block; font-size:10px; color:#64748b;">الهروب (التسرب)</span>
+                        <span style="font-weight:900; color:#9333ea; font-size:18px;">${truantCount}</span>
                     </div>
                 </div>
 
-                <div style="position:absolute; bottom:40px; left:40px; right:40px; display:flex; justify-content:space-between; align-items:flex-end; color: black;">
+                <div style="position:absolute; bottom:40px; left:40px; right:40px; display:flex; justify-content:space-between; align-items:flex-end;">
                     <div style="text-align:center;">
-                        <p style="font-weight:bold; margin-bottom:30px; color: black;">معلم المادة</p>
-                        <p style="color: black;">${teacherInfo.name}</p>
+                        <p style="font-weight:bold; margin-bottom:30px;">معلم المادة</p>
+                        <p>${teacherInfo.name}</p>
                     </div>
                     <div style="text-align:center;">
                         ${teacherInfo.stamp ? `<img src="${teacherInfo.stamp}" style="width:100px; opacity:0.7; mix-blend-mode:multiply; transform:rotate(-5deg);" />` : ''}
                     </div>
                     <div style="text-align:center;">
-                        <p style="font-weight:bold; margin-bottom:30px; color: black;">مدير المدرسة</p>
-                        <p style="color: black;">....................</p>
+                        <p style="font-weight:bold; margin-bottom:30px;">مدير المدرسة</p>
+                        <p>....................</p>
                     </div>
                 </div>
             </div>
@@ -357,7 +348,8 @@ const Reports: React.FC = () => {
       await generateAndSharePDF(allPagesHtml, `Class_Report_${stClass}.pdf`, false);
   };
 
-  // --- 2. GRADES RECORD PRINT (EXCELLENT AS IS) ---
+  // --- 2. GRADES RECORD PRINT ---
+  // Ensuring the logic for columns/rows is exactly what was working before
   const handlePrintGradeReport = async () => {
       if (filteredStudentsForGrades.length === 0) return alert('لا يوجد طلاب في هذا الفصل');
       
@@ -371,19 +363,19 @@ const Reports: React.FC = () => {
       `;
       
       continuousTools.forEach(t => {
-          headerHtml += `<th style="background-color:#ffedd5 !important; color:#000 !important;">${t.name}</th>`;
+          headerHtml += `<th style="background-color:#ffedd5 !important;">${t.name}</th>`;
       });
 
       headerHtml += `
-        <th style="width:60px; background-color:#dbeafe !important; color:#000 !important; border-right: 2px solid #000 !important;">المجموع (60)</th>
+        <th style="width:60px; background-color:#dbeafe !important; border-right: 2px solid #000 !important;">المجموع (60)</th>
       `;
 
       if (finalTool) {
-          headerHtml += `<th style="width:70px; background-color:#fce7f3 !important; color:#000 !important;">${finalTool.name} (40)</th>`;
+          headerHtml += `<th style="width:70px; background-color:#fce7f3 !important;">${finalTool.name} (40)</th>`;
       }
 
       headerHtml += `
-        <th style="width:60px; background-color:#e5e7eb !important; color:#000 !important;">المجموع الكلي</th>
+        <th style="width:60px; background-color:#e5e7eb !important;">المجموع الكلي</th>
         <th style="width:40px;">التقدير</th>
       `;
 
@@ -418,12 +410,13 @@ const Reports: React.FC = () => {
           `;
       });
 
+      // The container structure
       const html = `
-        <div id="report-content-print" class="force-print-style" style="padding:20px; font-family:'Tajawal', sans-serif; width:100%; color:black !important; background:white !important; direction:rtl;">
+        <div style="padding:20px; font-family:'Tajawal', sans-serif; width:100%; direction:rtl;">
             <style>
-              .force-print-style table { width: 100%; border-collapse: collapse; margin-top: 10px; border: 2px solid #000; color: #000 !important; font-size: 10px; }
-              .force-print-style th { background-color: #e5e7eb; color: #000 !important; font-weight: bold; padding: 6px; border: 1px solid #000; }
-              .force-print-style td { padding: 4px; border: 1px solid #000; text-align: center; color: #000 !important; }
+              table { width: 100%; border-collapse: collapse; margin-top: 10px; border: 2px solid #000; font-size: 10px; }
+              th { background-color: #e5e7eb; font-weight: bold; padding: 6px; border: 1px solid #000; }
+              td { padding: 4px; border: 1px solid #000; text-align: center; }
               tr { page-break-inside: avoid !important; break-inside: avoid !important; }
               td, th { page-break-inside: avoid !important; break-inside: avoid !important; }
             </style>
@@ -431,18 +424,18 @@ const Reports: React.FC = () => {
             <div style="text-align:center; margin-bottom:15px; border-bottom:2px solid #000; padding-bottom:10px;">
                 <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
                     <div style="text-align:right;">
-                        <p style="margin:0; font-weight:bold; color:black !important;">سلطنة عمان</p>
-                        <p style="margin:0; font-weight:bold; color:black !important;">وزارة التربية والتعليم</p>
+                        <p style="margin:0; font-weight:bold;">سلطنة عمان</p>
+                        <p style="margin:0; font-weight:bold;">وزارة التربية والتعليم</p>
                     </div>
                     <div>
-                        <h1 style="font-size:18px; font-weight:900; margin:0; text-decoration:underline; color:black !important;">سجل درجات الطلاب</h1>
+                        <h1 style="font-size:18px; font-weight:900; margin:0; text-decoration:underline;">سجل درجات الطلاب</h1>
                     </div>
                     <div style="text-align:left;">
-                        <p style="margin:0; font-weight:bold; color:black !important;">المادة: ${teacherInfo.subject}</p>
-                        <p style="margin:0; font-weight:bold; color:black !important;">الصف: ${gradesClass === 'all' ? 'الكل' : gradesClass}</p>
+                        <p style="margin:0; font-weight:bold;">المادة: ${teacherInfo.subject}</p>
+                        <p style="margin:0; font-weight:bold;">الصف: ${gradesClass === 'all' ? 'الكل' : gradesClass}</p>
                     </div>
                 </div>
-                <div style="display:flex; justify-content:center; gap:20px; font-size:12px; font-weight:bold; color:black !important;">
+                <div style="display:flex; justify-content:center; gap:20px; font-size:12px; font-weight:bold;">
                     <span>المعلم: ${teacherInfo.name}</span>
                     <span>|</span>
                     <span>الفصل الدراسي: ${currentSemester === '1' ? 'الأول' : 'الثاني'}</span>
@@ -454,7 +447,7 @@ const Reports: React.FC = () => {
                 <tbody>${rowsHtml}</tbody>
             </table>
             
-            <div style="margin-top:30px; display:flex; justify-content:space-between; padding:0 40px; font-weight:bold; color:#000;">
+            <div style="margin-top:30px; display:flex; justify-content:space-between; padding:0 40px; font-weight:bold;">
                 <p>توقيع المعلم: .................</p>
                 <p>يعتمد مدير المدرسة: .................</p>
             </div>
@@ -464,56 +457,69 @@ const Reports: React.FC = () => {
       await generateAndSharePDF(html, `Grades_Record_${gradesClass}.pdf`, true);
   };
 
-  // ... (Certificates and Summon Logic - Keeping standard) ...
+  // --- CERTIFICATES PRINT LOGIC ---
   const printCertificates = async () => {
       const targets = filteredStudentsForCert.filter(s => selectedCertStudents.includes(s.id));
       if (targets.length === 0) return;
 
       let pagesHtml = '';
+      
       targets.forEach((s) => {
           const placeholderRegex = /(الطالبة|الطالب)/g;
           const hasPlaceholder = placeholderRegex.test(certificateSettings.bodyText);
-          let body = certificateSettings.bodyText.replace(placeholderRegex, `<span style="font-weight:900; color:#000;">${s.name}</span>`);
+          let body = certificateSettings.bodyText.replace(placeholderRegex, `<span style="font-weight:900;">${s.name}</span>`);
           
           const bgStyle = certificateSettings.backgroundImage 
             ? `background-image: url('${certificateSettings.backgroundImage}'); background-size: cover; background-position: center;` 
             : `background-color: #ffffff; border: 15px double #059669;`;
 
           const headerHtml = `
-            <div style="width:100%; text-align:center; display:flex; flex-direction:column; align-items:center; margin-bottom:5px; color:#000;">
+            <div style="width:100%; text-align:center; display:flex; flex-direction:column; align-items:center; margin-bottom:5px;">
                 ${teacherInfo.ministryLogo ? `<img src="${teacherInfo.ministryLogo}" style="height:60px; width:auto; object-fit:contain; margin-bottom:5px;" />` : ''}
-                <h3 style="font-weight:bold; font-size:14px; margin:1px; color:black !important;">سلطنة عمان</h3>
-                <h3 style="font-weight:bold; font-size:14px; margin:1px; color:black !important;">وزارة التربية والتعليم</h3>
-                <h3 style="font-weight:bold; font-size:14px; margin:1px; color:black !important;">مدرسة ${teacherInfo.school}</h3>
+                <h3 style="font-weight:bold; font-size:14px; margin:1px;">سلطنة عمان</h3>
+                <h3 style="font-weight:bold; font-size:14px; margin:1px;">وزارة التربية والتعليم</h3>
+                <h3 style="font-weight:bold; font-size:14px; margin:1px;">مدرسة ${teacherInfo.school}</h3>
             </div>
           `;
 
           pagesHtml += `
-            <div class="force-print-style" style="width:100%; height:100vh; position:relative; ${bgStyle} padding:20px; box-sizing:border-box; display:flex; flex-direction:column; align-items:center; text-align:center; page-break-after: always; color:#000000 !important; background-color:#fff;">
-                <div style="z-index:10; width:95%; height:100%; display:flex; flex-direction:column; justify-content:flex-start; background:rgba(255,255,255,0.92); padding:30px; padding-top:10px; border-radius:30px; box-shadow:none; color: #000000 !important;">
+            <div style="width:100%; height:100vh; position:relative; ${bgStyle} padding:20px; box-sizing:border-box; display:flex; flex-direction:column; align-items:center; text-align:center; page-break-after: always; background-color:#fff;">
+                ${!certificateSettings.backgroundImage ? `
+                    <div style="position:absolute; top:25px; left:25px; right:25px; bottom:25px; border: 2px solid #059669; pointer-events:none;"></div>
+                    <div style="position:absolute; top:20px; left:20px; width:50px; height:50px; border-top:5px solid #059669; border-left:5px solid #059669;"></div>
+                    <div style="position:absolute; top:20px; right:20px; width:50px; height:50px; border-top:5px solid #059669; border-right:5px solid #059669;"></div>
+                    <div style="position:absolute; bottom:20px; left:20px; width:50px; height:50px; border-bottom:5px solid #059669; border-left:5px solid #059669;"></div>
+                    <div style="position:absolute; bottom:20px; right:20px; width:50px; height:50px; border-bottom:5px solid #059669; border-right:5px solid #059669;"></div>
+                ` : ''}
+                
+                <div style="z-index:10; width:95%; height:100%; display:flex; flex-direction:column; justify-content:flex-start; background:rgba(255,255,255,0.92); padding:30px; padding-top:10px; border-radius:30px; box-shadow:none;">
                     ${headerHtml}
                     <div style="flex:1; display:flex; flex-direction:column; justify-content:center; align-items:center; margin-top:-20px;">
                         <h1 style="font-size:48px; color:#047857 !important; margin-bottom:15px; font-weight:900; font-family:'Tajawal', serif;">${certificateSettings.title}</h1>
-                        ${!hasPlaceholder ? `<h2 style="font-size:42px; color:#000000 !important; margin:10px 0 20px 0; font-weight:900; text-decoration:underline; text-decoration-color:#059669; text-underline-offset: 8px;">${s.name}</h2>` : ''}
+                        
+                        ${!hasPlaceholder ? `<h2 style="font-size:42px; margin:10px 0 20px 0; font-weight:900; text-decoration:underline; text-decoration-color:#059669; text-underline-offset: 8px;">${s.name}</h2>` : ''}
+
                         <p style="font-size:24px; line-height:1.6; margin-bottom:20px; font-weight:bold; color:#374151 !important; max-width:80%;">${body}</p>
                     </div>
-                    <div style="margin-top:20px; display:flex; justify-content:space-between; width:100%; padding:0 20px; color: #000000 !important; align-items:flex-end;">
+                    
+                    <div style="margin-top:20px; display:flex; justify-content:space-between; width:100%; padding:0 20px; align-items:flex-end;">
                         <div style="text-align:center; width:30%;">
-                            <p style="font-size:18px; color:#000000 !important; margin-bottom:40px; font-weight:bold;">معلم المادة</p>
-                            <p style="font-size:20px; font-weight:900; color:#000000 !important;">${teacherInfo.name}</p>
+                            <p style="font-size:18px; margin-bottom:40px; font-weight:bold;">معلم المادة</p>
+                            <p style="font-size:20px; font-weight:900;">${teacherInfo.name}</p>
                         </div>
                         <div style="text-align:center; width:40%;">
                             ${teacherInfo.stamp ? `<img src="${teacherInfo.stamp}" style="width:120px; opacity:0.8; mix-blend-mode:multiply; transform: rotate(-10deg);" />` : ''}
                         </div>
                         <div style="text-align:center; width:30%;">
-                            <p style="font-size:18px; color:#000000 !important; margin-bottom:40px; font-weight:bold;">مدير المدرسة</p>
-                            <p style="font-size:20px; font-weight:900; color:#000000 !important;">....................</p>
+                            <p style="font-size:18px; margin-bottom:40px; font-weight:bold;">مدير المدرسة</p>
+                            <p style="font-size:20px; font-weight:900;">....................</p>
                         </div>
                     </div>
                 </div>
             </div>
           `;
       });
+
       await generateAndSharePDF(pagesHtml, `Certificates.pdf`, true);
   };
 
@@ -528,86 +534,109 @@ const Reports: React.FC = () => {
     }
   };
 
+  // --- 3. SUMMON LETTER PRINT LOGIC ---
   const handlePrintSummon = async () => {
       const studentName = availableStudentsForSummon.find(s=>s.id===summonStudentId)?.name || '';
       if (!studentName) { alert('يرجى اختيار الطالب أولاً'); return; }
 
       const proceduresHtml = takenProcedures.length > 0 
         ? `<div style="margin-top:20px; text-align:right; border:1px dashed #000; padding:15px; border-radius:10px;">
-             <p style="font-weight:bold; text-decoration:underline; margin-bottom:10px; color:black !important;">الإجراءات المتخذة مسبقاً مع الطالب:</p>
+             <p style="font-weight:bold; text-decoration:underline; margin-bottom:10px;">الإجراءات المتخذة مسبقاً مع الطالب:</p>
              <ul style="list-style-type:disc; padding-right:20px; margin:0;">
-                ${takenProcedures.map(p => `<li style="margin-bottom:5px; color:black !important;">${p}</li>`).join('')}
+                ${takenProcedures.map(p => `<li style="margin-bottom:5px;">${p}</li>`).join('')}
              </ul>
            </div>` 
         : '';
 
       const html = `
-        <div class="force-print-style" style="padding:50px; font-family:'Tajawal', serif; color:#000000 !important; background:#ffffff !important; direction:rtl; text-align:right; width:100%; height:100%;">
+        <div style="padding:50px; font-family:'Tajawal', serif; direction:rtl; text-align:right; width:100%; height:100%;">
             <div style="text-align:center; margin-bottom:40px;">
                 ${teacherInfo.ministryLogo ? `<img src="${teacherInfo.ministryLogo}" style="width:60px; height:auto; margin:0 auto 15px auto; display:block;" />` : ''}
-                <h3 style="font-weight:bold; font-size:16px; margin:5px; color:#000000 !important;">سلطنة عمان</h3>
-                <h3 style="font-weight:bold; font-size:16px; margin:5px; color:#000000 !important;">وزارة التربية والتعليم</h3>
-                <h3 style="font-weight:bold; font-size:16px; margin:5px; color:#000000 !important;">مدرسة ${teacherInfo.school}</h3>
+                <h3 style="font-weight:bold; font-size:16px; margin:5px;">سلطنة عمان</h3>
+                <h3 style="font-weight:bold; font-size:16px; margin:5px;">وزارة التربية والتعليم</h3>
+                <h3 style="font-weight:bold; font-size:16px; margin:5px;">مدرسة ${teacherInfo.school}</h3>
             </div>
             
-            <div style="border-bottom:2px solid #000; padding-bottom:20px; margin-bottom:30px; color: #000000 !important;">
+            <div style="border-bottom:2px solid #000; padding-bottom:20px; margin-bottom:30px;">
                 <div style="display:flex; justify-content:space-between; margin-bottom:10px;">
-                    <span style="font-weight:bold; font-size:18px; color:#000000 !important;">الفاضل/ ولي أمر الطالب: ${studentName}</span>
-                    <span style="font-size:18px; color:#000000 !important;">المحترم</span>
+                    <span style="font-weight:bold; font-size:18px;">الفاضل/ ولي أمر الطالب: ${studentName}</span>
+                    <span style="font-size:18px;">المحترم</span>
                 </div>
                 <div style="display:flex; justify-content:space-between;">
-                    <span style="font-weight:bold; font-size:16px; color:#000000 !important;">الصف: ${summonClass}</span>
-                    <span style="font-size:16px; color:#000000 !important;">التاريخ: ${issueDate}</span>
+                    <span style="font-weight:bold; font-size:16px;">الصف: ${summonClass}</span>
+                    <span style="font-size:16px;">التاريخ: ${issueDate}</span>
                 </div>
             </div>
 
-            <h2 style="text-align:center; font-weight:900; font-size:24px; text-decoration:underline; margin-bottom:30px; color:#000000 !important;">استدعاء ولي أمر</h2>
+            <h2 style="text-align:center; font-weight:900; font-size:24px; text-decoration:underline; margin-bottom:30px;">استدعاء ولي أمر</h2>
             
-            <p style="line-height:2.2; font-size:18px; text-align:justify; margin-bottom:20px; color:#000000 !important;">
+            <p style="line-height:2.2; font-size:18px; text-align:justify; margin-bottom:20px;">
                 السلام عليكم ورحمة الله وبركاته،،،<br/>
                 نود إفادتكم بضرورة الحضور إلى المدرسة يوم <strong>${summonDate}</strong> الساعة <strong>${summonTime}</strong>، وذلك لمناقشة الأمر التالي:
             </p>
             
-            <div style="background:#f9f9f9; border:1px solid #000; padding:20px; text-align:center; font-size:20px; font-weight:bold; margin-bottom:30px; border-radius:10px; color:#000000 !important;">
+            <div style="background:#f9f9f9; border:1px solid #000; padding:20px; text-align:center; font-size:20px; font-weight:bold; margin-bottom:30px; border-radius:10px;">
                 ${getReasonText()}
             </div>
 
             ${proceduresHtml}
             
-            <p style="line-height:2; font-size:18px; text-align:justify; margin-top:30px; margin-bottom:50px; color:#000000 !important;">
+            <p style="line-height:2; font-size:18px; text-align:justify; margin-top:30px; margin-bottom:50px;">
                 شاكرين لكم حسن تعاونكم واهتمامكم بمصلحة الطالب.
             </p>
             
-            <div style="display:flex; justify-content:space-between; margin-top:80px; padding:0 20px; color: #000000 !important; align-items:flex-end; position:relative;">
+            <div style="display:flex; justify-content:space-between; margin-top:80px; padding:0 20px; align-items:flex-end; position:relative;">
                 <div style="text-align:center; width:30%;">
-                    <p style="font-weight:bold; font-size:18px; margin-bottom:40px; color:#000000 !important;">معلم المادة</p>
-                    <p style="font-size:18px; color:#000000 !important;">${teacherInfo.name}</p>
+                    <p style="font-weight:bold; font-size:18px; margin-bottom:40px;">معلم المادة</p>
+                    <p style="font-size:18px;">${teacherInfo.name}</p>
                 </div>
                 <div style="text-align:center; width:40%; display: flex; justify-content: center; align-items: center;">
                     ${teacherInfo.stamp ? `<img src="${teacherInfo.stamp}" style="width:130px; opacity:0.8; mix-blend-mode:multiply; transform: rotate(-10deg);" />` : ''}
                 </div>
                 <div style="text-align:center; width:30%;">
-                    <p style="font-weight:bold; font-size:18px; margin-bottom:40px; color:#000000 !important;">مدير المدرسة</p>
-                    <p style="font-size:18px; color:#000000 !important;">.........................</p>
+                    <p style="font-weight:bold; font-size:18px; margin-bottom:40px;">مدير المدرسة</p>
+                    <p style="font-size:18px;">.........................</p>
                 </div>
             </div>
         </div>
       `;
+      
       await generateAndSharePDF(html, `Summon_${studentName}.pdf`, false);
   };
 
   const handleSendSummonWhatsApp = async () => {
-    // ... (unchanged)
     const student = availableStudentsForSummon.find(s => s.id === summonStudentId);
-    if (!student || !student.parentPhone) { alert('لا يوجد رقم هاتف مسجل لولي الأمر'); return; }
+    if (!student || !student.parentPhone) {
+        alert('لا يوجد رقم هاتف مسجل لولي الأمر');
+        return;
+    }
+
     let cleanPhone = student.parentPhone.replace(/[^0-9]/g, '');
-    if (!cleanPhone || cleanPhone.length < 5) { alert('رقم الهاتف غير صحيح'); return; }
+    if (!cleanPhone || cleanPhone.length < 5) {
+        alert('رقم الهاتف غير صحيح');
+        return;
+    }
+    
     if (cleanPhone.startsWith('00')) cleanPhone = cleanPhone.substring(2);
     if (cleanPhone.length === 8) cleanPhone = '968' + cleanPhone;
     else if (cleanPhone.length === 9 && cleanPhone.startsWith('0')) cleanPhone = '968' + cleanPhone.substring(1);
+
     const msg = encodeURIComponent(`السلام عليكم، ولي أمر الطالب ${student.name}.\nنود إفادتكم بضرورة الحضور للمدرسة يوم ${summonDate} الساعة ${summonTime}.\nالسبب: ${getReasonText()}`);
-    if (window.electron) { window.electron.openExternal(`whatsapp://send?phone=${cleanPhone}&text=${msg}`); } 
-    else { const universalUrl = `https://api.whatsapp.com/send?phone=${cleanPhone}&text=${msg}`; try { if (Capacitor.isNativePlatform()) { await Browser.open({ url: universalUrl }); } else { window.open(universalUrl, '_blank'); } } catch (e) { window.open(universalUrl, '_blank'); } }
+
+    if (window.electron) {
+        window.electron.openExternal(`whatsapp://send?phone=${cleanPhone}&text=${msg}`);
+    } else {
+        const universalUrl = `https://api.whatsapp.com/send?phone=${cleanPhone}&text=${msg}`;
+        try {
+            if (Capacitor.isNativePlatform()) {
+                await Browser.open({ url: universalUrl });
+            } else {
+                window.open(universalUrl, '_blank');
+            }
+        } catch (e) {
+            window.open(universalUrl, '_blank');
+        }
+    }
   };
 
   const tabItems = [
@@ -642,6 +671,7 @@ const Reports: React.FC = () => {
             <div className="space-y-6 animate-in fade-in slide-in-from-bottom-2 duration-300">
                  <div className="pb-4 border-b border-white/10 flex items-center gap-3"><div className="p-2 bg-indigo-900/30 rounded-xl text-indigo-400"><User size={20}/></div><div><h3 className="font-black text-lg text-white">تقرير الطالب الشامل</h3><p className="text-gray-400 text-xs font-bold">عرض وطباعة تقرير مفصل</p></div></div>
                 
+                {/* Hierarchy Filter */}
                 <div className="space-y-4">
                     {availableGrades.length > 0 && (
                         <div className="flex gap-2 overflow-x-auto no-scrollbar pb-1">
@@ -667,8 +697,6 @@ const Reports: React.FC = () => {
                 </div>
             </div>
         )}
-        
-        {/* ... (Rest of tabs: Grades, Certificates, Summon - same as original) ... */}
         {activeTab === 'grades_record' && (
             <div className="space-y-6 animate-in fade-in slide-in-from-bottom-2 duration-300">
                 <div className="pb-4 border-b border-white/10 flex items-center gap-3"><div className="p-2 bg-amber-900/30 rounded-xl text-amber-400"><BarChart3 size={20}/></div><div><h3 className="font-black text-lg text-white">سجل الدرجات</h3><p className="text-gray-400 text-xs font-bold">طباعة كشف درجات كامل</p></div></div>
@@ -686,7 +714,6 @@ const Reports: React.FC = () => {
                 <div className="flex justify-end pt-6"><button onClick={handlePrintGradeReport} disabled={isGeneratingPdf} className="bg-amber-500 disabled:opacity-50 text-white px-8 py-4 rounded-2xl font-black text-xs flex items-center gap-2 shadow-lg shadow-amber-500/30 hover:bg-amber-600 active:scale-95 transition-all w-full md:w-auto justify-center">{isGeneratingPdf ? <Loader2 className="animate-spin w-4 h-4"/> : <Printer size={18} />} طباعة السجل</button></div>
             </div>
         )}
-        
         {activeTab === 'certificates' && (
             <div className="space-y-6 animate-in fade-in slide-in-from-bottom-2 duration-300">
                 <div className="flex justify-between items-start pb-4 border-b border-white/10"><div className="flex items-center gap-3"><div className="p-2 bg-emerald-900/30 rounded-xl text-emerald-400"><Award size={20}/></div><div><h3 className="font-black text-lg text-white">شهادات التفوق</h3><p className="text-gray-400 text-xs font-bold">طباعة شهادات تقدير</p></div></div><button onClick={() => setShowCertSettingsModal(true)} className="p-3 bg-white/5 hover:bg-white/10 rounded-xl transition-colors text-white"><Settings className="w-5 h-5" /></button></div>
@@ -707,8 +734,6 @@ const Reports: React.FC = () => {
                 <div className="flex justify-end pt-6 border-t border-white/10 mt-2"><button onClick={printCertificates} disabled={isGeneratingPdf || selectedCertStudents.length === 0} className="bg-emerald-600 disabled:opacity-50 text-white px-8 py-4 rounded-2xl font-black text-xs flex items-center gap-2 shadow-lg shadow-emerald-500/30 hover:bg-emerald-700 active:scale-95 transition-all w-full md:w-auto justify-center">{isGeneratingPdf ? <Loader2 className="animate-spin w-4 h-4"/> : <Award size={18} />} طباعة الشهادات</button></div>
             </div>
         )}
-        
-        {/* Summon tab UI (unchanged) ... */}
         {activeTab === 'summon' && (
             <div className="space-y-6 animate-in fade-in slide-in-from-bottom-2 duration-300">
                 <div className="pb-4 border-b border-white/10 flex items-center gap-3"><div className="p-2 bg-rose-900/30 rounded-xl text-rose-400"><FileWarning size={20}/></div><div><h3 className="font-black text-lg text-white">استدعاء ولي أمر</h3><p className="text-gray-400 text-xs font-bold">إنشاء خطاب رسمي</p></div></div>
@@ -738,20 +763,19 @@ const Reports: React.FC = () => {
         )}
       </div>
 
-      {/* Summon Preview Modal (Using same robust PDF generator logic) */}
       {showSummonPreview && (
         <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/80 backdrop-blur-sm p-4" onClick={() => setShowSummonPreview(false)}>
             <div className="bg-white w-full max-w-4xl h-[90vh] rounded-2xl flex flex-col overflow-hidden" onClick={e => e.stopPropagation()}>
                 <div className="p-4 border-b flex justify-between items-center text-black bg-gray-50"><h3 className="font-bold">معاينة الخطاب</h3><div className="flex gap-2"><button onClick={handlePrintSummon} className="p-2 bg-indigo-600 text-white rounded-lg flex items-center gap-2 text-xs font-bold shadow-md hover:bg-indigo-700"><Printer size={16} /> طباعة PDF</button><button onClick={() => setShowSummonPreview(false)} className="p-2 hover:bg-gray-200 rounded-full"><X size={24}/></button></div></div>
                 <div className="flex-1 overflow-auto bg-gray-200 p-8 flex justify-center">
                     <div id="report-content-print" className="force-print-style text-black" style={{backgroundColor: 'white', color: 'black', width: '210mm', minHeight: '297mm', padding: '20mm', textAlign: 'right', fontFamily: 'serif', position: 'relative', border: '4px solid black', boxSizing: 'border-box'}}>
-                       <div style={{textAlign:'center', marginBottom:'40px'}}>{teacherInfo.ministryLogo && <img src={teacherInfo.ministryLogo} style={{width:'60px', height:'auto', margin:'0 auto 15px auto', display:'block'}} alt="Logo" />}<h3 style={{fontWeight:'bold', fontSize:'16px', margin:'5px', color:'black'}}>سلطنة عمان</h3><h3 style={{fontWeight:'bold', fontSize:'16px', margin:'5px', color:'black'}}>وزارة التربية والتعليم</h3><h3 style={{fontWeight:'bold', fontSize:'16px', margin:'5px', color:'black'}}>مدرسة {teacherInfo.school}</h3></div>
-                       <div style={{marginBottom: '2rem', borderBottom: '2px solid black', paddingBottom: '1rem'}}><div style={{display:'flex', justifyContent:'space-between', marginBottom:'10px'}}><span style={{fontWeight:'bold', fontSize:'18px', color:'black'}}>الفاضل/ ولي أمر الطالب: {availableStudentsForSummon.find(s=>s.id===summonStudentId)?.name}</span><span style={{fontSize:'18px', color:'black'}}>المحترم</span></div><div style={{display:'flex', justifyContent:'space-between'}}><span style={{fontWeight:'bold', fontSize:'16px', color:'black'}}>الصف: {summonClass}</span><span style={{fontSize:'16px', color:'black'}}>التاريخ: {issueDate}</span></div></div>
-                       <h2 style={{textAlign: 'center', fontWeight: 'bold', fontSize: '1.25rem', textDecoration: 'underline', marginBottom: '2rem', color:'black'}}>استدعاء ولي أمر</h2>
-                       <p style={{lineHeight: '2', fontSize: '1.125rem', marginBottom: '1.5rem', textAlign: 'justify', color:'black'}}>السلام عليكم ورحمة الله وبركاته...<br/>نود إفادتكم بضرورة الحضور إلى المدرسة يوم <strong>{summonDate}</strong> الساعة <strong>{summonTime}</strong>.</p>
-                       <div style={{background: '#f9f9f9', border: '1px solid black', padding: '20px', textAlign: 'center', fontWeight: 'bold', marginBottom: '30px', color:'black'}}>{getReasonText()}</div>
-                       {takenProcedures.length > 0 && (<div style={{marginTop:'20px', textAlign:'right', border:'1px dashed #000', padding:'15px', borderRadius:'10px'}}><p style={{fontWeight:'bold', textDecoration:'underline', marginBottom:'10px', color:'black'}}>الإجراءات المتخذة مسبقاً:</p><ul style={{listStyleType:'disc', paddingRight:'20px', margin:0}}>{takenProcedures.map(p => <li key={p} style={{marginBottom:'5px', color:'black'}}>{p}</li>)}</ul></div>)}
-                       <div style={{display:'flex', justifyContent:'space-between', marginTop:'80px', padding:'0 20px', position:'relative', alignItems:'flex-end'}}><div style={{textAlign:'center', width:'30%'}}><p style={{fontWeight:'bold', fontSize:'18px', marginBottom:'40px', color:'black'}}>معلم المادة</p><p style={{fontSize:'18px', color:'black'}}>{teacherInfo.name}</p></div><div style={{textAlign:'center', width:'40%', display: 'flex', justifyContent: 'center', alignItems: 'center'}}>{teacherInfo.stamp && <img src={teacherInfo.stamp} style={{width:'130px', opacity:0.8, mixBlendMode:'multiply', transform: 'rotate(-10deg)'}} alt="Stamp" />}</div><div style={{textAlign:'center', width:'30%'}}><p style={{fontWeight:'bold', fontSize:'18px', marginBottom:'40px', color:'black'}}>مدير المدرسة</p><p style={{fontSize:'18px', color:'black'}}>.........................</p></div></div>
+                       <div style={{textAlign:'center', marginBottom:'40px'}}>{teacherInfo.ministryLogo && <img src={teacherInfo.ministryLogo} style={{width:'60px', height:'auto', margin:'0 auto 15px auto', display:'block'}} alt="Logo" />}<h3 style={{fontWeight:'bold', fontSize:'16px', margin:'5px'}}>سلطنة عمان</h3><h3 style={{fontWeight:'bold', fontSize:'16px', margin:'5px'}}>وزارة التربية والتعليم</h3><h3 style={{fontWeight:'bold', fontSize:'16px', margin:'5px'}}>مدرسة {teacherInfo.school}</h3></div>
+                       <div style={{marginBottom: '2rem', borderBottom: '2px solid black', paddingBottom: '1rem'}}><div style={{display:'flex', justifyContent:'space-between', marginBottom:'10px'}}><span style={{fontWeight:'bold', fontSize:'18px'}}>الفاضل/ ولي أمر الطالب: {availableStudentsForSummon.find(s=>s.id===summonStudentId)?.name}</span><span style={{fontSize:'18px'}}>المحترم</span></div><div style={{display:'flex', justifyContent:'space-between'}}><span style={{fontWeight:'bold', fontSize:'16px'}}>الصف: {summonClass}</span><span style={{fontSize:'16px'}}>التاريخ: {issueDate}</span></div></div>
+                       <h2 style={{textAlign: 'center', fontWeight: 'bold', fontSize: '1.25rem', textDecoration: 'underline', marginBottom: '2rem'}}>استدعاء ولي أمر</h2>
+                       <p style={{lineHeight: '2', fontSize: '1.125rem', marginBottom: '1.5rem', textAlign: 'justify'}}>السلام عليكم ورحمة الله وبركاته...<br/>نود إفادتكم بضرورة الحضور إلى المدرسة يوم <strong>{summonDate}</strong> الساعة <strong>{summonTime}</strong>.</p>
+                       <div style={{background: '#f9f9f9', border: '1px solid black', padding: '20px', textAlign: 'center', fontWeight: 'bold', marginBottom: '30px'}}>{getReasonText()}</div>
+                       {takenProcedures.length > 0 && (<div style={{marginTop:'20px', textAlign:'right', border:'1px dashed #000', padding:'15px', borderRadius:'10px'}}><p style={{fontWeight:'bold', textDecoration:'underline', marginBottom:'10px'}}>الإجراءات المتخذة مسبقاً:</p><ul style={{listStyleType:'disc', paddingRight:'20px', margin:0}}>{takenProcedures.map(p => <li key={p} style={{marginBottom:'5px'}}>{p}</li>)}</ul></div>)}
+                       <div style={{display:'flex', justifyContent:'space-between', marginTop:'80px', padding:'0 20px', position:'relative', alignItems:'flex-end'}}><div style={{textAlign:'center', width:'30%'}}><p style={{fontWeight:'bold', fontSize:'18px', marginBottom:'40px'}}>معلم المادة</p><p style={{fontSize:'18px'}}>{teacherInfo.name}</p></div><div style={{textAlign:'center', width:'40%', display: 'flex', justifyContent: 'center', alignItems: 'center'}}>{teacherInfo.stamp && <img src={teacherInfo.stamp} style={{width:'130px', opacity:0.8, mixBlendMode:'multiply', transform: 'rotate(-10deg)'}} alt="Stamp" />}</div><div style={{textAlign:'center', width:'30%'}}><p style={{fontWeight:'bold', fontSize:'18px', marginBottom:'40px'}}>مدير المدرسة</p><p style={{fontSize:'18px'}}>.........................</p></div></div>
                     </div>
                 </div>
             </div>

@@ -75,10 +75,21 @@ const StudentReport: React.FC<StudentReportProps> = ({ student, onUpdateStudent,
 
       setIsGeneratingPdf(true);
 
-      // --- CRITICAL FIX FOR BLANK PAGES ---
-      // Temporarily unlock the body/html overflow so html2pdf can scroll and capture everything
-      document.body.classList.add('printing-mode');
-      document.documentElement.classList.add('printing-mode');
+      // --- ROBUST ISOLATED PRINT METHOD ---
+      // We clone the element and put it into a dedicated print container
+      // that is completely isolated from the app's dark theme styles.
+      const container = document.createElement('div');
+      container.className = 'pdf-export-container';
+      
+      // Clone the report content
+      const contentClone = element.cloneNode(true) as HTMLElement;
+      
+      // Ensure the clone inherits the correct black text styles by removing any app-specific classes that might conflict
+      contentClone.style.backgroundColor = 'white';
+      contentClone.style.color = 'black';
+      
+      container.appendChild(contentClone);
+      document.body.appendChild(container);
 
       const opt = {
           margin: 0,
@@ -90,13 +101,13 @@ const StudentReport: React.FC<StudentReportProps> = ({ student, onUpdateStudent,
               logging: false, 
               letterRendering: true,
               scrollY: 0,
-              windowWidth: 800 // Force width to ensure layout consistency
+              windowWidth: 800
           },
           jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
       };
 
       try {
-          const worker = html2pdf().set(opt).from(element).toPdf();
+          const worker = html2pdf().set(opt).from(container).toPdf();
           
           if (Capacitor.isNativePlatform()) {
                const pdfBase64 = await worker.output('datauristring');
@@ -114,9 +125,7 @@ const StudentReport: React.FC<StudentReportProps> = ({ student, onUpdateStudent,
           console.error('PDF Error:', err); 
           alert('حدث خطأ أثناء إنشاء ملف PDF');
       } finally { 
-          // --- RESTORE SCROLL LOCK ---
-          document.body.classList.remove('printing-mode');
-          document.documentElement.classList.remove('printing-mode');
+          if (document.body.contains(container)) document.body.removeChild(container);
           setIsGeneratingPdf(false); 
       }
   };
@@ -149,8 +158,7 @@ const StudentReport: React.FC<StudentReportProps> = ({ student, onUpdateStudent,
 
         {/* Report Preview (Screen) */}
         <div className="flex-1 overflow-y-auto custom-scrollbar p-1">
-            {/* Added 'force-print-style' class to ensure correct colors */}
-            <div id="report-content" className="force-print-style bg-white text-slate-900 p-8 rounded-none md:rounded-[2rem] max-w-4xl mx-auto shadow-xl relative overflow-hidden border-[3px] border-black box-border" dir="rtl">
+            <div id="report-content" className="bg-white text-slate-900 p-8 rounded-none md:rounded-[2rem] max-w-4xl mx-auto shadow-xl relative overflow-hidden border-[3px] border-black box-border" dir="rtl">
                 
                 {/* Formal Header */}
                 <div className="flex justify-between items-start mb-8 border-b-2 border-slate-900/10 pb-6">
