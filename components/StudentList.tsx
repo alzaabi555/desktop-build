@@ -17,18 +17,16 @@ interface StudentListProps {
     onDeleteStudent: (id: string) => void;
     onViewReport: (student: Student) => void;
     currentSemester: '1' | '2';
-    onDeleteClass?: (className: string) => void; // Added Prop
+    onDeleteClass?: (className: string) => void; 
     onSemesterChange?: (sem: '1' | '2') => void;
     onEditClass?: (oldName: string, newName: string) => void;
 }
 
-// ... (Constants and StudentItem component remain same) ...
 const SOUNDS = {
-    positive: 'https://assets.mixkit.co/active_storage/sfx/2000/2000-preview.mp3', // صوت نجاح/جرس
-    negative: 'https://assets.mixkit.co/active_storage/sfx/2955/2955-preview.mp3'  // صوت خطأ/تنبيه منخفض
+    positive: 'https://assets.mixkit.co/active_storage/sfx/2000/2000-preview.mp3',
+    negative: 'https://assets.mixkit.co/active_storage/sfx/2955/2955-preview.mp3'
 };
 
-// ... (StudentItem component code hidden for brevity - unchanged) ...
 const StudentItem = React.memo(({ student, onAction, currentSemester }: { 
     student: Student, onAction: (s: Student, type: 'positive' | 'negative' | 'edit' | 'delete' | 'truant') => void, currentSemester: '1' | '2'
 }) => {
@@ -36,53 +34,53 @@ const StudentItem = React.memo(({ student, onAction, currentSemester }: {
     const gradeSymbol = useMemo(() => { if (totalScore >= 90) return 'أ'; if (totalScore >= 80) return 'ب'; if (totalScore >= 65) return 'ج'; if (totalScore >= 50) return 'د'; return 'هـ'; }, [totalScore]);
     
     const gradeColor = useMemo(() => { 
-        if (totalScore >= 90) return 'text-emerald-400 bg-emerald-900/30 border-emerald-500/50'; 
-        if (totalScore >= 80) return 'text-blue-400 bg-blue-900/30 border-blue-500/50'; 
-        if (totalScore >= 65) return 'text-amber-400 bg-amber-900/30 border-amber-500/50'; 
-        return 'text-rose-400 bg-rose-900/30 border-rose-500/50'; 
+        if (totalScore >= 90) return 'text-emerald-600 bg-emerald-50 border-emerald-200'; 
+        if (totalScore >= 80) return 'text-blue-600 bg-blue-50 border-blue-200'; 
+        if (totalScore >= 65) return 'text-amber-600 bg-amber-50 border-amber-200'; 
+        return 'text-rose-600 bg-rose-50 border-rose-200'; 
     }, [totalScore]);
 
     return (
         <motion.div 
             initial={{ opacity: 0, y: 15 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.3 }}
             className="group flex flex-col sm:flex-row sm:items-center justify-between p-4 mb-3 rounded-[1.5rem] gap-4 sm:gap-0 relative overflow-hidden transition-all duration-300
-            glass-card bg-[#1f2937] hover:bg-[#374151] shadow-sm hover:shadow-md border border-blue-500 shimmer-hover"
+            glass-card bg-white hover:bg-gray-50 shadow-sm hover:shadow-md border border-gray-200 shimmer-hover"
         >
             <div className={`absolute left-0 top-0 bottom-0 w-1.5 ${totalScore >= 90 ? 'bg-emerald-500' : totalScore >= 50 ? 'bg-indigo-500' : 'bg-rose-500'}`}></div>
 
             <div className="flex items-center gap-4 flex-1 min-w-0 relative z-10 pl-3">
-                <div className="w-12 h-12 rounded-xl bg-[#111827] flex items-center justify-center text-gray-400 text-lg font-bold overflow-hidden shrink-0 shadow-sm border border-gray-600">
+                <div className="w-12 h-12 rounded-xl bg-gray-100 flex items-center justify-center text-gray-500 text-lg font-bold overflow-hidden shrink-0 shadow-sm border border-gray-200">
                     {student.avatar ? <img src={student.avatar} className="w-full h-full object-cover" /> : student.name.charAt(0)}
                 </div>
                 <div className="min-w-0">
-                    <h3 className="font-black text-white text-sm truncate group-hover:text-indigo-400 transition-colors">{student.name}</h3>
+                    <h3 className="font-black text-slate-800 text-sm truncate group-hover:text-indigo-600 transition-colors">{student.name}</h3>
                     <div className="flex items-center gap-2 mt-1">
-                        <span className="text-[10px] bg-[#111827] text-gray-400 px-2 py-0.5 rounded-md font-bold border border-gray-600">{student.classes[0]}</span>
+                        <span className="text-[10px] bg-gray-100 text-gray-500 px-2 py-0.5 rounded-md font-bold border border-gray-200">{student.classes[0]}</span>
                         <span className={`text-[10px] px-2 py-0.5 rounded-md font-bold border ${gradeColor}`}>{gradeSymbol} ({totalScore})</span>
                     </div>
                 </div>
             </div>
 
             <div className="flex items-center justify-between sm:justify-end gap-2 pl-1 relative z-10">
-                <div className="flex items-center gap-1 bg-[#111827] p-1 rounded-xl border border-gray-600">
-                    <button onClick={(e) => { e.stopPropagation(); onAction(student, 'positive'); }} className="w-9 h-9 rounded-lg flex items-center justify-center bg-[#1f2937] text-emerald-500 hover:text-emerald-400 shadow-sm border border-gray-600 active:scale-95 transition-transform">
+                <div className="flex items-center gap-1 bg-gray-50 p-1 rounded-xl border border-gray-200">
+                    <button onClick={(e) => { e.stopPropagation(); onAction(student, 'positive'); }} className="w-9 h-9 rounded-lg flex items-center justify-center bg-white text-emerald-500 hover:text-emerald-600 shadow-sm border border-gray-200 active:scale-95 transition-transform">
                         <ThumbsUp className="w-4 h-4" />
                     </button>
-                    <button onClick={(e) => { e.stopPropagation(); onAction(student, 'negative'); }} className="w-9 h-9 rounded-lg flex items-center justify-center bg-[#1f2937] text-rose-500 hover:text-rose-400 shadow-sm border border-gray-600 active:scale-95 transition-transform">
+                    <button onClick={(e) => { e.stopPropagation(); onAction(student, 'negative'); }} className="w-9 h-9 rounded-lg flex items-center justify-center bg-white text-rose-500 hover:text-rose-600 shadow-sm border border-gray-200 active:scale-95 transition-transform">
                         <ThumbsDown className="w-4 h-4" />
                     </button>
-                    <button onClick={(e) => { e.stopPropagation(); onAction(student, 'truant'); }} className="w-9 h-9 rounded-lg flex items-center justify-center bg-[#1f2937] text-purple-500 hover:text-purple-400 shadow-sm border border-gray-600 active:scale-95 transition-transform" title="تسرب">
+                    <button onClick={(e) => { e.stopPropagation(); onAction(student, 'truant'); }} className="w-9 h-9 rounded-lg flex items-center justify-center bg-white text-purple-500 hover:text-purple-600 shadow-sm border border-gray-200 active:scale-95 transition-transform" title="تسرب">
                         <DoorOpen className="w-4 h-4" />
                     </button>
                 </div>
                 
-                <div className="w-px h-6 bg-gray-600 mx-1 hidden sm:block"></div>
+                <div className="w-px h-6 bg-gray-200 mx-1 hidden sm:block"></div>
                 
                 <div className="flex items-center gap-1">
-                    <button onClick={(e) => { e.stopPropagation(); onAction(student, 'edit'); }} className="w-8 h-8 rounded-lg flex items-center justify-center text-gray-500 hover:text-indigo-400 hover:bg-[#111827] transition-colors">
+                    <button onClick={(e) => { e.stopPropagation(); onAction(student, 'edit'); }} className="w-8 h-8 rounded-lg flex items-center justify-center text-gray-400 hover:text-indigo-500 hover:bg-gray-100 transition-colors">
                         <Edit2 className="w-4 h-4" />
                     </button>
-                    <button onClick={(e) => { e.stopPropagation(); onAction(student, 'delete'); }} className="w-8 h-8 rounded-lg flex items-center justify-center text-gray-500 hover:text-rose-500 hover:bg-[#111827] transition-colors">
+                    <button onClick={(e) => { e.stopPropagation(); onAction(student, 'delete'); }} className="w-8 h-8 rounded-lg flex items-center justify-center text-gray-400 hover:text-rose-500 hover:bg-gray-100 transition-colors">
                         <Trash2 className="w-4 h-4" />
                     </button>
                 </div>
@@ -97,13 +95,11 @@ const StudentList: React.FC<StudentListProps> = ({ students, classes, onAddClass
   const [selectedGrade, setSelectedGrade] = useState<string>('all');
   const [selectedClass, setSelectedClass] = useState<string>('all');
   
-  // Modals State
   const [showManualAddModal, setShowManualAddModal] = useState(false);
   const [showImportModal, setShowImportModal] = useState(false);
   const [showAddClassModal, setShowAddClassModal] = useState(false);
-  const [showManageClasses, setShowManageClasses] = useState(false); // New modal for deletion
+  const [showManageClasses, setShowManageClasses] = useState(false); 
   
-  // Inputs State
   const [newClassInput, setNewClassInput] = useState('');
   const [editingStudent, setEditingStudent] = useState<Student | null>(null);
   const [editName, setEditName] = useState('');
@@ -111,26 +107,21 @@ const StudentList: React.FC<StudentListProps> = ({ students, classes, onAddClass
   const [editClass, setEditClass] = useState('');
   const [editAvatar, setEditAvatar] = useState('');
   
-  // Behavior Logic State
   const [showNegativeReasons, setShowNegativeReasons] = useState<{student: Student} | null>(null);
   const [showPositiveReasons, setShowPositiveReasons] = useState<{student: Student} | null>(null);
   const [customBehaviorReason, setCustomBehaviorReason] = useState('');
   const [customBehaviorPoints, setCustomBehaviorPoints] = useState<string>('1');
 
-  // Animation Feedback State
   const [feedbackAnimation, setFeedbackAnimation] = useState<{ type: BehaviorType, text: string } | null>(null);
 
-  // Random Picker State
   const [randomStudent, setRandomStudent] = useState<Student | null>(null);
   const [isRandomPicking, setIsRandomPicking] = useState(false);
   
-  // Logic: Extract unique Grades from students
   const availableGrades = useMemo(() => {
       const grades = new Set<string>();
       students.forEach(s => {
           if (s.grade) grades.add(s.grade);
           else if (s.classes[0]) {
-              // Attempt to parse grade from class (e.g. "5/1" -> "5")
               const match = s.classes[0].match(/^(\d+)/);
               if (match) grades.add(match[1]);
           }
@@ -138,7 +129,6 @@ const StudentList: React.FC<StudentListProps> = ({ students, classes, onAddClass
       return Array.from(grades).sort();
   }, [students, classes]);
 
-  // Logic: Filter classes based on selected grade
   const visibleClasses = useMemo(() => {
       if (selectedGrade === 'all') return classes;
       return classes.filter(c => c.startsWith(selectedGrade));
@@ -156,7 +146,6 @@ const StudentList: React.FC<StudentListProps> = ({ students, classes, onAddClass
       return matchName && matchClass && matchGrade;
   }), [students, searchTerm, selectedClass, selectedGrade]);
 
-  // Clear animation after delay
   useEffect(() => {
       if (feedbackAnimation) {
           const timer = setTimeout(() => setFeedbackAnimation(null), 1800);
@@ -272,7 +261,7 @@ const StudentList: React.FC<StudentListProps> = ({ students, classes, onAddClass
   };
 
   return (
-    <div className="flex flex-col h-[calc(100vh-80px)] text-white pb-20 relative">
+    <div className="flex flex-col h-[calc(100vh-80px)] text-slate-800 pb-20 relative">
         
         {/* --- FEEDBACK ANIMATION OVERLAY --- */}
         <AnimatePresence>
@@ -288,8 +277,8 @@ const StudentList: React.FC<StudentListProps> = ({ students, classes, onAddClass
                         p-8 rounded-[3rem] shadow-2xl flex flex-col items-center gap-4 border-4
                         backdrop-blur-xl
                         ${feedbackAnimation.type === 'positive' 
-                            ? 'bg-emerald-900/90 border-emerald-600 text-white shadow-emerald-500/50' 
-                            : 'bg-rose-900/90 border-rose-600 text-white shadow-rose-500/50'}
+                            ? 'bg-emerald-500/90 border-emerald-600 text-white shadow-emerald-500/50' 
+                            : 'bg-rose-500/90 border-rose-600 text-white shadow-rose-500/50'}
                     `}>
                         <div className="bg-white/20 p-6 rounded-full shadow-inner">
                             {feedbackAnimation.type === 'positive' ? (
@@ -310,18 +299,18 @@ const StudentList: React.FC<StudentListProps> = ({ students, classes, onAddClass
             )}
         </AnimatePresence>
 
-        {/* Sticky Header */}
-        <div className="sticky top-0 z-30 pb-2 glass-heavy bg-[#1f2937] border-b border-gray-700 shadow-md -mx-4 px-4 -mt-4">
+        {/* Sticky Header (Light Theme) */}
+        <div className="sticky top-0 z-30 pb-2 glass-heavy bg-white border-b border-gray-200 shadow-sm -mx-4 px-4 -mt-4">
             <div className="flex justify-between items-center mb-4 pt-safe mt-4">
-                <h1 className="text-2xl font-black text-white tracking-tight drop-shadow-sm">قائمة الطلاب</h1>
+                <h1 className="text-2xl font-black text-slate-900 tracking-tight drop-shadow-sm">قائمة الطلاب</h1>
                 <div className="flex gap-2">
-                    <button onClick={() => setShowManualAddModal(true)} className="w-10 h-10 rounded-2xl glass-icon bg-[#374151] text-indigo-400 active:scale-95 transition-all shadow-md border border-gray-600 shimmer-hover" title="إضافة طالب">
+                    <button onClick={() => setShowManualAddModal(true)} className="w-10 h-10 rounded-2xl glass-icon bg-gray-50 text-indigo-500 active:scale-95 transition-all shadow-sm border border-gray-200 shimmer-hover" title="إضافة طالب">
                         <UserPlus className="w-5 h-5"/>
                     </button>
-                    <button onClick={() => setShowImportModal(true)} className="w-10 h-10 rounded-2xl glass-icon bg-[#374151] text-emerald-500 active:scale-95 transition-all shadow-md border border-gray-600 shimmer-hover" title="استيراد Excel">
+                    <button onClick={() => setShowImportModal(true)} className="w-10 h-10 rounded-2xl glass-icon bg-gray-50 text-emerald-600 active:scale-95 transition-all shadow-sm border border-gray-200 shimmer-hover" title="استيراد Excel">
                         <Upload className="w-5 h-5"/>
                     </button>
-                    <button onClick={pickRandomStudent} className="w-10 h-10 rounded-2xl glass-icon bg-[#374151] text-purple-500 active:scale-95 transition-all shadow-md border border-gray-600 shimmer-hover" title="اختيار عشوائي">
+                    <button onClick={pickRandomStudent} className="w-10 h-10 rounded-2xl glass-icon bg-gray-50 text-purple-600 active:scale-95 transition-all shadow-sm border border-gray-200 shimmer-hover" title="اختيار عشوائي">
                         <Sparkles className="w-5 h-5"/>
                     </button>
                 </div>
@@ -332,39 +321,38 @@ const StudentList: React.FC<StudentListProps> = ({ students, classes, onAddClass
                 {/* 1. Grades (Level) */}
                 {availableGrades.length > 0 && (
                     <div className="flex gap-2 overflow-x-auto no-scrollbar pb-1">
-                        <button onClick={() => { setSelectedGrade('all'); setSelectedClass('all'); }} className={`px-4 py-1.5 text-[10px] font-black whitespace-nowrap transition-all rounded-lg border ${selectedGrade === 'all' ? 'bg-indigo-600 text-white border-indigo-700' : 'glass-card bg-[#374151] border-gray-600 text-gray-300'}`}>كل المراحل</button>
+                        <button onClick={() => { setSelectedGrade('all'); setSelectedClass('all'); }} className={`px-4 py-1.5 text-[10px] font-black whitespace-nowrap transition-all rounded-lg border ${selectedGrade === 'all' ? 'bg-indigo-600 text-white border-indigo-700' : 'bg-white border-gray-200 text-gray-500'}`}>كل المراحل</button>
                         {availableGrades.map(g => (
-                            <button key={g} onClick={() => { setSelectedGrade(g); setSelectedClass('all'); }} className={`px-4 py-1.5 text-[10px] font-black whitespace-nowrap transition-all rounded-lg border ${selectedGrade === g ? 'bg-indigo-600 text-white border-indigo-700' : 'glass-card bg-[#374151] border-gray-600 text-gray-300'}`}>صف {g}</button>
+                            <button key={g} onClick={() => { setSelectedGrade(g); setSelectedClass('all'); }} className={`px-4 py-1.5 text-[10px] font-black whitespace-nowrap transition-all rounded-lg border ${selectedGrade === g ? 'bg-indigo-600 text-white border-indigo-700' : 'bg-white border-gray-200 text-gray-500'}`}>صف {g}</button>
                         ))}
                     </div>
                 )}
 
                 {/* 2. Classes (Sub-level) + Search */}
                 <div className="flex items-center gap-3">
-                    <button onClick={() => setShowManageClasses(true)} className="w-9 h-9 flex items-center justify-center rounded-xl glass-card bg-[#374151] border border-gray-600 hover:bg-[#111827] active:scale-95 text-gray-300 shadow-sm" title="إدارة الفصول">
+                    <button onClick={() => setShowManageClasses(true)} className="w-9 h-9 flex items-center justify-center rounded-xl glass-card bg-white border border-gray-200 hover:bg-gray-50 active:scale-95 text-gray-500 shadow-sm" title="إدارة الفصول">
                         <Settings className="w-4 h-4"/>
                     </button>
                     <div className="flex gap-2 overflow-x-auto no-scrollbar pb-1 max-w-[55%]">
                         {visibleClasses.map(c => (
-                            <button key={c} onClick={() => setSelectedClass(c)} className={`px-4 py-2 text-xs font-black whitespace-nowrap transition-all rounded-xl border shadow-sm ${selectedClass === c ? 'bg-indigo-600 text-white border-indigo-700 shadow-indigo-500/30' : 'glass-card bg-[#374151] border-gray-600 hover:bg-[#111827] text-gray-300'}`}>{c}</button>
+                            <button key={c} onClick={() => setSelectedClass(c)} className={`px-4 py-2 text-xs font-black whitespace-nowrap transition-all rounded-xl border shadow-sm ${selectedClass === c ? 'bg-indigo-600 text-white border-indigo-700 shadow-indigo-200' : 'bg-white border-gray-200 hover:bg-gray-50 text-gray-500'}`}>{c}</button>
                         ))}
-                        <button onClick={() => setShowAddClassModal(true)} className="px-3 py-2 rounded-xl glass-card bg-[#374151] border border-gray-600 hover:bg-[#111827] active:scale-95 text-gray-400"><Plus className="w-4 h-4"/></button>
+                        <button onClick={() => setShowAddClassModal(true)} className="px-3 py-2 rounded-xl glass-card bg-white border border-gray-200 hover:bg-gray-50 active:scale-95 text-gray-400"><Plus className="w-4 h-4"/></button>
                     </div>
                     <div className="relative flex-1">
-                        <Search className="absolute right-3 top-3 w-4 h-4 text-gray-500" />
+                        <Search className="absolute right-3 top-3 w-4 h-4 text-gray-400" />
                         <input 
                             type="text" 
                             placeholder="بحث..." 
                             value={searchTerm}
                             onChange={(e) => setSearchTerm(e.target.value)}
-                            className="w-full glass-input bg-[#374151] rounded-xl py-2.5 pr-9 pl-3 text-xs font-bold outline-none border border-gray-600 focus:border-indigo-500 shadow-inner text-white" 
+                            className="w-full glass-input bg-white rounded-xl py-2.5 pr-9 pl-3 text-xs font-bold outline-none border border-gray-200 focus:border-indigo-500 shadow-sm text-slate-800" 
                         />
                     </div>
                 </div>
             </div>
         </div>
 
-        {/* ... Rest of StudentList component (unmodified) ... */}
         {/* Student List Content */}
         <div className="flex-1 overflow-y-auto px-4 custom-scrollbar">
             {filteredStudents.length > 0 ? (
@@ -380,7 +368,7 @@ const StudentList: React.FC<StudentListProps> = ({ students, classes, onAddClass
                 </div>
             ) : (
                 <div className="flex flex-col items-center justify-center py-20 opacity-50">
-                    <LayoutGrid className="w-16 h-16 text-gray-600 mb-4" />
+                    <LayoutGrid className="w-16 h-16 text-gray-400 mb-4" />
                     <p className="text-sm font-bold text-gray-500">لا يوجد طلاب مطابقين</p>
                 </div>
             )}
@@ -388,60 +376,60 @@ const StudentList: React.FC<StudentListProps> = ({ students, classes, onAddClass
 
         {/* --- Manage Classes Modal --- */}
         <Modal isOpen={showManageClasses} onClose={() => setShowManageClasses(false)} className="max-w-md rounded-[2rem]">
-            <div className="text-center text-white">
+            <div className="text-center text-slate-900">
                 <h3 className="font-black text-xl mb-4">إعدادات الفصول والصفوف</h3>
-                <p className="text-xs text-gray-400 mb-6 font-bold">يمكنك هنا حذف الفصول أو الصفوف الدراسية بالكامل. <br/> <span className="text-rose-400">تنبيه: الحذف سيؤثر على جميع الصفحات.</span></p>
+                <p className="text-xs text-gray-500 mb-6 font-bold">يمكنك هنا حذف الفصول أو الصفوف الدراسية بالكامل. <br/> <span className="text-rose-500">تنبيه: الحذف سيؤثر على جميع الصفحات.</span></p>
                 
                 <div className="space-y-6 text-right">
                     
                     {/* Grades Management */}
                     <div>
-                        <h4 className="text-xs font-black text-indigo-400 mb-2 border-b border-white/10 pb-1">المراحل الدراسية (Grades)</h4>
+                        <h4 className="text-xs font-black text-indigo-600 mb-2 border-b border-gray-200 pb-1">المراحل الدراسية (Grades)</h4>
                         {availableGrades.length > 0 ? (
                             <div className="grid grid-cols-2 gap-2">
                                 {availableGrades.map(g => (
-                                    <div key={g} className="flex items-center justify-between p-3 bg-[#374151] rounded-xl border border-white/10">
+                                    <div key={g} className="flex items-center justify-between p-3 bg-gray-50 rounded-xl border border-gray-200">
                                         <span className="text-sm font-bold">الصف {g}</span>
-                                        <button onClick={() => executeDeleteGrade(g)} className="p-2 text-rose-400 hover:bg-white/10 rounded-lg transition-colors" title="حذف الصف بالكامل">
+                                        <button onClick={() => executeDeleteGrade(g)} className="p-2 text-rose-500 hover:bg-rose-50 rounded-lg transition-colors" title="حذف الصف بالكامل">
                                             <Trash2 className="w-4 h-4" />
                                         </button>
                                     </div>
                                 ))}
                             </div>
-                        ) : <p className="text-[10px] text-gray-500">لا توجد مراحل مضافة.</p>}
+                        ) : <p className="text-[10px] text-gray-400">لا توجد مراحل مضافة.</p>}
                     </div>
 
                     {/* Classes Management */}
                     <div>
-                        <h4 className="text-xs font-black text-indigo-400 mb-2 border-b border-white/10 pb-1">الفصول (Classes)</h4>
+                        <h4 className="text-xs font-black text-indigo-600 mb-2 border-b border-gray-200 pb-1">الفصول (Classes)</h4>
                         {classes.length > 0 ? (
                             <div className="grid grid-cols-2 gap-2 max-h-48 overflow-y-auto custom-scrollbar">
                                 {classes.map(c => (
-                                    <div key={c} className="flex items-center justify-between p-3 bg-[#374151] rounded-xl border border-white/10">
+                                    <div key={c} className="flex items-center justify-between p-3 bg-gray-50 rounded-xl border border-gray-200">
                                         <span className="text-sm font-bold">{c}</span>
-                                        <button onClick={() => executeDeleteClass(c)} className="p-2 text-rose-400 hover:bg-white/10 rounded-lg transition-colors" title="حذف الفصل">
+                                        <button onClick={() => executeDeleteClass(c)} className="p-2 text-rose-500 hover:bg-rose-50 rounded-lg transition-colors" title="حذف الفصل">
                                             <Trash2 className="w-4 h-4" />
                                         </button>
                                     </div>
                                 ))}
                             </div>
-                        ) : <p className="text-[10px] text-gray-500">لا توجد فصول مضافة.</p>}
+                        ) : <p className="text-[10px] text-gray-400">لا توجد فصول مضافة.</p>}
                     </div>
 
                 </div>
                 
-                <button onClick={() => setShowManageClasses(false)} className="mt-6 w-full py-3 bg-gray-700 text-white rounded-xl font-bold text-xs hover:bg-gray-600">إغلاق</button>
+                <button onClick={() => setShowManageClasses(false)} className="mt-6 w-full py-3 bg-gray-100 text-slate-600 rounded-xl font-bold text-xs hover:bg-gray-200">إغلاق</button>
             </div>
         </Modal>
 
         {/* ... Other Modals ... */}
         <Modal isOpen={showManualAddModal} onClose={() => { setShowManualAddModal(false); setEditingStudent(null); setEditName(''); setEditPhone(''); setEditClass(''); }}>
             <div className="text-center">
-                <h3 className="font-black text-xl mb-4 text-white">{editingStudent ? 'تعديل بيانات الطالب' : 'إضافة طالب جديد'}</h3>
+                <h3 className="font-black text-xl mb-4 text-slate-800">{editingStudent ? 'تعديل بيانات الطالب' : 'إضافة طالب جديد'}</h3>
                 <div className="space-y-3">
-                    <input className="w-full p-3 glass-input bg-[#111827] rounded-xl font-bold text-sm outline-none border-gray-600 focus:border-indigo-500 text-white" placeholder="اسم الطالب" value={editName} onChange={e => setEditName(e.target.value)} />
-                    <input className="w-full p-3 glass-input bg-[#111827] rounded-xl font-bold text-sm outline-none border-gray-600 focus:border-indigo-500 text-white" placeholder="الصف (مثال: 5/1)" value={editClass} onChange={e => setEditClass(e.target.value)} />
-                    <input className="w-full p-3 glass-input bg-[#111827] rounded-xl font-bold text-sm outline-none border-gray-600 focus:border-indigo-500 text-white" placeholder="رقم ولي الأمر (اختياري)" value={editPhone} onChange={e => setEditPhone(e.target.value)} type="tel" />
+                    <input className="w-full p-3 glass-input bg-white rounded-xl font-bold text-sm outline-none border-gray-200 focus:border-indigo-500 text-slate-800" placeholder="اسم الطالب" value={editName} onChange={e => setEditName(e.target.value)} />
+                    <input className="w-full p-3 glass-input bg-white rounded-xl font-bold text-sm outline-none border-gray-200 focus:border-indigo-500 text-slate-800" placeholder="الصف (مثال: 5/1)" value={editClass} onChange={e => setEditClass(e.target.value)} />
+                    <input className="w-full p-3 glass-input bg-white rounded-xl font-bold text-sm outline-none border-gray-200 focus:border-indigo-500 text-slate-800" placeholder="رقم ولي الأمر (اختياري)" value={editPhone} onChange={e => setEditPhone(e.target.value)} type="tel" />
                     <button onClick={handleSaveStudent} className="w-full py-3 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl font-black text-sm shadow-lg">حفظ</button>
                 </div>
             </div>
@@ -453,25 +441,25 @@ const StudentList: React.FC<StudentListProps> = ({ students, classes, onAddClass
 
         <Modal isOpen={showAddClassModal} onClose={() => setShowAddClassModal(false)} className="max-w-xs rounded-[2rem]">
             <div className="text-center">
-                <h3 className="font-black text-lg mb-4 text-white">إضافة فصل جديد</h3>
-                <input autoFocus className="w-full p-3 glass-input bg-[#111827] rounded-xl font-bold text-sm mb-4 outline-none border-gray-600 focus:border-indigo-500 text-white" placeholder="اسم الفصل" value={newClassInput} onChange={e => setNewClassInput(e.target.value)} />
+                <h3 className="font-black text-lg mb-4 text-slate-800">إضافة فصل جديد</h3>
+                <input autoFocus className="w-full p-3 glass-input bg-white rounded-xl font-bold text-sm mb-4 outline-none border-gray-200 focus:border-indigo-500 text-slate-800" placeholder="اسم الفصل" value={newClassInput} onChange={e => setNewClassInput(e.target.value)} />
                 <button onClick={() => { if(newClassInput.trim()) { onAddClass(newClassInput.trim()); setNewClassInput(''); setShowAddClassModal(false); } }} className="w-full py-3 bg-indigo-600 text-white rounded-xl font-black text-sm">إضافة</button>
             </div>
         </Modal>
 
         <Modal isOpen={isRandomPicking || !!randomStudent} onClose={() => { setRandomStudent(null); setIsRandomPicking(false); }} className="max-w-xs rounded-[2.5rem]">
             <div className="text-center py-6">
-                <div className="w-24 h-24 mx-auto mb-4 rounded-full glass-icon border-4 border-indigo-600 shadow-xl overflow-hidden relative bg-[#1f2937]">
+                <div className="w-24 h-24 mx-auto mb-4 rounded-full glass-icon border-4 border-indigo-100 shadow-xl overflow-hidden relative bg-white">
                     {randomStudent ? (
-                        randomStudent.avatar ? <img src={randomStudent.avatar} className="w-full h-full object-cover" /> : <div className="w-full h-full flex items-center justify-center text-4xl font-black text-indigo-400">{randomStudent.name.charAt(0)}</div>
+                        randomStudent.avatar ? <img src={randomStudent.avatar} className="w-full h-full object-cover" /> : <div className="w-full h-full flex items-center justify-center text-4xl font-black text-indigo-600">{randomStudent.name.charAt(0)}</div>
                     ) : (
                         <Sparkles className="w-10 h-10 text-indigo-400 animate-spin" />
                     )}
                 </div>
-                <h3 className="text-xl font-black text-white mb-2 min-h-[2rem]">
+                <h3 className="text-xl font-black text-slate-900 mb-2 min-h-[2rem]">
                     {randomStudent ? randomStudent.name : 'جاري الاختيار...'}
                 </h3>
-                {randomStudent && <p className="text-sm font-bold text-gray-400 mb-6">{randomStudent.classes[0]}</p>}
+                {randomStudent && <p className="text-sm font-bold text-gray-500 mb-6">{randomStudent.classes[0]}</p>}
                 
                 {randomStudent && (
                     <button onClick={() => { setRandomStudent(null); pickRandomStudent(); }} className="px-6 py-3 bg-indigo-600 text-white rounded-xl font-black text-sm shadow-lg w-full">
@@ -483,14 +471,14 @@ const StudentList: React.FC<StudentListProps> = ({ students, classes, onAddClass
 
         <Modal isOpen={!!showPositiveReasons} onClose={() => setShowPositiveReasons(null)} className="max-w-xs rounded-[2rem]">
             <div className="text-center">
-                <h3 className="font-black text-lg mb-4 text-emerald-400">سلوك إيجابي</h3>
+                <h3 className="font-black text-lg mb-4 text-emerald-600">سلوك إيجابي</h3>
                 <div className="grid grid-cols-2 gap-2 mb-4">
                     {['مشاركة مميزة', 'واجب منزلي', 'نظافة', 'تعاون', 'إجابة نموذجية', 'هدوء'].map(r => (
-                        <button key={r} onClick={() => { if(showPositiveReasons) handleAddBehavior(showPositiveReasons.student, 'positive', r, 1); }} className="p-2 glass-card bg-[#374151] text-xs font-bold hover:bg-emerald-900/30 text-gray-300 transition-colors border border-gray-600">{r}</button>
+                        <button key={r} onClick={() => { if(showPositiveReasons) handleAddBehavior(showPositiveReasons.student, 'positive', r, 1); }} className="p-2 glass-card bg-gray-50 text-xs font-bold hover:bg-emerald-50 text-gray-600 transition-colors border border-gray-200">{r}</button>
                     ))}
                 </div>
                 <div className="flex gap-2">
-                    <input placeholder="سبب آخر..." value={customBehaviorReason} onChange={e => setCustomBehaviorReason(e.target.value)} className="flex-1 p-2 glass-input bg-[#111827] rounded-lg text-xs font-bold border-gray-600 text-white" />
+                    <input placeholder="سبب آخر..." value={customBehaviorReason} onChange={e => setCustomBehaviorReason(e.target.value)} className="flex-1 p-2 glass-input bg-white rounded-lg text-xs font-bold border-gray-200 text-slate-800" />
                     <button onClick={() => { if(showPositiveReasons) handleManualBehaviorSubmit('positive', showPositiveReasons.student); }} className="p-2 bg-emerald-600 text-white rounded-lg"><Plus className="w-4 h-4"/></button>
                 </div>
             </div>
@@ -498,14 +486,14 @@ const StudentList: React.FC<StudentListProps> = ({ students, classes, onAddClass
 
         <Modal isOpen={!!showNegativeReasons} onClose={() => setShowNegativeReasons(null)} className="max-w-xs rounded-[2rem]">
             <div className="text-center">
-                <h3 className="font-black text-lg mb-4 text-rose-400">سلوك سلبي</h3>
+                <h3 className="font-black text-lg mb-4 text-rose-600">سلوك سلبي</h3>
                 <div className="grid grid-cols-2 gap-2 mb-4">
                     {['إزعاج', 'نسيان كتاب', 'نوم', 'تأخر', 'ألفاظ', 'شجار'].map(r => (
-                        <button key={r} onClick={() => { if(showNegativeReasons) handleAddBehavior(showNegativeReasons.student, 'negative', r, -1); }} className="p-2 glass-card bg-[#374151] text-xs font-bold hover:bg-rose-900/30 text-gray-300 transition-colors border border-gray-600">{r}</button>
+                        <button key={r} onClick={() => { if(showNegativeReasons) handleAddBehavior(showNegativeReasons.student, 'negative', r, -1); }} className="p-2 glass-card bg-gray-50 text-xs font-bold hover:bg-rose-50 text-gray-600 transition-colors border border-gray-200">{r}</button>
                     ))}
                 </div>
                 <div className="flex gap-2">
-                    <input placeholder="سبب آخر..." value={customBehaviorReason} onChange={e => setCustomBehaviorReason(e.target.value)} className="flex-1 p-2 glass-input bg-[#111827] rounded-lg text-xs font-bold border-gray-600 text-white" />
+                    <input placeholder="سبب آخر..." value={customBehaviorReason} onChange={e => setCustomBehaviorReason(e.target.value)} className="flex-1 p-2 glass-input bg-white rounded-lg text-xs font-bold border-gray-200 text-slate-800" />
                     <button onClick={() => { if(showNegativeReasons) handleManualBehaviorSubmit('negative', showNegativeReasons.student); }} className="p-2 bg-rose-600 text-white rounded-lg"><Plus className="w-4 h-4"/></button>
                 </div>
             </div>

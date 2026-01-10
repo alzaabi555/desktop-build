@@ -49,12 +49,12 @@ const GradeBook: React.FC<GradeBookProps> = ({
 
   const styles = {
       card: `
-        glass-card border border-blue-500 rounded-[1.8rem] 
-        hover:border-indigo-400/50 hover:shadow-lg hover:shadow-indigo-500/20 hover:-translate-y-1 hover:bg-[#374151]
-        transition-all duration-300 relative overflow-hidden backdrop-blur-md bg-[#1f2937]
+        glass-card border border-indigo-100 rounded-[1.8rem] 
+        hover:border-indigo-300 hover:shadow-lg hover:shadow-indigo-100 hover:-translate-y-1 hover:bg-white
+        transition-all duration-300 relative overflow-hidden backdrop-blur-md bg-white
       `,
-      pill: 'rounded-xl border border-white/10 shadow-sm',
-      header: 'glass-heavy border-b border-white/10 shadow-lg backdrop-blur-xl -mx-4 -mt-4 px-4 pt-safe sticky top-0 z-30 bg-[#1f2937] pb-2',
+      pill: 'rounded-xl border border-gray-200 shadow-sm',
+      header: 'glass-heavy border-b border-gray-200 shadow-sm backdrop-blur-xl -mx-4 -mt-4 px-4 pt-safe sticky top-0 z-30 bg-white pb-2',
   };
 
   useEffect(() => {
@@ -64,7 +64,6 @@ const GradeBook: React.FC<GradeBookProps> = ({
      }
   }, [showAddGrade, editingGrade]);
 
-  // Logic: Extract unique Grades
   const availableGrades = useMemo(() => {
       const grades = new Set<string>();
       students.forEach(s => {
@@ -74,11 +73,9 @@ const GradeBook: React.FC<GradeBookProps> = ({
               if (match) grades.add(match[1]);
           }
       });
-      // REMOVED "GENERAL" FALLBACK
       return Array.from(grades).sort();
   }, [students, classes]);
 
-  // Logic: Filter classes based on selected grade
   const visibleClasses = useMemo(() => {
       if (selectedGrade === 'all') return classes;
       return classes.filter(c => c.startsWith(selectedGrade));
@@ -88,13 +85,7 @@ const GradeBook: React.FC<GradeBookProps> = ({
   
   const normalizeText = (text: string) => {
       if (!text) return '';
-      return String(text)
-          .trim()
-          .toLowerCase()
-          .replace(/[أإآ]/g, 'ا')
-          .replace(/ة/g, 'ه')
-          .replace(/ى/g, 'ي')
-          .replace(/[ـ]/g, ''); 
+      return String(text).trim().toLowerCase().replace(/[أإآ]/g, 'ا').replace(/ة/g, 'ه').replace(/ى/g, 'ي').replace(/[ـ]/g, ''); 
   };
 
   const extractNumericScore = (val: any): number | null => { 
@@ -114,25 +105,22 @@ const GradeBook: React.FC<GradeBookProps> = ({
   };
 
   const getSymbolColor = (score: number) => {
-      if (score >= 90) return 'text-emerald-400'; 
-      if (score >= 80) return 'text-blue-400';
-      if (score >= 65) return 'text-amber-400';
-      if (score >= 50) return 'text-orange-400';
-      return 'text-rose-400';
+      if (score >= 90) return 'text-emerald-600'; 
+      if (score >= 80) return 'text-blue-600';
+      if (score >= 65) return 'text-amber-600';
+      if (score >= 50) return 'text-orange-600';
+      return 'text-rose-600';
   };
 
   const filteredStudents = useMemo(() => {
     if (!Array.isArray(students)) return [];
     return students.filter(s => {
       if (!s || typeof s !== 'object') return false;
-      
       const matchesClass = selectedClass === 'all' || (s.classes && s.classes.includes(selectedClass));
-      
       let matchesGrade = true;
       if (selectedGrade !== 'all') {
           matchesGrade = s.grade === selectedGrade || (s.classes[0] && s.classes[0].startsWith(selectedGrade));
       }
-
       return matchesClass && matchesGrade;
     });
   }, [students, selectedClass, selectedGrade]);
@@ -281,7 +269,6 @@ const GradeBook: React.FC<GradeBookProps> = ({
   };
 
   const handleImportExcel = async (e: React.ChangeEvent<HTMLInputElement>) => {
-      // ... same logic as before (unchanged)
       const file = e.target.files?.[0];
       if (!file) return;
       setIsImporting(true);
@@ -392,24 +379,24 @@ const GradeBook: React.FC<GradeBookProps> = ({
   };
 
   return (
-    <div className="flex flex-col h-[calc(100vh-80px)] text-white pb-20">
+    <div className="flex flex-col h-[calc(100vh-80px)] text-slate-800 pb-20">
         
-        {/* Sticky Header */}
+        {/* Sticky Header (Light) */}
         <div className={styles.header}>
             <div className="flex justify-between items-center mb-3 pt-4">
-                <h1 className="text-2xl font-black text-white">سجل الدرجات</h1>
+                <h1 className="text-2xl font-black text-slate-900">سجل الدرجات</h1>
                 <div className="flex gap-2">
-                    <label className="w-9 h-9 rounded-full glass-icon text-emerald-400 active:scale-95 transition-transform flex items-center justify-center cursor-pointer shadow-md border border-white/20 hover:scale-105" title="استيراد Excel">
+                    <label className="w-9 h-9 rounded-full glass-icon text-emerald-500 active:scale-95 transition-transform flex items-center justify-center cursor-pointer shadow-sm border border-gray-200 hover:scale-105" title="استيراد Excel">
                             {isImporting ? <Loader2 className="w-4 h-4 animate-spin"/> : <FileUp className="w-4 h-4"/>}
                             <input type="file" ref={fileInputRef} onChange={handleImportExcel} accept=".xlsx, .xls" className="hidden" />
                     </label>
-                    <button onClick={handleExportExcel} disabled={isExporting} className="w-9 h-9 rounded-full glass-icon text-indigo-400 active:scale-95 transition-transform shadow-md border border-white/20 hover:scale-105" title="تصدير Excel">
+                    <button onClick={handleExportExcel} disabled={isExporting} className="w-9 h-9 rounded-full glass-icon text-indigo-500 active:scale-95 transition-transform shadow-sm border border-gray-200 hover:scale-105" title="تصدير Excel">
                         {isExporting ? <Loader2 className="w-4 h-4 animate-spin"/> : <FileSpreadsheet className="w-4 h-4"/>}
                     </button>
-                    <button onClick={handleClearGrades} className="w-9 h-9 rounded-full glass-icon text-rose-400 active:scale-95 transition-transform shadow-md border border-white/20 hover:scale-105" title="حذف درجات الفصل الحالي">
+                    <button onClick={handleClearGrades} className="w-9 h-9 rounded-full glass-icon text-rose-500 active:scale-95 transition-transform shadow-sm border border-gray-200 hover:scale-105" title="حذف درجات الفصل الحالي">
                         <Trash2 className="w-4 h-4"/>
                     </button>
-                    <button onClick={() => setShowToolsManager(true)} className="w-9 h-9 rounded-full glass-icon text-white active:scale-95 transition-transform shadow-md border border-white/20 hover:scale-105" title="إعدادات أدوات التقويم">
+                    <button onClick={() => setShowToolsManager(true)} className="w-9 h-9 rounded-full glass-icon text-gray-500 active:scale-95 transition-transform shadow-sm border border-gray-200 hover:scale-105" title="إعدادات أدوات التقويم">
                         <Settings className="w-4 h-4"/>
                     </button>
                 </div>
@@ -420,9 +407,9 @@ const GradeBook: React.FC<GradeBookProps> = ({
                 {/* Grades */}
                 {availableGrades.length > 0 && (
                     <div className="flex gap-2 overflow-x-auto no-scrollbar pb-1">
-                        <button onClick={() => { setSelectedGrade('all'); setSelectedClass('all'); }} className={`px-4 py-1.5 text-[10px] font-bold whitespace-nowrap transition-all rounded-lg border ${selectedGrade === 'all' ? 'bg-indigo-600 text-white border-indigo-700 shadow-md' : 'glass-card bg-[#374151] border-gray-600 text-gray-300'}`}>كل المراحل</button>
+                        <button onClick={() => { setSelectedGrade('all'); setSelectedClass('all'); }} className={`px-4 py-1.5 text-[10px] font-bold whitespace-nowrap transition-all rounded-lg border ${selectedGrade === 'all' ? 'bg-indigo-600 text-white border-indigo-700 shadow-md' : 'glass-card bg-white border-gray-200 text-gray-500'}`}>كل المراحل</button>
                         {availableGrades.map(g => (
-                            <button key={g} onClick={() => { setSelectedGrade(g); setSelectedClass('all'); }} className={`px-4 py-1.5 text-[10px] font-bold whitespace-nowrap transition-all rounded-lg border ${selectedGrade === g ? 'bg-indigo-600 text-white border-indigo-700 shadow-md' : 'glass-card bg-[#374151] border-gray-600 text-gray-300'}`}>صف {g}</button>
+                            <button key={g} onClick={() => { setSelectedGrade(g); setSelectedClass('all'); }} className={`px-4 py-1.5 text-[10px] font-bold whitespace-nowrap transition-all rounded-lg border ${selectedGrade === g ? 'bg-indigo-600 text-white border-indigo-700 shadow-md' : 'glass-card bg-white border-gray-200 text-gray-500'}`}>صف {g}</button>
                         ))}
                     </div>
                 )}
@@ -430,7 +417,7 @@ const GradeBook: React.FC<GradeBookProps> = ({
                 {/* Classes */}
                 <div className="flex gap-2 overflow-x-auto no-scrollbar pb-1">
                     {visibleClasses.map(c => (
-                        <button key={c} onClick={() => setSelectedClass(c)} className={`px-4 py-2 text-xs font-bold whitespace-nowrap transition-all ${selectedClass === c ? 'bg-indigo-600 text-white shadow-indigo-500/50' : 'glass-card text-white hover:bg-white/10'} ${styles.pill}`}>{c}</button>
+                        <button key={c} onClick={() => setSelectedClass(c)} className={`px-4 py-2 text-xs font-bold whitespace-nowrap transition-all ${selectedClass === c ? 'bg-indigo-600 text-white shadow-indigo-200' : 'glass-card text-gray-500 hover:bg-gray-50'} ${styles.pill}`}>{c}</button>
                     ))}
                 </div>
             </div>
@@ -441,13 +428,13 @@ const GradeBook: React.FC<GradeBookProps> = ({
                     <button 
                         key={tool.id}
                         onClick={() => { setBulkFillTool(tool); setBulkScore(''); }}
-                        className="px-3 py-1.5 glass-card rounded-lg text-[10px] font-bold text-white whitespace-nowrap hover:bg-white/10 border border-white/10 flex items-center gap-1 active:scale-95 shadow-sm"
+                        className="px-3 py-1.5 glass-card rounded-lg text-[10px] font-bold text-gray-600 whitespace-nowrap hover:bg-white border border-gray-200 flex items-center gap-1 active:scale-95 shadow-sm"
                     >
-                        <Wand2 className="w-3 h-3 text-indigo-400" />
+                        <Wand2 className="w-3 h-3 text-indigo-500" />
                         رصد {tool.name}
                     </button>
                 )) : (
-                    <span className="text-[10px] text-white font-bold px-2">قم بإضافة أدوات تقويم للبدء</span>
+                    <span className="text-[10px] text-gray-400 font-bold px-2">قم بإضافة أدوات تقويم للبدء</span>
                 )}
             </div>
         </div>
@@ -462,20 +449,17 @@ const GradeBook: React.FC<GradeBookProps> = ({
 
                         return (
                             <div key={student.id} onClick={() => setShowAddGrade({ student })} className={`${styles.card} p-4 flex items-center justify-between cursor-pointer active:scale-[0.99] group`}>
-                                {/* Shimmer Effect */}
-                                <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/5 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-1000 ease-in-out pointer-events-none"></div>
-
                                 <div className="flex items-center gap-3 relative z-10">
-                                    <div className="w-12 h-12 rounded-full bg-[#111827] flex items-center justify-center font-bold text-white overflow-hidden shadow-md border border-white/20 group-hover:border-indigo-400">
+                                    <div className="w-12 h-12 rounded-full bg-gray-100 flex items-center justify-center font-bold text-gray-500 overflow-hidden shadow-sm border border-gray-200 group-hover:border-indigo-300">
                                         {student.avatar ? <img src={student.avatar} className="w-full h-full object-cover"/> : student.name.charAt(0)}
                                     </div>
                                     <div>
-                                        <h3 className="text-sm font-black text-white group-hover:text-indigo-400 transition-colors">{student.name}</h3>
+                                        <h3 className="text-sm font-black text-slate-800 group-hover:text-indigo-600 transition-colors">{student.name}</h3>
                                         <div className="flex items-center gap-2 mt-1">
                                             {tools.slice(0, 3).map(tool => {
                                                 const grade = semGrades.find(g => g.category.trim() === tool.name.trim());
                                                 return (
-                                                    <span key={tool.id} className="text-[9px] px-2 py-0.5 rounded-lg bg-[#111827] border border-white/10 text-gray-300">
+                                                    <span key={tool.id} className="text-[9px] px-2 py-0.5 rounded-lg bg-gray-50 border border-gray-100 text-gray-500">
                                                         {tool.name}: {grade ? grade.score : '-'}
                                                     </span>
                                                 )
@@ -483,7 +467,7 @@ const GradeBook: React.FC<GradeBookProps> = ({
                                         </div>
                                     </div>
                                 </div>
-                                <div className="text-center bg-[#111827] px-3 py-1.5 rounded-xl border border-white/10 shadow-inner group-hover:bg-[#374151] transition-colors relative z-10">
+                                <div className="text-center bg-gray-50 px-3 py-1.5 rounded-xl border border-gray-100 shadow-inner group-hover:bg-white transition-colors relative z-10">
                                     <span className={`block text-xl font-black ${getSymbolColor(totalScore)}`}>{totalScore}</span>
                                     <span className="text-[9px] font-bold text-gray-400">{getGradeSymbol(totalScore)}</span>
                                 </div>
@@ -492,25 +476,25 @@ const GradeBook: React.FC<GradeBookProps> = ({
                     })}
                 </div>
             ) : (
-                <div className="flex flex-col items-center justify-center py-20 text-white opacity-50">
+                <div className="flex flex-col items-center justify-center py-20 text-gray-400 opacity-50">
                     <FileSpreadsheet className="w-16 h-16 mb-4" />
                     <p className="font-bold">لا يوجد طلاب مطابقين</p>
                 </div>
             )}
         </div>
 
-        {/* ... Modals (Add Grade, Tools Manager, Bulk Fill) - Unchanged ... */}
+        {/* ... Modals (Add Grade, Tools Manager, Bulk Fill) ... */}
         <Modal isOpen={!!showAddGrade} onClose={() => { setShowAddGrade(null); setEditingGrade(null); setScore(''); }} className="max-w-sm rounded-[2rem]">
             {showAddGrade && (
-                <div className="text-center text-white">
+                <div className="text-center text-slate-900">
                     <h3 className="font-black text-lg mb-1">{showAddGrade.student.name}</h3>
-                    <p className="text-xs text-gray-400 font-bold mb-6">رصد درجة جديدة - فصل {currentSemester}</p>
+                    <p className="text-xs text-gray-500 font-bold mb-6">رصد درجة جديدة - فصل {currentSemester}</p>
                     <div className="grid grid-cols-2 gap-2 mb-4">
                         {tools.map(tool => (
                             <button 
                                 key={tool.id} 
                                 onClick={() => setSelectedToolId(tool.id)}
-                                className={`p-3 rounded-xl text-xs font-black transition-all border ${selectedToolId === tool.id ? 'bg-indigo-600 text-white border-transparent shadow-md' : 'glass-card bg-[#374151] text-gray-300 border-white/10 hover:bg-[#4b5563]'}`}
+                                className={`p-3 rounded-xl text-xs font-black transition-all border ${selectedToolId === tool.id ? 'bg-indigo-600 text-white border-transparent shadow-md' : 'glass-card bg-gray-50 text-gray-500 border-gray-200 hover:bg-gray-100'}`}
                             >
                                 {tool.name}
                             </button>
@@ -521,25 +505,25 @@ const GradeBook: React.FC<GradeBookProps> = ({
                             type="number" 
                             autoFocus
                             placeholder="الدرجة" 
-                            className="flex-1 glass-input rounded-xl p-3 text-center text-lg font-black outline-none border border-white/10 focus:border-indigo-500 text-white shadow-inner bg-[#111827]"
+                            className="flex-1 glass-input rounded-xl p-3 text-center text-lg font-black outline-none border border-gray-200 focus:border-indigo-500 text-slate-900 shadow-inner bg-white"
                             value={score}
                             onChange={(e) => setScore(e.target.value)}
                         />
-                        <button onClick={handleSaveGrade} className="flex-1 bg-indigo-600 text-white rounded-xl font-black text-sm shadow-lg shadow-indigo-500/30">حفظ</button>
+                        <button onClick={handleSaveGrade} className="flex-1 bg-indigo-600 text-white rounded-xl font-black text-sm shadow-lg shadow-indigo-200">حفظ</button>
                     </div>
-                    <div className="border-t border-white/10 pt-4 mt-2">
+                    <div className="border-t border-gray-100 pt-4 mt-2">
                         <p className="text-[10px] font-bold text-right mb-2 text-gray-400">الدرجات المرصودة:</p>
                         <div className="space-y-2 max-h-40 overflow-y-auto custom-scrollbar p-1">
                             {getSemesterGrades(showAddGrade.student, currentSemester).length > 0 ? getSemesterGrades(showAddGrade.student, currentSemester).map(g => (
-                                <div key={g.id} className="flex items-center justify-between p-2 rounded-lg glass-card bg-[#374151] border border-white/5 hover:bg-[#4b5563]">
-                                    <span className="text-xs font-bold text-white">{g.category}</span>
+                                <div key={g.id} className="flex items-center justify-between p-2 rounded-lg glass-card bg-gray-50 border border-gray-100 hover:bg-white">
+                                    <span className="text-xs font-bold text-slate-700">{g.category}</span>
                                     <div className="flex items-center gap-2">
-                                        <span className="font-black text-indigo-400">{g.score}</span>
-                                        <button onClick={() => handleEditGrade(g)} className="p-1 text-gray-400 hover:text-indigo-400"><Edit2 className="w-3 h-3"/></button>
-                                        <button onClick={() => handleDeleteGrade(g.id)} className="p-1 text-gray-400 hover:text-rose-400"><Trash2 className="w-3 h-3"/></button>
+                                        <span className="font-black text-indigo-500">{g.score}</span>
+                                        <button onClick={() => handleEditGrade(g)} className="p-1 text-gray-400 hover:text-indigo-500"><Edit2 className="w-3 h-3"/></button>
+                                        <button onClick={() => handleDeleteGrade(g.id)} className="p-1 text-gray-400 hover:text-rose-500"><Trash2 className="w-3 h-3"/></button>
                                     </div>
                                 </div>
-                            )) : <p className="text-[10px] text-gray-500">لا توجد درجات</p>}
+                            )) : <p className="text-[10px] text-gray-400">لا توجد درجات</p>}
                         </div>
                     </div>
                 </div>
@@ -547,44 +531,44 @@ const GradeBook: React.FC<GradeBookProps> = ({
         </Modal>
 
         <Modal isOpen={showToolsManager} onClose={() => { setShowToolsManager(false); setIsAddingTool(false); }} className="max-w-sm rounded-[2rem]">
-            <div className="text-center text-white">
+            <div className="text-center text-slate-900">
                 <div className="flex justify-between items-center mb-6">
                     <h3 className="font-black text-lg">أدوات التقويم</h3>
-                    <button onClick={() => { setShowToolsManager(false); setIsAddingTool(false); }} className="p-2 glass-icon rounded-full hover:bg-white/20"><X className="w-5 h-5 text-white"/></button>
+                    <button onClick={() => { setShowToolsManager(false); setIsAddingTool(false); }} className="p-2 glass-icon rounded-full hover:bg-gray-100"><X className="w-5 h-5 text-gray-500"/></button>
                 </div>
                 {!isAddingTool ? (
                     <>
-                        <button onClick={() => setIsAddingTool(true)} className="w-full py-3 mb-4 bg-indigo-600 hover:bg-indigo-500 text-white rounded-xl font-black text-xs shadow-lg shadow-indigo-500/30 flex items-center justify-center gap-2">
+                        <button onClick={() => setIsAddingTool(true)} className="w-full py-3 mb-4 bg-indigo-600 hover:bg-indigo-500 text-white rounded-xl font-black text-xs shadow-lg shadow-indigo-200 flex items-center justify-center gap-2">
                             <Plus className="w-4 h-4"/> إضافة أداة جديدة
                         </button>
                         <div className="space-y-2 max-h-60 overflow-y-auto custom-scrollbar p-1">
                             {tools.length > 0 ? tools.map(tool => (
-                                <div key={tool.id} className="flex items-center justify-between p-3 glass-card bg-[#374151] rounded-xl border border-white/10 group">
+                                <div key={tool.id} className="flex items-center justify-between p-3 glass-card bg-gray-50 rounded-xl border border-gray-200 group">
                                     {editingToolId === tool.id ? (
                                         <div className="flex gap-2 w-full">
-                                            <input autoFocus value={editToolName} onChange={e => setEditToolName(e.target.value)} className="flex-1 glass-input bg-[#111827] rounded-lg px-2 text-xs font-bold text-white" />
+                                            <input autoFocus value={editToolName} onChange={e => setEditToolName(e.target.value)} className="flex-1 glass-input bg-white rounded-lg px-2 text-xs font-bold text-slate-800" />
                                             <button onClick={saveEditedTool} className="p-1.5 bg-emerald-500 text-white rounded-lg"><Check className="w-3 h-3"/></button>
                                             <button onClick={cancelEditingTool} className="p-1.5 bg-slate-500 text-white rounded-lg"><X className="w-3 h-3"/></button>
                                         </div>
                                     ) : (
                                         <>
-                                            <span className="text-xs font-bold text-white">{tool.name}</span>
+                                            <span className="text-xs font-bold text-slate-700">{tool.name}</span>
                                             <div className="flex gap-1 opacity-50 group-hover:opacity-100 transition-opacity">
-                                                <button onClick={() => startEditingTool(tool)} className="p-1.5 hover:bg-white/10 rounded-lg"><Edit2 className="w-3 h-3 text-blue-400"/></button>
-                                                <button onClick={() => handleDeleteTool(tool.id)} className="p-1.5 hover:bg-white/10 rounded-lg"><Trash2 className="w-3 h-3 text-rose-400"/></button>
+                                                <button onClick={() => startEditingTool(tool)} className="p-1.5 hover:bg-gray-200 rounded-lg"><Edit2 className="w-3 h-3 text-blue-500"/></button>
+                                                <button onClick={() => handleDeleteTool(tool.id)} className="p-1.5 hover:bg-gray-200 rounded-lg"><Trash2 className="w-3 h-3 text-rose-500"/></button>
                                             </div>
                                         </>
                                     )}
                                 </div>
-                            )) : <p className="text-xs text-gray-500 py-4">لا توجد أدوات مضافة</p>}
+                            )) : <p className="text-xs text-gray-400 py-4">لا توجد أدوات مضافة</p>}
                         </div>
                     </>
                 ) : (
                     <div className="animate-in fade-in zoom-in duration-200">
-                        <input autoFocus placeholder="اسم الأداة (مثال: اختبار قصير 1)" value={newToolName} onChange={e => setNewToolName(e.target.value)} className="w-full p-4 glass-input bg-[#111827] rounded-2xl mb-4 font-bold text-sm outline-none border-white/10 focus:border-indigo-500 text-white" />
+                        <input autoFocus placeholder="اسم الأداة (مثال: اختبار قصير 1)" value={newToolName} onChange={e => setNewToolName(e.target.value)} className="w-full p-4 glass-input bg-white rounded-2xl mb-4 font-bold text-sm outline-none border-gray-200 focus:border-indigo-500 text-slate-800" />
                         <div className="flex gap-2">
-                            <button onClick={() => setIsAddingTool(false)} className="flex-1 py-3 glass-card bg-[#374151] text-gray-300 font-bold text-xs rounded-xl">إلغاء</button>
-                            <button onClick={handleAddTool} className="flex-[2] py-3 bg-indigo-600 text-white font-black text-xs rounded-xl shadow-lg shadow-indigo-500/30">حفظ الأداة</button>
+                            <button onClick={() => setIsAddingTool(false)} className="flex-1 py-3 glass-card bg-gray-100 text-gray-500 font-bold text-xs rounded-xl">إلغاء</button>
+                            <button onClick={handleAddTool} className="flex-[2] py-3 bg-indigo-600 text-white font-black text-xs rounded-xl shadow-lg shadow-indigo-200">حفظ الأداة</button>
                         </div>
                     </div>
                 )}
@@ -593,13 +577,13 @@ const GradeBook: React.FC<GradeBookProps> = ({
 
         <Modal isOpen={!!bulkFillTool} onClose={() => { setBulkFillTool(null); setBulkScore(''); }} className="max-w-xs rounded-[2rem]">
             {bulkFillTool && (
-                <div className="text-center text-white">
-                    <div className="w-12 h-12 glass-icon rounded-full flex items-center justify-center mx-auto mb-3 text-indigo-400 shadow-md border border-white/20 bg-[#374151]"><Wand2 className="w-6 h-6" /></div>
+                <div className="text-center text-slate-900">
+                    <div className="w-12 h-12 glass-icon rounded-full flex items-center justify-center mx-auto mb-3 text-indigo-500 shadow-md border border-gray-200 bg-gray-50"><Wand2 className="w-6 h-6" /></div>
                     <h3 className="font-black text-lg mb-1">رصد جماعي</h3>
-                    <p className="text-xs text-indigo-400 font-bold mb-4">{bulkFillTool.name}</p>
-                    <p className="text-[10px] text-gray-400 mb-4 px-2">سيتم رصد هذه الدرجة لجميع الطلاب الظاهرين في القائمة الحالية (الذين لم ترصد لهم درجة لهذه الأداة بعد).</p>
-                    <input type="number" autoFocus placeholder="الدرجة" className="w-full glass-input bg-[#111827] rounded-xl p-3 text-center text-lg font-black outline-none border border-white/10 focus:border-indigo-500 mb-4 text-white shadow-inner" value={bulkScore} onChange={(e) => setBulkScore(e.target.value)} />
-                    <button onClick={handleBulkFill} className="w-full py-3 bg-indigo-600 text-white rounded-xl font-black text-xs shadow-lg shadow-indigo-500/30">تطبيق الرصد</button>
+                    <p className="text-xs text-indigo-500 font-bold mb-4">{bulkFillTool.name}</p>
+                    <p className="text-[10px] text-gray-500 mb-4 px-2">سيتم رصد هذه الدرجة لجميع الطلاب الظاهرين في القائمة الحالية (الذين لم ترصد لهم درجة لهذه الأداة بعد).</p>
+                    <input type="number" autoFocus placeholder="الدرجة" className="w-full glass-input bg-white rounded-xl p-3 text-center text-lg font-black outline-none border border-gray-200 focus:border-indigo-500 mb-4 text-slate-800 shadow-inner" value={bulkScore} onChange={(e) => setBulkScore(e.target.value)} />
+                    <button onClick={handleBulkFill} className="w-full py-3 bg-indigo-600 text-white rounded-xl font-black text-xs shadow-lg shadow-indigo-200">تطبيق الرصد</button>
                 </div>
             )}
         </Modal>

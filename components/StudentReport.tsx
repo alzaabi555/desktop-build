@@ -67,48 +67,143 @@ const StudentReport: React.FC<StudentReportProps> = ({ student, onUpdateStudent,
   };
 
   const handlePrintReport = async () => {
-      const element = document.getElementById('report-content');
-      if (!element) {
-          alert('خطأ في تحديد محتوى التقرير');
-          return;
-      }
-
       setIsGeneratingPdf(true);
 
+      // --- GENERATE HTML STRING DIRECTLY (No Cloning) ---
+      // This ensures 100% control over the printed output (Light Theme / Black Text)
+      
+      let continuousRows = '';
+      if (assessmentTools.length > 0) {
+          continuousTools.forEach(tool => {
+              const g = currentSemesterGrades.find(r => r.category.trim() === tool.name.trim());
+              continuousRows += `
+                <tr>
+                    <td style="border:1px solid #000; padding:8px; text-align:right;">${teacherInfo?.subject || 'المادة'}</td>
+                    <td style="border:1px solid #000; padding:8px; text-align:center; background-color:#ffedd5;">${tool.name}</td>
+                    <td style="border:1px solid #000; padding:8px; text-align:center; font-weight:bold;">${g ? g.score : '-'}</td>
+                </tr>`;
+          });
+      } else {
+          currentSemesterGrades.forEach(g => {
+              continuousRows += `
+                <tr>
+                    <td style="border:1px solid #000; padding:8px; text-align:right;">${g.subject}</td>
+                    <td style="border:1px solid #000; padding:8px; text-align:center;">${g.category}</td>
+                    <td style="border:1px solid #000; padding:8px; text-align:center; font-weight:bold;">${g.score}</td>
+                </tr>`;
+          });
+      }
+
+      let finalRow = '';
+      if (finalTool) {
+          const g = currentSemesterGrades.find(r => r.category.trim() === finalTool.name.trim());
+          finalRow = `
+            <tr>
+                <td style="border:1px solid #000; padding:8px; text-align:right;">${teacherInfo?.subject || 'المادة'}</td>
+                <td style="border:1px solid #000; padding:8px; text-align:center; background-color:#fce7f3;">${finalTool.name} (40)</td>
+                <td style="border:1px solid #000; padding:8px; text-align:center; font-weight:bold;">${g ? g.score : '-'}</td>
+            </tr>`;
+      }
+
+      const htmlContent = `
+        <div style="padding: 40px; font-family: 'Tajawal', sans-serif; direction: rtl; background: white; color: black; box-sizing: border-box; width: 210mm;">
+            <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:20px; border-bottom:2px solid #eee; padding-bottom:20px;">
+                <div style="text-align:center; width:33%;">
+                    <p style="margin:0; font-weight:bold;">سلطنة عمان</p>
+                    <p style="margin:0; font-weight:bold;">وزارة التربية والتعليم</p>
+                    <p style="margin:0; font-weight:bold; font-size:10px;">محافظة ${teacherInfo?.governorate}</p>
+                    <p style="margin:0; font-weight:bold; font-size:10px;">مدرسة ${teacherInfo?.school}</p>
+                </div>
+                <div style="text-align:center; width:33%;">
+                    ${teacherInfo?.ministryLogo ? `<img src="${teacherInfo.ministryLogo}" style="height:60px; object-fit:contain;" />` : ''}
+                    <h2 style="font-weight:900; text-decoration:underline; margin-top:10px;">تقرير مستوى طالب</h2>
+                </div>
+                <div style="text-align:left; width:33%; font-size:12px; font-weight:bold;">
+                    <p>العام الدراسي: ${teacherInfo?.academicYear}</p>
+                    <p>الفصل: ${currentSemester === '1' ? 'الأول' : 'الثاني'}</p>
+                    <p>التاريخ: ${new Date().toLocaleDateString('en-GB')}</p>
+                </div>
+            </div>
+
+            <div style="background:#f8fafc; border:1px solid #cbd5e1; padding:15px; border-radius:10px; margin-bottom:20px;">
+                <div style="display:flex; gap:20px; margin-bottom:10px;">
+                    <div><span style="color:#000; font-size:10px;">الاسم:</span> <strong style="font-size:16px;">${student.name}</strong></div>
+                    <div style="width:1px; background:#cbd5e1;"></div>
+                    <div><span style="color:#000; font-size:10px;">الصف:</span> <strong style="font-size:16px;">${student.classes[0]}</strong></div>
+                </div>
+                <div style="display:flex; gap:10px;">
+                    <span style="background:#dcfce7; color:#000; padding:2px 8px; border-radius:4px; font-size:10px; font-weight:bold;">إيجابي: ${totalPositivePoints}</span>
+                    <span style="background:#ffe4e6; color:#000; padding:2px 8px; border-radius:4px; font-size:10px; font-weight:bold;">سلبي: ${totalNegativePoints}</span>
+                </div>
+            </div>
+
+            <h3 style="font-weight:bold; font-size:16px; margin-bottom:10px; border-bottom:1px solid #000; padding-bottom:5px;">التحصيل الدراسي</h3>
+            <table style="width:100%; border-collapse:collapse; margin-bottom:20px; font-size:12px;">
+                <thead>
+                    <tr style="background:#f1f5f9;">
+                        <th style="border:1px solid #000; padding:8px;">المادة</th>
+                        <th style="border:1px solid #000; padding:8px;">أداة التقويم</th>
+                        <th style="border:1px solid #000; padding:8px;">الدرجة</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    ${continuousRows}
+                    <tr style="background:#eff6ff; font-weight:bold;">
+                        <td colspan="2" style="border:1px solid #000; padding:8px; text-align:center;">المجموع (60)</td>
+                        <td style="border:1px solid #000; padding:8px; text-align:center;">${continuousSum}</td>
+                    </tr>
+                    ${finalRow}
+                </tbody>
+                <tfoot>
+                    <tr style="background:#f1f5f9;">
+                        <td colspan="2" style="border:1px solid #000; padding:8px; font-weight:900; text-align:right;">المجموع الكلي</td>
+                        <td style="border:1px solid #000; padding:8px; font-weight:900; text-align:center; font-size:14px;">${totalScore}</td>
+                    </tr>
+                </tfoot>
+            </table>
+
+            <div style="display:flex; gap:15px; margin-bottom:20px;">
+                <div style="flex:1; border:1px solid #cbd5e1; padding:10px; border-radius:8px; text-align:center;">
+                    <span style="display:block; font-size:10px; color:#000;">أيام الغياب</span>
+                    <span style="font-weight:900; color:#000; font-size:18px;">${absenceRecords.length}</span>
+                </div>
+                <div style="flex:1; border:1px solid #cbd5e1; padding:10px; border-radius:8px; text-align:center;">
+                    <span style="display:block; font-size:10px; color:#000;">الهروب (التسرب)</span>
+                    <span style="font-weight:900; color:#000; font-size:18px;">${truantRecords.length}</span>
+                </div>
+            </div>
+
+            <div style="position:absolute; bottom:40px; left:40px; right:40px; display:flex; justify-content:space-between; align-items:flex-end;">
+                <div style="text-align:center;">
+                    <p style="font-weight:bold; margin-bottom:30px;">معلم المادة</p>
+                    <p>${teacherInfo?.name}</p>
+                </div>
+                <div style="text-align:center;">
+                    ${teacherInfo?.stamp ? `<img src="${teacherInfo.stamp}" style="width:100px; opacity:0.7; mix-blend-mode:multiply; transform:rotate(-5deg);" />` : ''}
+                </div>
+                <div style="text-align:center;">
+                    <p style="font-weight:bold; margin-bottom:30px;">مدير المدرسة</p>
+                    <p>....................</p>
+                </div>
+            </div>
+        </div>
+      `;
+
       const container = document.createElement('div');
-      container.className = 'pdf-export-container';
-      
-      // Clone the report content
-      const contentClone = element.cloneNode(true) as HTMLElement;
-      
-      // Force styles on the clone to override app dark theme
-      contentClone.style.backgroundColor = 'white';
-      contentClone.style.color = 'black';
-      contentClone.style.width = '100%';
-      contentClone.style.height = 'auto';
-      contentClone.style.margin = '0';
-      contentClone.style.boxShadow = 'none';
-      contentClone.style.border = 'none'; // Remove the thick border if unwanted in print
-      
-      container.appendChild(contentClone);
+      container.style.position = 'absolute';
+      container.style.top = '-9999px';
+      container.style.left = '0';
+      container.innerHTML = htmlContent;
       document.body.appendChild(container);
 
-      // CRITICAL DELAY
+      // Wait a bit
       await new Promise(resolve => setTimeout(resolve, 500));
 
       const opt = {
-          margin: 10, // Add some margin
+          margin: 0,
           filename: `Report_${student.name}.pdf`,
           image: { type: 'jpeg', quality: 0.98 },
-          html2canvas: { 
-              scale: 2, 
-              useCORS: true, 
-              logging: false, 
-              letterRendering: true,
-              scrollY: 0,
-              backgroundColor: '#ffffff',
-              windowWidth: 800
-          },
+          html2canvas: { scale: 2, useCORS: true, backgroundColor: '#ffffff' },
           jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
       };
 
@@ -131,30 +226,30 @@ const StudentReport: React.FC<StudentReportProps> = ({ student, onUpdateStudent,
           console.error('PDF Error:', err); 
           alert('حدث خطأ أثناء إنشاء ملف PDF');
       } finally { 
-          if (document.body.contains(container)) document.body.removeChild(container);
+          document.body.removeChild(container);
           setIsGeneratingPdf(false); 
       }
   };
 
   return (
-    <div className="flex flex-col h-full space-y-4 pb-20 animate-in fade-in slide-in-from-bottom-4 duration-500 text-slate-900 dark:text-white">
+    <div className="flex flex-col h-full space-y-4 pb-20 animate-in fade-in slide-in-from-bottom-4 duration-500 text-slate-900">
         
-        {/* Header Action Bar */}
-        <div className="flex items-center justify-between glass-heavy p-4 rounded-[2rem] border border-white/20">
+        {/* Header Action Bar (Light Theme) */}
+        <div className="flex items-center justify-between glass-heavy p-4 rounded-[2rem] border border-gray-200">
             <div className="flex items-center gap-3">
-                <button onClick={onBack} className="p-3 rounded-full glass-icon hover:bg-white/10 transition-colors">
-                    <ArrowRight className="w-5 h-5" />
+                <button onClick={onBack} className="p-3 rounded-full glass-icon hover:bg-gray-100 transition-colors">
+                    <ArrowRight className="w-5 h-5 text-slate-600" />
                 </button>
                 <div>
-                    <h2 className="text-lg font-black">{student.name}</h2>
-                    <p className="text-xs font-bold text-slate-500 dark:text-white/60">{student.classes[0]} • تقرير الفصل {currentSemester}</p>
+                    <h2 className="text-lg font-black text-slate-900">{student.name}</h2>
+                    <p className="text-xs font-bold text-gray-500">{student.classes[0]} • تقرير الفصل {currentSemester}</p>
                 </div>
             </div>
             <div className="flex gap-2">
                 <button 
                     onClick={handlePrintReport} 
                     disabled={isGeneratingPdf}
-                    className="bg-indigo-600 text-white px-4 py-2.5 rounded-xl font-black text-xs shadow-lg shadow-indigo-500/30 active:scale-95 transition-all flex items-center gap-2"
+                    className="bg-indigo-600 text-white px-4 py-2.5 rounded-xl font-black text-xs shadow-lg shadow-indigo-200 active:scale-95 transition-all flex items-center gap-2"
                 >
                     {isGeneratingPdf ? <Loader2 className="w-4 h-4 animate-spin" /> : <Printer className="w-4 h-4" />}
                     طباعة التقرير
@@ -164,10 +259,10 @@ const StudentReport: React.FC<StudentReportProps> = ({ student, onUpdateStudent,
 
         {/* Report Preview (Screen) */}
         <div className="flex-1 overflow-y-auto custom-scrollbar p-1">
-            <div id="report-content" className="bg-white text-slate-900 p-8 rounded-none md:rounded-[2rem] max-w-4xl mx-auto shadow-xl relative overflow-hidden border-[3px] border-black box-border" dir="rtl">
+            <div id="report-content" className="bg-white text-slate-900 p-8 rounded-none md:rounded-[2rem] max-w-4xl mx-auto shadow-sm border border-gray-200 relative overflow-hidden box-border" dir="rtl">
                 
                 {/* Formal Header */}
-                <div className="flex justify-between items-start mb-8 border-b-2 border-slate-900/10 pb-6">
+                <div className="flex justify-between items-start mb-8 border-b-2 border-gray-100 pb-6">
                     <div className="text-center w-1/3">
                         <p className="font-bold text-sm mb-1">سلطنة عمان</p>
                         <p className="font-bold text-sm mb-1">وزارة التربية والتعليم</p>
@@ -222,7 +317,7 @@ const StudentReport: React.FC<StudentReportProps> = ({ student, onUpdateStudent,
                     </div>
                 </div>
 
-                {/* Grades Section - Ordered to Match GradeBook */}
+                {/* Grades Section */}
                 <div className="mb-8">
                     <h3 className="font-black text-lg mb-4 flex items-center gap-2">
                         <FileText className="w-5 h-5 text-indigo-600" />
@@ -231,9 +326,9 @@ const StudentReport: React.FC<StudentReportProps> = ({ student, onUpdateStudent,
                     <table className="w-full border-collapse">
                         <thead>
                             <tr className="bg-slate-100">
-                                <th className="border border-slate-300 p-3 text-sm font-bold text-right">المادة</th>
-                                <th className="border border-slate-300 p-3 text-sm font-bold text-center">أداة التقويم</th>
-                                <th className="border border-slate-300 p-3 text-sm font-bold text-center">الدرجة</th>
+                                <th className="border border-slate-300 p-3 text-sm font-bold text-right text-black">المادة</th>
+                                <th className="border border-slate-300 p-3 text-sm font-bold text-center text-black">أداة التقويم</th>
+                                <th className="border border-slate-300 p-3 text-sm font-bold text-center text-black">الدرجة</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -257,7 +352,7 @@ const StudentReport: React.FC<StudentReportProps> = ({ student, onUpdateStudent,
                                         <td className="border border-slate-300 p-3 text-sm text-center font-mono text-blue-900 border-t-2 border-slate-400">{continuousSum}</td>
                                     </tr>
 
-                                    {/* 3. Final Exam Row (Only if tool exists) */}
+                                    {/* 3. Final Exam Row */}
                                     {finalTool && (() => {
                                         const grade = currentSemesterGrades.find(g => g.category.trim() === finalTool.name.trim());
                                         return (
@@ -270,7 +365,7 @@ const StudentReport: React.FC<StudentReportProps> = ({ student, onUpdateStudent,
                                     })()}
                                 </>
                             ) : (
-                                /* Fallback if no tools defined (Raw List) */
+                                /* Fallback if no tools defined */
                                 currentSemesterGrades.length > 0 ? currentSemesterGrades.map((g, idx) => (
                                     <tr key={idx}>
                                         <td className="border border-slate-300 p-3 text-sm font-bold">{g.subject}</td>
@@ -286,8 +381,8 @@ const StudentReport: React.FC<StudentReportProps> = ({ student, onUpdateStudent,
                         </tbody>
                         <tfoot>
                             <tr className="bg-slate-100">
-                                <td colSpan={2} className="border border-slate-300 p-3 text-sm font-black text-right border-t-2 border-black">المجموع الكلي</td>
-                                <td className="border border-slate-300 p-3 text-sm font-black text-center font-mono text-lg border-t-2 border-black">
+                                <td colSpan={2} className="border border-slate-300 p-3 text-sm font-black text-right border-t-2 border-black text-black">المجموع الكلي</td>
+                                <td className="border border-slate-300 p-3 text-sm font-black text-center font-mono text-lg border-t-2 border-black text-black">
                                     {totalScore}
                                 </td>
                             </tr>
@@ -321,9 +416,9 @@ const StudentReport: React.FC<StudentReportProps> = ({ student, onUpdateStudent,
                         <table className="w-full border-collapse mt-2">
                             <thead>
                                 <tr className="bg-slate-100">
-                                    <th className="border border-slate-300 p-2 text-xs font-bold text-right w-1/3">التاريخ</th>
-                                    <th className="border border-slate-300 p-2 text-xs font-bold text-center">الحالة</th>
-                                    <th className="border border-slate-300 p-2 text-xs font-bold text-center">الملاحظات</th>
+                                    <th className="border border-slate-300 p-2 text-xs font-bold text-right w-1/3 text-black">التاريخ</th>
+                                    <th className="border border-slate-300 p-2 text-xs font-bold text-center text-black">الحالة</th>
+                                    <th className="border border-slate-300 p-2 text-xs font-bold text-center text-black">الملاحظات</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -379,7 +474,7 @@ const StudentReport: React.FC<StudentReportProps> = ({ student, onUpdateStudent,
                 </div>
 
                 {/* Signatures */}
-                <div className="flex justify-between items-end pt-8 border-t-2 border-slate-900/10 relative">
+                <div className="flex justify-between items-end pt-8 border-t-2 border-gray-100 relative">
                      <div className="text-center w-1/3">
                         <p className="font-bold text-sm mb-8 text-slate-500">معلم المادة</p>
                         <p className="font-black text-lg">{teacherInfo?.name || '....................'}</p>

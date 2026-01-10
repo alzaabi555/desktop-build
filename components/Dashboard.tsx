@@ -65,7 +65,6 @@ const Dashboard: React.FC<DashboardProps> = ({
     const [editAcademicYear, setEditAcademicYear] = useState(teacherInfo.academicYear || '');
     const [editSemester, setEditSemester] = useState<'1' | '2'>(currentSemester);
 
-    // State for Schedule/Timing Modal
     const [showScheduleModal, setShowScheduleModal] = useState(false);
     const [scheduleTab, setScheduleTab] = useState<'timing' | 'classes'>('timing');
     const [editingDayIndex, setEditingDayIndex] = useState(0); 
@@ -84,13 +83,11 @@ const Dashboard: React.FC<DashboardProps> = ({
         setEditSemester(currentSemester);
     }, [teacherInfo, currentSemester]);
 
-    // Update clock every minute
     useEffect(() => {
         const timer = setInterval(() => setCurrentTime(new Date()), 60000);
         return () => clearInterval(timer);
     }, []);
 
-    // Initialize temp states
     useEffect(() => {
         if (showScheduleModal) {
             setTempPeriodTimes(JSON.parse(JSON.stringify(periodTimes)));
@@ -243,43 +240,42 @@ const Dashboard: React.FC<DashboardProps> = ({
     const days = ['الأحد', 'الاثنين', 'الثلاثاء', 'الأربعاء', 'الخميس'];
 
     return (
-        <div className="space-y-4 pb-20 text-gray-100 animate-in fade-in duration-500">
+        <div className="space-y-4 pb-20 text-slate-900 animate-in fade-in duration-500">
             
             {/* 1. Top Section: Teacher Profile Card (Sticky Header) */}
-            {/* Removed negative margins to prevent overlap with status bar */}
-            <div className="sticky top-0 z-40 bg-[#111827] -mx-4 -mt-4">
-                <div className="glass-heavy bg-[#1f2937] p-4 md:p-6 pt-safe relative overflow-hidden rounded-b-[2rem] border-b border-gray-700 group">
+            <div className="sticky top-0 z-40 bg-[#f3f4f6] -mx-4 -mt-4">
+                <div className="glass-heavy bg-white p-4 md:p-6 pt-safe relative overflow-hidden rounded-b-[2rem] border-b border-gray-200 group">
                     <div className="relative z-10 flex items-center justify-between mt-4">
                         <button 
                             onClick={() => setShowEditModal(true)}
-                            className="glass-icon p-3 rounded-2xl text-gray-300 hover:bg-gray-700 transition-all absolute left-0 top-0 border border-gray-600"
+                            className="glass-icon p-3 rounded-2xl text-gray-500 hover:bg-gray-100 transition-all absolute left-0 top-0 border border-gray-200"
                         >
-                            <Edit3 className="w-5 h-5 text-indigo-400" />
+                            <Edit3 className="w-5 h-5 text-indigo-500" />
                         </button>
 
                         <div className="absolute right-3 top-3 flex flex-col items-center gap-1">
                             <BrandLogo className="w-10 h-10" showText={false} />
-                            <span className="text-[10px] font-black text-indigo-300 tracking-wider">راصد</span>
+                            <span className="text-[10px] font-black text-indigo-600 tracking-wider">راصد</span>
                         </div>
 
                         <div className="flex flex-col items-center w-full">
                             <div className="mt-2"></div>
-                            <div className="w-20 h-20 md:w-24 md:h-24 rounded-[2rem] bg-[#374151] p-1 shadow-lg mb-3 relative group-hover:scale-105 transition-transform border border-gray-600">
+                            <div className="w-20 h-20 md:w-24 md:h-24 rounded-[2rem] bg-gray-100 p-1 shadow-md mb-3 relative group-hover:scale-105 transition-transform border border-gray-200">
                                 {teacherInfo.avatar ? (
                                     <img src={teacherInfo.avatar} className="w-full h-full object-cover rounded-[1.8rem]" alt="Profile" />
                                 ) : (
-                                    <div className="w-full h-full bg-indigo-900 rounded-[1.8rem] flex items-center justify-center text-3xl font-black text-white">
+                                    <div className="w-full h-full bg-indigo-100 rounded-[1.8rem] flex items-center justify-center text-3xl font-black text-indigo-600">
                                         {teacherInfo.name ? teacherInfo.name.charAt(0) : 'T'}
                                     </div>
                                 )}
                             </div>
-                            <h1 className="text-xl md:text-2xl font-black text-white text-center mb-1">
+                            <h1 className="text-xl md:text-2xl font-black text-slate-900 text-center mb-1">
                                 {teacherInfo.name || 'مرحباً بك يا معلم'}
                             </h1>
-                            <div className="flex flex-col items-center gap-1 text-[10px] font-bold text-gray-400">
-                                {teacherInfo.school && <span className="flex items-center gap-1"><School className="w-3 h-3 text-indigo-400"/> {teacherInfo.school}</span>}
+                            <div className="flex flex-col items-center gap-1 text-[10px] font-bold text-gray-500">
+                                {teacherInfo.school && <span className="flex items-center gap-1"><School className="w-3 h-3 text-indigo-500"/> {teacherInfo.school}</span>}
                                 <span className="flex items-center gap-2">
-                                    <span className="bg-indigo-900/50 text-indigo-200 px-2 py-0.5 rounded-md border border-indigo-500/30">
+                                    <span className="bg-indigo-50 text-indigo-600 px-2 py-0.5 rounded-md border border-indigo-100">
                                         الفصل الدراسي {currentSemester === '1' ? 'الأول' : 'الثاني'}
                                     </span>
                                 </span>
@@ -289,31 +285,31 @@ const Dashboard: React.FC<DashboardProps> = ({
                 </div>
             </div>
 
-            {/* Schedule Card (Dark Gray) */}
-            <div className="glass-card bg-[#1f2937] rounded-[2.5rem] p-4 border border-gray-700 shadow-xl relative mt-4 mx-1">
+            {/* Schedule Card (Light) */}
+            <div className="glass-card bg-white rounded-[2.5rem] p-4 border border-gray-200 shadow-sm relative mt-4 mx-1">
                 <div className="flex justify-between items-center mb-3">
                     <div className="flex items-center gap-2">
-                        <button onClick={() => setShowScheduleModal(true)} className="w-8 h-8 glass-icon rounded-full text-gray-300 hover:bg-gray-700 transition-colors border border-gray-600 shadow-sm shimmer-hover">
-                            <Settings className="w-4 h-4 text-indigo-400" />
+                        <button onClick={() => setShowScheduleModal(true)} className="w-8 h-8 glass-icon rounded-full text-gray-500 hover:bg-gray-100 transition-colors border border-gray-200 shadow-sm shimmer-hover">
+                            <Settings className="w-4 h-4 text-indigo-600" />
                         </button>
-                        <button onClick={onToggleNotifications} className={`w-8 h-8 glass-icon rounded-full transition-colors border border-gray-600 shadow-sm shimmer-hover ${notificationsEnabled ? 'text-amber-500 bg-amber-900/30' : 'text-gray-500'}`}>
+                        <button onClick={onToggleNotifications} className={`w-8 h-8 glass-icon rounded-full transition-colors border border-gray-200 shadow-sm shimmer-hover ${notificationsEnabled ? 'text-amber-500 bg-amber-50' : 'text-gray-400'}`}>
                             <Bell className={`w-4 h-4 ${notificationsEnabled ? 'fill-amber-500' : ''}`} />
                         </button>
-                        <button onClick={handleTestNotification} className="w-8 h-8 glass-icon rounded-full text-gray-300 hover:bg-gray-700 transition-colors border border-gray-600 shadow-sm shimmer-hover" title="تجربة صوت الجرس">
-                            <PlayCircle className="w-4 h-4 text-indigo-400" />
+                        <button onClick={handleTestNotification} className="w-8 h-8 glass-icon rounded-full text-gray-500 hover:bg-gray-100 transition-colors border border-gray-200 shadow-sm shimmer-hover" title="تجربة صوت الجرس">
+                            <PlayCircle className="w-4 h-4 text-indigo-600" />
                         </button>
-                        <button onClick={() => scheduleFileInputRef.current?.click()} className="w-8 h-8 glass-icon rounded-full text-gray-300 hover:bg-gray-700 transition-colors border border-gray-600 shadow-sm relative shimmer-hover">
+                        <button onClick={() => scheduleFileInputRef.current?.click()} className="w-8 h-8 glass-icon rounded-full text-gray-500 hover:bg-gray-100 transition-colors border border-gray-200 shadow-sm relative shimmer-hover">
                             {isImportingSchedule ? <Loader2 className="w-4 h-4 animate-spin"/> : <FileSpreadsheet className="w-4 h-4 text-emerald-500" />}
                         </button>
                         <input type="file" ref={scheduleFileInputRef} onChange={handleImportSchedule} accept=".xlsx, .xls" className="hidden" />
                     </div>
-                    <h2 className="text-base font-black text-white flex items-center gap-2">
+                    <h2 className="text-base font-black text-slate-800 flex items-center gap-2">
                         جدول {todaySchedule.dayName}
                         <Clock className="w-4 h-4 text-amber-500" />
                     </h2>
                 </div>
                 
-                {/* Clear & Visible Schedule Grid (COMPACT) */}
+                {/* Clear & Visible Schedule Grid */}
                 <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
                     {todaySchedule.periods.map((cls, idx) => {
                         const pt = periodTimes[idx] || { startTime: '--:--', endTime: '--:--' };
@@ -322,93 +318,93 @@ const Dashboard: React.FC<DashboardProps> = ({
                             <div key={idx} className={`
                                 p-1.5 rounded-xl flex flex-col items-center justify-center text-center min-h-[55px] relative transition-all duration-300 shimmer-hover
                                 ${isActive 
-                                    ? 'bg-indigo-700 text-white border-2 border-amber-500 shadow-[0_0_15px_rgba(245,158,11,0.3)] scale-105 z-10' 
-                                    : 'glass-card bg-[#374151] border border-gray-600 shadow-sm hover:border-indigo-500/50'
+                                    ? 'bg-indigo-600 text-white border-2 border-amber-400 shadow-lg scale-105 z-10' 
+                                    : 'bg-gray-50 border border-gray-200 text-slate-600'
                                 }
                             `}>
-                                {isActive && <span className="absolute -top-2 bg-amber-500 text-black text-[7px] font-black px-1.5 py-0.5 rounded-full shadow-sm animate-pulse">الآن</span>}
-                                <div className={`text-[8px] font-black mb-0.5 ${isActive ? 'text-indigo-200' : 'text-gray-500'}`}>حصة {idx + 1}</div>
-                                <h3 className={`text-[10px] font-black truncate w-full px-1 mb-0.5 ${isActive ? 'text-white' : 'text-gray-200'}`}>{cls || '-'}</h3>
-                                <span className={`text-[7px] font-bold dir-ltr block ${isActive ? 'text-indigo-200' : 'text-gray-500'}`}>{pt.startTime} - {pt.endTime}</span>
+                                {isActive && <span className="absolute -top-2 bg-amber-400 text-black text-[7px] font-black px-1.5 py-0.5 rounded-full shadow-sm animate-pulse">الآن</span>}
+                                <div className={`text-[8px] font-black mb-0.5 ${isActive ? 'text-indigo-200' : 'text-gray-400'}`}>حصة {idx + 1}</div>
+                                <h3 className={`text-[10px] font-black truncate w-full px-1 mb-0.5 ${isActive ? 'text-white' : 'text-slate-800'}`}>{cls || '-'}</h3>
+                                <span className={`text-[7px] font-bold dir-ltr block ${isActive ? 'text-indigo-200' : 'text-gray-400'}`}>{pt.startTime} - {pt.endTime}</span>
                             </div>
                         )
                     })}
                 </div>
             </div>
 
-            {/* Edit Teacher Info Modal (Dark) */}
+            {/* Edit Teacher Info Modal */}
             <Modal isOpen={showEditModal} onClose={() => setShowEditModal(false)}>
                  <div className="text-center">
-                    <h3 className="font-black text-2xl mb-6 text-white">إعدادات الهوية</h3>
+                    <h3 className="font-black text-2xl mb-6 text-slate-800">إعدادات الهوية</h3>
                     
                     <div className="flex gap-4 justify-center mb-6 overflow-x-auto pb-2">
                         {/* Avatar Uploader */}
                         <div className="relative w-20 h-20 group cursor-pointer shrink-0" onClick={() => fileInputRef.current?.click()}>
-                            <div className="w-full h-full rounded-[1.5rem] overflow-hidden border-4 border-gray-700 shadow-xl glass-card bg-[#374151]">
+                            <div className="w-full h-full rounded-[1.5rem] overflow-hidden border-4 border-gray-200 shadow-sm glass-card bg-white">
                                 {editAvatar ? (
                                     <img src={editAvatar} className="w-full h-full object-cover" alt="Avatar" />
                                 ) : (
-                                    <div className="w-full h-full bg-indigo-900 flex items-center justify-center text-3xl font-black text-white">
+                                    <div className="w-full h-full bg-indigo-50 flex items-center justify-center text-3xl font-black text-indigo-600">
                                         {editName ? editName.charAt(0) : 'T'}
                                     </div>
                                 )}
                             </div>
-                            <div className="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity rounded-[1.5rem]">
-                                <Camera className="w-5 h-5 text-white" />
+                            <div className="absolute inset-0 bg-black/10 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity rounded-[1.5rem]">
+                                <Camera className="w-5 h-5 text-white drop-shadow-md" />
                             </div>
                             <input type="file" ref={fileInputRef} onChange={handleImageUpload} accept="image/*" className="hidden" />
-                            <p className="text-[9px] font-bold text-gray-300 mt-1">الصورة الشخصية</p>
+                            <p className="text-[9px] font-bold text-gray-500 mt-1">الصورة الشخصية</p>
                         </div>
 
                         {/* Stamp Uploader */}
                         <div className="relative w-20 h-20 group cursor-pointer shrink-0" onClick={() => stampInputRef.current?.click()}>
-                            <div className="w-full h-full rounded-[1.5rem] overflow-hidden border-4 border-gray-700 shadow-xl glass-card flex items-center justify-center bg-[#374151]">
+                            <div className="w-full h-full rounded-[1.5rem] overflow-hidden border-4 border-gray-200 shadow-sm glass-card flex items-center justify-center bg-white">
                                 {editStamp ? (
                                     <img src={editStamp} className="w-full h-full object-contain p-2" alt="Stamp" />
                                 ) : (
-                                    <div className="flex flex-col items-center justify-center text-gray-300">
-                                        <div className="w-6 h-6 mb-1 border-2 border-gray-500 rounded-lg flex items-center justify-center">S</div>
+                                    <div className="flex flex-col items-center justify-center text-gray-400">
+                                        <div className="w-6 h-6 mb-1 border-2 border-gray-300 rounded-lg flex items-center justify-center">S</div>
                                     </div>
                                 )}
                             </div>
-                            <div className="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity rounded-[1.5rem]">
-                                <Upload className="w-5 h-5 text-white" />
+                            <div className="absolute inset-0 bg-black/10 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity rounded-[1.5rem]">
+                                <Upload className="w-5 h-5 text-white drop-shadow-md" />
                             </div>
                             <input type="file" ref={stampInputRef} onChange={handleStampUpload} accept="image/*" className="hidden" />
-                            <p className="text-[9px] font-bold text-gray-300 mt-1">ختم المدرسة</p>
+                            <p className="text-[9px] font-bold text-gray-500 mt-1">ختم المدرسة</p>
                         </div>
 
                         {/* Ministry Logo Uploader */}
                         <div className="relative w-20 h-20 group cursor-pointer shrink-0" onClick={() => ministryLogoInputRef.current?.click()}>
-                            <div className="w-full h-full rounded-[1.5rem] overflow-hidden border-4 border-gray-700 shadow-xl glass-card flex items-center justify-center bg-[#374151]">
+                            <div className="w-full h-full rounded-[1.5rem] overflow-hidden border-4 border-gray-200 shadow-sm glass-card flex items-center justify-center bg-white">
                                 {editMinistryLogo ? (
                                     <img src={editMinistryLogo} className="w-full h-full object-contain p-2" alt="Ministry Logo" />
                                 ) : (
-                                    <div className="flex flex-col items-center justify-center text-gray-300">
-                                        <div className="w-6 h-6 mb-1 border-2 border-gray-500 rounded-full flex items-center justify-center">M</div>
+                                    <div className="flex flex-col items-center justify-center text-gray-400">
+                                        <div className="w-6 h-6 mb-1 border-2 border-gray-300 rounded-full flex items-center justify-center">M</div>
                                     </div>
                                 )}
                             </div>
-                            <div className="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity rounded-[1.5rem]">
-                                <Upload className="w-5 h-5 text-white" />
+                            <div className="absolute inset-0 bg-black/10 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity rounded-[1.5rem]">
+                                <Upload className="w-5 h-5 text-white drop-shadow-md" />
                             </div>
                             <input type="file" ref={ministryLogoInputRef} onChange={handleMinistryLogoUpload} accept="image/*" className="hidden" />
-                            <p className="text-[9px] font-bold text-gray-300 mt-1">شعار الوزارة</p>
+                            <p className="text-[9px] font-bold text-gray-500 mt-1">شعار الوزارة</p>
                         </div>
                     </div>
 
                     <div className="space-y-2">
-                        <input className="w-full p-2.5 glass-input rounded-xl font-bold text-xs md:text-sm text-white bg-[#374151] border border-gray-600 focus:border-indigo-500 outline-none" placeholder="اسم المعلم" value={editName} onChange={e => setEditName(e.target.value)} />
-                        <input className="w-full p-2.5 glass-input rounded-xl font-bold text-xs md:text-sm text-white bg-[#374151] border border-gray-600 focus:border-indigo-500 outline-none" placeholder="اسم المدرسة" value={editSchool} onChange={e => setEditSchool(e.target.value)} />
-                        <input className="w-full p-2.5 glass-input rounded-xl font-bold text-xs md:text-sm text-white bg-[#374151] border border-gray-600 focus:border-indigo-500 outline-none" placeholder="المادة (مثال: رياضيات)" value={editSubject} onChange={e => setEditSubject(e.target.value)} />
-                        <input className="w-full p-2.5 glass-input rounded-xl font-bold text-xs md:text-sm text-white bg-[#374151] border border-gray-600 focus:border-indigo-500 outline-none" placeholder="المحافظة (للتوجيه)" value={editGovernorate} onChange={e => setEditGovernorate(e.target.value)} />
-                        <input className="w-full p-2.5 glass-input rounded-xl font-bold text-xs md:text-sm text-white bg-[#374151] border border-gray-600 focus:border-indigo-500 outline-none" placeholder="العام الدراسي (مثال: 2024 / 2025)" value={editAcademicYear} onChange={e => setEditAcademicYear(e.target.value)} />
+                        <input className="w-full p-2.5 glass-input rounded-xl font-bold text-xs md:text-sm text-slate-800 bg-white border border-gray-200 focus:border-indigo-500 outline-none" placeholder="اسم المعلم" value={editName} onChange={e => setEditName(e.target.value)} />
+                        <input className="w-full p-2.5 glass-input rounded-xl font-bold text-xs md:text-sm text-slate-800 bg-white border border-gray-200 focus:border-indigo-500 outline-none" placeholder="اسم المدرسة" value={editSchool} onChange={e => setEditSchool(e.target.value)} />
+                        <input className="w-full p-2.5 glass-input rounded-xl font-bold text-xs md:text-sm text-slate-800 bg-white border border-gray-200 focus:border-indigo-500 outline-none" placeholder="المادة (مثال: رياضيات)" value={editSubject} onChange={e => setEditSubject(e.target.value)} />
+                        <input className="w-full p-2.5 glass-input rounded-xl font-bold text-xs md:text-sm text-slate-800 bg-white border border-gray-200 focus:border-indigo-500 outline-none" placeholder="المحافظة (للتوجيه)" value={editGovernorate} onChange={e => setEditGovernorate(e.target.value)} />
+                        <input className="w-full p-2.5 glass-input rounded-xl font-bold text-xs md:text-sm text-slate-800 bg-white border border-gray-200 focus:border-indigo-500 outline-none" placeholder="العام الدراسي (مثال: 2024 / 2025)" value={editAcademicYear} onChange={e => setEditAcademicYear(e.target.value)} />
                         
-                        <div className="bg-[#374151] rounded-xl p-2 flex items-center justify-between border border-gray-600">
-                            <span className="text-xs font-bold text-gray-300 pr-2">الفصل الدراسي:</span>
+                        <div className="bg-gray-50 rounded-xl p-2 flex items-center justify-between border border-gray-200">
+                            <span className="text-xs font-bold text-gray-500 pr-2">الفصل الدراسي:</span>
                             <div className="flex gap-1">
-                                <button onClick={() => setEditSemester('1')} className={`px-4 py-1.5 rounded-lg text-xs font-bold transition-all ${editSemester === '1' ? 'bg-indigo-600 text-white' : 'text-gray-400 hover:bg-gray-700'}`}>الأول</button>
-                                <button onClick={() => setEditSemester('2')} className={`px-4 py-1.5 rounded-lg text-xs font-bold transition-all ${editSemester === '2' ? 'bg-indigo-600 text-white' : 'text-gray-400 hover:bg-gray-700'}`}>الثاني</button>
+                                <button onClick={() => setEditSemester('1')} className={`px-4 py-1.5 rounded-lg text-xs font-bold transition-all ${editSemester === '1' ? 'bg-indigo-600 text-white' : 'text-gray-500 hover:bg-gray-200'}`}>الأول</button>
+                                <button onClick={() => setEditSemester('2')} className={`px-4 py-1.5 rounded-lg text-xs font-bold transition-all ${editSemester === '2' ? 'bg-indigo-600 text-white' : 'text-gray-500 hover:bg-gray-200'}`}>الثاني</button>
                             </div>
                         </div>
 
@@ -417,24 +413,24 @@ const Dashboard: React.FC<DashboardProps> = ({
                  </div>
             </Modal>
 
-            {/* Schedule Settings Modal (Dark) */}
+            {/* Schedule Settings Modal */}
             <Modal isOpen={showScheduleModal} onClose={() => setShowScheduleModal(false)} className="max-w-md rounded-[2rem]">
                 <div className="text-center">
-                    <h3 className="font-black text-xl mb-4 text-white">إعدادات الجدول</h3>
+                    <h3 className="font-black text-xl mb-4 text-slate-800">إعدادات الجدول</h3>
                     
-                    <div className="flex p-1 bg-[#111827] rounded-xl mb-4">
-                        <button onClick={() => setScheduleTab('timing')} className={`flex-1 py-2 rounded-lg text-xs font-bold transition-all ${scheduleTab === 'timing' ? 'bg-[#374151] shadow text-white' : 'text-gray-500'}`}>التوقيت</button>
-                        <button onClick={() => setScheduleTab('classes')} className={`flex-1 py-2 rounded-lg text-xs font-bold transition-all ${scheduleTab === 'classes' ? 'bg-[#374151] shadow text-white' : 'text-gray-500'}`}>الحصص</button>
+                    <div className="flex p-1 bg-gray-100 rounded-xl mb-4">
+                        <button onClick={() => setScheduleTab('timing')} className={`flex-1 py-2 rounded-lg text-xs font-bold transition-all ${scheduleTab === 'timing' ? 'bg-white shadow text-slate-800' : 'text-gray-500'}`}>التوقيت</button>
+                        <button onClick={() => setScheduleTab('classes')} className={`flex-1 py-2 rounded-lg text-xs font-bold transition-all ${scheduleTab === 'classes' ? 'bg-white shadow text-slate-800' : 'text-gray-500'}`}>الحصص</button>
                     </div>
 
                     {scheduleTab === 'timing' ? (
                         <div className="space-y-2 max-h-60 overflow-y-auto custom-scrollbar p-1">
                             {tempPeriodTimes.map((pt, idx) => (
                                 <div key={idx} className="flex items-center gap-2 mb-2">
-                                    <span className="text-xs font-bold w-16 text-gray-300">حصة {pt.periodNumber}</span>
-                                    <input type="time" value={pt.startTime} onChange={e => updateTempTime(idx, 'startTime', e.target.value)} className="flex-1 p-2 glass-input rounded-lg text-xs font-bold text-white bg-[#374151] border border-gray-600" />
-                                    <span className="text-gray-500">-</span>
-                                    <input type="time" value={pt.endTime} onChange={e => updateTempTime(idx, 'endTime', e.target.value)} className="flex-1 p-2 glass-input rounded-lg text-xs font-bold text-white bg-[#374151] border border-gray-600" />
+                                    <span className="text-xs font-bold w-16 text-gray-500">حصة {pt.periodNumber}</span>
+                                    <input type="time" value={pt.startTime} onChange={e => updateTempTime(idx, 'startTime', e.target.value)} className="flex-1 p-2 glass-input rounded-lg text-xs font-bold text-slate-800 bg-white border border-gray-200" />
+                                    <span className="text-gray-400">-</span>
+                                    <input type="time" value={pt.endTime} onChange={e => updateTempTime(idx, 'endTime', e.target.value)} className="flex-1 p-2 glass-input rounded-lg text-xs font-bold text-slate-800 bg-white border border-gray-200" />
                                 </div>
                             ))}
                         </div>
@@ -442,7 +438,7 @@ const Dashboard: React.FC<DashboardProps> = ({
                          <div className="space-y-4 max-h-60 overflow-y-auto custom-scrollbar p-1">
                              <div className="flex gap-2 overflow-x-auto pb-2">
                                  {tempSchedule.map((day, idx) => (
-                                     <button key={idx} onClick={() => setEditingDayIndex(idx)} className={`px-3 py-1.5 rounded-lg text-xs font-bold whitespace-nowrap ${editingDayIndex === idx ? 'bg-indigo-600 text-white' : 'glass-card bg-[#374151] text-gray-300 border border-gray-600'}`}>
+                                     <button key={idx} onClick={() => setEditingDayIndex(idx)} className={`px-3 py-1.5 rounded-lg text-xs font-bold whitespace-nowrap ${editingDayIndex === idx ? 'bg-indigo-600 text-white' : 'glass-card bg-gray-50 text-gray-500 border border-gray-200'}`}>
                                          {day.dayName}
                                      </button>
                                  ))}
@@ -450,12 +446,12 @@ const Dashboard: React.FC<DashboardProps> = ({
                              <div className="space-y-2">
                                  {tempSchedule[editingDayIndex]?.periods.map((cls, pIdx) => (
                                      <div key={pIdx} className="flex items-center gap-2">
-                                         <span className="text-xs font-bold w-12 text-gray-300">#{pIdx + 1}</span>
+                                         <span className="text-xs font-bold w-12 text-gray-500">#{pIdx + 1}</span>
                                          <input 
                                              placeholder="اسم الفصل / المادة" 
                                              value={cls} 
                                              onChange={e => updateTempClass(editingDayIndex, pIdx, e.target.value)}
-                                             className="flex-1 p-2 glass-input rounded-lg text-xs font-bold text-white bg-[#374151] border border-gray-600 focus:border-indigo-500 outline-none"
+                                             className="flex-1 p-2 glass-input rounded-lg text-xs font-bold text-slate-800 bg-white border border-gray-200 focus:border-indigo-500 outline-none"
                                          />
                                      </div>
                                  ))}
@@ -463,8 +459,8 @@ const Dashboard: React.FC<DashboardProps> = ({
                          </div>
                     )}
                     
-                    <div className="flex gap-2 mt-4 pt-4 border-t border-gray-700">
-                        <button onClick={() => setShowScheduleModal(false)} className="flex-1 py-3 text-gray-400 font-bold text-xs hover:bg-[#374151] rounded-xl">إلغاء</button>
+                    <div className="flex gap-2 mt-4 pt-4 border-t border-gray-100">
+                        <button onClick={() => setShowScheduleModal(false)} className="flex-1 py-3 text-gray-500 font-bold text-xs hover:bg-gray-100 rounded-xl">إلغاء</button>
                         <button onClick={handleSaveScheduleSettings} className="flex-[2] py-3 bg-indigo-600 text-white rounded-xl font-black text-sm shadow-lg hover:bg-indigo-700">حفظ الجدول</button>
                     </div>
                 </div>
