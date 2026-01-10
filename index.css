@@ -184,14 +184,25 @@ body :not(.force-print-style):not(.force-print-style *):not(.user-guide-wrapper)
   transform: translateX(100%);
 }
 
-/* --- PRINT OVERRIDES (Critical Fix for Blank Pages) --- */
+/* --- PRINTING MODE OVERRIDES --- */
+/* This class is added temporarily during PDF generation to fix blank pages */
+.printing-mode body, 
+.printing-mode html {
+    position: static !important;
+    overflow: visible !important;
+    height: auto !important;
+    width: 100% !important;
+    background-color: white !important;
+}
+
+/* --- NATIVE PRINT MEDIA QUERY --- */
 @media print {
   @page {
     margin: 0;
     size: auto; 
   }
 
-  /* Release the locks on body/html during print */
+  /* Release locks for native printing */
   html, body {
     position: static !important;
     overflow: visible !important;
@@ -220,7 +231,6 @@ body :not(.force-print-style):not(.force-print-style *):not(.user-guide-wrapper)
     overflow: visible !important;
   }
   
-  /* Reset Styles for Print Content */
   .force-print-style * {
       color: #000000 !important;
       background-color: transparent !important;
