@@ -67,148 +67,29 @@ const StudentReport: React.FC<StudentReportProps> = ({ student, onUpdateStudent,
   };
 
   const handlePrintReport = async () => {
+      const element = document.getElementById('report-content');
+      if (!element) return;
+
       setIsGeneratingPdf(true);
-
-      // --- GENERATE HTML STRING DIRECTLY (No Cloning) ---
-      // This ensures 100% control over the printed output (Light Theme / Black Text)
-      
-      let continuousRows = '';
-      if (assessmentTools.length > 0) {
-          continuousTools.forEach(tool => {
-              const g = currentSemesterGrades.find(r => r.category.trim() === tool.name.trim());
-              continuousRows += `
-                <tr>
-                    <td style="border:1px solid #000; padding:8px; text-align:right;">${teacherInfo?.subject || 'المادة'}</td>
-                    <td style="border:1px solid #000; padding:8px; text-align:center; background-color:#ffedd5;">${tool.name}</td>
-                    <td style="border:1px solid #000; padding:8px; text-align:center; font-weight:bold;">${g ? g.score : '-'}</td>
-                </tr>`;
-          });
-      } else {
-          currentSemesterGrades.forEach(g => {
-              continuousRows += `
-                <tr>
-                    <td style="border:1px solid #000; padding:8px; text-align:right;">${g.subject}</td>
-                    <td style="border:1px solid #000; padding:8px; text-align:center;">${g.category}</td>
-                    <td style="border:1px solid #000; padding:8px; text-align:center; font-weight:bold;">${g.score}</td>
-                </tr>`;
-          });
-      }
-
-      let finalRow = '';
-      if (finalTool) {
-          const g = currentSemesterGrades.find(r => r.category.trim() === finalTool.name.trim());
-          finalRow = `
-            <tr>
-                <td style="border:1px solid #000; padding:8px; text-align:right;">${teacherInfo?.subject || 'المادة'}</td>
-                <td style="border:1px solid #000; padding:8px; text-align:center; background-color:#fce7f3;">${finalTool.name} (40)</td>
-                <td style="border:1px solid #000; padding:8px; text-align:center; font-weight:bold;">${g ? g.score : '-'}</td>
-            </tr>`;
-      }
-
-      const htmlContent = `
-        <div style="padding: 40px; font-family: 'Tajawal', sans-serif; direction: rtl; background: white; color: black; box-sizing: border-box; width: 210mm;">
-            <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:20px; border-bottom:2px solid #eee; padding-bottom:20px;">
-                <div style="text-align:center; width:33%;">
-                    <p style="margin:0; font-weight:bold;">سلطنة عمان</p>
-                    <p style="margin:0; font-weight:bold;">وزارة التربية والتعليم</p>
-                    <p style="margin:0; font-weight:bold; font-size:10px;">محافظة ${teacherInfo?.governorate}</p>
-                    <p style="margin:0; font-weight:bold; font-size:10px;">مدرسة ${teacherInfo?.school}</p>
-                </div>
-                <div style="text-align:center; width:33%;">
-                    ${teacherInfo?.ministryLogo ? `<img src="${teacherInfo.ministryLogo}" style="height:60px; object-fit:contain;" />` : ''}
-                    <h2 style="font-weight:900; text-decoration:underline; margin-top:10px;">تقرير مستوى طالب</h2>
-                </div>
-                <div style="text-align:left; width:33%; font-size:12px; font-weight:bold;">
-                    <p>العام الدراسي: ${teacherInfo?.academicYear}</p>
-                    <p>الفصل: ${currentSemester === '1' ? 'الأول' : 'الثاني'}</p>
-                    <p>التاريخ: ${new Date().toLocaleDateString('en-GB')}</p>
-                </div>
-            </div>
-
-            <div style="background:#f8fafc; border:1px solid #cbd5e1; padding:15px; border-radius:10px; margin-bottom:20px;">
-                <div style="display:flex; gap:20px; margin-bottom:10px;">
-                    <div><span style="color:#000; font-size:10px;">الاسم:</span> <strong style="font-size:16px;">${student.name}</strong></div>
-                    <div style="width:1px; background:#cbd5e1;"></div>
-                    <div><span style="color:#000; font-size:10px;">الصف:</span> <strong style="font-size:16px;">${student.classes[0]}</strong></div>
-                </div>
-                <div style="display:flex; gap:10px;">
-                    <span style="background:#dcfce7; color:#000; padding:2px 8px; border-radius:4px; font-size:10px; font-weight:bold;">إيجابي: ${totalPositivePoints}</span>
-                    <span style="background:#ffe4e6; color:#000; padding:2px 8px; border-radius:4px; font-size:10px; font-weight:bold;">سلبي: ${totalNegativePoints}</span>
-                </div>
-            </div>
-
-            <h3 style="font-weight:bold; font-size:16px; margin-bottom:10px; border-bottom:1px solid #000; padding-bottom:5px;">التحصيل الدراسي</h3>
-            <table style="width:100%; border-collapse:collapse; margin-bottom:20px; font-size:12px;">
-                <thead>
-                    <tr style="background:#f1f5f9;">
-                        <th style="border:1px solid #000; padding:8px;">المادة</th>
-                        <th style="border:1px solid #000; padding:8px;">أداة التقويم</th>
-                        <th style="border:1px solid #000; padding:8px;">الدرجة</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    ${continuousRows}
-                    <tr style="background:#eff6ff; font-weight:bold;">
-                        <td colspan="2" style="border:1px solid #000; padding:8px; text-align:center;">المجموع (60)</td>
-                        <td style="border:1px solid #000; padding:8px; text-align:center;">${continuousSum}</td>
-                    </tr>
-                    ${finalRow}
-                </tbody>
-                <tfoot>
-                    <tr style="background:#f1f5f9;">
-                        <td colspan="2" style="border:1px solid #000; padding:8px; font-weight:900; text-align:right;">المجموع الكلي</td>
-                        <td style="border:1px solid #000; padding:8px; font-weight:900; text-align:center; font-size:14px;">${totalScore}</td>
-                    </tr>
-                </tfoot>
-            </table>
-
-            <div style="display:flex; gap:15px; margin-bottom:20px;">
-                <div style="flex:1; border:1px solid #cbd5e1; padding:10px; border-radius:8px; text-align:center;">
-                    <span style="display:block; font-size:10px; color:#000;">أيام الغياب</span>
-                    <span style="font-weight:900; color:#000; font-size:18px;">${absenceRecords.length}</span>
-                </div>
-                <div style="flex:1; border:1px solid #cbd5e1; padding:10px; border-radius:8px; text-align:center;">
-                    <span style="display:block; font-size:10px; color:#000;">الهروب (التسرب)</span>
-                    <span style="font-weight:900; color:#000; font-size:18px;">${truantRecords.length}</span>
-                </div>
-            </div>
-
-            <div style="position:absolute; bottom:40px; left:40px; right:40px; display:flex; justify-content:space-between; align-items:flex-end;">
-                <div style="text-align:center;">
-                    <p style="font-weight:bold; margin-bottom:30px;">معلم المادة</p>
-                    <p>${teacherInfo?.name}</p>
-                </div>
-                <div style="text-align:center;">
-                    ${teacherInfo?.stamp ? `<img src="${teacherInfo.stamp}" style="width:100px; opacity:0.7; mix-blend-mode:multiply; transform:rotate(-5deg);" />` : ''}
-                </div>
-                <div style="text-align:center;">
-                    <p style="font-weight:bold; margin-bottom:30px;">مدير المدرسة</p>
-                    <p>....................</p>
-                </div>
-            </div>
-        </div>
-      `;
-
-      const container = document.createElement('div');
-      container.style.position = 'absolute';
-      container.style.top = '-9999px';
-      container.style.left = '0';
-      container.innerHTML = htmlContent;
-      document.body.appendChild(container);
-
-      // Wait a bit
-      await new Promise(resolve => setTimeout(resolve, 500));
+      window.scrollTo(0, 0); // ضمان البدء من الأعلى
 
       const opt = {
-          margin: 0,
+          margin: 10,
           filename: `Report_${student.name}.pdf`,
           image: { type: 'jpeg', quality: 0.98 },
-          html2canvas: { scale: 2, useCORS: true, backgroundColor: '#ffffff' },
+          html2canvas: { 
+              scale: 2, 
+              useCORS: true, 
+              logging: false,
+              // لم نعد بحاجة لقسر الألوان لأن التطبيق أصلاً فاتح
+              windowWidth: 800
+          },
           jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
       };
 
       try {
-          const worker = html2pdf().set(opt).from(container).toPdf();
+          // نستخدم العنصر مباشرة دون استنساخ معقد
+          const worker = html2pdf().set(opt).from(element).toPdf();
           
           if (Capacitor.isNativePlatform()) {
                const pdfBase64 = await worker.output('datauristring');
@@ -224,9 +105,8 @@ const StudentReport: React.FC<StudentReportProps> = ({ student, onUpdateStudent,
           }
       } catch (err) { 
           console.error('PDF Error:', err); 
-          alert('حدث خطأ أثناء إنشاء ملف PDF');
+          alert('حدث خطأ أثناء الطباعة');
       } finally { 
-          document.body.removeChild(container);
           setIsGeneratingPdf(false); 
       }
   };
@@ -234,8 +114,8 @@ const StudentReport: React.FC<StudentReportProps> = ({ student, onUpdateStudent,
   return (
     <div className="flex flex-col h-full space-y-4 pb-20 animate-in fade-in slide-in-from-bottom-4 duration-500 text-slate-900">
         
-        {/* Header Action Bar (Light Theme) */}
-        <div className="flex items-center justify-between glass-heavy p-4 rounded-[2rem] border border-gray-200">
+        {/* Header Action Bar */}
+        <div className="flex items-center justify-between glass-heavy p-4 rounded-[2rem]">
             <div className="flex items-center gap-3">
                 <button onClick={onBack} className="p-3 rounded-full glass-icon hover:bg-gray-100 transition-colors">
                     <ArrowRight className="w-5 h-5 text-slate-600" />
@@ -319,7 +199,7 @@ const StudentReport: React.FC<StudentReportProps> = ({ student, onUpdateStudent,
 
                 {/* Grades Section */}
                 <div className="mb-8">
-                    <h3 className="font-black text-lg mb-4 flex items-center gap-2">
+                    <h3 className="font-black text-lg mb-4 flex items-center gap-2 text-slate-800">
                         <FileText className="w-5 h-5 text-indigo-600" />
                         التحصيل الدراسي
                     </h3>
@@ -392,7 +272,7 @@ const StudentReport: React.FC<StudentReportProps> = ({ student, onUpdateStudent,
 
                 {/* Attendance Summary and Details */}
                 <div className="mb-8">
-                     <h3 className="font-black text-lg mb-4 flex items-center gap-2">
+                     <h3 className="font-black text-lg mb-4 flex items-center gap-2 text-slate-800">
                         <LayoutList className="w-5 h-5 text-indigo-600" />
                         ملخص الحضور والغياب
                     </h3>
@@ -440,7 +320,7 @@ const StudentReport: React.FC<StudentReportProps> = ({ student, onUpdateStudent,
 
                 {/* Behavior Log */}
                 <div className="mb-12">
-                    <h3 className="font-black text-lg mb-4 flex items-center gap-2">
+                    <h3 className="font-black text-lg mb-4 flex items-center gap-2 text-slate-800">
                         <Award className="w-5 h-5 text-indigo-600" />
                         سجل السلوك والملاحظات
                     </h3>

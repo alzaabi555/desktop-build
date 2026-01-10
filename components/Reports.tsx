@@ -132,12 +132,8 @@ const Reports: React.FC = () => {
   const generateAndSharePDF = async (htmlContent: string, filename: string, landscape = false) => {
       setIsGeneratingPdf(true);
       
-      // Simple container appended to body
       const container = document.createElement('div');
-      container.style.position = 'absolute';
-      container.style.top = '-9999px';
-      container.style.left = '0';
-      container.style.width = landscape ? '297mm' : '210mm';
+      container.className = 'pdf-export-container'; // Ensures white background
       container.innerHTML = htmlContent;
       document.body.appendChild(container);
 
