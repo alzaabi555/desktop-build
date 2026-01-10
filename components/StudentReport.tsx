@@ -6,8 +6,7 @@ import { Filesystem, Directory } from '@capacitor/filesystem';
 import { Share } from '@capacitor/share';
 import { Capacitor } from '@capacitor/core';
 import { useApp } from '../context/AppContext';
-
-declare var html2pdf: any;
+import html2pdf from 'html2pdf.js'; // Explicit import to fix "library not ready"
 
 interface StudentReportProps {
   student: Student;
@@ -77,25 +76,25 @@ const StudentReport: React.FC<StudentReportProps> = ({ student, onUpdateStudent,
         jsPDF: { unit: 'mm', format: 'a4', orientation: orientation }
     };
 
-    if (typeof html2pdf !== 'undefined') {
-        try {
-            const worker = html2pdf().set(opt).from(element).toPdf();
-            if (Capacitor.isNativePlatform()) {
-                 const pdfBase64 = await worker.output('datauristring');
-                 const base64Data = pdfBase64.split(',')[1];
-                 const result = await Filesystem.writeFile({ path: filename, data: base64Data, directory: Directory.Cache });
-                 await Share.share({ title: filename, url: result.uri, dialogTitle: 'مشاركة/حفظ' });
-            } else {
-                 worker.save();
-            }
-        } catch (err) { console.error('PDF Error:', err); } finally { setLoader(false); }
-    } else { alert('مكتبة PDF غير جاهزة'); setLoader(false); }
+    try {
+        const worker = html2pdf().set(opt).from(element).toPdf();
+        if (Capacitor.isNativePlatform()) {
+             const pdfBase64 = await worker.output('datauristring');
+             const base64Data = pdfBase64.split(',')[1];
+             const result = await Filesystem.writeFile({ path: filename, data: base64Data, directory: Directory.Cache });
+             await Share.share({ title: filename, url: result.uri, dialogTitle: 'مشاركة/حفظ' });
+        } else {
+             worker.save();
+        }
+    } catch (err) { console.error('PDF Error:', err); } finally { setLoader(false); }
   };
 
   const handlePrintReport = async () => {
       const element = document.getElementById('report-content');
       if (element) {
           await exportPDF(element, `Report_${student.name}.pdf`, setIsGeneratingPdf);
+      } else {
+          alert('خطأ في تحديد محتوى التقرير');
       }
   };
 

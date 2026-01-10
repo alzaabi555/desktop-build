@@ -7,27 +7,28 @@ import Modal from './Modal';
 import ExcelImport from './ExcelImport';
 import { useApp } from '../context/AppContext';
 
-// روابط أصوات خفيفة ومناسبة
+interface StudentListProps {
+    students: Student[];
+    classes: string[];
+    onAddClass: (name: string) => void;
+    onAddStudentManually: (name: string, className: string, phone?: string, avatar?: string) => void;
+    onBatchAddStudents: (students: Student[]) => void;
+    onUpdateStudent: (student: Student) => void;
+    onDeleteStudent: (id: string) => void;
+    onViewReport: (student: Student) => void;
+    currentSemester: '1' | '2';
+    onDeleteClass?: (className: string) => void; // Added Prop
+    onSemesterChange?: (sem: '1' | '2') => void;
+    onEditClass?: (oldName: string, newName: string) => void;
+}
+
+// ... (Constants and StudentItem component remain same) ...
 const SOUNDS = {
     positive: 'https://assets.mixkit.co/active_storage/sfx/2000/2000-preview.mp3', // صوت نجاح/جرس
     negative: 'https://assets.mixkit.co/active_storage/sfx/2955/2955-preview.mp3'  // صوت خطأ/تنبيه منخفض
 };
 
-interface StudentListProps {
-  students: Student[];
-  classes: string[];
-  onAddClass: (name: string) => void;
-  onAddStudentManually: (name: string, className: string, phone?: string, avatar?: string) => void;
-  onBatchAddStudents: (students: Student[]) => void;
-  onUpdateStudent: (s: Student) => void;
-  onDeleteStudent: (id: string) => void;
-  onViewReport: (s: Student) => void;
-  currentSemester: '1' | '2';
-  onSemesterChange: (sem: '1' | '2') => void;
-  onEditClass: (oldName: string, newName: string) => void;
-  onDeleteClass: (className: string) => void;
-}
-
+// ... (StudentItem component code hidden for brevity - unchanged) ...
 const StudentItem = React.memo(({ student, onAction, currentSemester }: { 
     student: Student, onAction: (s: Student, type: 'positive' | 'negative' | 'edit' | 'delete' | 'truant') => void, currentSemester: '1' | '2'
 }) => {
@@ -45,9 +46,8 @@ const StudentItem = React.memo(({ student, onAction, currentSemester }: {
         <motion.div 
             initial={{ opacity: 0, y: 15 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.3 }}
             className="group flex flex-col sm:flex-row sm:items-center justify-between p-4 mb-3 rounded-[1.5rem] gap-4 sm:gap-0 relative overflow-hidden transition-all duration-300
-            glass-card bg-[#1f2937] hover:bg-[#374151] shadow-sm hover:shadow-md border border-indigo-500/40 shimmer-hover"
+            glass-card bg-[#1f2937] hover:bg-[#374151] shadow-sm hover:shadow-md border border-blue-500 shimmer-hover"
         >
-            {/* Cleaner visual separation - Left Border Accent based on grade */}
             <div className={`absolute left-0 top-0 bottom-0 w-1.5 ${totalScore >= 90 ? 'bg-emerald-500' : totalScore >= 50 ? 'bg-indigo-500' : 'bg-rose-500'}`}></div>
 
             <div className="flex items-center gap-4 flex-1 min-w-0 relative z-10 pl-3">
@@ -91,7 +91,7 @@ const StudentItem = React.memo(({ student, onAction, currentSemester }: {
     );
 }, (prev, next) => prev.student === next.student && prev.currentSemester === next.currentSemester);
 
-const StudentList: React.FC<StudentListProps> = ({ students, classes, onAddClass, onAddStudentManually, onBatchAddStudents, onUpdateStudent, onDeleteStudent, onViewReport, currentSemester }) => {
+const StudentList: React.FC<StudentListProps> = ({ students, classes, onAddClass, onAddStudentManually, onBatchAddStudents, onUpdateStudent, onDeleteStudent, onViewReport, currentSemester, onDeleteClass }) => {
   const { teacherInfo } = useApp();
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedGrade, setSelectedGrade] = useState<string>('all');
@@ -101,6 +101,7 @@ const StudentList: React.FC<StudentListProps> = ({ students, classes, onAddClass
   const [showManualAddModal, setShowManualAddModal] = useState(false);
   const [showImportModal, setShowImportModal] = useState(false);
   const [showAddClassModal, setShowAddClassModal] = useState(false);
+  const [showManageClasses, setShowManageClasses] = useState(false); // New modal for deletion
   
   // Inputs State
   const [newClassInput, setNewClassInput] = useState('');
@@ -134,8 +135,6 @@ const StudentList: React.FC<StudentListProps> = ({ students, classes, onAddClass
               if (match) grades.add(match[1]);
           }
       });
-      // Fallback if no specific grades found
-      if (grades.size === 0 && classes.length > 0) return ['عام']; 
       return Array.from(grades).sort();
   }, [students, classes]);
 
@@ -151,7 +150,6 @@ const StudentList: React.FC<StudentListProps> = ({ students, classes, onAddClass
       
       let matchGrade = true;
       if (selectedGrade !== 'all') {
-          // Strict grade check or fuzzy class check
           matchGrade = s.grade === selectedGrade || (s.classes[0] && s.classes[0].startsWith(selectedGrade));
       }
 
@@ -199,15 +197,10 @@ const StudentList: React.FC<StudentListProps> = ({ students, classes, onAddClass
 
   const handleSaveStudent = () => {
       if (editName.trim() && editClass.trim()) {
-          // infer grade from class input for new students
           const inferredGrade = editClass.trim().match(/^(\d+)/)?.[1] || '';
-          
           if (editingStudent) {
               onUpdateStudent({ ...editingStudent, name: editName, classes: [editClass], parentPhone: editPhone, avatar: editAvatar, grade: inferredGrade });
           } else {
-              // onAddStudentManually is a wrapper, we might need to update the actual function to accept grade or calc it inside
-              // For now, let's update state directly or rely on the wrapper to be smart.
-              // Assuming wrapper just creates obj. We can update it via `onBatch` or just use the wrapper.
               onAddStudentManually(editName, editClass, editPhone, editAvatar);
           }
           setShowManualAddModal(false);
@@ -258,6 +251,26 @@ const StudentList: React.FC<StudentListProps> = ({ students, classes, onAddClass
       }
   };
 
+  const executeDeleteClass = (className: string) => {
+      if (!onDeleteClass) return;
+      if (confirm(`هل أنت متأكد من حذف الفصل "${className}"؟\nسيتم حذفه من سجلات جميع الطلاب.`)) {
+          onDeleteClass(className);
+          if (selectedClass === className) setSelectedClass('all');
+      }
+  };
+
+  const executeDeleteGrade = (grade: string) => {
+      if (!onDeleteClass) return;
+      const relatedClasses = classes.filter(c => c.startsWith(grade));
+      if (confirm(`هل أنت متأكد من حذف الصف "${grade}" بالكامل؟\nسيتم حذف الفصول التالية: ${relatedClasses.join(', ')}`)) {
+          relatedClasses.forEach(c => onDeleteClass(c));
+          if (selectedGrade === grade) {
+              setSelectedGrade('all');
+              setSelectedClass('all');
+          }
+      }
+  };
+
   return (
     <div className="flex flex-col h-[calc(100vh-80px)] text-white pb-20 relative">
         
@@ -297,7 +310,7 @@ const StudentList: React.FC<StudentListProps> = ({ students, classes, onAddClass
             )}
         </AnimatePresence>
 
-        {/* Sticky Header - Adjusted Layout */}
+        {/* Sticky Header */}
         <div className="sticky top-0 z-30 pb-2 glass-heavy bg-[#1f2937] border-b border-gray-700 shadow-md -mx-4 px-4 -mt-4">
             <div className="flex justify-between items-center mb-4 pt-safe mt-4">
                 <h1 className="text-2xl font-black text-white tracking-tight drop-shadow-sm">قائمة الطلاب</h1>
@@ -328,7 +341,10 @@ const StudentList: React.FC<StudentListProps> = ({ students, classes, onAddClass
 
                 {/* 2. Classes (Sub-level) + Search */}
                 <div className="flex items-center gap-3">
-                    <div className="flex gap-2 overflow-x-auto no-scrollbar pb-1 max-w-[65%]">
+                    <button onClick={() => setShowManageClasses(true)} className="w-9 h-9 flex items-center justify-center rounded-xl glass-card bg-[#374151] border border-gray-600 hover:bg-[#111827] active:scale-95 text-gray-300 shadow-sm" title="إدارة الفصول">
+                        <Settings className="w-4 h-4"/>
+                    </button>
+                    <div className="flex gap-2 overflow-x-auto no-scrollbar pb-1 max-w-[55%]">
                         {visibleClasses.map(c => (
                             <button key={c} onClick={() => setSelectedClass(c)} className={`px-4 py-2 text-xs font-black whitespace-nowrap transition-all rounded-xl border shadow-sm ${selectedClass === c ? 'bg-indigo-600 text-white border-indigo-700 shadow-indigo-500/30' : 'glass-card bg-[#374151] border-gray-600 hover:bg-[#111827] text-gray-300'}`}>{c}</button>
                         ))}
@@ -348,6 +364,7 @@ const StudentList: React.FC<StudentListProps> = ({ students, classes, onAddClass
             </div>
         </div>
 
+        {/* ... Rest of StudentList component (unmodified) ... */}
         {/* Student List Content */}
         <div className="flex-1 overflow-y-auto px-4 custom-scrollbar">
             {filteredStudents.length > 0 ? (
@@ -369,9 +386,55 @@ const StudentList: React.FC<StudentListProps> = ({ students, classes, onAddClass
             )}
         </div>
 
-        {/* --- MODALS (Updated for Dark Mode) --- */}
+        {/* --- Manage Classes Modal --- */}
+        <Modal isOpen={showManageClasses} onClose={() => setShowManageClasses(false)} className="max-w-md rounded-[2rem]">
+            <div className="text-center text-white">
+                <h3 className="font-black text-xl mb-4">إعدادات الفصول والصفوف</h3>
+                <p className="text-xs text-gray-400 mb-6 font-bold">يمكنك هنا حذف الفصول أو الصفوف الدراسية بالكامل. <br/> <span className="text-rose-400">تنبيه: الحذف سيؤثر على جميع الصفحات.</span></p>
+                
+                <div className="space-y-6 text-right">
+                    
+                    {/* Grades Management */}
+                    <div>
+                        <h4 className="text-xs font-black text-indigo-400 mb-2 border-b border-white/10 pb-1">المراحل الدراسية (Grades)</h4>
+                        {availableGrades.length > 0 ? (
+                            <div className="grid grid-cols-2 gap-2">
+                                {availableGrades.map(g => (
+                                    <div key={g} className="flex items-center justify-between p-3 bg-[#374151] rounded-xl border border-white/10">
+                                        <span className="text-sm font-bold">الصف {g}</span>
+                                        <button onClick={() => executeDeleteGrade(g)} className="p-2 text-rose-400 hover:bg-white/10 rounded-lg transition-colors" title="حذف الصف بالكامل">
+                                            <Trash2 className="w-4 h-4" />
+                                        </button>
+                                    </div>
+                                ))}
+                            </div>
+                        ) : <p className="text-[10px] text-gray-500">لا توجد مراحل مضافة.</p>}
+                    </div>
 
-        {/* 1. Add Student Modal */}
+                    {/* Classes Management */}
+                    <div>
+                        <h4 className="text-xs font-black text-indigo-400 mb-2 border-b border-white/10 pb-1">الفصول (Classes)</h4>
+                        {classes.length > 0 ? (
+                            <div className="grid grid-cols-2 gap-2 max-h-48 overflow-y-auto custom-scrollbar">
+                                {classes.map(c => (
+                                    <div key={c} className="flex items-center justify-between p-3 bg-[#374151] rounded-xl border border-white/10">
+                                        <span className="text-sm font-bold">{c}</span>
+                                        <button onClick={() => executeDeleteClass(c)} className="p-2 text-rose-400 hover:bg-white/10 rounded-lg transition-colors" title="حذف الفصل">
+                                            <Trash2 className="w-4 h-4" />
+                                        </button>
+                                    </div>
+                                ))}
+                            </div>
+                        ) : <p className="text-[10px] text-gray-500">لا توجد فصول مضافة.</p>}
+                    </div>
+
+                </div>
+                
+                <button onClick={() => setShowManageClasses(false)} className="mt-6 w-full py-3 bg-gray-700 text-white rounded-xl font-bold text-xs hover:bg-gray-600">إغلاق</button>
+            </div>
+        </Modal>
+
+        {/* ... Other Modals ... */}
         <Modal isOpen={showManualAddModal} onClose={() => { setShowManualAddModal(false); setEditingStudent(null); setEditName(''); setEditPhone(''); setEditClass(''); }}>
             <div className="text-center">
                 <h3 className="font-black text-xl mb-4 text-white">{editingStudent ? 'تعديل بيانات الطالب' : 'إضافة طالب جديد'}</h3>
@@ -384,12 +447,10 @@ const StudentList: React.FC<StudentListProps> = ({ students, classes, onAddClass
             </div>
         </Modal>
 
-        {/* 2. Import Excel Modal */}
         <Modal isOpen={showImportModal} onClose={() => setShowImportModal(false)} className="max-w-md rounded-[2rem]">
             <ExcelImport existingClasses={classes} onImport={(s) => { onBatchAddStudents(s); setShowImportModal(false); }} onAddClass={onAddClass} />
         </Modal>
 
-        {/* 3. Add Class Modal */}
         <Modal isOpen={showAddClassModal} onClose={() => setShowAddClassModal(false)} className="max-w-xs rounded-[2rem]">
             <div className="text-center">
                 <h3 className="font-black text-lg mb-4 text-white">إضافة فصل جديد</h3>
@@ -398,7 +459,6 @@ const StudentList: React.FC<StudentListProps> = ({ students, classes, onAddClass
             </div>
         </Modal>
 
-        {/* 4. Random Picker Modal */}
         <Modal isOpen={isRandomPicking || !!randomStudent} onClose={() => { setRandomStudent(null); setIsRandomPicking(false); }} className="max-w-xs rounded-[2.5rem]">
             <div className="text-center py-6">
                 <div className="w-24 h-24 mx-auto mb-4 rounded-full glass-icon border-4 border-indigo-600 shadow-xl overflow-hidden relative bg-[#1f2937]">
@@ -421,7 +481,6 @@ const StudentList: React.FC<StudentListProps> = ({ students, classes, onAddClass
             </div>
         </Modal>
 
-        {/* 5. Behavior Reasons Modals */}
         <Modal isOpen={!!showPositiveReasons} onClose={() => setShowPositiveReasons(null)} className="max-w-xs rounded-[2rem]">
             <div className="text-center">
                 <h3 className="font-black text-lg mb-4 text-emerald-400">سلوك إيجابي</h3>

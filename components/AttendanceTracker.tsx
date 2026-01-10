@@ -87,7 +87,7 @@ const AttendanceTracker: React.FC<AttendanceTrackerProps> = ({ students, classes
               if (match) grades.add(match[1]);
           }
       });
-      if (grades.size === 0 && classes.length > 0) return ['عام']; 
+      // REMOVED "GENERAL" FALLBACK
       return Array.from(grades).sort();
   }, [students, classes]);
 
@@ -117,49 +117,27 @@ const AttendanceTracker: React.FC<AttendanceTrackerProps> = ({ students, classes
   }, [filteredStudents, selectedDate]);
 
   const performNotification = async (method: 'whatsapp' | 'sms') => {
-      if(!notificationTarget || !notificationTarget.student.parentPhone) {
-          alert('لا يوجد رقم هاتف مسجل');
-          return;
-      }
-      
+      // ... same logic (unchanged)
+      if(!notificationTarget || !notificationTarget.student.parentPhone) { alert('لا يوجد رقم هاتف مسجل'); return; }
       const { student, type } = notificationTarget;
       let cleanPhone = student.parentPhone.replace(/[^0-9]/g, '');
       if (!cleanPhone || cleanPhone.length < 5) return alert('رقم الهاتف غير صحيح');
-      
       if (cleanPhone.startsWith('00')) cleanPhone = cleanPhone.substring(2);
       if (cleanPhone.length === 8) cleanPhone = '968' + cleanPhone;
       else if (cleanPhone.length === 9 && cleanPhone.startsWith('0')) cleanPhone = '968' + cleanPhone.substring(1);
-
       let statusText = '';
-      if (type === 'absent') statusText = 'غائب';
-      else if (type === 'late') statusText = 'متأخر';
-      else if (type === 'truant') statusText = 'تسرب من الحصة (هروب)';
-
+      if (type === 'absent') statusText = 'غائب'; else if (type === 'late') statusText = 'متأخر'; else if (type === 'truant') statusText = 'تسرب من الحصة (هروب)';
       const dateText = new Date().toLocaleDateString('ar-EG');
       const msg = encodeURIComponent(`السلام عليكم، نود إشعاركم بأن الطالب ${student.name} تم تسجيل حالة: *${statusText}* اليوم (${dateText}). نرجو المتابعة.`);
-      
       if (method === 'whatsapp') {
-          if (window.electron) {
-             window.electron.openExternal(`whatsapp://send?phone=${cleanPhone}&text=${msg}`);
-          } else {
-             const universalUrl = `https://api.whatsapp.com/send?phone=${cleanPhone}&text=${msg}`;
-             try {
-                 if (Capacitor.isNativePlatform()) {
-                     await Browser.open({ url: universalUrl });
-                 } else {
-                     window.open(universalUrl, '_blank');
-                 }
-             } catch (e) {
-                 window.open(universalUrl, '_blank');
-             }
-          }
-      } else {
-          window.location.href = `sms:${cleanPhone}?body=${msg}`;
-      }
+          if (window.electron) { window.electron.openExternal(`whatsapp://send?phone=${cleanPhone}&text=${msg}`); } 
+          else { const universalUrl = `https://api.whatsapp.com/send?phone=${cleanPhone}&text=${msg}`; try { if (Capacitor.isNativePlatform()) { await Browser.open({ url: universalUrl }); } else { window.open(universalUrl, '_blank'); } } catch (e) { window.open(universalUrl, '_blank'); } }
+      } else { window.location.href = `sms:${cleanPhone}?body=${msg}`; }
       setNotificationTarget(null);
   };
 
   const handleExportDailyExcel = async () => {
+      // ... same logic (unchanged)
       if (filteredStudents.length === 0) return alert('لا يوجد طلاب');
       setIsExportingExcel(true);
       try {
@@ -200,11 +178,8 @@ const AttendanceTracker: React.FC<AttendanceTrackerProps> = ({ students, classes
 
   return (
     <div className="flex flex-col h-full text-gray-100 relative animate-in fade-in duration-500">
-        
-        {/* Sticky Header - Adjusted for safe area and removed gap */}
+        {/* Sticky Header */}
         <div className="sticky top-0 z-30 pb-2 glass-heavy bg-[#1f2937] border-b border-gray-700 shadow-md -mx-4 px-4 -mt-4">
-            
-            {/* Title & Actions */}
             <div className="flex justify-between items-center mb-4 pt-safe mt-4">
                 <h1 className="text-2xl font-black tracking-tight text-white">سجل الغياب</h1>
                 <button onClick={handleExportDailyExcel} disabled={isExportingExcel} className="w-10 h-10 glass-icon bg-[#374151] border border-gray-600 rounded-full text-emerald-500 shadow-sm flex items-center justify-center active:scale-95 transition-transform hover:bg-[#4b5563]" title="تصدير سجل شهري">
@@ -222,7 +197,7 @@ const AttendanceTracker: React.FC<AttendanceTrackerProps> = ({ students, classes
                 <button onClick={() => { const d = new Date(selectedDate); d.setDate(d.getDate() + 1); setSelectedDate(d.toLocaleDateString('en-CA')); }} className="p-3 rounded-xl hover:bg-[#4b5563] active:bg-[#1f2937] transition-colors"><ChevronDown className="w-5 h-5 -rotate-90 text-gray-400"/></button>
             </div>
 
-            {/* Filters (Grade Level first, then Classes) */}
+            {/* Filters */}
             <div className="space-y-2 mb-2 px-1">
                 {availableGrades.length > 0 && (
                     <div className="flex gap-2 overflow-x-auto no-scrollbar pb-1">
@@ -241,6 +216,7 @@ const AttendanceTracker: React.FC<AttendanceTrackerProps> = ({ students, classes
             </div>
         </div>
 
+        {/* ... Rest of Stats and List (Unchanged) ... */}
         {/* Live Stats Strip */}
         <div className="grid grid-cols-5 gap-px bg-gray-700 rounded-2xl overflow-hidden mx-1 mb-4 shadow-sm border border-gray-600 mt-4">
             <button onClick={() => handleMarkAll('present')} className="bg-[#1f2937] py-3 flex flex-col items-center justify-center active:bg-[#111827] transition-colors hover:bg-[#374151]">
@@ -275,7 +251,7 @@ const AttendanceTracker: React.FC<AttendanceTrackerProps> = ({ students, classes
                             <div 
                                 key={student.id} 
                                 className={`
-                                    group flex items-center justify-between p-4 rounded-2xl border transition-all duration-300 relative overflow-hidden shimmer-hover
+                                    group flex items-center justify-between p-4 rounded-2xl border border-blue-500 transition-all duration-300 relative overflow-hidden shimmer-hover
                                     ${status 
                                         ? 'bg-[#374151] border-indigo-500/30 shadow-[0_0_15px_rgba(99,102,241,0.15)]' 
                                         : 'bg-[#1f2937] border-indigo-500/40 hover:bg-[#374151] hover:border-indigo-500/50 hover:shadow-lg hover:shadow-indigo-500/10'

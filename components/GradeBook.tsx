@@ -29,40 +29,31 @@ const GradeBook: React.FC<GradeBookProps> = ({
     teacherInfo 
 }) => {
   const { assessmentTools, setAssessmentTools } = useApp();
-  
   const tools = useMemo(() => Array.isArray(assessmentTools) ? assessmentTools : [], [assessmentTools]);
-
   const [selectedGrade, setSelectedGrade] = useState<string>('all');
   const [selectedClass, setSelectedClass] = useState('all');
-
   const [showAddGrade, setShowAddGrade] = useState<{ student: Student } | null>(null);
   const [editingGrade, setEditingGrade] = useState<GradeRecord | null>(null);
-  
   const [isImporting, setIsImporting] = useState(false);
   const [isExporting, setIsExporting] = useState(false);
-  
   const fileInputRef = useRef<HTMLInputElement>(null);
-  
   const [showToolsManager, setShowToolsManager] = useState(false);
   const [isAddingTool, setIsAddingTool] = useState(false);
   const [newToolName, setNewToolName] = useState('');
   const [editingToolId, setEditingToolId] = useState<string | null>(null);
   const [editToolName, setEditToolName] = useState('');
-
   const [bulkFillTool, setBulkFillTool] = useState<AssessmentTool | null>(null);
   const [bulkScore, setBulkScore] = useState('');
-
   const [selectedToolId, setSelectedToolId] = useState<string>('');
   const [score, setScore] = useState('');
 
   const styles = {
       card: `
-        glass-card border border-indigo-500/40 rounded-[1.8rem] 
+        glass-card border border-blue-500 rounded-[1.8rem] 
         hover:border-indigo-400/50 hover:shadow-lg hover:shadow-indigo-500/20 hover:-translate-y-1 hover:bg-[#374151]
         transition-all duration-300 relative overflow-hidden backdrop-blur-md bg-[#1f2937]
       `,
       pill: 'rounded-xl border border-white/10 shadow-sm',
-      // Modified header to be sticky and safe
       header: 'glass-heavy border-b border-white/10 shadow-lg backdrop-blur-xl -mx-4 -mt-4 px-4 pt-safe sticky top-0 z-30 bg-[#1f2937] pb-2',
   };
 
@@ -83,7 +74,7 @@ const GradeBook: React.FC<GradeBookProps> = ({
               if (match) grades.add(match[1]);
           }
       });
-      if (grades.size === 0 && classes.length > 0) return ['عام']; 
+      // REMOVED "GENERAL" FALLBACK
       return Array.from(grades).sort();
   }, [students, classes]);
 
@@ -290,6 +281,7 @@ const GradeBook: React.FC<GradeBookProps> = ({
   };
 
   const handleImportExcel = async (e: React.ChangeEvent<HTMLInputElement>) => {
+      // ... same logic as before (unchanged)
       const file = e.target.files?.[0];
       if (!file) return;
       setIsImporting(true);
@@ -297,18 +289,13 @@ const GradeBook: React.FC<GradeBookProps> = ({
           const data = await file.arrayBuffer();
           const workbook = XLSX.read(data, { type: 'array' });
           const firstSheet = workbook.Sheets[workbook.SheetNames[0]];
-          
           const jsonData = XLSX.utils.sheet_to_json(firstSheet, { defval: "" }) as any[];
           if (jsonData.length === 0) throw new Error('الملف فارغ');
-          
           const headers = Object.keys(jsonData[0]);
-          
           const nameKeywords = ['الاسم', 'اسم الطالب', 'name', 'student', 'full name', 'المتعلم', 'student name'];
           const nameKey = headers.find(h => nameKeywords.some(kw => normalizeText(h).includes(normalizeText(kw)))) || headers[0];
-
           const excludedExact = ['م', '#', 'id', 'no', 'number', 'رقم'];
           const excludedPartial = ['مجموع', 'total', 'تقدير', 'rank', 'average', 'معدل', 'نتيجة', 'result'];
-          
           const potentialTools = headers.filter(h => {
               const lowerH = normalizeText(h);
               if (h === nameKey) return false;
@@ -316,7 +303,6 @@ const GradeBook: React.FC<GradeBookProps> = ({
               if (excludedPartial.some(ex => lowerH.includes(ex))) return false;
               return true;
           });
-
           let updatedTools = [...tools];
           potentialTools.forEach(h => {
               const cleanH = cleanText(h);
@@ -325,17 +311,14 @@ const GradeBook: React.FC<GradeBookProps> = ({
               }
           });
           setAssessmentTools(updatedTools);
-          
           let updatedCount = 0;
           setStudents(prev => prev.map(s => {
               const row = jsonData.find((r: any) => {
                   const rName = String(r[nameKey] || '').trim();
                   return normalizeText(rName) === normalizeText(s.name);
               });
-              
               if (!row) return s;
               updatedCount++;
-              
               let newGrades = [...(s.grades || [])];
               potentialTools.forEach(headerStr => {
                   const val = extractNumericScore(row[headerStr]);
@@ -355,15 +338,8 @@ const GradeBook: React.FC<GradeBookProps> = ({
               });
               return { ...s, grades: newGrades };
           }));
-          
           alert(`تم استيراد الدرجات بنجاح لـ ${updatedCount} طالب.\nتم إضافة ${potentialTools.length} أدوات تقويم جديدة.`);
-      } catch (error: any) { 
-          console.error(error); 
-          alert('خطأ في قراءة الملف: ' + error.message); 
-      } finally { 
-          setIsImporting(false); 
-          if (e.target) e.target.value = ''; 
-      }
+      } catch (error: any) { console.error(error); alert('خطأ في قراءة الملف: ' + error.message); } finally { setIsImporting(false); if (e.target) e.target.value = ''; }
   };
 
   const handleExportExcel = async () => {
@@ -523,15 +499,12 @@ const GradeBook: React.FC<GradeBookProps> = ({
             )}
         </div>
 
-        {/* --- Modals --- */}
-        
-        {/* 1. Add/Edit Grade Modal */}
+        {/* ... Modals (Add Grade, Tools Manager, Bulk Fill) - Unchanged ... */}
         <Modal isOpen={!!showAddGrade} onClose={() => { setShowAddGrade(null); setEditingGrade(null); setScore(''); }} className="max-w-sm rounded-[2rem]">
             {showAddGrade && (
                 <div className="text-center text-white">
                     <h3 className="font-black text-lg mb-1">{showAddGrade.student.name}</h3>
                     <p className="text-xs text-gray-400 font-bold mb-6">رصد درجة جديدة - فصل {currentSemester}</p>
-                    
                     <div className="grid grid-cols-2 gap-2 mb-4">
                         {tools.map(tool => (
                             <button 
@@ -543,7 +516,6 @@ const GradeBook: React.FC<GradeBookProps> = ({
                             </button>
                         ))}
                     </div>
-
                     <div className="flex gap-2 mb-4">
                         <input 
                             type="number" 
@@ -555,8 +527,6 @@ const GradeBook: React.FC<GradeBookProps> = ({
                         />
                         <button onClick={handleSaveGrade} className="flex-1 bg-indigo-600 text-white rounded-xl font-black text-sm shadow-lg shadow-indigo-500/30">حفظ</button>
                     </div>
-
-                    {/* Existing Grades List */}
                     <div className="border-t border-white/10 pt-4 mt-2">
                         <p className="text-[10px] font-bold text-right mb-2 text-gray-400">الدرجات المرصودة:</p>
                         <div className="space-y-2 max-h-40 overflow-y-auto custom-scrollbar p-1">
@@ -576,20 +546,17 @@ const GradeBook: React.FC<GradeBookProps> = ({
             )}
         </Modal>
 
-        {/* 2. Tools Manager Modal */}
         <Modal isOpen={showToolsManager} onClose={() => { setShowToolsManager(false); setIsAddingTool(false); }} className="max-w-sm rounded-[2rem]">
             <div className="text-center text-white">
                 <div className="flex justify-between items-center mb-6">
                     <h3 className="font-black text-lg">أدوات التقويم</h3>
                     <button onClick={() => { setShowToolsManager(false); setIsAddingTool(false); }} className="p-2 glass-icon rounded-full hover:bg-white/20"><X className="w-5 h-5 text-white"/></button>
                 </div>
-
                 {!isAddingTool ? (
                     <>
                         <button onClick={() => setIsAddingTool(true)} className="w-full py-3 mb-4 bg-indigo-600 hover:bg-indigo-500 text-white rounded-xl font-black text-xs shadow-lg shadow-indigo-500/30 flex items-center justify-center gap-2">
                             <Plus className="w-4 h-4"/> إضافة أداة جديدة
                         </button>
-
                         <div className="space-y-2 max-h-60 overflow-y-auto custom-scrollbar p-1">
                             {tools.length > 0 ? tools.map(tool => (
                                 <div key={tool.id} className="flex items-center justify-between p-3 glass-card bg-[#374151] rounded-xl border border-white/10 group">
@@ -614,13 +581,7 @@ const GradeBook: React.FC<GradeBookProps> = ({
                     </>
                 ) : (
                     <div className="animate-in fade-in zoom-in duration-200">
-                        <input 
-                            autoFocus 
-                            placeholder="اسم الأداة (مثال: اختبار قصير 1)" 
-                            value={newToolName} 
-                            onChange={e => setNewToolName(e.target.value)} 
-                            className="w-full p-4 glass-input bg-[#111827] rounded-2xl mb-4 font-bold text-sm outline-none border-white/10 focus:border-indigo-500 text-white"
-                        />
+                        <input autoFocus placeholder="اسم الأداة (مثال: اختبار قصير 1)" value={newToolName} onChange={e => setNewToolName(e.target.value)} className="w-full p-4 glass-input bg-[#111827] rounded-2xl mb-4 font-bold text-sm outline-none border-white/10 focus:border-indigo-500 text-white" />
                         <div className="flex gap-2">
                             <button onClick={() => setIsAddingTool(false)} className="flex-1 py-3 glass-card bg-[#374151] text-gray-300 font-bold text-xs rounded-xl">إلغاء</button>
                             <button onClick={handleAddTool} className="flex-[2] py-3 bg-indigo-600 text-white font-black text-xs rounded-xl shadow-lg shadow-indigo-500/30">حفظ الأداة</button>
@@ -630,26 +591,14 @@ const GradeBook: React.FC<GradeBookProps> = ({
             </div>
         </Modal>
 
-        {/* 3. Bulk Fill Modal */}
         <Modal isOpen={!!bulkFillTool} onClose={() => { setBulkFillTool(null); setBulkScore(''); }} className="max-w-xs rounded-[2rem]">
             {bulkFillTool && (
                 <div className="text-center text-white">
-                    <div className="w-12 h-12 glass-icon rounded-full flex items-center justify-center mx-auto mb-3 text-indigo-400 shadow-md border border-white/20 bg-[#374151]">
-                        <Wand2 className="w-6 h-6" />
-                    </div>
+                    <div className="w-12 h-12 glass-icon rounded-full flex items-center justify-center mx-auto mb-3 text-indigo-400 shadow-md border border-white/20 bg-[#374151]"><Wand2 className="w-6 h-6" /></div>
                     <h3 className="font-black text-lg mb-1">رصد جماعي</h3>
                     <p className="text-xs text-indigo-400 font-bold mb-4">{bulkFillTool.name}</p>
                     <p className="text-[10px] text-gray-400 mb-4 px-2">سيتم رصد هذه الدرجة لجميع الطلاب الظاهرين في القائمة الحالية (الذين لم ترصد لهم درجة لهذه الأداة بعد).</p>
-                    
-                    <input 
-                        type="number" 
-                        autoFocus
-                        placeholder="الدرجة" 
-                        className="w-full glass-input bg-[#111827] rounded-xl p-3 text-center text-lg font-black outline-none border border-white/10 focus:border-indigo-500 mb-4 text-white shadow-inner"
-                        value={bulkScore}
-                        onChange={(e) => setBulkScore(e.target.value)}
-                    />
-                    
+                    <input type="number" autoFocus placeholder="الدرجة" className="w-full glass-input bg-[#111827] rounded-xl p-3 text-center text-lg font-black outline-none border border-white/10 focus:border-indigo-500 mb-4 text-white shadow-inner" value={bulkScore} onChange={(e) => setBulkScore(e.target.value)} />
                     <button onClick={handleBulkFill} className="w-full py-3 bg-indigo-600 text-white rounded-xl font-black text-xs shadow-lg shadow-indigo-500/30">تطبيق الرصد</button>
                 </div>
             )}
