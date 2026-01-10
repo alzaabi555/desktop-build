@@ -107,6 +107,25 @@ const AppContent: React.FC = () => {
   // Helper Wrappers for Components
   const handleUpdateStudent = (updated: any) => setStudents(prev => prev.map(s => s.id === updated.id ? updated : s));
   const handleAddClass = (name: string) => setClasses(prev => [...prev, name]);
+  
+  // --- CORE DELETE LOGIC ---
+  const handleDeleteClass = (className: string) => {
+      // 1. Remove from global class list
+      setClasses(prev => prev.filter(c => c !== className));
+      
+      // 2. Remove class from all students associated with it
+      setStudents(prev => prev.map(s => {
+          // If student has this class, remove it
+          if (s.classes.includes(className)) {
+              return { 
+                  ...s, 
+                  classes: s.classes.filter(c => c !== className) 
+              };
+          }
+          return s;
+      }));
+  };
+
   const handleAddStudent = (name: string, className: string, phone?: string, avatar?: string) => {
       setStudents(prev => [...prev, { 
           id: Math.random().toString(36).substr(2,9), 
@@ -154,8 +173,7 @@ const AppContent: React.FC = () => {
                   onViewReport={(s) => {}}
                   currentSemester={currentSemester}
                   onSemesterChange={setCurrentSemester}
-                  onEditClass={(old, newN) => setClasses(p => p.map(c => c === old ? newN : c))}
-                  onDeleteClass={(c) => setClasses(p => p.filter(x => x !== c))}
+                  onDeleteClass={handleDeleteClass} // Pass the robust delete function
               />;
           case 'grades':
               return <GradeBook 
@@ -254,9 +272,9 @@ const AppContent: React.FC = () => {
 
         {/* --- MAIN CONTENT AREA --- */}
         <main className="flex-1 flex flex-col h-full overflow-hidden relative bg-[#111827]">
-            {/* Main Scroll Container */}
+            {/* Main Scroll Container - Added overscroll-contain via custom class 'custom-scrollbar' logic */}
             <div 
-                className="flex-1 overflow-y-auto overflow-x-hidden custom-scrollbar pb-28 md:pb-8 px-4 md:px-8 pt-safe"
+                className="flex-1 overflow-y-auto overflow-x-hidden custom-scrollbar pb-28 md:pb-4 px-4 md:px-8 pt-safe overscroll-contain"
                 id="main-scroll-container"
             >
                 <div className="max-w-5xl mx-auto w-full min-h-full">

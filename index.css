@@ -11,14 +11,31 @@
   -webkit-tap-highlight-color: transparent;
 }
 
-body {
-  background-color: #111827; /* Gray 900 (Dark Background) */
-  color: #ffffff; /* FORCE WHITE TEXT GLOBALLY */
-  overflow: hidden; 
+/* --- CRITICAL SCROLL FIXES --- */
+html, body {
+  background-color: #111827; /* Match app dark theme */
+  color: #ffffff;
+  height: 100%;
+  width: 100%;
+  margin: 0;
+  padding: 0;
+  overflow: hidden; /* Prevent body itself from scrolling */
+  overscroll-behavior: none; /* Disable pull-to-refresh/bounce globally */
+  position: fixed; /* Lock the viewport */
+  top: 0;
+  left: 0;
+  touch-action: none; /* Prevent default touch actions on body */
+}
+
+#root {
+  height: 100%;
+  width: 100%;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
 }
 
 /* --- FORCE WHITE TEXT OVERRIDES (UI ONLY) --- */
-/* Apply white text generally, BUT EXCLUDE items inside .force-print-style AND .user-guide-wrapper */
 body :not(.force-print-style):not(.force-print-style *):not(.user-guide-wrapper):not(.user-guide-wrapper *) {
     --tw-text-opacity: 1 !important;
     color: #ffffff !important; 
@@ -37,7 +54,6 @@ body :not(.force-print-style):not(.force-print-style *):not(.user-guide-wrapper)
 }
 
 /* --- FORCE PRINT STYLE (UI Override & Preview Fix) --- */
-/* This class explicitly forces BLACK text on WHITE background for reports/previews */
 .force-print-style {
     background-color: #ffffff !important;
     color: #000000 !important;
@@ -51,7 +67,6 @@ body :not(.force-print-style):not(.force-print-style *):not(.user-guide-wrapper)
 }
 
 /* --- USER GUIDE STYLE --- */
-/* Allow dark text inside the user guide wrapper */
 .user-guide-wrapper {
     background-color: #f8fafc !important; /* Slate 50 */
     color: #0f172a !important; /* Slate 900 */
@@ -67,16 +82,14 @@ body :not(.force-print-style):not(.force-print-style *):not(.user-guide-wrapper)
 .user-guide-wrapper .text-slate-500 { color: #64748b !important; }
 .user-guide-wrapper .text-slate-600 { color: #475569 !important; }
 
-/* Restore specific colors inside reports if needed (keeping them readable on white) */
-.force-print-style .text-emerald-600 { color: #059669 !important; -webkit-text-fill-color: #059669 !important; }
-.force-print-style .text-rose-600 { color: #e11d48 !important; -webkit-text-fill-color: #e11d48 !important; }
-.force-print-style .text-indigo-600 { color: #4f46e5 !important; -webkit-text-fill-color: #4f46e5 !important; }
-.force-print-style .bg-slate-50 { background-color: #f8fafc !important; }
-.force-print-style .bg-slate-100 { background-color: #f1f5f9 !important; }
-.force-print-style .border-slate-200 { border-color: #e2e8f0 !important; }
-.force-print-style .border-slate-300 { border-color: #cbd5e1 !important; }
-
 /* Custom Scrollbar */
+.custom-scrollbar {
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch; /* Smooth scrolling on iOS */
+  touch-action: pan-y; /* Allow vertical scrolling */
+  overscroll-behavior-y: contain; /* Prevent scroll chaining to body */
+}
+
 .custom-scrollbar::-webkit-scrollbar {
   width: 4px;
   height: 4px;
@@ -174,7 +187,7 @@ body :not(.force-print-style):not(.force-print-style *):not(.user-guide-wrapper)
 /* --- وضع الطباعة الصارم (Strict Print Mode) --- */
 @media print {
   @page {
-    margin: 10mm;
+    margin: 0;
     size: auto; 
   }
 
@@ -191,6 +204,7 @@ body :not(.force-print-style):not(.force-print-style *):not(.user-guide-wrapper)
     display: block !important;
     margin: 0 !important;
     padding: 0 !important;
+    overscroll-behavior: auto !important; /* Allow normal behavior in print */
   }
 
   /* 2. إخفاء جميع عناصر التطبيق غير الضرورية */
@@ -199,7 +213,7 @@ body :not(.force-print-style):not(.force-print-style *):not(.user-guide-wrapper)
   }
 
   /* 3. إظهار حاوية التقرير فقط وتنسيقها */
-  #report-content-print, .force-print-style, .print-only-container {
+  #report-content-print, .force-print-style, .print-only-container, .user-guide-wrapper {
     display: block !important;
     visibility: visible !important;
     position: relative !important;
@@ -214,48 +228,32 @@ body :not(.force-print-style):not(.force-print-style *):not(.user-guide-wrapper)
     box-shadow: none !important;
     border: none !important;
   }
+  
+  /* Force all text inside print container to be black */
+  .force-print-style *, .user-guide-wrapper * {
+      color: #000000 !important;
+      background-color: transparent !important;
+      text-shadow: none !important;
+      box-shadow: none !important;
+      border-color: #000000 !important;
+  }
 
-  /* 4. معالجة الجداول لمنع القص (هام جداً) */
+  /* 4. معالجة الجداول */
   table {
     width: 100% !important;
     border-collapse: collapse !important;
-    margin-bottom: 20px !important;
-    background-color: transparent !important;
-    page-break-inside: auto !important;
-  }
-
-  thead {
-    display: table-header-group !important;
-  }
-  
-  tfoot {
-    display: table-footer-group !important;
-  }
-
-  /* منع قص الصفوف */
-  tr {
-    break-inside: avoid !important;
-    page-break-inside: avoid !important;
-    page-break-after: auto !important;
     background-color: transparent !important;
   }
 
-  /* حدود واضحة للخلايا */
+  thead { display: table-header-group !important; }
+  tfoot { display: table-footer-group !important; }
+  tr { break-inside: avoid !important; page-break-inside: avoid !important; }
+
   th, td {
     border: 1px solid #000000 !important;
-    padding: 6px 4px !important;
     color: #000000 !important;
-    background-color: #ffffff !important;
-    font-size: 12px !important;
   }
   
-  th {
-      background-color: #f3f4f6 !important; /* رمادي فاتح جداً للعناوين */
-      font-weight: bold !important;
-      -webkit-print-color-adjust: exact;
-      print-color-adjust: exact;
-  }
-
   /* 5. إزالة الظلال والتأثيرات */
   * {
       text-shadow: none !important;
