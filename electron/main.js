@@ -1,8 +1,12 @@
+
 const { app, BrowserWindow, shell } = require('electron');
 const path = require('path');
 
-// إيقاف التسريع المادي قد يحل بعض مشاكل العرض في كروت شاشة معينة
-// app.disableHardwareAcceleration();
+// إيقاف التسريع المادي لحل مشاكل التعليق والتجميد في الويندوز (حل جذري)
+app.disableHardwareAcceleration();
+
+// زيادة حد الذاكرة لمنع التعليق عند التعامل مع بيانات كبيرة
+app.commandLine.appendSwitch('js-flags', '--max-old-space-size=4096');
 
 let mainWindow;
 
