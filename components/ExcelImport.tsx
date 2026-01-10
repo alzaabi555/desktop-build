@@ -34,7 +34,6 @@ const ExcelImport: React.FC<ExcelImportProps> = ({ existingClasses, onImport, on
   };
 
   const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    // File handling logic preserved ...
     const file = e.target.files?.[0];
     if (!file) return;
 
@@ -134,11 +133,11 @@ const ExcelImport: React.FC<ExcelImportProps> = ({ existingClasses, onImport, on
   };
 
   return (
-    <div className="space-y-4 text-slate-900 dark:text-white">
-      <div className="glass-card p-4 rounded-2xl border border-white/20 space-y-4 backdrop-blur-xl">
+    <div className="space-y-4 text-slate-900">
+      <div className="glass-card p-4 rounded-2xl border border-gray-200 space-y-4 bg-white">
         <div className="flex items-center justify-between">
-            <h3 className="text-xs font-black text-slate-900 dark:text-white flex items-center gap-2">
-                <LayoutGrid className="w-4 h-4 text-blue-500" />
+            <h3 className="text-xs font-black text-slate-900 flex items-center gap-2">
+                <LayoutGrid className="w-4 h-4 text-indigo-500" />
                 توزيع الطلاب على فصل
             </h3>
             <button 
@@ -147,7 +146,7 @@ const ExcelImport: React.FC<ExcelImportProps> = ({ existingClasses, onImport, on
                     setTargetClass('');
                     setNewClassInput('');
                 }}
-                className="text-[10px] font-bold text-blue-600 dark:text-blue-200 bg-blue-50/50 dark:bg-blue-500/20 border border-blue-200 dark:border-blue-500/30 px-3 py-1 rounded-full active:scale-95 transition-all hover:bg-blue-100 dark:hover:bg-blue-500/30"
+                className="text-[10px] font-bold text-indigo-600 bg-indigo-50 border border-indigo-200 px-3 py-1 rounded-full active:scale-95 transition-all hover:bg-indigo-100"
             >
                 {isCreatingNew ? 'اختر من القائمة' : 'فصل جديد +'}
             </button>
@@ -158,7 +157,7 @@ const ExcelImport: React.FC<ExcelImportProps> = ({ existingClasses, onImport, on
                 <input 
                   type="text" 
                   placeholder="اكتب اسم الفصل الجديد (مثال: 4/ب)" 
-                  className="w-full bg-white/40 dark:bg-black/20 border border-white/20 rounded-xl py-3 px-4 text-sm font-bold focus:border-blue-500/50 outline-none text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-white/30"
+                  className="w-full bg-gray-50 border border-gray-200 rounded-xl py-3 px-4 text-sm font-bold focus:border-indigo-500 outline-none text-slate-900 placeholder:text-gray-400"
                   value={newClassInput}
                   onChange={(e) => setNewClassInput(e.target.value)}
                   autoFocus
@@ -170,25 +169,25 @@ const ExcelImport: React.FC<ExcelImportProps> = ({ existingClasses, onImport, on
                     <button
                         key={cls}
                         onClick={() => setTargetClass(cls)}
-                        className={`p-3 rounded-xl text-[10px] font-black transition-all border flex items-center justify-between ${targetClass === cls ? 'bg-blue-600 text-white border-blue-500 shadow-md' : 'bg-white/40 dark:bg-white/5 text-slate-600 dark:text-white/50 border-white/20 hover:bg-white/60 dark:hover:bg-white/10'}`}
+                        className={`p-3 rounded-xl text-[10px] font-black transition-all border flex items-center justify-between ${targetClass === cls ? 'bg-indigo-600 text-white border-indigo-500 shadow-md' : 'bg-gray-50 text-slate-600 border-gray-200 hover:bg-gray-100'}`}
                     >
                         {cls}
                         {targetClass === cls && <Check className="w-3 h-3" />}
                     </button>
-                )) : <p className="col-span-2 text-center text-[10px] text-slate-400 dark:text-white/30 py-4">لا توجد فصول حالياً، قم بإنشاء فصل جديد.</p>}
+                )) : <p className="col-span-2 text-center text-[10px] text-gray-400 py-4">لا توجد فصول حالياً، قم بإنشاء فصل جديد.</p>}
             </div>
         )}
       </div>
 
-      <div className={`glass-card p-6 rounded-2xl border-2 border-dashed flex flex-col items-center text-center shadow-sm relative overflow-hidden transition-all backdrop-blur-md ${ (isCreatingNew ? newClassInput : targetClass) ? 'border-blue-400/50 bg-blue-50/20 dark:bg-blue-500/10' : 'border-white/20'}`}>
-        <div className="w-14 h-14 bg-blue-50/50 dark:bg-white/10 rounded-2xl shadow-inner flex items-center justify-center mb-3 relative z-10 border border-blue-100 dark:border-white/5">
-          {isImporting ? <Loader2 className="w-6 h-6 text-blue-500 animate-spin" /> : <FileSpreadsheet className="w-6 h-6 text-blue-500" />}
+      <div className={`glass-card p-6 rounded-2xl border-2 border-dashed flex flex-col items-center text-center shadow-sm relative overflow-hidden transition-all bg-white ${ (isCreatingNew ? newClassInput : targetClass) ? 'border-indigo-300 bg-indigo-50/30' : 'border-gray-200'}`}>
+        <div className="w-14 h-14 bg-indigo-50 rounded-2xl shadow-sm flex items-center justify-center mb-3 relative z-10 border border-indigo-100">
+          {isImporting ? <Loader2 className="w-6 h-6 text-indigo-500 animate-spin" /> : <FileSpreadsheet className="w-6 h-6 text-indigo-500" />}
         </div>
         
-        <h3 className="text-sm font-black mb-1 text-slate-900 dark:text-white relative z-10">
+        <h3 className="text-sm font-black mb-1 text-slate-900 relative z-10">
             {isImporting ? 'جاري المعالجة...' : 'ارفع ملف الإكسل'}
         </h3>
-        <p className="text-[10px] text-slate-500 dark:text-white/40 mb-4 px-4 relative z-10 font-bold">
+        <p className="text-[10px] text-slate-500 mb-4 px-4 relative z-10 font-bold">
             {(isCreatingNew ? newClassInput : targetClass) 
                 ? `سيتم استيراد الطلاب إلى فصل: ${isCreatingNew ? newClassInput : targetClass}`
                 : 'يجب اختيار الفصل أولاً لتفعيل الزر'}
@@ -202,15 +201,15 @@ const ExcelImport: React.FC<ExcelImportProps> = ({ existingClasses, onImport, on
             onChange={handleFileChange} 
             disabled={isImporting || !(isCreatingNew ? newClassInput : targetClass)} 
           />
-          <div className={`w-full py-3 rounded-xl font-black text-xs transition-all flex items-center justify-center gap-2 shadow-lg ${isImporting || !(isCreatingNew ? newClassInput : targetClass) ? 'bg-gray-100 text-gray-400 shadow-none border border-gray-200' : 'bg-blue-600 text-white shadow-blue-500/30 active:scale-95'}`}>
+          <div className={`w-full py-3 rounded-xl font-black text-xs transition-all flex items-center justify-center gap-2 shadow-lg ${isImporting || !(isCreatingNew ? newClassInput : targetClass) ? 'bg-gray-100 text-gray-400 shadow-none border border-gray-200' : 'bg-indigo-600 text-white shadow-indigo-200 active:scale-95'}`}>
             <FileUp className="w-4 h-4" /> اختر الملف الآن
           </div>
         </label>
       </div>
 
       {importStatus === 'success' && (
-        <div className="bg-emerald-500/20 text-emerald-700 dark:text-emerald-200 p-4 rounded-xl flex items-center gap-3 animate-in fade-in slide-in-from-bottom-2 border border-emerald-500/20 backdrop-blur-md">
-          <div className="bg-emerald-500 text-white p-1 rounded-full shadow-[0_0_10px_rgba(16,185,129,0.5)]">
+        <div className="bg-emerald-50 text-emerald-700 p-4 rounded-xl flex items-center gap-3 animate-in fade-in slide-in-from-bottom-2 border border-emerald-200">
+          <div className="bg-emerald-500 text-white p-1 rounded-full shadow-sm">
             <CheckCircle2 className="w-3 h-3" />
           </div>
           <div>
@@ -219,10 +218,10 @@ const ExcelImport: React.FC<ExcelImportProps> = ({ existingClasses, onImport, on
         </div>
       )}
 
-      <div className="p-3 bg-amber-50/50 dark:bg-amber-500/10 rounded-xl border border-amber-200 dark:border-amber-500/20 backdrop-blur-sm">
+      <div className="p-3 bg-amber-50 rounded-xl border border-amber-200">
           <div className="flex gap-2 items-start">
-              <Info className="w-4 h-4 text-amber-500 dark:text-amber-400 shrink-0 mt-0.5" />
-              <div className="text-[9px] text-amber-800 dark:text-amber-100/80 font-bold leading-relaxed text-right">
+              <Info className="w-4 h-4 text-amber-500 shrink-0 mt-0.5" />
+              <div className="text-[9px] text-amber-800 font-bold leading-relaxed text-right">
                   <p>تأكد من احتواء الملف على أعمدة "الاسم" و"الهاتف" لضمان استيراد البيانات بشكل صحيح.</p>
               </div>
           </div>

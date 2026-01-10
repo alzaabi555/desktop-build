@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Building2, User, Key, Loader2, ShieldCheck, Wifi, Calendar, LayoutList, UploadCloud, AlertCircle, BarChart3, Settings2, Info, Link as LinkIcon, Check, X, RefreshCw, Activity, ArrowDownCircle, Lock } from 'lucide-react';
 import { ministryService } from '../services/MinistryService';
@@ -214,22 +213,22 @@ const MinistrySync: React.FC = () => {
   };
 
   return (
-    <div className="flex flex-col h-full bg-[#F2F2F7] dark:bg-black rounded-[2.5rem] overflow-hidden shadow-2xl relative border border-white/20">
+    <div className="flex flex-col h-full bg-[#f3f4f6] rounded-[2.5rem] overflow-hidden shadow-sm relative border border-gray-200">
       
       {/* Header */}
-      <div className="pt-8 pb-4 px-6 bg-white/80 dark:bg-[#1C1C1E]/80 backdrop-blur-xl border-b border-black/5 dark:border-white/10 sticky top-0 z-10">
+      <div className="pt-8 pb-4 px-6 bg-white border-b border-gray-200 sticky top-0 z-10">
          <div className="flex items-center justify-between">
-            <h2 className="text-xl font-bold text-black dark:text-white tracking-tight">بوابة الوزارة (معلم)</h2>
+            <h2 className="text-xl font-bold text-slate-900 tracking-tight">بوابة الوزارة (معلم)</h2>
             <div className="flex items-center gap-3">
-                <button onClick={() => setShowSettings(true)} className="p-2 rounded-full bg-gray-200 dark:bg-white/10 hover:bg-gray-300 transition-colors">
-                    <Settings2 className="w-4 h-4 text-black dark:text-white" />
+                <button onClick={() => setShowSettings(true)} className="p-2 rounded-full bg-gray-100 hover:bg-gray-200 transition-colors">
+                    <Settings2 className="w-4 h-4 text-slate-700" />
                 </button>
-                <div className="w-8 h-8 bg-blue-500 rounded-full flex items-center justify-center shadow-lg shadow-blue-500/30">
+                <div className="w-8 h-8 bg-blue-500 rounded-full flex items-center justify-center shadow-lg shadow-blue-200">
                     <Building2 className="w-4 h-4 text-white" />
                 </div>
             </div>
          </div>
-         <p className="text-[11px] text-gray-500 dark:text-gray-400 mt-1 font-medium">
+         <p className="text-[11px] text-gray-500 mt-1 font-medium">
              {session ? `مرحباً، المستخدم (ID: ${session.userId})` : 'الاتصال الآمن (Secure Sync)'}
          </p>
       </div>
@@ -239,7 +238,7 @@ const MinistrySync: React.FC = () => {
          {!session ? (
              <>
                 <div className="flex justify-center mb-8 mt-4">
-                    <div className="w-24 h-24 bg-white dark:bg-[#1C1C1E] rounded-[22px] shadow-sm flex items-center justify-center relative border border-gray-100 dark:border-white/5 shimmer-hover">
+                    <div className="w-24 h-24 bg-white rounded-[22px] shadow-sm flex items-center justify-center relative border border-gray-200 shimmer-hover">
                         <img src="oman_logo.png" className="w-16 opacity-90" alt="MOE" onError={(e) => e.currentTarget.style.display='none'} />
                         <div className="absolute -bottom-3 bg-emerald-500 text-white text-[10px] font-bold px-3 py-1 rounded-full shadow-sm flex items-center gap-1">
                             <Lock className="w-3 h-3" /> اتصال مشفر
@@ -247,20 +246,20 @@ const MinistrySync: React.FC = () => {
                     </div>
                 </div>
                 <form onSubmit={handleLogin} className="space-y-6">
-                    <div className="bg-white dark:bg-[#1C1C1E] rounded-xl overflow-hidden shadow-sm border border-gray-200 dark:border-white/5">
-                        <div className="flex items-center px-4 py-1 border-b border-gray-100 dark:border-white/5">
+                    <div className="bg-white rounded-xl overflow-hidden shadow-sm border border-gray-200">
+                        <div className="flex items-center px-4 py-1 border-b border-gray-100">
                             <User className="w-5 h-5 text-gray-400 shrink-0" />
-                            <input type="text" placeholder="اسم المستخدم (USme)" value={username} onChange={(e) => setUsername(e.target.value)} className="w-full py-3.5 px-3 bg-transparent text-sm font-medium text-black dark:text-white placeholder:text-gray-400 outline-none" dir="ltr" />
+                            <input type="text" placeholder="اسم المستخدم (USme)" value={username} onChange={(e) => setUsername(e.target.value)} className="w-full py-3.5 px-3 bg-transparent text-sm font-medium text-slate-900 placeholder:text-gray-400 outline-none" dir="ltr" />
                         </div>
                         <div className="flex items-center px-4 py-1">
                             <Key className="w-5 h-5 text-gray-400 shrink-0" />
-                            <input type="password" placeholder="كلمة المرور (PPPWZ)" value={password} onChange={(e) => setPassword(e.target.value)} className="w-full py-3.5 px-3 bg-transparent text-sm font-medium text-black dark:text-white placeholder:text-gray-400 outline-none" dir="ltr" />
+                            <input type="password" placeholder="كلمة المرور (PPPWZ)" value={password} onChange={(e) => setPassword(e.target.value)} className="w-full py-3.5 px-3 bg-transparent text-sm font-medium text-slate-900 placeholder:text-gray-400 outline-none" dir="ltr" />
                         </div>
                     </div>
                     
-                    {errorMessage && <div className="text-center"><p className="text-xs font-bold text-red-500 bg-red-50 dark:bg-red-500/10 py-2 px-4 rounded-lg inline-block whitespace-pre-line" dir="ltr">{errorMessage}</p></div>}
+                    {errorMessage && <div className="text-center"><p className="text-xs font-bold text-red-500 bg-red-50 py-2 px-4 rounded-lg inline-block whitespace-pre-line" dir="ltr">{errorMessage}</p></div>}
                     
-                    <button type="submit" disabled={isLoading || !username || !password} className="w-full bg-[#007AFF] hover:bg-[#006EDE] disabled:bg-gray-300 dark:disabled:bg-gray-700 text-white rounded-xl py-3.5 text-sm font-bold shadow-lg shadow-blue-500/20 active:scale-95 transition-all flex items-center justify-center gap-2 shimmer-hover">
+                    <button type="submit" disabled={isLoading || !username || !password} className="w-full bg-[#007AFF] hover:bg-[#006EDE] disabled:bg-gray-300 text-white rounded-xl py-3.5 text-sm font-bold shadow-lg shadow-blue-200 active:scale-95 transition-all flex items-center justify-center gap-2 shimmer-hover">
                         {isLoading ? <><Loader2 className="w-5 h-5 animate-spin" /> جاري الاتصال...</> : 'تسجيل الدخول'}
                     </button>
                 </form>
@@ -268,59 +267,59 @@ const MinistrySync: React.FC = () => {
          ) : (
              <div className="space-y-6 animate-in slide-in-from-bottom-4 duration-500">
                  {/* Session Status */}
-                 <div className="bg-emerald-500/10 border border-emerald-500/20 rounded-2xl p-4 flex items-center gap-4 shimmer-hover">
-                     <div className="w-12 h-12 bg-emerald-500 rounded-full flex items-center justify-center text-white shadow-lg shadow-emerald-500/30">
+                 <div className="bg-emerald-50 border border-emerald-100 rounded-2xl p-4 flex items-center gap-4 shimmer-hover">
+                     <div className="w-12 h-12 bg-emerald-500 rounded-full flex items-center justify-center text-white shadow-lg shadow-emerald-200">
                          <ShieldCheck className="w-6 h-6" />
                      </div>
                      <div>
-                         <h3 className="font-bold text-slate-900 dark:text-white text-sm">الجلسة نشطة</h3>
-                         <p className="text-[10px] text-emerald-600 dark:text-emerald-400 font-bold">تم الاتصال بقاعدة بيانات الوزارة</p>
+                         <h3 className="font-bold text-slate-900 text-sm">الجلسة نشطة</h3>
+                         <p className="text-[10px] text-emerald-600 font-bold">تم الاتصال بقاعدة بيانات الوزارة</p>
                      </div>
                  </div>
 
                  {/* Tab Switcher */}
-                 <div className="flex bg-gray-200 dark:bg-white/10 p-1 rounded-xl">
-                     <button onClick={() => setActiveTab('absence')} className={`flex-1 py-2 rounded-lg text-xs font-bold transition-all ${activeTab === 'absence' ? 'bg-white dark:bg-gray-800 shadow text-black dark:text-white' : 'text-gray-500'}`}>رصد الغياب</button>
-                     <button onClick={() => setActiveTab('marks')} className={`flex-1 py-2 rounded-lg text-xs font-bold transition-all ${activeTab === 'marks' ? 'bg-white dark:bg-gray-800 shadow text-black dark:text-white' : 'text-gray-500'}`}>رصد الدرجات</button>
+                 <div className="flex bg-gray-100 p-1 rounded-xl">
+                     <button onClick={() => setActiveTab('absence')} className={`flex-1 py-2 rounded-lg text-xs font-bold transition-all ${activeTab === 'absence' ? 'bg-white shadow text-slate-900' : 'text-gray-500'}`}>رصد الغياب</button>
+                     <button onClick={() => setActiveTab('marks')} className={`flex-1 py-2 rounded-lg text-xs font-bold transition-all ${activeTab === 'marks' ? 'bg-white shadow text-slate-900' : 'text-gray-500'}`}>رصد الدرجات</button>
                  </div>
 
                  {/* Filters Selection */}
-                 <div className="bg-white dark:bg-[#1C1C1E] rounded-2xl p-5 shadow-sm border border-gray-100 dark:border-white/5 shimmer-hover">
+                 <div className="bg-white rounded-2xl p-5 shadow-sm border border-gray-100 shimmer-hover">
                      <div className="flex items-center justify-between mb-4">
-                         <h3 className="text-sm font-black text-slate-800 dark:text-white flex items-center gap-2">
+                         <h3 className="text-sm font-black text-slate-800 flex items-center gap-2">
                              <LayoutList className="w-4 h-4 text-purple-500" />
                              الفصول الدراسية
                          </h3>
-                         <button onClick={handleFetchFilters} disabled={isLoading} className="text-[10px] font-bold text-blue-500 bg-blue-50 dark:bg-blue-500/10 px-3 py-1 rounded-full">تحديث</button>
+                         <button onClick={handleFetchFilters} disabled={isLoading} className="text-[10px] font-bold text-blue-500 bg-blue-50 px-3 py-1 rounded-full hover:bg-blue-100">تحديث</button>
                      </div>
                      {filtersData.length > 0 ? (
                          <div className="grid grid-cols-2 gap-2 mb-4">
                              {filtersData.map((item, idx) => (
-                                 <button key={idx} onClick={() => setSelectedFilterIndex(idx)} className={`p-3 rounded-xl border text-right transition-all ${selectedFilterIndex === idx ? 'bg-blue-600 text-white border-blue-600 shadow-md' : 'bg-gray-50 dark:bg-white/5 border-gray-200 dark:border-white/10'}`}>
+                                 <button key={idx} onClick={() => setSelectedFilterIndex(idx)} className={`p-3 rounded-xl border text-right transition-all ${selectedFilterIndex === idx ? 'bg-blue-600 text-white border-blue-600 shadow-md' : 'bg-gray-50 border-gray-200 hover:bg-gray-100 text-slate-800'}`}>
                                      <span className="block text-xs font-bold">{item.ClassName || item.Name || `فصل ${idx+1}`}</span>
                                      <span className="text-[9px] opacity-70">{item.GradeName || ''}</span>
                                  </button>
                              ))}
                          </div>
                      ) : (
-                         <div className="text-center py-4 text-gray-400 text-xs font-bold border-2 border-dashed border-gray-200 dark:border-white/10 rounded-xl mb-4">لم يتم جلب الفصول بعد</div>
+                         <div className="text-center py-4 text-gray-400 text-xs font-bold border-2 border-dashed border-gray-200 rounded-xl mb-4">لم يتم جلب الفصول بعد</div>
                      )}
                  </div>
 
                  {/* --- ABSENCE MODE --- */}
                  {activeTab === 'absence' && (
-                     <div className="bg-white dark:bg-[#1C1C1E] rounded-2xl p-5 shadow-sm border border-gray-100 dark:border-white/5 animate-in fade-in shimmer-hover">
-                         <h3 className="text-sm font-black text-slate-800 dark:text-white mb-4 flex items-center gap-2">
+                     <div className="bg-white rounded-2xl p-5 shadow-sm border border-gray-100 animate-in fade-in shimmer-hover">
+                         <h3 className="text-sm font-black text-slate-800 mb-4 flex items-center gap-2">
                              <UploadCloud className="w-4 h-4 text-blue-500" />
                              رفع الغياب (SubmitStudentAbsence)
                          </h3>
                          <div className="space-y-3">
                              <div className="relative">
-                                 <input type="date" value={targetDate} onChange={(e) => setTargetDate(e.target.value)} className="w-full bg-gray-50 dark:bg-white/5 border border-gray-200 dark:border-white/10 rounded-xl px-4 py-3 text-xs font-bold outline-none focus:border-blue-500" />
+                                 <input type="date" value={targetDate} onChange={(e) => setTargetDate(e.target.value)} className="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 text-xs font-bold outline-none focus:border-blue-500 text-slate-800" />
                                  <Calendar className="absolute left-3 top-3 w-4 h-4 text-gray-400 pointer-events-none" />
                              </div>
                              {selectedFilterIndex === -1 && <p className="text-[10px] text-amber-500 font-bold flex items-center gap-1"><AlertCircle className="w-3 h-3" /> يرجى اختيار فصل من القائمة أعلاه</p>}
-                             <button onClick={handleSubmitAbsence} disabled={isLoading || selectedFilterIndex === -1} className="w-full bg-slate-900 dark:bg-white text-white dark:text-black py-3 rounded-xl font-black text-xs hover:opacity-90 transition-opacity flex items-center justify-center gap-2 shadow-lg">
+                             <button onClick={handleSubmitAbsence} disabled={isLoading || selectedFilterIndex === -1} className="w-full bg-slate-900 text-white py-3 rounded-xl font-black text-xs hover:bg-slate-800 transition-all flex items-center justify-center gap-2 shadow-lg">
                                  {isLoading ? <Loader2 className="w-4 h-4 animate-spin"/> : 'رفع الغياب للسيرفر'}
                              </button>
                          </div>
@@ -329,8 +328,8 @@ const MinistrySync: React.FC = () => {
 
                  {/* --- MARKS MODE --- */}
                  {activeTab === 'marks' && (
-                     <div className="bg-white dark:bg-[#1C1C1E] rounded-2xl p-5 shadow-sm border border-gray-100 dark:border-white/5 animate-in fade-in shimmer-hover">
-                         <h3 className="text-sm font-black text-slate-800 dark:text-white mb-4 flex items-center gap-2">
+                     <div className="bg-white rounded-2xl p-5 shadow-sm border border-gray-100 animate-in fade-in shimmer-hover">
+                         <h3 className="text-sm font-black text-slate-800 mb-4 flex items-center gap-2">
                              <BarChart3 className="w-4 h-4 text-emerald-500" />
                              رفع الدرجات (SubmitMarks)
                          </h3>
@@ -340,25 +339,25 @@ const MinistrySync: React.FC = () => {
                              <div className="flex gap-2">
                                  <div className="flex-1">
                                      <label className="text-[9px] font-bold text-gray-400 mb-1 block">Subject ID (المادة)</label>
-                                     <input type="text" placeholder="مثال: 101" value={marksConfig.subjectId} onChange={e => setMarksConfig({...marksConfig, subjectId: e.target.value})} className="w-full bg-gray-50 dark:bg-white/5 border border-gray-200 dark:border-white/10 rounded-xl px-3 py-2 text-xs font-bold outline-none" />
+                                     <input type="text" placeholder="مثال: 101" value={marksConfig.subjectId} onChange={e => setMarksConfig({...marksConfig, subjectId: e.target.value})} className="w-full bg-gray-50 border border-gray-200 rounded-xl px-3 py-2 text-xs font-bold outline-none text-slate-800" />
                                  </div>
                                  <div className="flex-1">
                                      <label className="text-[9px] font-bold text-gray-400 mb-1 block">Exam ID (الاختبار)</label>
-                                     <input type="text" placeholder="مثال: 5543" value={marksConfig.examId} onChange={e => setMarksConfig({...marksConfig, examId: e.target.value})} className="w-full bg-gray-50 dark:bg-white/5 border border-gray-200 dark:border-white/10 rounded-xl px-3 py-2 text-xs font-bold outline-none" />
+                                     <input type="text" placeholder="مثال: 5543" value={marksConfig.examId} onChange={e => setMarksConfig({...marksConfig, examId: e.target.value})} className="w-full bg-gray-50 border border-gray-200 rounded-xl px-3 py-2 text-xs font-bold outline-none text-slate-800" />
                                  </div>
                              </div>
                              
                              <div className="flex gap-2">
                                  <div className="flex-1">
                                      <label className="text-[9px] font-bold text-gray-400 mb-1 block">الفصل الدراسي</label>
-                                     <select value={marksConfig.termId} onChange={e => setMarksConfig({...marksConfig, termId: e.target.value})} className="w-full bg-gray-50 dark:bg-white/5 border border-gray-200 dark:border-white/10 rounded-xl px-2 py-2 text-xs font-bold outline-none">
+                                     <select value={marksConfig.termId} onChange={e => setMarksConfig({...marksConfig, termId: e.target.value})} className="w-full bg-gray-50 border border-gray-200 rounded-xl px-2 py-2 text-xs font-bold outline-none text-slate-800">
                                          <option value="1">فصل 1</option>
                                          <option value="2">فصل 2</option>
                                      </select>
                                  </div>
                                  <div className="flex-[2]">
                                      <label className="text-[9px] font-bold text-gray-400 mb-1 block">الأداة المحلية</label>
-                                     <select value={selectedLocalTool} onChange={e => setSelectedLocalTool(e.target.value)} className="w-full bg-gray-50 dark:bg-white/5 border border-gray-200 dark:border-white/10 rounded-xl px-2 py-2 text-xs font-bold outline-none">
+                                     <select value={selectedLocalTool} onChange={e => setSelectedLocalTool(e.target.value)} className="w-full bg-gray-50 border border-gray-200 rounded-xl px-2 py-2 text-xs font-bold outline-none text-slate-800">
                                          <option value="">اختر الأداة...</option>
                                          {assessmentTools.map(tool => (
                                              <option key={tool.id} value={tool.id}>{tool.name}</option>
@@ -370,16 +369,16 @@ const MinistrySync: React.FC = () => {
 
                          {selectedFilterIndex === -1 && <p className="text-[10px] text-amber-500 font-bold flex items-center gap-1 mb-2"><AlertCircle className="w-3 h-3" /> يرجى اختيار فصل من القائمة أعلاه</p>}
                          
-                         <button onClick={handleSubmitMarks} disabled={isLoading || selectedFilterIndex === -1 || !selectedLocalTool} className="w-full bg-emerald-600 text-white py-3 rounded-xl font-black text-xs hover:opacity-90 transition-opacity flex items-center justify-center gap-2 shadow-lg">
+                         <button onClick={handleSubmitMarks} disabled={isLoading || selectedFilterIndex === -1 || !selectedLocalTool} className="w-full bg-emerald-600 text-white py-3 rounded-xl font-black text-xs hover:bg-emerald-700 transition-all flex items-center justify-center gap-2 shadow-lg">
                              {isLoading ? <Loader2 className="w-4 h-4 animate-spin"/> : 'رفع الدرجات للسيرفر'}
                          </button>
                      </div>
                  )}
 
-                 {successMessage && <div className="mt-4 p-3 bg-emerald-500/10 text-emerald-600 rounded-xl text-xs font-bold text-center border border-emerald-500/20">{successMessage}</div>}
-                 {errorMessage && <div className="mt-4 p-3 bg-red-500/10 text-red-600 rounded-xl text-xs font-bold text-center border border-red-500/20">{errorMessage}</div>}
+                 {successMessage && <div className="mt-4 p-3 bg-emerald-50 text-emerald-600 rounded-xl text-xs font-bold text-center border border-emerald-200">{successMessage}</div>}
+                 {errorMessage && <div className="mt-4 p-3 bg-red-50 text-red-600 rounded-xl text-xs font-bold text-center border border-red-200">{errorMessage}</div>}
 
-                 <button onClick={() => setSession(null)} className="w-full py-3 text-red-500 font-bold text-xs hover:bg-red-50 dark:hover:bg-red-500/10 rounded-xl transition-colors">تسجيل الخروج</button>
+                 <button onClick={() => setSession(null)} className="w-full py-3 text-red-500 font-bold text-xs hover:bg-red-50 rounded-xl transition-colors border border-red-100">تسجيل الخروج</button>
              </div>
          )}
 
@@ -388,56 +387,42 @@ const MinistrySync: React.FC = () => {
       {/* Settings Modal */}
       <Modal isOpen={showSettings} onClose={() => setShowSettings(false)} className="max-w-sm rounded-[2rem]">
           <div className="text-center">
-              <h3 className="font-black text-lg text-slate-900 dark:text-white mb-2">إعدادات الخادم</h3>
-              <p className="text-xs text-gray-500 dark:text-gray-400 mb-6">يمكنك تغيير السيرفر إذا واجهت مشاكل في الاتصال.</p>
+              <h3 className="font-black text-lg text-slate-900 mb-2">إعدادات الخادم</h3>
+              <p className="text-xs text-gray-400 font-bold mb-4">يمكنك تخصيص رابط خادم الوزارة في حال تغيره.</p>
               
-              <div className="space-y-3 mb-6">
-                  {URL_PRESETS.map((preset, idx) => (
-                      <button 
-                        key={idx}
-                        onClick={() => { setCustomApiUrl(preset.url); }}
-                        className={`w-full p-3 rounded-xl border text-xs font-bold flex items-center justify-between group transition-all ${customApiUrl === preset.url ? 'bg-blue-600 text-white border-blue-500 shadow-md' : 'bg-gray-50 dark:bg-white/5 border-gray-200 dark:border-white/10 text-slate-700 dark:text-white hover:bg-gray-100 dark:hover:bg-white/10'}`}
-                      >
-                          <span>{preset.name}</span>
-                          {customApiUrl === preset.url && <Check className="w-4 h-4" />}
-                      </button>
-                  ))}
-              </div>
-
-              <div className="relative mb-4">
-                  <LinkIcon className="absolute top-3 right-3 w-4 h-4 text-gray-400" />
+              <div className="space-y-3">
                   <input 
-                    type="text" 
-                    dir="ltr"
-                    value={customApiUrl} 
-                    onChange={e => setCustomApiUrl(e.target.value)}
-                    className="w-full bg-gray-100 dark:bg-white/10 rounded-xl py-3 pr-9 pl-3 text-xs font-bold text-left outline-none border border-transparent focus:border-blue-500 transition-colors"
-                    placeholder="https://..."
+                      type="text" 
+                      dir="ltr"
+                      value={customApiUrl} 
+                      onChange={(e) => setCustomApiUrl(e.target.value)} 
+                      placeholder="https://..." 
+                      className="w-full p-3 bg-gray-50 border border-gray-200 rounded-xl text-xs font-bold outline-none focus:border-blue-500 text-slate-800"
                   />
-              </div>
-
-              <button 
-                onClick={handleTestConnection}
-                disabled={testStatus === 'testing'}
-                className="w-full mb-4 py-2 px-3 rounded-xl border border-gray-200 dark:border-white/10 flex items-center justify-center gap-2 text-xs font-bold hover:bg-gray-50 dark:hover:bg-white/5 transition-all active:scale-95"
-              >
-                  {testStatus === 'testing' ? <Loader2 className="w-3 h-3 animate-spin"/> : <Activity className="w-3 h-3 text-indigo-500"/>}
-                  فحص الاتصال (Ping)
-              </button>
-
-              {testMessage && (
-                  <div className={`text-[10px] font-bold py-2 mb-4 rounded-lg px-2 break-all ${testStatus === 'success' || (testStatus === 'idle' && testMessage.includes('200')) ? 'bg-emerald-100 text-emerald-700' : 'bg-gray-100 text-gray-700'}`}>
-                      {testMessage}
+                  
+                  <div className="flex gap-2">
+                      <button onClick={handleTestConnection} disabled={testStatus === 'testing'} className="flex-1 py-2.5 bg-blue-50 text-blue-600 hover:bg-blue-100 rounded-xl font-bold text-xs transition-colors flex items-center justify-center gap-2">
+                          {testStatus === 'testing' ? <Loader2 className="w-3 h-3 animate-spin"/> : <Wifi className="w-3 h-3"/>}
+                          فحص
+                      </button>
+                      <button onClick={handleResetSettings} className="flex-1 py-2.5 bg-gray-100 text-gray-500 hover:bg-gray-200 rounded-xl font-bold text-xs transition-colors flex items-center justify-center gap-2">
+                          <RefreshCw className="w-3 h-3"/>
+                          استعادة
+                      </button>
                   </div>
-              )}
 
-              <div className="flex gap-2">
-                  <button onClick={handleResetSettings} className="flex-1 py-3 text-xs font-bold text-gray-500 hover:bg-gray-100 dark:hover:bg-white/10 rounded-xl transition-colors">افتراضي</button>
-                  <button onClick={handleSaveSettings} className="flex-[2] py-3 text-xs font-black text-white bg-blue-600 hover:bg-blue-500 rounded-xl shadow-lg shadow-blue-500/30 transition-colors">حفظ التغييرات</button>
+                  {testMessage && (
+                      <div className={`p-2 rounded-xl text-[10px] font-bold text-center ${testStatus === 'success' ? 'bg-emerald-50 text-emerald-600 border border-emerald-100' : (testStatus === 'testing' ? 'bg-blue-50 text-blue-600' : 'bg-red-50 text-red-600 border border-red-100')}`}>
+                          {testMessage}
+                      </div>
+                  )}
+                  
+                  <button onClick={handleSaveSettings} className="w-full py-3 bg-slate-900 text-white rounded-xl font-black text-xs hover:bg-slate-800 shadow-lg mt-2">
+                      حفظ الإعدادات
+                  </button>
               </div>
           </div>
       </Modal>
-
     </div>
   );
 };
