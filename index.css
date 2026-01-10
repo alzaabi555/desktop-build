@@ -11,7 +11,7 @@
   -webkit-tap-highlight-color: transparent;
 }
 
-/* --- CRITICAL SCROLL FIXES --- */
+/* --- CRITICAL SCROLL FIXES (APP MODE) --- */
 html, body {
   background-color: #111827; /* Match app dark theme */
   color: #ffffff;
@@ -19,9 +19,9 @@ html, body {
   width: 100%;
   margin: 0;
   padding: 0;
-  overflow: hidden; /* Prevent body itself from scrolling */
+  overflow: hidden; /* Prevent body itself from scrolling in App Mode */
   overscroll-behavior: none; /* Disable pull-to-refresh/bounce globally */
-  position: fixed; /* Lock the viewport */
+  position: fixed; /* Lock the viewport in App Mode */
   top: 0;
   left: 0;
   touch-action: none; /* Prevent default touch actions on body */
@@ -53,7 +53,7 @@ body :not(.force-print-style):not(.force-print-style *):not(.user-guide-wrapper)
     color: rgba(255, 255, 255, 0.7) !important;
 }
 
-/* --- FORCE PRINT STYLE (UI Override & Preview Fix) --- */
+/* --- FORCE PRINT STYLE --- */
 .force-print-style {
     background-color: #ffffff !important;
     color: #000000 !important;
@@ -184,87 +184,59 @@ body :not(.force-print-style):not(.force-print-style *):not(.user-guide-wrapper)
   transform: translateX(100%);
 }
 
-/* --- وضع الطباعة الصارم (Strict Print Mode) --- */
+/* --- PRINT OVERRIDES (Critical Fix for Blank Pages) --- */
 @media print {
   @page {
     margin: 0;
     size: auto; 
   }
 
-  /* 1. تصفير وتبييض الصفحة بالكامل */
-  body, html, #root, #main-scroll-container, .overflow-y-auto {
-    background-color: #ffffff !important;
-    background-image: none !important;
-    color: #000000 !important;
+  /* Release the locks on body/html during print */
+  html, body {
+    position: static !important;
+    overflow: visible !important;
     height: auto !important;
     width: 100% !important;
-    min-height: 0 !important;
-    overflow: visible !important;
-    position: static !important;
-    display: block !important;
-    margin: 0 !important;
-    padding: 0 !important;
-    overscroll-behavior: auto !important; /* Allow normal behavior in print */
+    background-color: #ffffff !important;
+    color: #000000 !important;
   }
 
-  /* 2. إخفاء جميع عناصر التطبيق غير الضرورية */
-  body > * {
+  /* Hide App UI */
+  #root, nav, aside, .no-print, header, .header-actions, .ios-tab-bar, button {
     display: none !important;
   }
 
-  /* 3. إظهار حاوية التقرير فقط وتنسيقها */
-  #report-content-print, .force-print-style, .print-only-container, .user-guide-wrapper {
+  /* Show Print Container */
+  .force-print-style {
     display: block !important;
-    visibility: visible !important;
-    position: relative !important;
+    position: absolute !important;
     left: 0 !important;
     top: 0 !important;
     width: 100% !important;
-    margin: 0 !important;
-    padding: 0 !important;
-    background: #ffffff !important;
-    color: #000000 !important;
+    height: auto !important;
     z-index: 9999;
-    box-shadow: none !important;
-    border: none !important;
+    background-color: #ffffff !important;
+    color: #000000 !important;
+    overflow: visible !important;
   }
   
-  /* Force all text inside print container to be black */
-  .force-print-style *, .user-guide-wrapper * {
+  /* Reset Styles for Print Content */
+  .force-print-style * {
       color: #000000 !important;
       background-color: transparent !important;
       text-shadow: none !important;
       box-shadow: none !important;
       border-color: #000000 !important;
+      -webkit-text-fill-color: #000000 !important;
   }
 
-  /* 4. معالجة الجداول */
   table {
     width: 100% !important;
     border-collapse: collapse !important;
-    background-color: transparent !important;
   }
-
-  thead { display: table-header-group !important; }
-  tfoot { display: table-footer-group !important; }
-  tr { break-inside: avoid !important; page-break-inside: avoid !important; }
 
   th, td {
     border: 1px solid #000000 !important;
     color: #000000 !important;
-  }
-  
-  /* 5. إزالة الظلال والتأثيرات */
-  * {
-      text-shadow: none !important;
-      box-shadow: none !important;
-      backdrop-filter: none !important;
-      transition: none !important;
-      animation: none !important;
-  }
-
-  /* 6. إخفاء الأزرار والقوائم */
-  button, nav, aside, .no-print, header, .header-actions, .ios-tab-bar {
-    display: none !important;
   }
 }
