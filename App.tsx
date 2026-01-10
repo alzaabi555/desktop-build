@@ -30,7 +30,6 @@ import { useSchoolBell } from './hooks/useSchoolBell';
 const getDeviceId = () => {
     let id = localStorage.getItem('device_uuid');
     if (!id) {
-        // Generate a pseudo-unique ID
         id = 'DEV-' + Math.random().toString(36).substring(2, 10).toUpperCase();
         localStorage.setItem('device_uuid', id);
     }
@@ -75,7 +74,6 @@ const AppContent: React.FC = () => {
   // Handle Activation Logic
   const handleActivation = (code: string) => {
       const validCode = generateValidCode(deviceId);
-      // Master Code & Device Code Check
       if (code === validCode || code === 'OMAN-MASTER-2026') {
           localStorage.setItem('rased_activated', 'true');
           setIsActivated(true);
@@ -87,7 +85,7 @@ const AppContent: React.FC = () => {
   // Handle Loading State
   if (!isDataLoaded) {
       return (
-          <div className="flex h-screen w-full items-center justify-center bg-[#111827]">
+          <div className="flex h-screen w-full items-center justify-center bg-gray-50">
               <Loader2 className="w-8 h-8 text-indigo-500 animate-spin" />
           </div>
       );
@@ -104,23 +102,15 @@ const AppContent: React.FC = () => {
       setShowMoreMenu(false);
   };
 
-  // Helper Wrappers for Components
+  // Helper Wrappers
   const handleUpdateStudent = (updated: any) => setStudents(prev => prev.map(s => s.id === updated.id ? updated : s));
   const handleAddClass = (name: string) => setClasses(prev => [...prev, name]);
   
-  // --- CORE DELETE LOGIC ---
   const handleDeleteClass = (className: string) => {
-      // 1. Remove from global class list
       setClasses(prev => prev.filter(c => c !== className));
-      
-      // 2. Remove class from all students associated with it
       setStudents(prev => prev.map(s => {
-          // If student has this class, remove it
           if (s.classes.includes(className)) {
-              return { 
-                  ...s, 
-                  classes: s.classes.filter(c => c !== className) 
-              };
+              return { ...s, classes: s.classes.filter(c => c !== className) };
           }
           return s;
       }));
@@ -129,14 +119,7 @@ const AppContent: React.FC = () => {
   const handleAddStudent = (name: string, className: string, phone?: string, avatar?: string) => {
       setStudents(prev => [...prev, { 
           id: Math.random().toString(36).substr(2,9), 
-          name, 
-          classes: [className], 
-          attendance:[], 
-          behaviors:[], 
-          grades:[], 
-          grade: '',
-          parentPhone: phone,
-          avatar: avatar
+          name, classes: [className], attendance:[], behaviors:[], grades:[], grade: '', parentPhone: phone, avatar: avatar
       }]);
   };
 
@@ -144,46 +127,24 @@ const AppContent: React.FC = () => {
       switch (activeTab) {
           case 'dashboard':
               return <Dashboard 
-                  students={students} 
-                  teacherInfo={teacherInfo} 
-                  onUpdateTeacherInfo={(i) => setTeacherInfo(prev => ({...prev, ...i}))}
-                  schedule={schedule}
-                  onUpdateSchedule={setSchedule}
-                  onSelectStudent={() => {}} 
-                  onNavigate={handleNavigate}
-                  onOpenSettings={() => setActiveTab('settings')}
-                  periodTimes={periodTimes}
-                  setPeriodTimes={setPeriodTimes}
-                  notificationsEnabled={notificationsEnabled}
-                  onToggleNotifications={handleToggleNotifications}
-                  currentSemester={currentSemester}
-                  onSemesterChange={setCurrentSemester}
+                  students={students} teacherInfo={teacherInfo} onUpdateTeacherInfo={(i) => setTeacherInfo(prev => ({...prev, ...i}))}
+                  schedule={schedule} onUpdateSchedule={setSchedule} onSelectStudent={() => {}} onNavigate={handleNavigate}
+                  onOpenSettings={() => setActiveTab('settings')} periodTimes={periodTimes} setPeriodTimes={setPeriodTimes}
+                  notificationsEnabled={notificationsEnabled} onToggleNotifications={handleToggleNotifications}
+                  currentSemester={currentSemester} onSemesterChange={setCurrentSemester}
               />;
-          case 'attendance':
-              return <AttendanceTracker students={students} classes={classes} setStudents={setStudents} />;
+          case 'attendance': return <AttendanceTracker students={students} classes={classes} setStudents={setStudents} />;
           case 'students':
               return <StudentList 
-                  students={students} 
-                  classes={classes} 
-                  onAddClass={handleAddClass}
-                  onAddStudentManually={handleAddStudent}
-                  onBatchAddStudents={(newS) => setStudents(prev => [...prev, ...newS])}
-                  onUpdateStudent={handleUpdateStudent}
-                  onDeleteStudent={(id) => setStudents(prev => prev.filter(s => s.id !== id))}
-                  onViewReport={(s) => {}}
-                  currentSemester={currentSemester}
-                  onSemesterChange={setCurrentSemester}
-                  onDeleteClass={handleDeleteClass} // Pass the robust delete function
+                  students={students} classes={classes} onAddClass={handleAddClass} onAddStudentManually={handleAddStudent}
+                  onBatchAddStudents={(newS) => setStudents(prev => [...prev, ...newS])} onUpdateStudent={handleUpdateStudent}
+                  onDeleteStudent={(id) => setStudents(prev => prev.filter(s => s.id !== id))} onViewReport={(s) => {}}
+                  currentSemester={currentSemester} onSemesterChange={setCurrentSemester} onDeleteClass={handleDeleteClass}
               />;
           case 'grades':
               return <GradeBook 
-                  students={students} 
-                  classes={classes} 
-                  onUpdateStudent={handleUpdateStudent} 
-                  setStudents={setStudents}
-                  currentSemester={currentSemester}
-                  onSemesterChange={setCurrentSemester}
-                  teacherInfo={teacherInfo}
+                  students={students} classes={classes} onUpdateStudent={handleUpdateStudent} setStudents={setStudents}
+                  currentSemester={currentSemester} onSemesterChange={setCurrentSemester} teacherInfo={teacherInfo}
               />;
           case 'reports': return <Reports />;
           case 'noor': return <NoorPlatform />;
@@ -202,7 +163,6 @@ const AppContent: React.FC = () => {
       { id: 'grades', label: 'الدرجات', icon: BarChart3 },
   ];
 
-  // Desktop Sidebar Items (All inclusive)
   const desktopNavItems = [
       { id: 'dashboard', label: 'الرئيسية', icon: LayoutDashboard },
       { id: 'attendance', label: 'الحضور', icon: CalendarCheck },
@@ -218,28 +178,28 @@ const AppContent: React.FC = () => {
   const isMoreActive = !mobileNavItems.some(item => item.id === activeTab);
 
   return (
-    <div className="flex h-screen bg-[#111827] font-sans overflow-hidden text-gray-100">
+    <div className="flex h-screen bg-[#f3f4f6] font-sans overflow-hidden text-slate-900">
         
-        {/* --- DESKTOP SIDEBAR --- */}
-        <aside className="hidden md:flex w-72 flex-col bg-[#1f2937] border-l border-gray-700 z-50 shadow-2xl transition-all h-full">
+        {/* --- DESKTOP SIDEBAR (Light Theme) --- */}
+        <aside className="hidden md:flex w-72 flex-col bg-white border-l border-gray-200 z-50 shadow-sm transition-all h-full">
             <div className="p-8 flex items-center gap-4">
                 <div className="w-12 h-12">
                     <BrandLogo className="w-full h-full" showText={false} />
                 </div>
                 <div>
-                    <h1 className="text-2xl font-black text-white tracking-tight leading-none">راصد</h1>
-                    <span className="text-[10px] font-bold text-indigo-400 tracking-wider">نسخة المعلم</span>
+                    <h1 className="text-2xl font-black text-slate-900 tracking-tight leading-none">راصد</h1>
+                    <span className="text-[10px] font-bold text-indigo-600 tracking-wider">نسخة المعلم</span>
                 </div>
             </div>
 
             <div className="px-6 mb-6">
-                <div className="p-4 bg-[#374151] rounded-2xl flex items-center gap-3 border border-gray-600 shadow-sm">
-                    <div className="w-10 h-10 rounded-full bg-[#4b5563] flex items-center justify-center overflow-hidden border border-gray-500 shadow-sm shrink-0">
-                         {teacherInfo.avatar ? <img src={teacherInfo.avatar} className="w-full h-full object-cover"/> : <span className="font-black text-gray-300 text-lg">{teacherInfo.name?.[0]}</span>}
+                <div className="p-4 bg-gray-50 rounded-2xl flex items-center gap-3 border border-gray-200 shadow-sm">
+                    <div className="w-10 h-10 rounded-full bg-gray-200 flex items-center justify-center overflow-hidden border border-gray-300 shadow-sm shrink-0">
+                         {teacherInfo.avatar ? <img src={teacherInfo.avatar} className="w-full h-full object-cover"/> : <span className="font-black text-slate-500 text-lg">{teacherInfo.name?.[0]}</span>}
                     </div>
                     <div className="overflow-hidden">
-                        <p className="text-xs font-bold text-white truncate">{teacherInfo.name || 'مرحباً بك'}</p>
-                        <p className="text-[10px] text-gray-400 truncate">{teacherInfo.school || 'المدرسة'}</p>
+                        <p className="text-xs font-bold text-slate-900 truncate">{teacherInfo.name || 'مرحباً بك'}</p>
+                        <p className="text-[10px] text-gray-500 truncate">{teacherInfo.school || 'المدرسة'}</p>
                     </div>
                 </div>
             </div>
@@ -253,11 +213,11 @@ const AppContent: React.FC = () => {
                             onClick={() => handleNavigate(item.id)}
                             className={`w-full flex items-center gap-3 px-4 py-3.5 rounded-2xl transition-all duration-300 group ${
                                 isActive 
-                                ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-900/50' 
-                                : 'text-gray-400 hover:bg-[#374151] hover:text-white'
+                                ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-200' 
+                                : 'text-slate-500 hover:bg-gray-100 hover:text-slate-900'
                             }`}
                         >
-                            <item.icon className={`w-5 h-5 ${isActive ? 'text-white' : 'text-gray-500 group-hover:text-indigo-400'} transition-colors`} strokeWidth={2.5} />
+                            <item.icon className={`w-5 h-5 ${isActive ? 'text-white' : 'text-slate-400 group-hover:text-indigo-500'} transition-colors`} strokeWidth={2.5} />
                             <span className="font-bold text-sm">{item.label}</span>
                             {isActive && <div className="mr-auto w-1.5 h-1.5 rounded-full bg-white animate-pulse"></div>}
                         </button>
@@ -265,14 +225,13 @@ const AppContent: React.FC = () => {
                 })}
             </nav>
 
-            <div className="p-6 text-center border-t border-gray-700">
-                <p className="text-[10px] font-bold text-gray-500">الإصدار 3.6.0</p>
+            <div className="p-6 text-center border-t border-gray-100">
+                <p className="text-[10px] font-bold text-gray-400">الإصدار 3.6.0</p>
             </div>
         </aside>
 
         {/* --- MAIN CONTENT AREA --- */}
-        <main className="flex-1 flex flex-col h-full overflow-hidden relative bg-[#111827]">
-            {/* Main Scroll Container - Added overscroll-contain via custom class 'custom-scrollbar' logic */}
+        <main className="flex-1 flex flex-col h-full overflow-hidden relative bg-[#f3f4f6]">
             <div 
                 className="flex-1 overflow-y-auto overflow-x-hidden custom-scrollbar pb-28 md:pb-4 px-4 md:px-8 pt-safe overscroll-contain"
                 id="main-scroll-container"
@@ -282,8 +241,8 @@ const AppContent: React.FC = () => {
                 </div>
             </div>
 
-            {/* --- MOBILE TAB BAR --- */}
-            <div className="md:hidden fixed bottom-0 left-0 right-0 z-50 h-[60px] bg-[#1f2937] rounded-t-[2.5rem] shadow-[0_-10px_30px_rgba(0,0,0,0.4)] flex justify-around items-end pb-2 border-t border-white/5">
+            {/* --- MOBILE TAB BAR (Light Theme) --- */}
+            <div className="md:hidden fixed bottom-0 left-0 right-0 z-50 h-[60px] bg-white rounded-t-[2.5rem] shadow-[0_-10px_30px_rgba(0,0,0,0.05)] flex justify-around items-end pb-2 border-t border-gray-100">
                 {mobileNavItems.map((item) => {
                     const isActive = activeTab === item.id;
                     return (
@@ -296,7 +255,7 @@ const AppContent: React.FC = () => {
                                 className={`
                                     absolute top-0 transition-all duration-500 cubic-bezier(0.4, 0, 0.2, 1)
                                     ${isActive 
-                                        ? 'w-14 h-14 bg-emerald-500 rounded-full -mt-6 border-[6px] border-[#111827] shadow-[0_10px_20px_rgba(16,185,129,0.4)] flex items-center justify-center transform scale-100 opacity-100' 
+                                        ? 'w-14 h-14 bg-indigo-600 rounded-full -mt-6 border-[6px] border-[#f3f4f6] shadow-[0_10px_20px_rgba(79,70,229,0.3)] flex items-center justify-center transform scale-100 opacity-100' 
                                         : 'w-0 h-0 bg-transparent border-0 opacity-0 scale-0 translate-y-12'
                                     }
                                 `}
@@ -309,7 +268,7 @@ const AppContent: React.FC = () => {
                                     transition-all duration-300 mb-1 group-hover:scale-110 group-active:scale-95
                                     ${isActive 
                                         ? 'opacity-0 scale-0 translate-y-10' 
-                                        : 'opacity-100 scale-100 text-gray-500 group-hover:text-emerald-400'
+                                        : 'opacity-100 scale-100 text-gray-400 group-hover:text-indigo-500'
                                     }
                                 `}
                             >
@@ -319,7 +278,7 @@ const AppContent: React.FC = () => {
                             <span 
                                 className={`
                                     text-[10px] font-black transition-all duration-300 
-                                    ${isActive ? 'translate-y-1 text-white opacity-100' : 'text-gray-500 opacity-80 group-hover:text-indigo-400'}
+                                    ${isActive ? 'translate-y-1 text-indigo-600 opacity-100' : 'text-gray-400 opacity-80 group-hover:text-indigo-500'}
                                 `}
                             >
                                 {item.label}
@@ -336,7 +295,7 @@ const AppContent: React.FC = () => {
                         className={`
                             absolute top-0 transition-all duration-500 cubic-bezier(0.4, 0, 0.2, 1)
                             ${isMoreActive 
-                                ? 'w-14 h-14 bg-indigo-500 rounded-full -mt-6 border-[6px] border-[#111827] shadow-[0_10px_20px_rgba(99,102,241,0.4)] flex items-center justify-center transform scale-100 opacity-100' 
+                                ? 'w-14 h-14 bg-indigo-600 rounded-full -mt-6 border-[6px] border-[#f3f4f6] shadow-[0_10px_20px_rgba(79,70,229,0.3)] flex items-center justify-center transform scale-100 opacity-100' 
                                 : 'w-0 h-0 bg-transparent border-0 opacity-0 scale-0 translate-y-12'
                             }
                         `}
@@ -349,7 +308,7 @@ const AppContent: React.FC = () => {
                             transition-all duration-300 mb-1 group-hover:scale-110 group-active:scale-95
                             ${isMoreActive 
                                 ? 'opacity-0 scale-0 translate-y-10' 
-                                : 'opacity-100 scale-100 text-gray-500 group-hover:text-indigo-400'
+                                : 'opacity-100 scale-100 text-gray-400 group-hover:text-indigo-500'
                             }
                         `}
                     >
@@ -359,7 +318,7 @@ const AppContent: React.FC = () => {
                     <span 
                         className={`
                             text-[10px] font-black transition-all duration-300 
-                            ${isMoreActive ? 'translate-y-1 text-white opacity-100' : 'text-gray-500 opacity-80 group-hover:text-indigo-400'}
+                            ${isMoreActive ? 'translate-y-1 text-indigo-600 opacity-100' : 'text-gray-400 opacity-80 group-hover:text-indigo-500'}
                         `}
                     >
                         المزيد
@@ -368,35 +327,36 @@ const AppContent: React.FC = () => {
             </div>
         </main>
 
+        {/* Mobile Menu Modal (Light Theme) */}
         <Modal isOpen={showMoreMenu} onClose={() => setShowMoreMenu(false)} className="max-w-md rounded-[2rem] mb-28 md:hidden">
             <div className="text-center mb-6">
-                <div className="w-12 h-1 bg-gray-600 rounded-full mx-auto mb-4"></div>
-                <h3 className="font-black text-white text-lg">القائمة الكاملة</h3>
+                <div className="w-12 h-1 bg-gray-300 rounded-full mx-auto mb-4"></div>
+                <h3 className="font-black text-slate-800 text-lg">القائمة الكاملة</h3>
             </div>
             <div className="grid grid-cols-3 gap-3">
-                <button onClick={() => handleNavigate('reports')} className="p-4 bg-indigo-900/30 rounded-2xl flex flex-col items-center justify-center gap-2 active:scale-95 transition-transform border border-indigo-500/30 aspect-square shadow-sm shimmer-hover">
-                    <FileText className="w-7 h-7 text-indigo-400" />
-                    <span className="font-bold text-[10px] text-indigo-200">التقارير</span>
+                <button onClick={() => handleNavigate('reports')} className="p-4 bg-indigo-50 rounded-2xl flex flex-col items-center justify-center gap-2 active:scale-95 transition-transform border border-indigo-100 aspect-square shadow-sm">
+                    <FileText className="w-7 h-7 text-indigo-600" />
+                    <span className="font-bold text-[10px] text-indigo-800">التقارير</span>
                 </button>
                 
-                <button onClick={() => handleNavigate('noor')} className="p-4 bg-cyan-900/30 rounded-2xl flex flex-col items-center justify-center gap-2 active:scale-95 transition-transform border border-cyan-500/30 aspect-square shadow-sm shimmer-hover">
-                    <Globe className="w-7 h-7 text-cyan-400" />
-                    <span className="font-bold text-[10px] text-cyan-200">منصة نور</span>
+                <button onClick={() => handleNavigate('noor')} className="p-4 bg-cyan-50 rounded-2xl flex flex-col items-center justify-center gap-2 active:scale-95 transition-transform border border-cyan-100 aspect-square shadow-sm">
+                    <Globe className="w-7 h-7 text-cyan-600" />
+                    <span className="font-bold text-[10px] text-cyan-800">منصة نور</span>
                 </button>
 
-                <button onClick={() => handleNavigate('settings')} className="p-4 bg-gray-700/50 rounded-2xl flex flex-col items-center justify-center gap-2 active:scale-95 transition-transform border border-gray-600 aspect-square shadow-sm shimmer-hover">
-                    <SettingsIcon className="w-7 h-7 text-gray-400" />
-                    <span className="font-bold text-[10px] text-gray-200">الإعدادات</span>
+                <button onClick={() => handleNavigate('settings')} className="p-4 bg-gray-100 rounded-2xl flex flex-col items-center justify-center gap-2 active:scale-95 transition-transform border border-gray-200 aspect-square shadow-sm">
+                    <SettingsIcon className="w-7 h-7 text-gray-600" />
+                    <span className="font-bold text-[10px] text-gray-800">الإعدادات</span>
                 </button>
 
-                <button onClick={() => handleNavigate('guide')} className="p-4 bg-amber-900/30 rounded-2xl flex flex-col items-center justify-center gap-2 active:scale-95 transition-transform border border-amber-500/30 aspect-square shadow-sm shimmer-hover">
-                    <BookOpen className="w-7 h-7 text-amber-400" />
-                    <span className="font-bold text-[10px] text-amber-200">الدليل</span>
+                <button onClick={() => handleNavigate('guide')} className="p-4 bg-amber-50 rounded-2xl flex flex-col items-center justify-center gap-2 active:scale-95 transition-transform border border-amber-100 aspect-square shadow-sm">
+                    <BookOpen className="w-7 h-7 text-amber-600" />
+                    <span className="font-bold text-[10px] text-amber-800">الدليل</span>
                 </button>
 
-                <button onClick={() => handleNavigate('about')} className="p-4 bg-purple-900/30 rounded-2xl flex flex-col items-center justify-center gap-2 active:scale-95 transition-transform border border-purple-500/30 aspect-square shadow-sm shimmer-hover">
-                    <Info className="w-7 h-7 text-purple-400" />
-                    <span className="font-bold text-[10px] text-purple-200">حول التطبيق</span>
+                <button onClick={() => handleNavigate('about')} className="p-4 bg-purple-50 rounded-2xl flex flex-col items-center justify-center gap-2 active:scale-95 transition-transform border border-purple-100 aspect-square shadow-sm">
+                    <Info className="w-7 h-7 text-purple-600" />
+                    <span className="font-bold text-[10px] text-purple-800">حول التطبيق</span>
                 </button>
             </div>
         </Modal>

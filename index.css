@@ -11,10 +11,10 @@
   -webkit-tap-highlight-color: transparent;
 }
 
-/* --- APP MODE SETTINGS --- */
+/* --- APP MODE SETTINGS (LIGHT THEME DEFAULT) --- */
 html, body {
-  background-color: #111827; /* Match app dark theme */
-  color: #ffffff;
+  background-color: #f3f4f6; /* Light Gray Background */
+  color: #1f2937; /* Dark Gray Text */
   height: 100%;
   width: 100%;
   margin: 0;
@@ -44,96 +44,58 @@ html, body {
 }
 .custom-scrollbar::-webkit-scrollbar { width: 4px; height: 4px; }
 .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
-.custom-scrollbar::-webkit-scrollbar-thumb { background: rgba(255, 255, 255, 0.2); border-radius: 4px; }
+.custom-scrollbar::-webkit-scrollbar-thumb { background: rgba(0, 0, 0, 0.2); border-radius: 4px; } /* Darker scrollbar for light theme */
 .no-scrollbar::-webkit-scrollbar { display: none; }
 .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
 
-/* --- GLASSMORPHISM --- */
+/* --- LIGHT THEME GLASSMORPHISM --- */
 .glass-heavy {
-  background: rgba(31, 41, 55, 0.95);
+  background: rgba(255, 255, 255, 0.85); /* White glass */
   backdrop-filter: blur(20px);
   -webkit-backdrop-filter: blur(20px);
-  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-  color: #ffffff;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+  color: #1f2937;
 }
 .glass-card {
-  background: rgba(31, 41, 55, 0.7); 
+  background: rgba(255, 255, 255, 0.7); 
   backdrop-filter: blur(12px);
   -webkit-backdrop-filter: blur(12px);
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.3);
-  color: #ffffff;
+  border: 1px solid rgba(255, 255, 255, 0.5);
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05); /* Softer shadow */
+  color: #1f2937;
 }
 .glass-input {
-  background: rgba(17, 24, 39, 0.6); 
-  border: 1px solid rgba(255, 255, 255, 0.15);
-  color: #ffffff !important;
+  background: rgba(255, 255, 255, 0.9); 
+  border: 1px solid rgba(0, 0, 0, 0.1);
+  color: #1f2937 !important;
 }
-.glass-input::placeholder { color: rgba(255, 255, 255, 0.5) !important; }
-.glass-input:focus { background: rgba(17, 24, 39, 0.9); border-color: #818cf8; }
+.glass-input::placeholder { color: rgba(0, 0, 0, 0.4) !important; }
+.glass-input:focus { background: #ffffff; border-color: #4f46e5; ring: 2px solid #4f46e5; }
+
 .glass-icon {
-  background: rgba(55, 65, 81, 0.8);
+  background: rgba(255, 255, 255, 0.8);
   backdrop-filter: blur(4px);
-  color: #ffffff;
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  color: #4b5563;
+  border: 1px solid rgba(0, 0, 0, 0.05);
 }
 
 /* --- UTILS --- */
 .pt-safe { padding-top: env(safe-area-inset-top); }
 .pb-safe { padding-bottom: env(safe-area-inset-bottom); }
-.text-glow { text-shadow: 0 0 20px rgba(129, 140, 248, 0.6); }
+.text-glow { text-shadow: 0 0 20px rgba(79, 70, 229, 0.3); } /* Adjusted glow for light theme */
 .shimmer-hover { position: relative; overflow: hidden !important; }
 .shimmer-hover::before {
   content: ''; position: absolute; top: 0; left: 0; width: 100%; height: 100%;
-  background: linear-gradient(to right, transparent, rgba(255, 255, 255, 0.08), transparent);
+  background: linear-gradient(to right, transparent, rgba(255, 255, 255, 0.4), transparent);
   transform: translateX(-100%); transition: transform 0.6s ease-in-out; pointer-events: none; z-index: 10;
 }
 .shimmer-hover:hover::before { transform: translateX(100%); }
 
-/* 
-   ==========================================================================
-   ISOLATED PRINT CONTAINER (FIXED VERSION)
-   ========================================================================== 
-*/
-.pdf-export-container {
-    /* Changed from fixed to absolute to avoid cropping/blank issues */
-    position: absolute; 
-    top: 0;
-    left: 0;
-    /* Move it off-screen but keep it rendered */
-    z-index: -1000; 
-    width: 210mm; /* A4 Width */
-    min-height: 297mm;
-    background-color: #ffffff !important;
-    color: #000000 !important;
-    padding: 0;
-    margin: 0;
-    box-sizing: border-box;
+/* --- CLEAN PRINTING --- */
+/* No complex hacks. Just a simple off-screen container if needed, or rely on html2pdf direct string rendering */
+.print-container {
+    background-color: white;
+    color: black;
     font-family: 'Tajawal', sans-serif;
-}
-
-/* CRITICAL FIX: 
-   Removed "background-color: transparent !important" 
-   We want styles defined in JS/HTML (like table row colors) to persist.
-*/
-.pdf-export-container * {
-    color: #000000 !important; /* Force text black */
-    text-shadow: none !important;
-    box-shadow: none !important;
-    print-color-adjust: exact;
-    -webkit-print-color-adjust: exact;
-}
-
-/* Restore borders for tables */
-.pdf-export-container table, 
-.pdf-export-container th, 
-.pdf-export-container td {
-    border: 1px solid #000000 !important;
-    border-collapse: collapse !important;
-}
-
-/* Hide unwanted elements */
-.pdf-export-container button,
-.pdf-export-container .no-print {
-    display: none !important;
+    padding: 20px;
 }
