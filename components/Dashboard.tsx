@@ -240,17 +240,20 @@ const Dashboard: React.FC<DashboardProps> = ({
     const days = ['الأحد', 'الاثنين', 'الثلاثاء', 'الأربعاء', 'الخميس'];
 
     return (
-        <div className="space-y-4 pb-20 text-slate-900 animate-in fade-in duration-500">
+        <div className="space-y-6 pb-20 text-slate-900 animate-in fade-in duration-500">
             
-            {/* 1. Top Section: Teacher Profile Card (Sticky Header) */}
-            <div className="sticky top-0 z-40 bg-[#f3f4f6] -mx-4 -mt-4">
-                <div className="glass-heavy bg-white p-4 md:p-6 pt-safe relative overflow-hidden rounded-b-[2rem] border-b border-gray-200 group">
+            {/* 1. Top Section: Teacher Profile Card (Sticky Header) - ENHANCED */}
+            <div className="sticky top-0 z-40 -mx-4 -mt-4">
+                <div className="bg-white/90 backdrop-blur-xl p-4 md:p-6 pt-safe relative overflow-hidden rounded-b-[2.5rem] border-b border-indigo-100 shadow-lg shadow-indigo-50/50 group">
+                    {/* Background Decorative Gradient */}
+                    <div className="absolute inset-0 bg-gradient-to-b from-indigo-50/50 to-transparent pointer-events-none"></div>
+                    
                     <div className="relative z-10 flex items-center justify-between mt-4">
                         <button 
                             onClick={() => setShowEditModal(true)}
-                            className="glass-icon p-3 rounded-2xl text-gray-500 hover:bg-gray-100 transition-all absolute left-0 top-0 border border-gray-200"
+                            className="glass-icon p-3 rounded-2xl bg-white border border-gray-200 text-gray-500 hover:text-indigo-600 hover:border-indigo-200 shadow-sm transition-all active:scale-95"
                         >
-                            <Edit3 className="w-5 h-5 text-indigo-500" />
+                            <Edit3 className="w-5 h-5" />
                         </button>
 
                         <div className="absolute right-3 top-3 flex flex-col items-center gap-1">
@@ -260,24 +263,26 @@ const Dashboard: React.FC<DashboardProps> = ({
 
                         <div className="flex flex-col items-center w-full">
                             <div className="mt-2"></div>
-                            <div className="w-20 h-20 md:w-24 md:h-24 rounded-[2rem] bg-gray-100 p-1 shadow-md mb-3 relative group-hover:scale-105 transition-transform border border-gray-200">
+                            <div className="w-24 h-24 rounded-[2rem] bg-white p-1.5 shadow-xl shadow-indigo-100 mb-3 relative group-hover:scale-105 transition-transform border border-white ring-4 ring-indigo-50">
                                 {teacherInfo.avatar ? (
-                                    <img src={teacherInfo.avatar} className="w-full h-full object-cover rounded-[1.8rem]" alt="Profile" />
+                                    <img src={teacherInfo.avatar} className="w-full h-full object-cover rounded-[1.6rem]" alt="Profile" />
                                 ) : (
-                                    <div className="w-full h-full bg-indigo-100 rounded-[1.8rem] flex items-center justify-center text-3xl font-black text-indigo-600">
+                                    <div className="w-full h-full bg-gradient-to-tr from-indigo-50 to-blue-50 rounded-[1.6rem] flex items-center justify-center text-3xl font-black text-indigo-600 border border-indigo-100">
                                         {teacherInfo.name ? teacherInfo.name.charAt(0) : 'T'}
                                     </div>
                                 )}
                             </div>
-                            <h1 className="text-xl md:text-2xl font-black text-slate-900 text-center mb-1">
+                            <h1 className="text-xl md:text-2xl font-black text-slate-800 text-center mb-1 drop-shadow-sm">
                                 {teacherInfo.name || 'مرحباً بك يا معلم'}
                             </h1>
-                            <div className="flex flex-col items-center gap-1 text-[10px] font-bold text-gray-500">
-                                {teacherInfo.school && <span className="flex items-center gap-1"><School className="w-3 h-3 text-indigo-500"/> {teacherInfo.school}</span>}
-                                <span className="flex items-center gap-2">
-                                    <span className="bg-indigo-50 text-indigo-600 px-2 py-0.5 rounded-md border border-indigo-100">
-                                        الفصل الدراسي {currentSemester === '1' ? 'الأول' : 'الثاني'}
+                            <div className="flex flex-col items-center gap-1.5 text-[11px] font-bold text-slate-500">
+                                {teacherInfo.school && (
+                                    <span className="flex items-center gap-1.5 bg-white px-3 py-1 rounded-full border border-gray-100 shadow-sm">
+                                        <School className="w-3.5 h-3.5 text-indigo-500"/> {teacherInfo.school}
                                     </span>
+                                )}
+                                <span className="bg-gradient-to-r from-indigo-500 to-blue-600 text-white px-3 py-0.5 rounded-md shadow-md shadow-indigo-200">
+                                    الفصل الدراسي {currentSemester === '1' ? 'الأول' : 'الثاني'}
                                 </span>
                             </div>
                         </div>
@@ -285,47 +290,59 @@ const Dashboard: React.FC<DashboardProps> = ({
                 </div>
             </div>
 
-            {/* Schedule Card (Light) */}
-            <div className="glass-card bg-white rounded-[2.5rem] p-4 border border-gray-200 shadow-sm relative mt-4 mx-1">
-                <div className="flex justify-between items-center mb-3">
+            {/* Schedule Card (Light) - ENHANCED */}
+            <div className="glass-card bg-white rounded-[2.5rem] p-5 border border-slate-200 shadow-[0_10px_30px_-10px_rgba(0,0,0,0.05)] relative mt-4 mx-1 overflow-hidden">
+                {/* Decorative background for card */}
+                <div className="absolute top-0 right-0 w-32 h-32 bg-amber-50 rounded-full blur-3xl opacity-50 pointer-events-none -mr-10 -mt-10"></div>
+                
+                <div className="flex justify-between items-center mb-4 relative z-10">
                     <div className="flex items-center gap-2">
-                        <button onClick={() => setShowScheduleModal(true)} className="w-8 h-8 glass-icon rounded-full text-gray-500 hover:bg-gray-100 transition-colors border border-gray-200 shadow-sm shimmer-hover">
-                            <Settings className="w-4 h-4 text-indigo-600" />
+                        <button onClick={() => setShowScheduleModal(true)} className="w-9 h-9 glass-icon rounded-full bg-white border border-slate-200 text-slate-500 hover:text-indigo-600 hover:border-indigo-200 transition-colors shadow-sm">
+                            <Settings className="w-4 h-4" />
                         </button>
-                        <button onClick={onToggleNotifications} className={`w-8 h-8 glass-icon rounded-full transition-colors border border-gray-200 shadow-sm shimmer-hover ${notificationsEnabled ? 'text-amber-500 bg-amber-50' : 'text-gray-400'}`}>
+                        <button onClick={onToggleNotifications} className={`w-9 h-9 glass-icon rounded-full transition-colors border shadow-sm ${notificationsEnabled ? 'bg-amber-50 text-amber-600 border-amber-200' : 'bg-white text-slate-400 border-slate-200'}`}>
                             <Bell className={`w-4 h-4 ${notificationsEnabled ? 'fill-amber-500' : ''}`} />
                         </button>
-                        <button onClick={handleTestNotification} className="w-8 h-8 glass-icon rounded-full text-gray-500 hover:bg-gray-100 transition-colors border border-gray-200 shadow-sm shimmer-hover" title="تجربة صوت الجرس">
-                            <PlayCircle className="w-4 h-4 text-indigo-600" />
+                        <button onClick={handleTestNotification} className="w-9 h-9 glass-icon rounded-full bg-white border border-slate-200 text-slate-500 hover:text-indigo-600 transition-colors shadow-sm" title="تجربة صوت الجرس">
+                            <PlayCircle className="w-4 h-4" />
                         </button>
-                        <button onClick={() => scheduleFileInputRef.current?.click()} className="w-8 h-8 glass-icon rounded-full text-gray-500 hover:bg-gray-100 transition-colors border border-gray-200 shadow-sm relative shimmer-hover">
-                            {isImportingSchedule ? <Loader2 className="w-4 h-4 animate-spin"/> : <FileSpreadsheet className="w-4 h-4 text-emerald-500" />}
+                        <button onClick={() => scheduleFileInputRef.current?.click()} className="w-9 h-9 glass-icon rounded-full bg-white border border-slate-200 text-slate-500 hover:text-emerald-600 transition-colors shadow-sm">
+                            {isImportingSchedule ? <Loader2 className="w-4 h-4 animate-spin"/> : <FileSpreadsheet className="w-4 h-4" />}
                         </button>
                         <input type="file" ref={scheduleFileInputRef} onChange={handleImportSchedule} accept=".xlsx, .xls" className="hidden" />
                     </div>
-                    <h2 className="text-base font-black text-slate-800 flex items-center gap-2">
-                        جدول {todaySchedule.dayName}
-                        <Clock className="w-4 h-4 text-amber-500" />
-                    </h2>
+                    <div className="text-right">
+                        <h2 className="text-base font-black text-slate-800 flex items-center gap-2 justify-end">
+                            جدول {todaySchedule.dayName}
+                            <Clock className="w-5 h-5 text-amber-500" />
+                        </h2>
+                        <p className="text-[10px] text-slate-400 font-bold">اليوم الدراسي الحالي</p>
+                    </div>
                 </div>
                 
-                {/* Clear & Visible Schedule Grid */}
-                <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+                {/* Clear & Visible Schedule Grid - TILES */}
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 relative z-10">
                     {todaySchedule.periods.map((cls, idx) => {
                         const pt = periodTimes[idx] || { startTime: '--:--', endTime: '--:--' };
                         const isActive = checkActivePeriod(pt.startTime, pt.endTime) && todaySchedule.dayName === days[dayIndex];
                         return (
                             <div key={idx} className={`
-                                p-1.5 rounded-xl flex flex-col items-center justify-center text-center min-h-[55px] relative transition-all duration-300 shimmer-hover
+                                p-2 rounded-2xl flex flex-col items-center justify-center text-center min-h-[65px] relative transition-all duration-300
                                 ${isActive 
-                                    ? 'bg-indigo-600 text-white border-2 border-amber-400 shadow-lg scale-105 z-10' 
-                                    : 'bg-gray-50 border border-gray-200 text-slate-600'
+                                    ? 'bg-gradient-to-br from-indigo-600 to-blue-600 text-white border-2 border-amber-400 shadow-xl scale-105 z-10' 
+                                    : 'bg-white border border-slate-200 text-slate-600 shadow-sm hover:border-indigo-200 hover:shadow-md'
                                 }
                             `}>
-                                {isActive && <span className="absolute -top-2 bg-amber-400 text-black text-[7px] font-black px-1.5 py-0.5 rounded-full shadow-sm animate-pulse">الآن</span>}
-                                <div className={`text-[8px] font-black mb-0.5 ${isActive ? 'text-indigo-200' : 'text-gray-400'}`}>حصة {idx + 1}</div>
-                                <h3 className={`text-[10px] font-black truncate w-full px-1 mb-0.5 ${isActive ? 'text-white' : 'text-slate-800'}`}>{cls || '-'}</h3>
-                                <span className={`text-[7px] font-bold dir-ltr block ${isActive ? 'text-indigo-200' : 'text-gray-400'}`}>{pt.startTime} - {pt.endTime}</span>
+                                {isActive && <span className="absolute -top-2.5 bg-amber-400 text-black text-[8px] font-black px-2 py-0.5 rounded-full shadow-md animate-pulse border border-white">الآن</span>}
+                                <div className={`text-[9px] font-black mb-1 px-2 py-0.5 rounded-lg ${isActive ? 'bg-white/20 text-white' : 'bg-slate-100 text-slate-400'}`}>
+                                    حصة {idx + 1}
+                                </div>
+                                <h3 className={`text-xs font-black truncate w-full px-1 mb-1 ${isActive ? 'text-white' : 'text-slate-800'}`}>
+                                    {cls || '-'}
+                                </h3>
+                                <span className={`text-[8px] font-bold dir-ltr block ${isActive ? 'text-indigo-100' : 'text-slate-400'}`}>
+                                    {pt.startTime} - {pt.endTime}
+                                </span>
                             </div>
                         )
                     })}
@@ -337,10 +354,10 @@ const Dashboard: React.FC<DashboardProps> = ({
                  <div className="text-center">
                     <h3 className="font-black text-2xl mb-6 text-slate-800">إعدادات الهوية</h3>
                     
-                    <div className="flex gap-4 justify-center mb-6 overflow-x-auto pb-2">
+                    <div className="flex gap-4 justify-center mb-6 overflow-x-auto pb-4 custom-scrollbar">
                         {/* Avatar Uploader */}
                         <div className="relative w-20 h-20 group cursor-pointer shrink-0" onClick={() => fileInputRef.current?.click()}>
-                            <div className="w-full h-full rounded-[1.5rem] overflow-hidden border-4 border-gray-200 shadow-sm glass-card bg-white">
+                            <div className="w-full h-full rounded-[1.5rem] overflow-hidden border-4 border-white shadow-md glass-card bg-white">
                                 {editAvatar ? (
                                     <img src={editAvatar} className="w-full h-full object-cover" alt="Avatar" />
                                 ) : (
@@ -353,12 +370,12 @@ const Dashboard: React.FC<DashboardProps> = ({
                                 <Camera className="w-5 h-5 text-white drop-shadow-md" />
                             </div>
                             <input type="file" ref={fileInputRef} onChange={handleImageUpload} accept="image/*" className="hidden" />
-                            <p className="text-[9px] font-bold text-gray-500 mt-1">الصورة الشخصية</p>
+                            <p className="text-[9px] font-bold text-gray-500 mt-2">الصورة الشخصية</p>
                         </div>
 
                         {/* Stamp Uploader */}
                         <div className="relative w-20 h-20 group cursor-pointer shrink-0" onClick={() => stampInputRef.current?.click()}>
-                            <div className="w-full h-full rounded-[1.5rem] overflow-hidden border-4 border-gray-200 shadow-sm glass-card flex items-center justify-center bg-white">
+                            <div className="w-full h-full rounded-[1.5rem] overflow-hidden border-4 border-white shadow-md glass-card flex items-center justify-center bg-white">
                                 {editStamp ? (
                                     <img src={editStamp} className="w-full h-full object-contain p-2" alt="Stamp" />
                                 ) : (
@@ -371,12 +388,12 @@ const Dashboard: React.FC<DashboardProps> = ({
                                 <Upload className="w-5 h-5 text-white drop-shadow-md" />
                             </div>
                             <input type="file" ref={stampInputRef} onChange={handleStampUpload} accept="image/*" className="hidden" />
-                            <p className="text-[9px] font-bold text-gray-500 mt-1">ختم المدرسة</p>
+                            <p className="text-[9px] font-bold text-gray-500 mt-2">ختم المدرسة</p>
                         </div>
 
                         {/* Ministry Logo Uploader */}
                         <div className="relative w-20 h-20 group cursor-pointer shrink-0" onClick={() => ministryLogoInputRef.current?.click()}>
-                            <div className="w-full h-full rounded-[1.5rem] overflow-hidden border-4 border-gray-200 shadow-sm glass-card flex items-center justify-center bg-white">
+                            <div className="w-full h-full rounded-[1.5rem] overflow-hidden border-4 border-white shadow-md glass-card flex items-center justify-center bg-white">
                                 {editMinistryLogo ? (
                                     <img src={editMinistryLogo} className="w-full h-full object-contain p-2" alt="Ministry Logo" />
                                 ) : (
@@ -389,26 +406,26 @@ const Dashboard: React.FC<DashboardProps> = ({
                                 <Upload className="w-5 h-5 text-white drop-shadow-md" />
                             </div>
                             <input type="file" ref={ministryLogoInputRef} onChange={handleMinistryLogoUpload} accept="image/*" className="hidden" />
-                            <p className="text-[9px] font-bold text-gray-500 mt-1">شعار الوزارة</p>
+                            <p className="text-[9px] font-bold text-gray-500 mt-2">شعار الوزارة</p>
                         </div>
                     </div>
 
-                    <div className="space-y-2">
-                        <input className="w-full p-2.5 glass-input rounded-xl font-bold text-xs md:text-sm text-slate-800 bg-white border border-gray-200 focus:border-indigo-500 outline-none" placeholder="اسم المعلم" value={editName} onChange={e => setEditName(e.target.value)} />
-                        <input className="w-full p-2.5 glass-input rounded-xl font-bold text-xs md:text-sm text-slate-800 bg-white border border-gray-200 focus:border-indigo-500 outline-none" placeholder="اسم المدرسة" value={editSchool} onChange={e => setEditSchool(e.target.value)} />
-                        <input className="w-full p-2.5 glass-input rounded-xl font-bold text-xs md:text-sm text-slate-800 bg-white border border-gray-200 focus:border-indigo-500 outline-none" placeholder="المادة (مثال: رياضيات)" value={editSubject} onChange={e => setEditSubject(e.target.value)} />
-                        <input className="w-full p-2.5 glass-input rounded-xl font-bold text-xs md:text-sm text-slate-800 bg-white border border-gray-200 focus:border-indigo-500 outline-none" placeholder="المحافظة (للتوجيه)" value={editGovernorate} onChange={e => setEditGovernorate(e.target.value)} />
-                        <input className="w-full p-2.5 glass-input rounded-xl font-bold text-xs md:text-sm text-slate-800 bg-white border border-gray-200 focus:border-indigo-500 outline-none" placeholder="العام الدراسي (مثال: 2024 / 2025)" value={editAcademicYear} onChange={e => setEditAcademicYear(e.target.value)} />
+                    <div className="space-y-3">
+                        <input className="w-full p-3 glass-input rounded-xl font-bold text-sm text-slate-800 bg-white border border-gray-200 focus:border-indigo-500 outline-none" placeholder="اسم المعلم" value={editName} onChange={e => setEditName(e.target.value)} />
+                        <input className="w-full p-3 glass-input rounded-xl font-bold text-sm text-slate-800 bg-white border border-gray-200 focus:border-indigo-500 outline-none" placeholder="اسم المدرسة" value={editSchool} onChange={e => setEditSchool(e.target.value)} />
+                        <input className="w-full p-3 glass-input rounded-xl font-bold text-sm text-slate-800 bg-white border border-gray-200 focus:border-indigo-500 outline-none" placeholder="المادة (مثال: رياضيات)" value={editSubject} onChange={e => setEditSubject(e.target.value)} />
+                        <input className="w-full p-3 glass-input rounded-xl font-bold text-sm text-slate-800 bg-white border border-gray-200 focus:border-indigo-500 outline-none" placeholder="المحافظة (للتوجيه)" value={editGovernorate} onChange={e => setEditGovernorate(e.target.value)} />
+                        <input className="w-full p-3 glass-input rounded-xl font-bold text-sm text-slate-800 bg-white border border-gray-200 focus:border-indigo-500 outline-none" placeholder="العام الدراسي (مثال: 2024 / 2025)" value={editAcademicYear} onChange={e => setEditAcademicYear(e.target.value)} />
                         
-                        <div className="bg-gray-50 rounded-xl p-2 flex items-center justify-between border border-gray-200">
+                        <div className="bg-slate-50 rounded-xl p-3 flex items-center justify-between border border-gray-200">
                             <span className="text-xs font-bold text-gray-500 pr-2">الفصل الدراسي:</span>
-                            <div className="flex gap-1">
-                                <button onClick={() => setEditSemester('1')} className={`px-4 py-1.5 rounded-lg text-xs font-bold transition-all ${editSemester === '1' ? 'bg-indigo-600 text-white' : 'text-gray-500 hover:bg-gray-200'}`}>الأول</button>
-                                <button onClick={() => setEditSemester('2')} className={`px-4 py-1.5 rounded-lg text-xs font-bold transition-all ${editSemester === '2' ? 'bg-indigo-600 text-white' : 'text-gray-500 hover:bg-gray-200'}`}>الثاني</button>
+                            <div className="flex gap-2">
+                                <button onClick={() => setEditSemester('1')} className={`px-5 py-2 rounded-lg text-xs font-bold transition-all shadow-sm ${editSemester === '1' ? 'bg-indigo-600 text-white shadow-indigo-200' : 'bg-white text-gray-500 border border-gray-200 hover:bg-gray-100'}`}>الأول</button>
+                                <button onClick={() => setEditSemester('2')} className={`px-5 py-2 rounded-lg text-xs font-bold transition-all shadow-sm ${editSemester === '2' ? 'bg-indigo-600 text-white shadow-indigo-200' : 'bg-white text-gray-500 border border-gray-200 hover:bg-gray-100'}`}>الثاني</button>
                             </div>
                         </div>
 
-                        <button onClick={handleSaveInfo} className="w-full py-2.5 bg-indigo-600 text-white rounded-xl font-black text-xs md:text-sm shadow-lg hover:bg-indigo-700 transition-all mt-3">حفظ وتطبيق</button>
+                        <button onClick={handleSaveInfo} className="w-full py-3.5 bg-indigo-600 text-white rounded-xl font-black text-sm shadow-lg shadow-indigo-200 hover:bg-indigo-700 active:scale-95 transition-all mt-4">حفظ وتطبيق</button>
                     </div>
                  </div>
             </Modal>
@@ -418,40 +435,40 @@ const Dashboard: React.FC<DashboardProps> = ({
                 <div className="text-center">
                     <h3 className="font-black text-xl mb-4 text-slate-800">إعدادات الجدول</h3>
                     
-                    <div className="flex p-1 bg-gray-100 rounded-xl mb-4">
-                        <button onClick={() => setScheduleTab('timing')} className={`flex-1 py-2 rounded-lg text-xs font-bold transition-all ${scheduleTab === 'timing' ? 'bg-white shadow text-slate-800' : 'text-gray-500'}`}>التوقيت</button>
-                        <button onClick={() => setScheduleTab('classes')} className={`flex-1 py-2 rounded-lg text-xs font-bold transition-all ${scheduleTab === 'classes' ? 'bg-white shadow text-slate-800' : 'text-gray-500'}`}>الحصص</button>
+                    <div className="flex p-1 bg-gray-100 rounded-xl mb-4 border border-gray-200">
+                        <button onClick={() => setScheduleTab('timing')} className={`flex-1 py-2.5 rounded-lg text-xs font-bold transition-all ${scheduleTab === 'timing' ? 'bg-white shadow text-indigo-600' : 'text-gray-500 hover:text-slate-700'}`}>التوقيت</button>
+                        <button onClick={() => setScheduleTab('classes')} className={`flex-1 py-2.5 rounded-lg text-xs font-bold transition-all ${scheduleTab === 'classes' ? 'bg-white shadow text-indigo-600' : 'text-gray-500 hover:text-slate-700'}`}>الحصص</button>
                     </div>
 
                     {scheduleTab === 'timing' ? (
-                        <div className="space-y-2 max-h-60 overflow-y-auto custom-scrollbar p-1">
+                        <div className="space-y-2 max-h-64 overflow-y-auto custom-scrollbar p-1">
                             {tempPeriodTimes.map((pt, idx) => (
-                                <div key={idx} className="flex items-center gap-2 mb-2">
-                                    <span className="text-xs font-bold w-16 text-gray-500">حصة {pt.periodNumber}</span>
-                                    <input type="time" value={pt.startTime} onChange={e => updateTempTime(idx, 'startTime', e.target.value)} className="flex-1 p-2 glass-input rounded-lg text-xs font-bold text-slate-800 bg-white border border-gray-200" />
-                                    <span className="text-gray-400">-</span>
-                                    <input type="time" value={pt.endTime} onChange={e => updateTempTime(idx, 'endTime', e.target.value)} className="flex-1 p-2 glass-input rounded-lg text-xs font-bold text-slate-800 bg-white border border-gray-200" />
+                                <div key={idx} className="flex items-center gap-2 mb-2 bg-white p-2 rounded-xl border border-gray-100 shadow-sm">
+                                    <span className="text-xs font-bold w-16 text-slate-500 bg-gray-50 py-2 rounded-lg">حصة {pt.periodNumber}</span>
+                                    <input type="time" value={pt.startTime} onChange={e => updateTempTime(idx, 'startTime', e.target.value)} className="flex-1 p-2 glass-input rounded-lg text-xs font-bold text-slate-800 bg-gray-50 border border-gray-200 text-center" />
+                                    <span className="text-gray-400 font-bold">-</span>
+                                    <input type="time" value={pt.endTime} onChange={e => updateTempTime(idx, 'endTime', e.target.value)} className="flex-1 p-2 glass-input rounded-lg text-xs font-bold text-slate-800 bg-gray-50 border border-gray-200 text-center" />
                                 </div>
                             ))}
                         </div>
                     ) : (
-                         <div className="space-y-4 max-h-60 overflow-y-auto custom-scrollbar p-1">
-                             <div className="flex gap-2 overflow-x-auto pb-2">
+                         <div className="space-y-4 max-h-64 overflow-y-auto custom-scrollbar p-1">
+                             <div className="flex gap-2 overflow-x-auto pb-2 no-scrollbar">
                                  {tempSchedule.map((day, idx) => (
-                                     <button key={idx} onClick={() => setEditingDayIndex(idx)} className={`px-3 py-1.5 rounded-lg text-xs font-bold whitespace-nowrap ${editingDayIndex === idx ? 'bg-indigo-600 text-white' : 'glass-card bg-gray-50 text-gray-500 border border-gray-200'}`}>
+                                     <button key={idx} onClick={() => setEditingDayIndex(idx)} className={`px-4 py-2 rounded-xl text-xs font-bold whitespace-nowrap transition-all ${editingDayIndex === idx ? 'bg-indigo-600 text-white shadow-md' : 'glass-card bg-white text-gray-500 border border-gray-200 hover:bg-gray-50'}`}>
                                          {day.dayName}
                                      </button>
                                  ))}
                              </div>
                              <div className="space-y-2">
                                  {tempSchedule[editingDayIndex]?.periods.map((cls, pIdx) => (
-                                     <div key={pIdx} className="flex items-center gap-2">
-                                         <span className="text-xs font-bold w-12 text-gray-500">#{pIdx + 1}</span>
+                                     <div key={pIdx} className="flex items-center gap-3">
+                                         <span className="text-xs font-bold w-12 text-slate-400 bg-slate-50 py-2.5 rounded-lg">#{pIdx + 1}</span>
                                          <input 
                                              placeholder="اسم الفصل / المادة" 
                                              value={cls} 
                                              onChange={e => updateTempClass(editingDayIndex, pIdx, e.target.value)}
-                                             className="flex-1 p-2 glass-input rounded-lg text-xs font-bold text-slate-800 bg-white border border-gray-200 focus:border-indigo-500 outline-none"
+                                             className="flex-1 p-2.5 glass-input rounded-xl text-xs font-bold text-slate-800 bg-white border border-gray-200 focus:border-indigo-500 outline-none shadow-sm"
                                          />
                                      </div>
                                  ))}
@@ -459,9 +476,9 @@ const Dashboard: React.FC<DashboardProps> = ({
                          </div>
                     )}
                     
-                    <div className="flex gap-2 mt-4 pt-4 border-t border-gray-100">
-                        <button onClick={() => setShowScheduleModal(false)} className="flex-1 py-3 text-gray-500 font-bold text-xs hover:bg-gray-100 rounded-xl">إلغاء</button>
-                        <button onClick={handleSaveScheduleSettings} className="flex-[2] py-3 bg-indigo-600 text-white rounded-xl font-black text-sm shadow-lg hover:bg-indigo-700">حفظ الجدول</button>
+                    <div className="flex gap-3 mt-6 pt-4 border-t border-gray-100">
+                        <button onClick={() => setShowScheduleModal(false)} className="flex-1 py-3.5 text-slate-500 font-bold text-xs hover:bg-gray-100 rounded-xl transition-colors">إلغاء</button>
+                        <button onClick={handleSaveScheduleSettings} className="flex-[2] py-3.5 bg-indigo-600 text-white rounded-xl font-black text-sm shadow-lg shadow-indigo-200 hover:bg-indigo-700 active:scale-95 transition-all">حفظ التغييرات</button>
                     </div>
                 </div>
             </Modal>
