@@ -172,46 +172,46 @@ const AttendanceTracker: React.FC<AttendanceTrackerProps> = ({ students, classes
 
   return (
     <div className="flex flex-col h-full text-slate-800 relative animate-in fade-in duration-500">
-        {/* Sticky Header (Light) - ENHANCED */}
-        <div className="sticky top-0 z-30 pb-2 bg-[#f3f4f6] -mx-4 px-4 -mt-4">
+        {/* Sticky Header (Light) */}
+        <div className="sticky top-0 z-30 pb-2 bg-[#e2e8f0] -mx-4 px-4 -mt-4">
             <div className="flex justify-between items-center mb-4 pt-safe mt-4">
                 <h1 className="text-2xl font-black tracking-tight text-slate-900">سجل الغياب</h1>
-                <button onClick={handleExportDailyExcel} disabled={isExportingExcel} className="w-10 h-10 glass-icon bg-white border border-gray-200 rounded-2xl text-emerald-600 shadow-sm flex items-center justify-center active:scale-95 transition-transform hover:shadow-md" title="تصدير سجل شهري">
+                <button onClick={handleExportDailyExcel} disabled={isExportingExcel} className="w-10 h-10 glass-icon bg-white border border-slate-300 rounded-2xl text-emerald-600 shadow-md flex items-center justify-center active:scale-95 transition-transform hover:shadow-lg" title="تصدير سجل شهري">
                      {isExportingExcel ? <Loader2 className="w-5 h-5 animate-spin"/> : <Share2 className="w-5 h-5"/>}
                 </button>
             </div>
 
-            {/* Date Scroller - ENHANCED */}
-            <div className="flex items-center justify-between bg-white rounded-2xl p-1.5 mb-3 shadow-sm border border-slate-200 mx-1">
-                <button onClick={() => { const d = new Date(selectedDate); d.setDate(d.getDate() - 1); setSelectedDate(d.toLocaleDateString('en-CA')); }} className="p-3 rounded-xl hover:bg-gray-100 active:scale-95 transition-all text-slate-400"><ChevronDown className="w-5 h-5 rotate-90"/></button>
-                <div className="flex items-center gap-2 font-black text-sm text-slate-800 bg-gray-50 px-4 py-2 rounded-xl">
+            {/* Date Scroller */}
+            <div className="flex items-center justify-between bg-white rounded-2xl p-1.5 mb-3 shadow-md border border-slate-300 mx-1">
+                <button onClick={() => { const d = new Date(selectedDate); d.setDate(d.getDate() - 1); setSelectedDate(d.toLocaleDateString('en-CA')); }} className="p-3 rounded-xl hover:bg-gray-100 active:scale-95 transition-all text-slate-500"><ChevronDown className="w-5 h-5 rotate-90"/></button>
+                <div className="flex items-center gap-2 font-black text-sm text-slate-900 bg-slate-50 px-4 py-2 rounded-xl">
                     <Calendar className="w-4 h-4 text-indigo-500"/>
                     {formatDateDisplay(selectedDate)}
                 </div>
-                <button onClick={() => { const d = new Date(selectedDate); d.setDate(d.getDate() + 1); setSelectedDate(d.toLocaleDateString('en-CA')); }} className="p-3 rounded-xl hover:bg-gray-100 active:scale-95 transition-all text-slate-400"><ChevronDown className="w-5 h-5 -rotate-90"/></button>
+                <button onClick={() => { const d = new Date(selectedDate); d.setDate(d.getDate() + 1); setSelectedDate(d.toLocaleDateString('en-CA')); }} className="p-3 rounded-xl hover:bg-gray-100 active:scale-95 transition-all text-slate-500"><ChevronDown className="w-5 h-5 -rotate-90"/></button>
             </div>
 
             {/* Filters */}
             <div className="space-y-2 mb-2 px-1">
                 {availableGrades.length > 0 && (
                     <div className="flex gap-2 overflow-x-auto no-scrollbar pb-1">
-                        <button onClick={() => { setSelectedGrade('all'); setClassFilter('all'); }} className={`px-4 py-2 text-[10px] font-bold whitespace-nowrap rounded-xl transition-all border ${selectedGrade === 'all' ? 'bg-indigo-600 text-white border-indigo-700 shadow-md' : 'bg-white text-slate-500 border-slate-200 shadow-sm'}`}>كل المراحل</button>
+                        <button onClick={() => { setSelectedGrade('all'); setClassFilter('all'); }} className={`px-4 py-2 text-[10px] font-bold whitespace-nowrap rounded-xl transition-all border ${selectedGrade === 'all' ? 'bg-indigo-600 text-white border-indigo-700 shadow-md' : 'bg-white text-slate-500 border-slate-300 shadow-sm'}`}>كل المراحل</button>
                         {availableGrades.map(g => (
-                            <button key={g} onClick={() => { setSelectedGrade(g); setClassFilter('all'); }} className={`px-4 py-2 text-[10px] font-bold whitespace-nowrap rounded-xl transition-all border ${selectedGrade === g ? 'bg-indigo-600 text-white border-indigo-700 shadow-md' : 'bg-white text-slate-500 border-slate-200 shadow-sm'}`}>صف {g}</button>
+                            <button key={g} onClick={() => { setSelectedGrade(g); setClassFilter('all'); }} className={`px-4 py-2 text-[10px] font-bold whitespace-nowrap rounded-xl transition-all border ${selectedGrade === g ? 'bg-indigo-600 text-white border-indigo-700 shadow-md' : 'bg-white text-slate-500 border-slate-300 shadow-sm'}`}>صف {g}</button>
                         ))}
                     </div>
                 )}
 
                 <div className="flex items-center gap-2 overflow-x-auto no-scrollbar pb-1">
                     {visibleClasses.map(c => (
-                        <button key={c} onClick={() => setClassFilter(c)} className={`px-5 py-2.5 text-xs font-bold whitespace-nowrap rounded-xl transition-all border ${classFilter === c ? 'bg-indigo-600 text-white border-indigo-700 shadow-md' : 'bg-white text-slate-500 border-slate-200 hover:bg-gray-50 shadow-sm'}`}>{c}</button>
+                        <button key={c} onClick={() => setClassFilter(c)} className={`px-5 py-2.5 text-xs font-bold whitespace-nowrap rounded-xl transition-all border ${classFilter === c ? 'bg-indigo-600 text-white border-indigo-700 shadow-md' : 'bg-white text-slate-500 border-slate-300 hover:bg-gray-50 shadow-sm'}`}>{c}</button>
                     ))}
                 </div>
             </div>
         </div>
 
-        {/* Live Stats Strip - ENHANCED */}
-        <div className="grid grid-cols-5 gap-px bg-slate-200 rounded-2xl overflow-hidden mx-1 mb-4 shadow-sm border border-slate-200 mt-2">
+        {/* Live Stats Strip */}
+        <div className="grid grid-cols-5 gap-px bg-slate-300 rounded-2xl overflow-hidden mx-1 mb-4 shadow-sm border border-slate-300 mt-2">
             <button onClick={() => handleMarkAll('present')} className="bg-white py-3 flex flex-col items-center justify-center active:bg-gray-50 transition-colors hover:bg-emerald-50 group">
                 <span className="text-[10px] font-bold text-gray-400 mb-1 group-hover:text-emerald-500">حضور</span>
                 <span className="text-sm font-black text-emerald-600">{stats.present}</span>
@@ -246,14 +246,14 @@ const AttendanceTracker: React.FC<AttendanceTrackerProps> = ({ students, classes
                                 className={`
                                     group flex items-center justify-between p-4 rounded-[1.2rem] border transition-all duration-300 relative overflow-hidden shimmer-hover
                                     ${status 
-                                        ? 'bg-white border-indigo-200 shadow-[0_4px_12px_-2px_rgba(79,70,229,0.1)]' 
-                                        : 'bg-white border-slate-200 hover:border-indigo-200 hover:shadow-sm'
+                                        ? 'bg-white border-indigo-300 shadow-[0_4px_12px_-2px_rgba(79,70,229,0.1)]' 
+                                        : 'bg-white border-slate-300 hover:border-indigo-300 hover:shadow-md shadow-sm'
                                     }
                                 `}
                             >
                                 {/* Left: Info */}
                                 <div className="flex items-center gap-4 min-w-0 flex-1 relative z-10">
-                                    <div className={`w-12 h-12 rounded-2xl flex items-center justify-center text-sm font-bold shrink-0 bg-gray-50 text-slate-400 overflow-hidden border border-slate-100 transition-colors group-hover:border-indigo-100 shadow-inner`}>
+                                    <div className={`w-12 h-12 rounded-2xl flex items-center justify-center text-sm font-bold shrink-0 bg-gray-50 text-slate-400 overflow-hidden border border-slate-200 transition-colors group-hover:border-indigo-200 shadow-inner`}>
                                         {student.avatar ? <img src={student.avatar} className="w-full h-full object-cover" /> : student.name.charAt(0)}
                                     </div>
                                     <div className="min-w-0">
@@ -280,16 +280,16 @@ const AttendanceTracker: React.FC<AttendanceTrackerProps> = ({ students, classes
 
                                 {/* Right: Action Buttons */}
                                 <div className="flex items-center gap-2 shrink-0 relative z-10">
-                                    <button onClick={() => toggleAttendance(student.id, 'present')} className={`w-10 h-10 rounded-xl flex items-center justify-center transition-all ${status === 'present' ? 'bg-emerald-600 text-white shadow-lg shadow-emerald-200' : 'bg-slate-50 text-slate-400 hover:bg-emerald-50 hover:text-emerald-500 border border-slate-100'}`}>
+                                    <button onClick={() => toggleAttendance(student.id, 'present')} className={`w-10 h-10 rounded-xl flex items-center justify-center transition-all ${status === 'present' ? 'bg-emerald-600 text-white shadow-lg shadow-emerald-200' : 'bg-slate-50 text-slate-400 hover:bg-emerald-50 hover:text-emerald-500 border border-slate-200'}`}>
                                         <Check className="w-5 h-5" strokeWidth={3} />
                                     </button>
-                                    <button onClick={() => toggleAttendance(student.id, 'absent')} className={`w-10 h-10 rounded-xl flex items-center justify-center transition-all ${status === 'absent' ? 'bg-rose-600 text-white shadow-lg shadow-rose-200' : 'bg-slate-50 text-slate-400 hover:bg-rose-50 hover:text-rose-500 border border-slate-100'}`}>
+                                    <button onClick={() => toggleAttendance(student.id, 'absent')} className={`w-10 h-10 rounded-xl flex items-center justify-center transition-all ${status === 'absent' ? 'bg-rose-600 text-white shadow-lg shadow-rose-200' : 'bg-slate-50 text-slate-400 hover:bg-rose-50 hover:text-rose-500 border border-slate-200'}`}>
                                         <X className="w-5 h-5" strokeWidth={3} />
                                     </button>
-                                    <button onClick={() => toggleAttendance(student.id, 'late')} className={`w-10 h-10 rounded-xl flex items-center justify-center transition-all ${status === 'late' ? 'bg-amber-500 text-white shadow-lg shadow-amber-200' : 'bg-slate-50 text-slate-400 hover:bg-amber-50 hover:text-amber-500 border border-slate-100'}`}>
+                                    <button onClick={() => toggleAttendance(student.id, 'late')} className={`w-10 h-10 rounded-xl flex items-center justify-center transition-all ${status === 'late' ? 'bg-amber-500 text-white shadow-lg shadow-amber-200' : 'bg-slate-50 text-slate-400 hover:bg-amber-50 hover:text-amber-500 border border-slate-200'}`}>
                                         <Clock className="w-5 h-5" strokeWidth={3} />
                                     </button>
-                                    <button onClick={() => toggleAttendance(student.id, 'truant')} className={`w-10 h-10 rounded-xl flex items-center justify-center transition-all ${status === 'truant' ? 'bg-purple-600 text-white shadow-lg shadow-purple-200' : 'bg-slate-50 text-slate-400 hover:bg-purple-50 hover:text-purple-500 border border-slate-100'}`}>
+                                    <button onClick={() => toggleAttendance(student.id, 'truant')} className={`w-10 h-10 rounded-xl flex items-center justify-center transition-all ${status === 'truant' ? 'bg-purple-600 text-white shadow-lg shadow-purple-200' : 'bg-slate-50 text-slate-400 hover:bg-purple-50 hover:text-purple-500 border border-slate-200'}`}>
                                         <DoorOpen className="w-5 h-5" strokeWidth={3} />
                                     </button>
                                 </div>
