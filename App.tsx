@@ -178,10 +178,10 @@ const AppContent: React.FC = () => {
   const isMoreActive = !mobileNavItems.some(item => item.id === activeTab);
 
   return (
-    <div className="flex h-screen bg-[#f3f4f6] font-sans overflow-hidden text-slate-900">
+    <div className="flex h-screen bg-[#e2e8f0] font-sans overflow-hidden text-slate-900">
         
-        {/* --- DESKTOP SIDEBAR (Light Theme) --- */}
-        <aside className="hidden md:flex w-72 flex-col bg-white border-l border-gray-200 z-50 shadow-sm transition-all h-full">
+        {/* --- DESKTOP SIDEBAR --- */}
+        <aside className="hidden md:flex w-72 flex-col bg-white border-l border-slate-300 z-50 shadow-md transition-all h-full">
             <div className="p-8 flex items-center gap-4">
                 <div className="w-12 h-12">
                     <BrandLogo className="w-full h-full" showText={false} />
@@ -193,8 +193,8 @@ const AppContent: React.FC = () => {
             </div>
 
             <div className="px-6 mb-6">
-                <div className="p-4 bg-gray-50 rounded-2xl flex items-center gap-3 border border-gray-200 shadow-sm">
-                    <div className="w-10 h-10 rounded-full bg-gray-200 flex items-center justify-center overflow-hidden border border-gray-300 shadow-sm shrink-0">
+                <div className="p-4 bg-slate-50 rounded-2xl flex items-center gap-3 border border-slate-200 shadow-sm">
+                    <div className="w-10 h-10 rounded-full bg-slate-200 flex items-center justify-center overflow-hidden border border-slate-300 shadow-sm shrink-0">
                          {teacherInfo.avatar ? <img src={teacherInfo.avatar} className="w-full h-full object-cover"/> : <span className="font-black text-slate-500 text-lg">{teacherInfo.name?.[0]}</span>}
                     </div>
                     <div className="overflow-hidden">
@@ -214,7 +214,7 @@ const AppContent: React.FC = () => {
                             className={`w-full flex items-center gap-3 px-4 py-3.5 rounded-2xl transition-all duration-300 group ${
                                 isActive 
                                 ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-200' 
-                                : 'text-slate-500 hover:bg-gray-100 hover:text-slate-900'
+                                : 'text-slate-500 hover:bg-slate-50 hover:text-slate-900 border border-transparent hover:border-slate-100'
                             }`}
                         >
                             <item.icon className={`w-5 h-5 ${isActive ? 'text-white' : 'text-slate-400 group-hover:text-indigo-500'} transition-colors`} strokeWidth={2.5} />
@@ -225,13 +225,13 @@ const AppContent: React.FC = () => {
                 })}
             </nav>
 
-            <div className="p-6 text-center border-t border-gray-100">
+            <div className="p-6 text-center border-t border-slate-200">
                 <p className="text-[10px] font-bold text-gray-400">الإصدار 3.6.0</p>
             </div>
         </aside>
 
         {/* --- MAIN CONTENT AREA --- */}
-        <main className="flex-1 flex flex-col h-full overflow-hidden relative bg-[#f3f4f6]">
+        <main className="flex-1 flex flex-col h-full overflow-hidden relative bg-[#e2e8f0]">
             <div 
                 className="flex-1 overflow-y-auto overflow-x-hidden custom-scrollbar pb-28 md:pb-4 px-4 md:px-8 pt-safe overscroll-contain"
                 id="main-scroll-container"
@@ -241,8 +241,8 @@ const AppContent: React.FC = () => {
                 </div>
             </div>
 
-            {/* --- MOBILE TAB BAR (Light Theme) --- */}
-            <div className="md:hidden fixed bottom-0 left-0 right-0 z-50 h-[60px] bg-white rounded-t-[2.5rem] shadow-[0_-10px_30px_rgba(0,0,0,0.05)] flex justify-around items-end pb-2 border-t border-gray-100">
+            {/* --- MOBILE TAB BAR --- */}
+            <div className="md:hidden fixed bottom-0 left-0 right-0 z-50 h-[60px] bg-white rounded-t-[2.5rem] shadow-[0_-10px_30px_rgba(0,0,0,0.1)] flex justify-around items-end pb-2 border-t border-slate-200">
                 {mobileNavItems.map((item) => {
                     const isActive = activeTab === item.id;
                     return (
@@ -255,7 +255,7 @@ const AppContent: React.FC = () => {
                                 className={`
                                     absolute top-0 transition-all duration-500 cubic-bezier(0.4, 0, 0.2, 1)
                                     ${isActive 
-                                        ? 'w-14 h-14 bg-indigo-600 rounded-full -mt-6 border-[6px] border-[#f3f4f6] shadow-[0_10px_20px_rgba(79,70,229,0.3)] flex items-center justify-center transform scale-100 opacity-100' 
+                                        ? 'w-14 h-14 bg-indigo-600 rounded-full -mt-6 border-[6px] border-[#e2e8f0] shadow-[0_10px_20px_rgba(79,70,229,0.3)] flex items-center justify-center transform scale-100 opacity-100' 
                                         : 'w-0 h-0 bg-transparent border-0 opacity-0 scale-0 translate-y-12'
                                     }
                                 `}
@@ -295,7 +295,7 @@ const AppContent: React.FC = () => {
                         className={`
                             absolute top-0 transition-all duration-500 cubic-bezier(0.4, 0, 0.2, 1)
                             ${isMoreActive 
-                                ? 'w-14 h-14 bg-indigo-600 rounded-full -mt-6 border-[6px] border-[#f3f4f6] shadow-[0_10px_20px_rgba(79,70,229,0.3)] flex items-center justify-center transform scale-100 opacity-100' 
+                                ? 'w-14 h-14 bg-indigo-600 rounded-full -mt-6 border-[6px] border-[#e2e8f0] shadow-[0_10px_20px_rgba(79,70,229,0.3)] flex items-center justify-center transform scale-100 opacity-100' 
                                 : 'w-0 h-0 bg-transparent border-0 opacity-0 scale-0 translate-y-12'
                             }
                         `}
@@ -327,34 +327,34 @@ const AppContent: React.FC = () => {
             </div>
         </main>
 
-        {/* Mobile Menu Modal (Light Theme) */}
+        {/* Mobile Menu Modal */}
         <Modal isOpen={showMoreMenu} onClose={() => setShowMoreMenu(false)} className="max-w-md rounded-[2rem] mb-28 md:hidden">
             <div className="text-center mb-6">
                 <div className="w-12 h-1 bg-gray-300 rounded-full mx-auto mb-4"></div>
                 <h3 className="font-black text-slate-800 text-lg">القائمة الكاملة</h3>
             </div>
             <div className="grid grid-cols-3 gap-3">
-                <button onClick={() => handleNavigate('reports')} className="p-4 bg-indigo-50 rounded-2xl flex flex-col items-center justify-center gap-2 active:scale-95 transition-transform border border-indigo-100 aspect-square shadow-sm">
+                <button onClick={() => handleNavigate('reports')} className="p-4 bg-indigo-50 rounded-2xl flex flex-col items-center justify-center gap-2 active:scale-95 transition-transform border border-indigo-200 aspect-square shadow-sm">
                     <FileText className="w-7 h-7 text-indigo-600" />
                     <span className="font-bold text-[10px] text-indigo-800">التقارير</span>
                 </button>
                 
-                <button onClick={() => handleNavigate('noor')} className="p-4 bg-cyan-50 rounded-2xl flex flex-col items-center justify-center gap-2 active:scale-95 transition-transform border border-cyan-100 aspect-square shadow-sm">
+                <button onClick={() => handleNavigate('noor')} className="p-4 bg-cyan-50 rounded-2xl flex flex-col items-center justify-center gap-2 active:scale-95 transition-transform border border-cyan-200 aspect-square shadow-sm">
                     <Globe className="w-7 h-7 text-cyan-600" />
                     <span className="font-bold text-[10px] text-cyan-800">منصة نور</span>
                 </button>
 
-                <button onClick={() => handleNavigate('settings')} className="p-4 bg-gray-100 rounded-2xl flex flex-col items-center justify-center gap-2 active:scale-95 transition-transform border border-gray-200 aspect-square shadow-sm">
+                <button onClick={() => handleNavigate('settings')} className="p-4 bg-gray-100 rounded-2xl flex flex-col items-center justify-center gap-2 active:scale-95 transition-transform border border-gray-300 aspect-square shadow-sm">
                     <SettingsIcon className="w-7 h-7 text-gray-600" />
                     <span className="font-bold text-[10px] text-gray-800">الإعدادات</span>
                 </button>
 
-                <button onClick={() => handleNavigate('guide')} className="p-4 bg-amber-50 rounded-2xl flex flex-col items-center justify-center gap-2 active:scale-95 transition-transform border border-amber-100 aspect-square shadow-sm">
+                <button onClick={() => handleNavigate('guide')} className="p-4 bg-amber-50 rounded-2xl flex flex-col items-center justify-center gap-2 active:scale-95 transition-transform border border-amber-200 aspect-square shadow-sm">
                     <BookOpen className="w-7 h-7 text-amber-600" />
                     <span className="font-bold text-[10px] text-amber-800">الدليل</span>
                 </button>
 
-                <button onClick={() => handleNavigate('about')} className="p-4 bg-purple-50 rounded-2xl flex flex-col items-center justify-center gap-2 active:scale-95 transition-transform border border-purple-100 aspect-square shadow-sm">
+                <button onClick={() => handleNavigate('about')} className="p-4 bg-purple-50 rounded-2xl flex flex-col items-center justify-center gap-2 active:scale-95 transition-transform border border-purple-200 aspect-square shadow-sm">
                     <Info className="w-7 h-7 text-purple-600" />
                     <span className="font-bold text-[10px] text-purple-800">حول التطبيق</span>
                 </button>

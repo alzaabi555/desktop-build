@@ -10,10 +10,10 @@
   -webkit-tap-highlight-color: transparent;
 }
 
-/* --- LIGHT MODE SETTINGS (ENHANCED CERAMIC) --- */
+/* --- LIGHT MODE SETTINGS (HIGH CONTRAST) --- */
 html, body {
-  background-color: #eef2f6; /* لون خلفية أغمق قليلاً من السابق لإبراز البطاقات البيضاء */
-  color: #1e293b; /* نص أزرق غامق جداً بدلاً من الرمادي */
+  background-color: #e2e8f0; /* خلفية رمادية مزرقة واضحة للتمييز بينها وبين البطاقات */
+  color: #0f172a; /* نص أسود مزرق غامق */
   height: 100%;
   width: 100%;
   margin: 0;
@@ -37,26 +37,26 @@ html, body {
 .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
 .no-scrollbar::-webkit-scrollbar { display: none; }
 
-/* --- ENHANCED CARDS (THE FIX) --- */
+/* --- ENHANCED CARDS (VISUAL FIX) --- */
 .glass-heavy {
-  background: linear-gradient(to bottom, #ffffff, #f8fafc);
-  border-bottom: 1px solid #e2e8f0;
+  background: #ffffff;
+  border-bottom: 1px solid #cbd5e1; /* حدود سفلية واضحة */
   color: #0f172a;
-  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03);
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
 }
 
 .glass-card {
   background: #ffffff;
-  border: 1px solid #e2e8f0; /* حدود أوضح */
-  box-shadow: 0 2px 5px rgba(0,0,0,0.04), 0 8px 20px rgba(0,0,0,0.02); /* ظل ناعم يرفع البطاقة */
+  border: 1px solid #cbd5e1; /* حدود رمادية واضحة جداً */
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06); /* ظل قوي */
   color: #1e293b;
-  border-radius: 1.25rem; /* زوايا أكثر استدارة */
+  border-radius: 1.25rem;
   transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
 }
 
 .glass-card:hover {
-  border-color: #cbd5e1;
-  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.06), 0 8px 10px -6px rgba(0, 0, 0, 0.03);
+  border-color: #94a3b8;
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
 }
 
 .glass-input {
@@ -67,24 +67,24 @@ html, body {
   box-shadow: inset 0 2px 4px rgba(0,0,0,0.02);
   transition: all 0.2s;
 }
-.glass-input::placeholder { color: #94a3b8 !important; font-weight: 500; }
+.glass-input::placeholder { color: #64748b !important; font-weight: 500; }
 .glass-input:focus { 
   background: #ffffff; 
-  border-color: #6366f1; 
-  box-shadow: 0 0 0 4px rgba(99, 102, 241, 0.1); 
+  border-color: #4f46e5; 
+  box-shadow: 0 0 0 4px rgba(79, 70, 229, 0.1); 
   transform: translateY(-1px);
 }
 
 .glass-icon {
   background: #ffffff;
   color: #475569;
-  border: 1px solid #e2e8f0;
-  box-shadow: 0 2px 4px rgba(0,0,0,0.03);
+  border: 1px solid #cbd5e1;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.05);
   transition: all 0.2s;
 }
 .glass-icon:hover {
   background: #f1f5f9;
-  border-color: #cbd5e1;
+  border-color: #94a3b8;
   transform: translateY(-1px);
 }
 
