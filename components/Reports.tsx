@@ -1,3 +1,4 @@
+
 import React, { useState, useMemo, useEffect } from 'react';
 import { Printer, FileSpreadsheet, User, Award, BarChart3, Check, Settings, FileWarning, ChevronDown, FileText, Loader2, ListChecks, Eye, Layers, ArrowLeft, ArrowRight } from 'lucide-react';
 import { useApp } from '../context/AppContext';
@@ -7,6 +8,7 @@ import Modal from './Modal';
 import { Filesystem, Directory } from '@capacitor/filesystem';
 import { Share } from '@capacitor/share';
 import { Capacitor } from '@capacitor/core';
+import { Browser } from '@capacitor/browser';
 import html2pdf from 'html2pdf.js';
 
 // تعريف الإعدادات الافتراضية للشهادة (حماية من الانهيار)
@@ -159,43 +161,96 @@ const GradesTemplate = ({ students, tools, finalTool, teacherInfo, semester, gra
     );
 };
 
-// ب. قالب الشهادات (تم الإصلاح: حماية كاملة ضد القيم الفارغة)
+// ب. قالب الشهادات (تم الإصلاح: تصميم متجاوب مع حماية ضد الانهيار)
 const CertificatesTemplate = ({ students, settings, teacherInfo }: any) => {
-    // نستخدم الإعدادات الممررة أو الافتراضية لتجنب الانهيار
-    const currentSettings = settings || DEFAULT_CERT_SETTINGS;
-    const title = currentSettings.title || 'شهادة تقدير';
-    const bodyText = currentSettings.bodyText || '...';
-    
-    // التعامل مع الخلفية بأمان
-    const bgStyle: React.CSSProperties = currentSettings.backgroundImage 
-        ? { backgroundImage: `url('${currentSettings.backgroundImage}')`, backgroundSize: 'cover', backgroundPosition: 'center' }
-        : { border: '15px double #059669' };
+    // 1. ضمان وجود الإعدادات لتجنب الشاشة البيضاء
+    const safeSettings = settings || DEFAULT_CERT_SETTINGS;
+    const title = safeSettings.title || 'شهادة شكر وتقدير';
+    const rawBody = safeSettings.bodyText || 'يسرنا تكريم الطالب...';
+    const hasImage = !!safeSettings.backgroundImage;
+
+    // 2. تصميم الحاوية الرئيسية لتملأ ورقة A4 Landscape بالكامل
+    const containerStyle: React.CSSProperties = {
+        width: '100%',
+        height: '210mm', // ارتفاع A4 Landscape
+        position: 'relative',
+        backgroundColor: '#ffffff',
+        color: '#000000',
+        pageBreakAfter: 'always',
+        display: 'flex',
+        flexDirection: 'column',
+        alignItems: 'center',
+        justifyContent: 'center',
+        overflow: 'hidden',
+        // التعامل مع الخلفية
+        ...(hasImage ? { 
+            backgroundImage: `url('${safeSettings.backgroundImage}')`,
+            backgroundSize: '100% 100%',
+            backgroundRepeat: 'no-repeat'
+        } : { 
+            border: '10px double #047857' 
+        })
+    };
 
     if (!students || students.length === 0) return <div className="p-10 text-center text-black">لا يوجد طلاب</div>;
 
     return (
         <div className="w-full text-black bg-white">
             {students.map((s: any) => {
-                const safeBody = bodyText.replace(/(الطالبة|الطالب)/g, `<span style="font-weight:900; font-size: 1.2em; color: #065f46; margin: 0 5px;">${s.name}</span>`);
+                // استبدال النص بأمان
+                const safeName = `<span style="color:#b91c1c; font-weight:900; margin:0 5px;">${s.name}</span>`;
+                const processedBody = rawBody.replace(/(الطالبة|الطالب)/g, ` ${safeName} `);
+
                 return (
-                    <div key={s.id} className="w-full h-[210mm] relative bg-white flex flex-col items-center text-center p-10 mb-0 page-break-after-always" 
-                         style={{ ...bgStyle, boxSizing: 'border-box', backgroundColor: '#ffffff', color: '#000000' }}>
-                        
-                        <div className="mb-4 w-full flex justify-between items-start px-4">
-                             <div className="text-right w-1/3"><h3 className="font-bold text-xs text-black">سلطنة عمان</h3><h3 className="font-bold text-xs text-black">وزارة التربية والتعليم</h3></div>
-                             <div className="w-1/3 text-center">{teacherInfo?.ministryLogo && <img src={teacherInfo.ministryLogo} className="h-16 mx-auto object-contain" />}</div>
-                             <div className="text-left w-1/3"><h3 className="font-bold text-xs text-black">مدرسة {teacherInfo?.school || '...'}</h3></div>
-                        </div>
+                    <div key={s.id} style={containerStyle}>
+                        {/* طبقة داخلية لضمان قراءة النص إذا كانت الخلفية صورة */}
+                        <div style={{
+                            width: hasImage ? '92%' : '100%', 
+                            height: hasImage ? '90%' : '100%', 
+                            backgroundColor: hasImage ? 'rgba(255,255,255,0.92)' : 'transparent',
+                            borderRadius: '25px',
+                            padding: '30px',
+                            boxSizing: 'border-box',
+                            display: 'flex',
+                            flexDirection: 'column',
+                            justifyContent: 'space-between',
+                            textAlign: 'center',
+                            border: hasImage ? '1px solid rgba(0,0,0,0.1)' : 'none'
+                        }}>
+                            {/* ترويسة الشهادة */}
+                            <div style={{display:'flex', justifyContent:'space-between', alignItems:'flex-start', width:'100%'}}>
+                                <div style={{textAlign:'right'}}>
+                                    <p style={{margin:0, fontWeight:'bold', fontSize:'14px'}}>سلطنة عمان</p>
+                                    <p style={{margin:0, fontWeight:'bold', fontSize:'14px'}}>وزارة التربية والتعليم</p>
+                                </div>
+                                <div>
+                                    {teacherInfo?.ministryLogo && <img src={teacherInfo.ministryLogo} style={{height:'60px', objectFit:'contain'}} alt="Logo" />}
+                                </div>
+                                <div style={{textAlign:'left'}}>
+                                    <p style={{margin:0, fontWeight:'bold', fontSize:'14px'}}>مدرسة {teacherInfo?.school || '................'}</p>
+                                </div>
+                            </div>
 
-                        <div className="flex-1 flex flex-col justify-center items-center w-full max-w-4xl z-10 bg-white/90 p-6 rounded-3xl">
-                            <h1 className="text-6xl font-black text-emerald-800 mb-8 font-serif">{title}</h1>
-                            <div className="text-2xl leading-loose font-bold text-gray-800" dangerouslySetInnerHTML={{ __html: safeBody }}></div>
-                        </div>
+                            {/* محتوى الشهادة */}
+                            <div style={{flex:1, display:'flex', flexDirection:'column', justifyContent:'center', alignItems:'center'}}>
+                                <h1 style={{fontSize:'52px', fontWeight:'900', color:'#047857', marginBottom:'30px', fontFamily:'Tajawal', textShadow:'0 2px 4px rgba(0,0,0,0.1)'}}>{title}</h1>
+                                <div style={{fontSize:'24px', lineHeight:'1.8', fontWeight:'bold', color:'#1f2937', maxWidth:'90%'}} dangerouslySetInnerHTML={{ __html: processedBody }} />
+                            </div>
 
-                        <div className="w-full flex justify-between items-end mt-4 px-12 z-10">
-                            <div className="text-center"><p className="font-bold text-lg mb-4 text-black">معلم المادة</p><p className="font-black text-xl text-black">{teacherInfo?.name || '...'}</p></div>
-                            <div className="text-center">{teacherInfo?.stamp && <img src={teacherInfo.stamp} className="w-24 opacity-80 mix-blend-multiply" />}</div>
-                            <div className="text-center"><p className="font-bold text-lg mb-4 text-black">مدير المدرسة</p><p className="font-black text-xl text-black">....................</p></div>
+                            {/* التذييل والتواقيع */}
+                            <div style={{display:'flex', justifyContent:'space-between', alignItems:'flex-end', marginTop:'20px', width:'100%'}}>
+                                <div style={{textAlign:'center', width:'30%'}}>
+                                    <p style={{fontWeight:'bold', fontSize:'18px', marginBottom:'40px', color:'#000'}}>معلم المادة</p>
+                                    <p style={{fontWeight:'900', fontSize:'20px', color:'#000'}}>{teacherInfo?.name}</p>
+                                </div>
+                                <div style={{textAlign:'center', width:'40%'}}>
+                                    {teacherInfo?.stamp && <img src={teacherInfo.stamp} style={{width:'120px', opacity:0.8, mixBlendMode:'multiply', transform:'rotate(-8deg)'}} alt="Stamp" />}
+                                </div>
+                                <div style={{textAlign:'center', width:'30%'}}>
+                                    <p style={{fontWeight:'bold', fontSize:'18px', marginBottom:'40px', color:'#000'}}>مدير المدرسة</p>
+                                    <p style={{fontWeight:'900', fontSize:'20px', color:'#000'}}>....................</p>
+                                </div>
+                            </div>
                         </div>
                     </div>
                 );
@@ -241,7 +296,7 @@ const SummonTemplate = ({ student, teacherInfo, data }: any) => {
     );
 };
 
-// د. قالب تقارير الصف كاملاً (تم إصلاح الطباعة البيضاء بإجبار الألوان)
+// د. قالب تقارير الصف كاملاً (لم يمس)
 const ClassReportsTemplate = ({ students, teacherInfo, semester, assessmentTools }: any) => {
     if (!students || students.length === 0) return <div className="text-black text-center p-10">لا توجد بيانات طلاب لعرضها</div>;
 
@@ -273,7 +328,6 @@ const ClassReportsTemplate = ({ students, teacherInfo, semester, assessmentTools
                 const totalNegative = behaviors.filter((b: any) => b.type === 'negative').reduce((acc: number, b: any) => acc + Math.abs(b.points), 0);
 
                 return (
-                    // 🛑 هنا الإصلاح: إجبار الخلفية البيضاء والنص الأسود للصفحة بالكامل
                     <div key={student.id} className="w-full min-h-[297mm] p-10 border-b border-gray-300 page-break-after-always box-border relative text-black bg-white" 
                          style={{ backgroundColor: '#ffffff', color: '#000000', pageBreakAfter: 'always' }}>
                         
@@ -433,6 +487,36 @@ const Reports: React.FC = () => {
           landscape: false, 
           content: <ClassReportsTemplate students={filteredStudentsForStudentTab} teacherInfo={teacherInfo} semester={currentSemester} assessmentTools={assessmentTools} /> 
       });
+  };
+
+  const selectAllCertStudents = () => {
+      if (selectedCertStudents.length === filteredStudentsForCert.length) {
+          setSelectedCertStudents([]);
+      } else {
+          setSelectedCertStudents(filteredStudentsForCert.map(s => s.id));
+      }
+  };
+
+  const toggleCertStudent = (id: string) => {
+      setSelectedCertStudents(prev => 
+          prev.includes(id) ? prev.filter(sid => sid !== id) : [...prev, id]
+      );
+  };
+
+  const handleSendSummonWhatsApp = async () => {
+    const student = availableStudentsForSummon.find(s => s.id === summonStudentId);
+    if (!student || !student.parentPhone) return alert('لا يوجد رقم هاتف مسجل لولي الأمر');
+    let cleanPhone = student.parentPhone.replace(/[^0-9]/g, '');
+    if (!cleanPhone || cleanPhone.length < 5) return alert('رقم الهاتف غير صحيح');
+    if (cleanPhone.startsWith('00')) cleanPhone = cleanPhone.substring(2);
+    if (cleanPhone.length === 8) cleanPhone = '968' + cleanPhone;
+    else if (cleanPhone.length === 9 && cleanPhone.startsWith('0')) cleanPhone = '968' + cleanPhone.substring(1);
+    const msg = encodeURIComponent(`السلام عليكم، ولي أمر الطالب ${student.name}.\nنود إفادتكم بضرورة الحضور للمدرسة يوم ${summonData.date} الساعة ${summonData.time}.\nالسبب: ${getReasonText()}`);
+    if (window.electron) window.electron.openExternal(`whatsapp://send?phone=${cleanPhone}&text=${msg}`);
+    else {
+        const universalUrl = `https://api.whatsapp.com/send?phone=${cleanPhone}&text=${msg}`;
+        try { if (Capacitor.isNativePlatform()) await Browser.open({ url: universalUrl }); else window.open(universalUrl, '_blank'); } catch (e) { window.open(universalUrl, '_blank'); }
+    }
   };
 
   if (viewingStudent) return <StudentReport student={viewingStudent} onUpdateStudent={handleUpdateStudent} currentSemester={currentSemester} teacherInfo={teacherInfo} onBack={() => setViewingStudent(null)} />;
