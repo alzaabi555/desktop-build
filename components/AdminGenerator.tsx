@@ -55,12 +55,17 @@ const AdminGenerator: React.FC<AdminGeneratorProps> = () => {
         const magicLink = `rased://activate/${generatedKey}`;
         const message = encodeURIComponent(`مرحباً بك في تطبيق راصد 🎓\n\nاضغط على الرابط التالي لتفعيل التطبيق تلقائياً:\n${magicLink}\n\nأو استخدم الكود يدوياً: *${generatedKey}*`);
         
-        const url = `https://wa.me/?text=${message}`;
-        
-        if (Capacitor.isNativePlatform()) {
-            await Browser.open({ url: url });
+        // تم تحديث الرابط لاستخدام api.whatsapp.com لضمان ظهور النص
+        if (window.electron) {
+            window.electron.openExternal(`whatsapp://send?text=${message}`);
         } else {
-            window.open(url, '_blank');
+            const url = `https://api.whatsapp.com/send?text=${message}`;
+            
+            if (Capacitor.isNativePlatform()) {
+                await Browser.open({ url: url });
+            } else {
+                window.open(url, '_blank');
+            }
         }
     };
 
