@@ -25,6 +25,8 @@ import BrandLogo from './components/BrandLogo';
 import { generateValidCode } from './utils/security';
 import { Loader2 } from 'lucide-react';
 import { useSchoolBell } from './hooks/useSchoolBell';
+import { initFirebase, logScreenView } from './services/firebase'; // استيراد فايربيس
+import { App as CapacitorApp } from '@capacitor/app';
 
 // Helper to get persistent Device ID without native plugin dependency
 const getDeviceId = () => {
@@ -47,6 +49,16 @@ const AppContent: React.FC = () => {
   
   const [activeTab, setActiveTab] = useState('dashboard');
   const [showMoreMenu, setShowMoreMenu] = useState(false);
+  
+  // تهيئة فايربيس عند بدء التشغيل
+  useEffect(() => {
+      initFirebase();
+  }, []);
+
+  // تتبع تغيير الصفحات
+  useEffect(() => {
+      logScreenView(activeTab);
+  }, [activeTab]);
   
   // Notification State
   const [notificationsEnabled, setNotificationsEnabled] = useState<boolean>(() => {
@@ -81,6 +93,31 @@ const AppContent: React.FC = () => {
       }
       return false;
   };
+
+  // --- Deep Linking Listener (Magic Link) ---
+  useEffect(() => {
+      // Listen for app url open (e.g., rased://activate/XXXX-XXXX)
+      const listener = CapacitorApp.addListener('appUrlOpen', (data) => {
+          if (data.url.includes('activate')) {
+              // Extract code from url (assuming format rased://activate/CODE)
+              const parts = data.url.split('/');
+              const potentialCode = parts[parts.length - 1];
+              
+              if (potentialCode && potentialCode.includes('-')) {
+                  const success = handleActivation(potentialCode.toUpperCase());
+                  if (success) {
+                      alert('تم تفعيل التطبيق بنجاح عبر الرابط السحري! 🎉');
+                  } else {
+                      alert('رابط التفعيل غير صالح لهذا الجهاز ⚠️');
+                  }
+              }
+          }
+      });
+
+      return () => {
+          listener.then(handle => handle.remove());
+      };
+  }, [deviceId]); // Dependency on deviceId to ensure validation works
 
   // Handle Loading State
   if (!isDataLoaded) {
@@ -178,10 +215,10 @@ const AppContent: React.FC = () => {
   const isMoreActive = !mobileNavItems.some(item => item.id === activeTab);
 
   return (
-    <div className="flex h-screen bg-[#e2e8f0] font-sans overflow-hidden text-slate-900">
+    <div className="flex h-screen bg-[#f3f4f6] font-sans overflow-hidden text-slate-900">
         
         {/* --- DESKTOP SIDEBAR --- */}
-        <aside className="hidden md:flex w-72 flex-col bg-white border-l border-slate-300 z-50 shadow-md transition-all h-full">
+        <aside className="hidden md:flex w-72 flex-col bg-white border-l border-slate-200 z-50 shadow-sm transition-all h-full">
             <div className="p-8 flex items-center gap-4">
                 <div className="w-12 h-12">
                     <BrandLogo className="w-full h-full" showText={false} />
@@ -193,7 +230,7 @@ const AppContent: React.FC = () => {
             </div>
 
             <div className="px-6 mb-6">
-                <div className="p-4 bg-slate-50 rounded-2xl flex items-center gap-3 border border-slate-200 shadow-sm">
+                <div className="p-4 bg-slate-50 rounded-2xl flex items-center gap-3 border border-slate-100">
                     <div className="w-10 h-10 rounded-full bg-slate-200 flex items-center justify-center overflow-hidden border border-slate-300 shadow-sm shrink-0">
                          {teacherInfo.avatar ? <img src={teacherInfo.avatar} className="w-full h-full object-cover"/> : <span className="font-black text-slate-500 text-lg">{teacherInfo.name?.[0]}</span>}
                     </div>
@@ -231,7 +268,7 @@ const AppContent: React.FC = () => {
         </aside>
 
         {/* --- MAIN CONTENT AREA --- */}
-        <main className="flex-1 flex flex-col h-full overflow-hidden relative bg-[#e2e8f0]">
+        <main className="flex-1 flex flex-col h-full overflow-hidden relative bg-[#f3f4f6]">
             <div 
                 className="flex-1 overflow-y-auto overflow-x-hidden custom-scrollbar pb-28 md:pb-4 px-4 md:px-8 pt-safe overscroll-contain"
                 id="main-scroll-container"
@@ -242,7 +279,7 @@ const AppContent: React.FC = () => {
             </div>
 
             {/* --- MOBILE TAB BAR --- */}
-            <div className="md:hidden fixed bottom-0 left-0 right-0 z-50 h-[60px] bg-white rounded-t-[2.5rem] shadow-[0_-10px_30px_rgba(0,0,0,0.1)] flex justify-around items-end pb-2 border-t border-slate-200">
+            <div className="md:hidden fixed bottom-0 left-0 right-0 z-50 h-[60px] bg-white rounded-t-[2.5rem] shadow-[0_-10px_30px_rgba(0,0,0,0.05)] flex justify-around items-end pb-2 border-t border-slate-100">
                 {mobileNavItems.map((item) => {
                     const isActive = activeTab === item.id;
                     return (
@@ -255,7 +292,7 @@ const AppContent: React.FC = () => {
                                 className={`
                                     absolute top-0 transition-all duration-500 cubic-bezier(0.4, 0, 0.2, 1)
                                     ${isActive 
-                                        ? 'w-14 h-14 bg-indigo-600 rounded-full -mt-6 border-[6px] border-[#e2e8f0] shadow-[0_10px_20px_rgba(79,70,229,0.3)] flex items-center justify-center transform scale-100 opacity-100' 
+                                        ? 'w-14 h-14 bg-indigo-600 rounded-full -mt-6 border-[6px] border-[#f3f4f6] shadow-[0_10px_20px_rgba(79,70,229,0.3)] flex items-center justify-center transform scale-100 opacity-100' 
                                         : 'w-0 h-0 bg-transparent border-0 opacity-0 scale-0 translate-y-12'
                                     }
                                 `}
@@ -295,7 +332,7 @@ const AppContent: React.FC = () => {
                         className={`
                             absolute top-0 transition-all duration-500 cubic-bezier(0.4, 0, 0.2, 1)
                             ${isMoreActive 
-                                ? 'w-14 h-14 bg-indigo-600 rounded-full -mt-6 border-[6px] border-[#e2e8f0] shadow-[0_10px_20px_rgba(79,70,229,0.3)] flex items-center justify-center transform scale-100 opacity-100' 
+                                ? 'w-14 h-14 bg-indigo-600 rounded-full -mt-6 border-[6px] border-[#f3f4f6] shadow-[0_10px_20px_rgba(79,70,229,0.3)] flex items-center justify-center transform scale-100 opacity-100' 
                                 : 'w-0 h-0 bg-transparent border-0 opacity-0 scale-0 translate-y-12'
                             }
                         `}

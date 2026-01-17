@@ -22,7 +22,7 @@
   },
   "ios": {
     "contentInset": "automatic",
-    "backgroundColor": "#111827",
+    "backgroundColor": "#F2F2F7",
     "allowsBackForwardNavigationGestures": true
   }
 }

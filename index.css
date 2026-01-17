@@ -10,10 +10,10 @@
   -webkit-tap-highlight-color: transparent;
 }
 
-/* --- LIGHT MODE SETTINGS (HIGH CONTRAST) --- */
+/* --- LIGHT MODE SETTINGS (Clean Minimalist) --- */
 html, body {
-  background-color: #e2e8f0; /* خلفية رمادية مزرقة واضحة للتمييز بينها وبين البطاقات */
-  color: #0f172a; /* نص أسود مزرق غامق */
+  background-color: #f3f4f6; /* العودة للخلفية الفاتحة المريحة للعين */
+  color: #1e293b;
   height: 100%;
   width: 100%;
   margin: 0;
@@ -37,55 +37,56 @@ html, body {
 .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
 .no-scrollbar::-webkit-scrollbar { display: none; }
 
-/* --- ENHANCED CARDS (VISUAL FIX) --- */
+/* --- SOFT GLASS CARDS (Minimalist style) --- */
 .glass-heavy {
-  background: #ffffff;
-  border-bottom: 1px solid #cbd5e1; /* حدود سفلية واضحة */
-  color: #0f172a;
-  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+  background: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border-bottom: 1px solid rgba(0, 0, 0, 0.05); /* حدود ناعمة جداً */
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
 }
 
 .glass-card {
   background: #ffffff;
-  border: 1px solid #cbd5e1; /* حدود رمادية واضحة جداً */
-  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06); /* ظل قوي */
-  color: #1e293b;
+  border: 1px solid #f1f5f9; /* حدود شبه مخفية للأناقة */
+  box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px -1px rgba(0, 0, 0, 0.1); /* ظل ناعم */
   border-radius: 1.25rem;
-  transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .glass-card:hover {
-  border-color: #94a3b8;
-  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -4px rgba(0, 0, 0, 0.1);
+  transform: translateY(-2px);
 }
 
 .glass-input {
   background: #f8fafc; 
-  border: 1px solid #cbd5e1; /* حدود أدق */
+  border: 1px solid #e2e8f0;
   color: #0f172a !important;
   font-weight: 600;
   box-shadow: inset 0 2px 4px rgba(0,0,0,0.02);
   transition: all 0.2s;
 }
-.glass-input::placeholder { color: #64748b !important; font-weight: 500; }
+.glass-input::placeholder { color: #94a3b8 !important; font-weight: 500; }
 .glass-input:focus { 
   background: #ffffff; 
-  border-color: #4f46e5; 
-  box-shadow: 0 0 0 4px rgba(79, 70, 229, 0.1); 
+  border-color: #6366f1; 
+  box-shadow: 0 0 0 4px rgba(99, 102, 241, 0.1); 
   transform: translateY(-1px);
 }
 
 .glass-icon {
   background: #ffffff;
-  color: #475569;
-  border: 1px solid #cbd5e1;
+  color: #64748b;
+  border: 1px solid #f1f5f9;
   box-shadow: 0 2px 4px rgba(0,0,0,0.05);
   transition: all 0.2s;
 }
 .glass-icon:hover {
-  background: #f1f5f9;
-  border-color: #94a3b8;
-  transform: translateY(-1px);
+  background: #f8fafc;
+  color: #4f46e5;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 6px rgba(0,0,0,0.08);
 }
 
 .pt-safe { padding-top: env(safe-area-inset-top); }
