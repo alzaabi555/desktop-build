@@ -5,6 +5,7 @@ import { Clipboard } from '@capacitor/clipboard';
 import { Browser } from '@capacitor/browser';
 import { Capacitor } from '@capacitor/core';
 import BrandLogo from './BrandLogo';
+import { logAppActivation } from '../services/firebase';
 
 interface ActivationScreenProps {
   deviceId: string;
@@ -51,7 +52,10 @@ const ActivationScreen: React.FC<ActivationScreenProps> = ({ deviceId, onActivat
 
     setTimeout(() => {
         const success = onActivate(inputCode);
-        if (!success) {
+        if (success) {
+            // تسجيل الحدث في فايربيس عند النجاح
+            logAppActivation(deviceId);
+        } else {
             setError('كود التفعيل غير صحيح.');
             setIsLoading(false);
         }

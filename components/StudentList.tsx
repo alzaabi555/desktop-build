@@ -44,37 +44,37 @@ const StudentItem = React.memo(({ student, onAction, currentSemester }: {
         <motion.div 
             initial={{ opacity: 0, y: 15 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.3 }}
             className="group flex flex-col sm:flex-row sm:items-center justify-between p-4 mb-3 rounded-[1.5rem] gap-4 sm:gap-0 relative overflow-hidden transition-all duration-300
-            bg-white hover:bg-white shadow-md border border-slate-300 hover:border-indigo-400 hover:shadow-lg shimmer-hover hover:-translate-y-0.5"
+            bg-white hover:bg-white shadow-sm hover:shadow-md border border-slate-100 shimmer-hover hover:-translate-y-0.5"
         >
             <div className={`absolute left-0 top-0 bottom-0 w-1.5 ${totalScore >= 90 ? 'bg-emerald-500' : totalScore >= 50 ? 'bg-indigo-500' : 'bg-rose-500'}`}></div>
 
             <div className="flex items-center gap-4 flex-1 min-w-0 relative z-10 pl-3">
-                <div className="w-14 h-14 rounded-2xl bg-gray-50 flex items-center justify-center text-slate-500 text-lg font-bold overflow-hidden shrink-0 shadow-inner border border-gray-300">
+                <div className="w-14 h-14 rounded-2xl bg-gray-50 flex items-center justify-center text-slate-500 text-lg font-bold overflow-hidden shrink-0 shadow-inner border border-gray-100">
                     {student.avatar ? <img src={student.avatar} className="w-full h-full object-cover" /> : student.name.charAt(0)}
                 </div>
                 <div className="min-w-0">
                     <h3 className="font-black text-slate-900 text-sm truncate group-hover:text-indigo-700 transition-colors">{student.name}</h3>
                     <div className="flex items-center gap-2 mt-1.5">
-                        <span className="text-[10px] bg-slate-100 text-slate-700 px-2.5 py-1 rounded-lg font-bold border border-slate-300">{student.classes[0]}</span>
+                        <span className="text-[10px] bg-slate-100 text-slate-700 px-2.5 py-1 rounded-lg font-bold">{student.classes[0]}</span>
                         <span className={`text-[10px] px-2.5 py-1 rounded-lg font-bold border ${gradeColor}`}>{gradeSymbol} ({totalScore})</span>
                     </div>
                 </div>
             </div>
 
             <div className="flex items-center justify-between sm:justify-end gap-2 pl-1 relative z-10">
-                <div className="flex items-center gap-1.5 bg-slate-100 p-1.5 rounded-xl border border-slate-300 shadow-inner">
-                    <button onClick={(e) => { e.stopPropagation(); onAction(student, 'positive'); }} className="w-10 h-10 rounded-lg flex items-center justify-center bg-white text-emerald-600 hover:text-white hover:bg-emerald-500 shadow-sm border border-slate-200 active:scale-95 transition-all">
+                <div className="flex items-center gap-1.5 bg-slate-50 p-1.5 rounded-xl border border-slate-100 shadow-inner">
+                    <button onClick={(e) => { e.stopPropagation(); onAction(student, 'positive'); }} className="w-10 h-10 rounded-lg flex items-center justify-center bg-white text-emerald-600 hover:text-white hover:bg-emerald-500 shadow-sm active:scale-95 transition-all">
                         <ThumbsUp className="w-5 h-5" />
                     </button>
-                    <button onClick={(e) => { e.stopPropagation(); onAction(student, 'negative'); }} className="w-10 h-10 rounded-lg flex items-center justify-center bg-white text-rose-600 hover:text-white hover:bg-rose-500 shadow-sm border border-slate-200 active:scale-95 transition-all">
+                    <button onClick={(e) => { e.stopPropagation(); onAction(student, 'negative'); }} className="w-10 h-10 rounded-lg flex items-center justify-center bg-white text-rose-600 hover:text-white hover:bg-rose-500 shadow-sm active:scale-95 transition-all">
                         <ThumbsDown className="w-5 h-5" />
                     </button>
-                    <button onClick={(e) => { e.stopPropagation(); onAction(student, 'truant'); }} className="w-10 h-10 rounded-lg flex items-center justify-center bg-white text-purple-600 hover:text-white hover:bg-purple-500 shadow-sm border border-slate-200 active:scale-95 transition-all" title="تسرب">
+                    <button onClick={(e) => { e.stopPropagation(); onAction(student, 'truant'); }} className="w-10 h-10 rounded-lg flex items-center justify-center bg-white text-purple-600 hover:text-white hover:bg-purple-500 shadow-sm active:scale-95 transition-all" title="تسرب">
                         <DoorOpen className="w-5 h-5" />
                     </button>
                 </div>
                 
-                <div className="w-px h-8 bg-slate-300 mx-1 hidden sm:block"></div>
+                <div className="w-px h-8 bg-slate-200 mx-1 hidden sm:block"></div>
                 
                 <div className="flex items-center gap-1">
                     <button onClick={(e) => { e.stopPropagation(); onAction(student, 'edit'); }} className="w-9 h-9 rounded-lg flex items-center justify-center text-slate-500 hover:text-indigo-600 hover:bg-indigo-50 transition-colors">
@@ -300,17 +300,17 @@ const StudentList: React.FC<StudentListProps> = ({ students, classes, onAddClass
         </AnimatePresence>
 
         {/* Sticky Header (Light Theme) */}
-        <div className="sticky top-0 z-30 pb-2 bg-[#e2e8f0] -mx-4 px-4 -mt-4">
+        <div className="sticky top-0 z-30 pb-2 bg-[#f3f4f6] -mx-4 px-4 -mt-4">
             <div className="flex justify-between items-center mb-4 pt-safe mt-4">
                 <h1 className="text-2xl font-black text-slate-900 tracking-tight drop-shadow-sm">قائمة الطلاب</h1>
                 <div className="flex gap-2">
-                    <button onClick={() => setShowManualAddModal(true)} className="w-10 h-10 rounded-2xl glass-icon bg-white border border-slate-300 text-indigo-600 active:scale-95 transition-all shadow-md hover:shadow-lg" title="إضافة طالب">
+                    <button onClick={() => setShowManualAddModal(true)} className="w-10 h-10 rounded-2xl glass-icon bg-white border border-slate-200 text-indigo-600 active:scale-95 transition-all shadow-sm hover:shadow-md" title="إضافة طالب">
                         <UserPlus className="w-5 h-5"/>
                     </button>
-                    <button onClick={() => setShowImportModal(true)} className="w-10 h-10 rounded-2xl glass-icon bg-white border border-slate-300 text-emerald-600 active:scale-95 transition-all shadow-md hover:shadow-lg" title="استيراد Excel">
+                    <button onClick={() => setShowImportModal(true)} className="w-10 h-10 rounded-2xl glass-icon bg-white border border-slate-200 text-emerald-600 active:scale-95 transition-all shadow-sm hover:shadow-md" title="استيراد Excel">
                         <Upload className="w-5 h-5"/>
                     </button>
-                    <button onClick={pickRandomStudent} className="w-10 h-10 rounded-2xl glass-icon bg-white border border-slate-300 text-purple-600 active:scale-95 transition-all shadow-md hover:shadow-lg" title="اختيار عشوائي">
+                    <button onClick={pickRandomStudent} className="w-10 h-10 rounded-2xl glass-icon bg-white border border-slate-200 text-purple-600 active:scale-95 transition-all shadow-sm hover:shadow-md" title="اختيار عشوائي">
                         <Sparkles className="w-5 h-5"/>
                     </button>
                 </div>
@@ -321,23 +321,23 @@ const StudentList: React.FC<StudentListProps> = ({ students, classes, onAddClass
                 {/* 1. Grades (Level) */}
                 {availableGrades.length > 0 && (
                     <div className="flex gap-2 overflow-x-auto no-scrollbar pb-1">
-                        <button onClick={() => { setSelectedGrade('all'); setSelectedClass('all'); }} className={`px-4 py-2 text-[10px] font-black whitespace-nowrap transition-all rounded-xl border ${selectedGrade === 'all' ? 'bg-indigo-600 text-white border-indigo-700 shadow-md' : 'bg-white border-slate-300 text-slate-600 shadow-sm'}`}>كل المراحل</button>
+                        <button onClick={() => { setSelectedGrade('all'); setSelectedClass('all'); }} className={`px-4 py-2 text-[10px] font-black whitespace-nowrap transition-all rounded-xl border ${selectedGrade === 'all' ? 'bg-indigo-600 text-white border-indigo-700 shadow-md' : 'bg-white border-slate-200 text-slate-600 shadow-sm'}`}>كل المراحل</button>
                         {availableGrades.map(g => (
-                            <button key={g} onClick={() => { setSelectedGrade(g); setSelectedClass('all'); }} className={`px-4 py-2 text-[10px] font-black whitespace-nowrap transition-all rounded-xl border ${selectedGrade === g ? 'bg-indigo-600 text-white border-indigo-700 shadow-md' : 'bg-white border-slate-300 text-slate-600 shadow-sm'}`}>صف {g}</button>
+                            <button key={g} onClick={() => { setSelectedGrade(g); setSelectedClass('all'); }} className={`px-4 py-2 text-[10px] font-black whitespace-nowrap transition-all rounded-xl border ${selectedGrade === g ? 'bg-indigo-600 text-white border-indigo-700 shadow-md' : 'bg-white border-slate-200 text-slate-600 shadow-sm'}`}>صف {g}</button>
                         ))}
                     </div>
                 )}
 
                 {/* 2. Classes (Sub-level) + Search */}
                 <div className="flex items-center gap-3">
-                    <button onClick={() => setShowManageClasses(true)} className="w-10 h-10 flex items-center justify-center rounded-xl glass-card bg-white border border-slate-300 hover:bg-gray-50 active:scale-95 text-slate-500 shadow-md" title="إدارة الفصول">
+                    <button onClick={() => setShowManageClasses(true)} className="w-10 h-10 flex items-center justify-center rounded-xl glass-card bg-white border border-slate-200 hover:bg-gray-50 active:scale-95 text-slate-500 shadow-sm" title="إدارة الفصول">
                         <Settings className="w-5 h-5"/>
                     </button>
                     <div className="flex gap-2 overflow-x-auto no-scrollbar pb-1 max-w-[55%]">
                         {visibleClasses.map(c => (
-                            <button key={c} onClick={() => setSelectedClass(c)} className={`px-5 py-2.5 text-xs font-black whitespace-nowrap transition-all rounded-xl border shadow-sm ${selectedClass === c ? 'bg-indigo-600 text-white border-indigo-700 shadow-indigo-200' : 'bg-white border-slate-300 hover:bg-gray-50 text-slate-700'}`}>{c}</button>
+                            <button key={c} onClick={() => setSelectedClass(c)} className={`px-5 py-2.5 text-xs font-black whitespace-nowrap transition-all rounded-xl border shadow-sm ${selectedClass === c ? 'bg-indigo-600 text-white border-indigo-700 shadow-indigo-200' : 'bg-white border-slate-200 hover:bg-gray-50 text-slate-700'}`}>{c}</button>
                         ))}
-                        <button onClick={() => setShowAddClassModal(true)} className="px-4 py-2 rounded-xl glass-card bg-white border border-slate-300 hover:bg-gray-50 active:scale-95 text-slate-500 shadow-md"><Plus className="w-5 h-5"/></button>
+                        <button onClick={() => setShowAddClassModal(true)} className="px-4 py-2 rounded-xl glass-card bg-white border border-slate-200 hover:bg-gray-50 active:scale-95 text-slate-500 shadow-sm"><Plus className="w-5 h-5"/></button>
                     </div>
                     <div className="relative flex-1">
                         <Search className="absolute right-3 top-3 w-4 h-4 text-slate-400" />
@@ -346,7 +346,7 @@ const StudentList: React.FC<StudentListProps> = ({ students, classes, onAddClass
                             placeholder="بحث..." 
                             value={searchTerm}
                             onChange={(e) => setSearchTerm(e.target.value)}
-                            className="w-full glass-input bg-white rounded-xl py-2.5 pr-9 pl-3 text-xs font-bold outline-none border border-slate-300 focus:border-indigo-500 shadow-sm text-slate-900" 
+                            className="w-full glass-input bg-white rounded-xl py-2.5 pr-9 pl-3 text-xs font-bold outline-none border border-slate-200 focus:border-indigo-500 shadow-sm text-slate-900" 
                         />
                     </div>
                 </div>

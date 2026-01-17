@@ -173,16 +173,16 @@ const AttendanceTracker: React.FC<AttendanceTrackerProps> = ({ students, classes
   return (
     <div className="flex flex-col h-full text-slate-800 relative animate-in fade-in duration-500">
         {/* Sticky Header (Light) */}
-        <div className="sticky top-0 z-30 pb-2 bg-[#e2e8f0] -mx-4 px-4 -mt-4">
+        <div className="sticky top-0 z-30 pb-2 bg-[#f3f4f6] -mx-4 px-4 -mt-4">
             <div className="flex justify-between items-center mb-4 pt-safe mt-4">
                 <h1 className="text-2xl font-black tracking-tight text-slate-900">سجل الغياب</h1>
-                <button onClick={handleExportDailyExcel} disabled={isExportingExcel} className="w-10 h-10 glass-icon bg-white border border-slate-300 rounded-2xl text-emerald-600 shadow-md flex items-center justify-center active:scale-95 transition-transform hover:shadow-lg" title="تصدير سجل شهري">
+                <button onClick={handleExportDailyExcel} disabled={isExportingExcel} className="w-10 h-10 glass-icon bg-white border border-slate-200 rounded-2xl text-emerald-600 shadow-sm flex items-center justify-center active:scale-95 transition-transform hover:shadow-md" title="تصدير سجل شهري">
                      {isExportingExcel ? <Loader2 className="w-5 h-5 animate-spin"/> : <Share2 className="w-5 h-5"/>}
                 </button>
             </div>
 
             {/* Date Scroller */}
-            <div className="flex items-center justify-between bg-white rounded-2xl p-1.5 mb-3 shadow-md border border-slate-300 mx-1">
+            <div className="flex items-center justify-between bg-white rounded-2xl p-1.5 mb-3 shadow-sm border border-slate-200 mx-1">
                 <button onClick={() => { const d = new Date(selectedDate); d.setDate(d.getDate() - 1); setSelectedDate(d.toLocaleDateString('en-CA')); }} className="p-3 rounded-xl hover:bg-gray-100 active:scale-95 transition-all text-slate-500"><ChevronDown className="w-5 h-5 rotate-90"/></button>
                 <div className="flex items-center gap-2 font-black text-sm text-slate-900 bg-slate-50 px-4 py-2 rounded-xl">
                     <Calendar className="w-4 h-4 text-indigo-500"/>
@@ -195,23 +195,23 @@ const AttendanceTracker: React.FC<AttendanceTrackerProps> = ({ students, classes
             <div className="space-y-2 mb-2 px-1">
                 {availableGrades.length > 0 && (
                     <div className="flex gap-2 overflow-x-auto no-scrollbar pb-1">
-                        <button onClick={() => { setSelectedGrade('all'); setClassFilter('all'); }} className={`px-4 py-2 text-[10px] font-bold whitespace-nowrap rounded-xl transition-all border ${selectedGrade === 'all' ? 'bg-indigo-600 text-white border-indigo-700 shadow-md' : 'bg-white text-slate-500 border-slate-300 shadow-sm'}`}>كل المراحل</button>
+                        <button onClick={() => { setSelectedGrade('all'); setClassFilter('all'); }} className={`px-4 py-2 text-[10px] font-bold whitespace-nowrap rounded-xl transition-all border ${selectedGrade === 'all' ? 'bg-indigo-600 text-white border-indigo-700 shadow-md' : 'bg-white text-slate-500 border-slate-200 shadow-sm'}`}>كل المراحل</button>
                         {availableGrades.map(g => (
-                            <button key={g} onClick={() => { setSelectedGrade(g); setClassFilter('all'); }} className={`px-4 py-2 text-[10px] font-bold whitespace-nowrap rounded-xl transition-all border ${selectedGrade === g ? 'bg-indigo-600 text-white border-indigo-700 shadow-md' : 'bg-white text-slate-500 border-slate-300 shadow-sm'}`}>صف {g}</button>
+                            <button key={g} onClick={() => { setSelectedGrade(g); setClassFilter('all'); }} className={`px-4 py-2 text-[10px] font-bold whitespace-nowrap rounded-xl transition-all border ${selectedGrade === g ? 'bg-indigo-600 text-white border-indigo-700 shadow-md' : 'bg-white text-slate-500 border-slate-200 shadow-sm'}`}>صف {g}</button>
                         ))}
                     </div>
                 )}
 
                 <div className="flex items-center gap-2 overflow-x-auto no-scrollbar pb-1">
                     {visibleClasses.map(c => (
-                        <button key={c} onClick={() => setClassFilter(c)} className={`px-5 py-2.5 text-xs font-bold whitespace-nowrap rounded-xl transition-all border ${classFilter === c ? 'bg-indigo-600 text-white border-indigo-700 shadow-md' : 'bg-white text-slate-500 border-slate-300 hover:bg-gray-50 shadow-sm'}`}>{c}</button>
+                        <button key={c} onClick={() => setClassFilter(c)} className={`px-5 py-2.5 text-xs font-bold whitespace-nowrap rounded-xl transition-all border ${classFilter === c ? 'bg-indigo-600 text-white border-indigo-700 shadow-md' : 'bg-white text-slate-500 border-slate-200 hover:bg-gray-50 shadow-sm'}`}>{c}</button>
                     ))}
                 </div>
             </div>
         </div>
 
         {/* Live Stats Strip */}
-        <div className="grid grid-cols-5 gap-px bg-slate-300 rounded-2xl overflow-hidden mx-1 mb-4 shadow-sm border border-slate-300 mt-2">
+        <div className="grid grid-cols-5 gap-px bg-slate-200 rounded-2xl overflow-hidden mx-1 mb-4 shadow-sm border border-slate-200 mt-2">
             <button onClick={() => handleMarkAll('present')} className="bg-white py-3 flex flex-col items-center justify-center active:bg-gray-50 transition-colors hover:bg-emerald-50 group">
                 <span className="text-[10px] font-bold text-gray-400 mb-1 group-hover:text-emerald-500">حضور</span>
                 <span className="text-sm font-black text-emerald-600">{stats.present}</span>
@@ -247,7 +247,7 @@ const AttendanceTracker: React.FC<AttendanceTrackerProps> = ({ students, classes
                                     group flex items-center justify-between p-4 rounded-[1.2rem] border transition-all duration-300 relative overflow-hidden shimmer-hover
                                     ${status 
                                         ? 'bg-white border-indigo-300 shadow-[0_4px_12px_-2px_rgba(79,70,229,0.1)]' 
-                                        : 'bg-white border-slate-300 hover:border-indigo-300 hover:shadow-md shadow-sm'
+                                        : 'bg-white border-slate-200 hover:border-indigo-300 hover:shadow-md shadow-sm'
                                     }
                                 `}
                             >

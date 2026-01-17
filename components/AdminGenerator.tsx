@@ -1,7 +1,9 @@
 
 import React, { useState } from 'react';
-import { Copy, RefreshCw, Fingerprint, CheckCircle2 } from 'lucide-react';
+import { Copy, RefreshCw, Fingerprint, CheckCircle2, Link as LinkIcon, MessageCircle } from 'lucide-react';
 import { Clipboard } from '@capacitor/clipboard';
+import { Browser } from '@capacitor/browser';
+import { Capacitor } from '@capacitor/core';
 
 // خوارزمية التشفير (مدمجة لضمان العمل المستقل)
 const SECRET_SALT = "RASED_APP_SECURE_2025_OMAN";
@@ -48,6 +50,20 @@ const AdminGenerator: React.FC<AdminGeneratorProps> = () => {
         setTimeout(() => setIsCopied(false), 2000);
     };
 
+    const handleSendWhatsApp = async () => {
+        if (!generatedKey) return;
+        const magicLink = `rased://activate/${generatedKey}`;
+        const message = encodeURIComponent(`مرحباً بك في تطبيق راصد 🎓\n\nاضغط على الرابط التالي لتفعيل التطبيق تلقائياً:\n${magicLink}\n\nأو استخدم الكود يدوياً: *${generatedKey}*`);
+        
+        const url = `https://wa.me/?text=${message}`;
+        
+        if (Capacitor.isNativePlatform()) {
+            await Browser.open({ url: url });
+        } else {
+            window.open(url, '_blank');
+        }
+    };
+
     return (
         <div className="flex flex-col items-center text-center">
             <div className="w-16 h-16 bg-indigo-600 rounded-2xl flex items-center justify-center mb-4 shadow-xl shadow-indigo-600/20">
@@ -78,18 +94,31 @@ const AdminGenerator: React.FC<AdminGeneratorProps> = () => {
                 </button>
 
                 {generatedKey && (
-                    <div className="mt-4 p-4 bg-emerald-500/10 border border-emerald-500/20 rounded-xl animate-in fade-in slide-in-from-bottom-2 w-full">
-                        <p className="text-[10px] font-bold text-emerald-600 dark:text-emerald-400 mb-2">كود التفعيل</p>
-                        <div 
-                            onClick={handleCopy}
-                            className="flex items-center justify-center gap-3 cursor-pointer group bg-white/50 dark:bg-black/20 p-2 rounded-lg border border-emerald-500/10"
-                        >
-                            <h2 className="text-2xl font-black font-mono text-slate-800 dark:text-white tracking-widest">{generatedKey}</h2>
-                            <div className="p-2 bg-white dark:bg-white/10 rounded-lg group-hover:scale-110 transition-transform shadow-sm">
-                                {isCopied ? <CheckCircle2 className="w-4 h-4 text-emerald-500"/> : <Copy className="w-4 h-4 text-slate-400"/>}
+                    <div className="space-y-3 animate-in fade-in slide-in-from-bottom-2 w-full">
+                        
+                        {/* Manual Copy Box */}
+                        <div className="p-4 bg-emerald-500/10 border border-emerald-500/20 rounded-xl">
+                            <p className="text-[10px] font-bold text-emerald-600 dark:text-emerald-400 mb-2">كود التفعيل اليدوي</p>
+                            <div 
+                                onClick={handleCopy}
+                                className="flex items-center justify-center gap-3 cursor-pointer group bg-white/50 dark:bg-black/20 p-2 rounded-lg border border-emerald-500/10"
+                            >
+                                <h2 className="text-2xl font-black font-mono text-slate-800 dark:text-white tracking-widest">{generatedKey}</h2>
+                                <div className="p-2 bg-white dark:bg-white/10 rounded-lg group-hover:scale-110 transition-transform shadow-sm">
+                                    {isCopied ? <CheckCircle2 className="w-4 h-4 text-emerald-500"/> : <Copy className="w-4 h-4 text-slate-400"/>}
+                                </div>
                             </div>
                         </div>
-                        {isCopied && <p className="text-[9px] font-bold text-emerald-500 mt-2">تم النسخ!</p>}
+
+                        {/* Magic Link Button */}
+                        <button 
+                            onClick={handleSendWhatsApp}
+                            className="w-full py-3 bg-[#25D366] hover:bg-[#128C7E] text-white rounded-xl font-black text-sm shadow-lg shadow-green-500/20 active:scale-95 transition-all flex items-center justify-center gap-2"
+                        >
+                            <MessageCircle className="w-5 h-5" />
+                            إرسال الرابط السحري (واتساب)
+                        </button>
+                        <p className="text-[9px] text-gray-400 font-bold">سيقوم الرابط بتفعيل التطبيق تلقائياً عند العميل</p>
                     </div>
                 )}
             </div>
