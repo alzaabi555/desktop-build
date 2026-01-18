@@ -20,23 +20,11 @@ import MinistrySync from './components/MinistrySync';
 import NoorPlatform from './components/NoorPlatform';
 import About from './components/About';
 import UserGuide from './components/UserGuide';
-import ActivationScreen from './components/ActivationScreen';
 import BrandLogo from './components/BrandLogo';
-import { generateValidCode } from './utils/security';
+import WelcomeScreen from './components/WelcomeScreen'; // Import WelcomeScreen
 import { Loader2 } from 'lucide-react';
 import { useSchoolBell } from './hooks/useSchoolBell';
-import { initFirebase, logScreenView } from './services/firebase'; // استيراد فايربيس
 import { App as CapacitorApp } from '@capacitor/app';
-
-// Helper to get persistent Device ID without native plugin dependency
-const getDeviceId = () => {
-    let id = localStorage.getItem('device_uuid');
-    if (!id) {
-        id = 'DEV-' + Math.random().toString(36).substring(2, 10).toUpperCase();
-        localStorage.setItem('device_uuid', id);
-    }
-    return id;
-};
 
 // Main App Container
 const AppContent: React.FC = () => {
@@ -50,16 +38,11 @@ const AppContent: React.FC = () => {
   const [activeTab, setActiveTab] = useState('dashboard');
   const [showMoreMenu, setShowMoreMenu] = useState(false);
   
-  // تهيئة فايربيس عند بدء التشغيل
-  useEffect(() => {
-      initFirebase();
-  }, []);
+  // Welcome Screen State
+  const [showWelcome, setShowWelcome] = useState<boolean>(() => {
+      return !localStorage.getItem('rased_welcome_seen');
+  });
 
-  // تتبع تغيير الصفحات
-  useEffect(() => {
-      logScreenView(activeTab);
-  }, [activeTab]);
-  
   // Notification State
   const [notificationsEnabled, setNotificationsEnabled] = useState<boolean>(() => {
       return localStorage.getItem('bell_enabled') === 'true';
@@ -76,49 +59,12 @@ const AppContent: React.FC = () => {
           return newState;
       });
   };
-  
-  // Activation State
-  const [isActivated, setIsActivated] = useState<boolean>(() => {
-      return localStorage.getItem('rased_activated') === 'true';
-  });
-  const [deviceId] = useState<string>(getDeviceId());
 
-  // Handle Activation Logic
-  const handleActivation = (code: string) => {
-      const validCode = generateValidCode(deviceId);
-      if (code === validCode || code === 'OMAN-MASTER-2026') {
-          localStorage.setItem('rased_activated', 'true');
-          setIsActivated(true);
-          return true;
-      }
-      return false;
+  const handleFinishWelcome = () => {
+      localStorage.setItem('rased_welcome_seen', 'true');
+      setShowWelcome(false);
   };
-
-  // --- Deep Linking Listener (Magic Link) ---
-  useEffect(() => {
-      // Listen for app url open (e.g., rased://activate/XXXX-XXXX)
-      const listener = CapacitorApp.addListener('appUrlOpen', (data) => {
-          if (data.url.includes('activate')) {
-              // Extract code from url (assuming format rased://activate/CODE)
-              const parts = data.url.split('/');
-              const potentialCode = parts[parts.length - 1];
-              
-              if (potentialCode && potentialCode.includes('-')) {
-                  const success = handleActivation(potentialCode.toUpperCase());
-                  if (success) {
-                      alert('تم تفعيل التطبيق بنجاح عبر الرابط السحري! 🎉');
-                  } else {
-                      alert('رابط التفعيل غير صالح لهذا الجهاز ⚠️');
-                  }
-              }
-          }
-      });
-
-      return () => {
-          listener.then(handle => handle.remove());
-      };
-  }, [deviceId]); // Dependency on deviceId to ensure validation works
-
+  
   // Handle Loading State
   if (!isDataLoaded) {
       return (
@@ -128,9 +74,9 @@ const AppContent: React.FC = () => {
       );
   }
 
-  // Show Activation Screen if not activated
-  if (!isActivated) {
-      return <ActivationScreen deviceId={deviceId} onActivate={handleActivation} />;
+  // Show Welcome Screen if first time
+  if (showWelcome) {
+      return <WelcomeScreen onFinish={handleFinishWelcome} />;
   }
 
   // Navigation Handlers
@@ -215,7 +161,7 @@ const AppContent: React.FC = () => {
   const isMoreActive = !mobileNavItems.some(item => item.id === activeTab);
 
   return (
-    <div className="flex h-screen bg-[#f3f4f6] font-sans overflow-hidden text-slate-900">
+    <div className="flex h-screen bg-[#f3f4f6] font-sans overflow-hidden text-slate-900 relative">
         
         {/* --- DESKTOP SIDEBAR --- */}
         <aside className="hidden md:flex w-72 flex-col bg-white border-l border-slate-200 z-50 shadow-sm transition-all h-full">
@@ -268,6 +214,7 @@ const AppContent: React.FC = () => {
         </aside>
 
         {/* --- MAIN CONTENT AREA --- */}
+        {/* تم إزالة القائمة السفلية من هنا لضمان عدم تأثرها بالتمرير أو التراكب */}
         <main className="flex-1 flex flex-col h-full overflow-hidden relative bg-[#f3f4f6]">
             <div 
                 className="flex-1 overflow-y-auto overflow-x-hidden custom-scrollbar pb-28 md:pb-4 px-4 md:px-8 pt-safe overscroll-contain"
@@ -277,92 +224,92 @@ const AppContent: React.FC = () => {
                     {renderContent()}
                 </div>
             </div>
-
-            {/* --- MOBILE TAB BAR --- */}
-            <div className="md:hidden fixed bottom-0 left-0 right-0 z-50 h-[60px] bg-white rounded-t-[2.5rem] shadow-[0_-10px_30px_rgba(0,0,0,0.05)] flex justify-around items-end pb-2 border-t border-slate-100">
-                {mobileNavItems.map((item) => {
-                    const isActive = activeTab === item.id;
-                    return (
-                        <button
-                            key={item.id}
-                            onClick={() => handleNavigate(item.id)}
-                            className="relative w-full h-full flex flex-col items-center justify-end group pb-1"
-                        >
-                            <span 
-                                className={`
-                                    absolute top-0 transition-all duration-500 cubic-bezier(0.4, 0, 0.2, 1)
-                                    ${isActive 
-                                        ? 'w-14 h-14 bg-indigo-600 rounded-full -mt-6 border-[6px] border-[#f3f4f6] shadow-[0_10px_20px_rgba(79,70,229,0.3)] flex items-center justify-center transform scale-100 opacity-100' 
-                                        : 'w-0 h-0 bg-transparent border-0 opacity-0 scale-0 translate-y-12'
-                                    }
-                                `}
-                            >
-                               {isActive && <item.icon className="w-6 h-6 text-white animate-in fade-in zoom-in duration-300" strokeWidth={2.5} />}
-                            </span>
-
-                            <span 
-                                className={`
-                                    transition-all duration-300 mb-1 group-hover:scale-110 group-active:scale-95
-                                    ${isActive 
-                                        ? 'opacity-0 scale-0 translate-y-10' 
-                                        : 'opacity-100 scale-100 text-gray-400 group-hover:text-indigo-500'
-                                    }
-                                `}
-                            >
-                                <item.icon className="w-6 h-6" strokeWidth={2} />
-                            </span>
-
-                            <span 
-                                className={`
-                                    text-[10px] font-black transition-all duration-300 
-                                    ${isActive ? 'translate-y-1 text-indigo-600 opacity-100' : 'text-gray-400 opacity-80 group-hover:text-indigo-500'}
-                                `}
-                            >
-                                {item.label}
-                            </span>
-                        </button>
-                    );
-                })}
-                
-                <button
-                    onClick={() => setShowMoreMenu(true)}
-                    className="relative w-full h-full flex flex-col items-center justify-end group pb-1"
-                >
-                    <span 
-                        className={`
-                            absolute top-0 transition-all duration-500 cubic-bezier(0.4, 0, 0.2, 1)
-                            ${isMoreActive 
-                                ? 'w-14 h-14 bg-indigo-600 rounded-full -mt-6 border-[6px] border-[#f3f4f6] shadow-[0_10px_20px_rgba(79,70,229,0.3)] flex items-center justify-center transform scale-100 opacity-100' 
-                                : 'w-0 h-0 bg-transparent border-0 opacity-0 scale-0 translate-y-12'
-                            }
-                        `}
-                    >
-                       {isMoreActive && <Grid className="w-6 h-6 text-white animate-in fade-in zoom-in duration-300" strokeWidth={2.5} />}
-                    </span>
-
-                    <span 
-                        className={`
-                            transition-all duration-300 mb-1 group-hover:scale-110 group-active:scale-95
-                            ${isMoreActive 
-                                ? 'opacity-0 scale-0 translate-y-10' 
-                                : 'opacity-100 scale-100 text-gray-400 group-hover:text-indigo-500'
-                            }
-                        `}
-                    >
-                        <Grid className="w-6 h-6" strokeWidth={2} />
-                    </span>
-
-                    <span 
-                        className={`
-                            text-[10px] font-black transition-all duration-300 
-                            ${isMoreActive ? 'translate-y-1 text-indigo-600 opacity-100' : 'text-gray-400 opacity-80 group-hover:text-indigo-500'}
-                        `}
-                    >
-                        المزيد
-                    </span>
-                </button>
-            </div>
         </main>
+
+        {/* --- MOBILE TAB BAR (Moved to Root Level for better Z-Index & Touch Handling) --- */}
+        <div className="md:hidden fixed bottom-0 left-0 right-0 z-[100] h-[60px] bg-white rounded-t-[2.5rem] shadow-[0_-10px_30px_rgba(0,0,0,0.05)] flex justify-around items-end pb-2 border-t border-slate-100 pb-safe safe-area-bottom">
+            {mobileNavItems.map((item) => {
+                const isActive = activeTab === item.id;
+                return (
+                    <button
+                        key={item.id}
+                        onClick={() => handleNavigate(item.id)}
+                        className="relative w-full h-full flex flex-col items-center justify-end group pb-1 touch-manipulation"
+                    >
+                        <span 
+                            className={`
+                                absolute top-0 transition-all duration-500 cubic-bezier(0.4, 0, 0.2, 1) pointer-events-none
+                                ${isActive 
+                                    ? 'w-14 h-14 bg-indigo-600 rounded-full -mt-6 border-[6px] border-[#f3f4f6] shadow-[0_10px_20px_rgba(79,70,229,0.3)] flex items-center justify-center transform scale-100 opacity-100' 
+                                    : 'w-0 h-0 bg-transparent border-0 opacity-0 scale-0 translate-y-12'
+                                }
+                            `}
+                        >
+                           {isActive && <item.icon className="w-6 h-6 text-white animate-in fade-in zoom-in duration-300" strokeWidth={2.5} />}
+                        </span>
+
+                        <span 
+                            className={`
+                                transition-all duration-300 mb-1 group-hover:scale-110 group-active:scale-95 pointer-events-none
+                                ${isActive 
+                                    ? 'opacity-0 scale-0 translate-y-10' 
+                                    : 'opacity-100 scale-100 text-gray-400 group-hover:text-indigo-500'
+                                }
+                            `}
+                        >
+                            <item.icon className="w-6 h-6" strokeWidth={2} />
+                        </span>
+
+                        <span 
+                            className={`
+                                text-[10px] font-black transition-all duration-300 pointer-events-none
+                                ${isActive ? 'translate-y-1 text-indigo-600 opacity-100' : 'text-gray-400 opacity-80 group-hover:text-indigo-500'}
+                            `}
+                        >
+                            {item.label}
+                        </span>
+                    </button>
+                );
+            })}
+            
+            <button
+                onClick={() => setShowMoreMenu(true)}
+                className="relative w-full h-full flex flex-col items-center justify-end group pb-1 touch-manipulation"
+            >
+                <span 
+                    className={`
+                        absolute top-0 transition-all duration-500 cubic-bezier(0.4, 0, 0.2, 1) pointer-events-none
+                        ${isMoreActive 
+                            ? 'w-14 h-14 bg-indigo-600 rounded-full -mt-6 border-[6px] border-[#f3f4f6] shadow-[0_10px_20px_rgba(79,70,229,0.3)] flex items-center justify-center transform scale-100 opacity-100' 
+                            : 'w-0 h-0 bg-transparent border-0 opacity-0 scale-0 translate-y-12'
+                        }
+                    `}
+                >
+                   {isMoreActive && <Grid className="w-6 h-6 text-white animate-in fade-in zoom-in duration-300" strokeWidth={2.5} />}
+                </span>
+
+                <span 
+                    className={`
+                        transition-all duration-300 mb-1 group-hover:scale-110 group-active:scale-95 pointer-events-none
+                        ${isMoreActive 
+                            ? 'opacity-0 scale-0 translate-y-10' 
+                            : 'opacity-100 scale-100 text-gray-400 group-hover:text-indigo-500'
+                        }
+                    `}
+                >
+                    <Grid className="w-6 h-6" strokeWidth={2} />
+                </span>
+
+                <span 
+                    className={`
+                        text-[10px] font-black transition-all duration-300 pointer-events-none
+                        ${isMoreActive ? 'translate-y-1 text-indigo-600 opacity-100' : 'text-gray-400 opacity-80 group-hover:text-indigo-500'}
+                    `}
+                >
+                    المزيد
+                </span>
+            </button>
+        </div>
 
         {/* Mobile Menu Modal */}
         <Modal isOpen={showMoreMenu} onClose={() => setShowMoreMenu(false)} className="max-w-md rounded-[2rem] mb-28 md:hidden">
