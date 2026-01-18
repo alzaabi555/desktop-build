@@ -5,7 +5,7 @@ import { Clipboard } from '@capacitor/clipboard';
 import { Browser } from '@capacitor/browser';
 import { Capacitor } from '@capacitor/core';
 import BrandLogo from './BrandLogo';
-import { logAppActivation } from '../services/firebase';
+// تم إزالة استيراد Firebase
 
 interface ActivationScreenProps {
   deviceId: string;
@@ -53,8 +53,7 @@ const ActivationScreen: React.FC<ActivationScreenProps> = ({ deviceId, onActivat
     setTimeout(() => {
         const success = onActivate(inputCode);
         if (success) {
-            // تسجيل الحدث في فايربيس عند النجاح
-            logAppActivation(deviceId);
+            // النجاح بدون تسجيل في Firebase
         } else {
             setError('كود التفعيل غير صحيح.');
             setIsLoading(false);

@@ -54,7 +54,8 @@ const GradeBook: React.FC<GradeBookProps> = ({
         transition-all duration-300 relative overflow-hidden shadow-sm
       `,
       pill: 'rounded-xl border border-slate-200 shadow-sm hover:shadow-md',
-      header: 'glass-heavy border-b border-slate-200 shadow-sm -mx-4 -mt-4 px-4 pt-safe sticky top-0 z-30 bg-[#f3f4f6]/95 backdrop-blur-md pb-2',
+      // تم تعديل الترويسة لتكون شفافة ومتناسقة مع خلفية التطبيق (مثل صفحة الطلاب)
+      header: 'sticky top-0 z-30 pb-2 bg-[#f3f4f6] -mx-4 px-4 -mt-4',
   };
 
   useEffect(() => {
@@ -379,11 +380,12 @@ const GradeBook: React.FC<GradeBookProps> = ({
   };
 
   return (
-    <div className="flex flex-col h-[calc(100vh-80px)] text-slate-800 pb-20">
+    <div className="flex flex-col h-full text-slate-800">
         
-        {/* Sticky Header (Light) */}
+        {/* Sticky Header (Updated to match StudentList style - No Box) */}
         <div className={styles.header}>
-            <div className="flex justify-between items-center mb-3 pt-4">
+            {/* Removed pt-safe and large mt-4 to fix mobile spacing */}
+            <div className="flex justify-between items-center mb-3 mt-2">
                 <h1 className="text-2xl font-black text-slate-900 tracking-tight">سجل الدرجات</h1>
                 <div className="flex gap-2">
                     <label className="w-10 h-10 rounded-2xl glass-icon text-emerald-600 active:scale-95 transition-all flex items-center justify-center cursor-pointer shadow-md border border-slate-200 hover:shadow-lg" title="استيراد Excel">

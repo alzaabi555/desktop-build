@@ -1,51 +1,16 @@
 
-import React, { useState, useRef } from 'react';
+import React from 'react';
 import { Users, Phone } from 'lucide-react';
 import BrandLogo from './BrandLogo';
-import Modal from './Modal';
-import AdminGenerator from './AdminGenerator';
 
 const About: React.FC = () => {
-  const [clickCount, setClickCount] = useState(0);
-  const [showAdmin, setShowAdmin] = useState(false);
-  const timeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-
-  const handleLogoClick = () => {
-      // Clear existing timeout to allow rapid clicking
-      if (timeoutRef.current) clearTimeout(timeoutRef.current);
-      
-      setClickCount(prev => {
-          const newCount = prev + 1;
-          if (newCount >= 5) {
-              setShowAdmin(true);
-              return 0;
-          }
-          return newCount;
-      });
-
-      // Reset count if user stops clicking for 1 second
-      timeoutRef.current = setTimeout(() => {
-          setClickCount(0);
-      }, 1000);
-  };
-
   return (
     <div className="flex flex-col items-center justify-center min-h-full p-6 text-slate-900 animate-in fade-in zoom-in duration-500">
       
-      {/* Clickable Logo Container with Secret Trigger */}
-      <div 
-        onClick={handleLogoClick}
-        className="w-40 h-40 glass-heavy rounded-[3rem] shadow-2xl flex items-center justify-center mb-8 border border-white/20 p-4 relative group cursor-pointer active:scale-95 transition-transform select-none shimmer-hover bg-white"
-      >
+      {/* Logo Container */}
+      <div className="w-40 h-40 glass-heavy rounded-[3rem] shadow-2xl flex items-center justify-center mb-8 border border-white/20 p-4 relative group hover:scale-105 transition-transform select-none bg-white">
           <div className="absolute inset-0 bg-gradient-to-tr from-indigo-50/50 to-purple-50/50 rounded-[3rem] blur-xl opacity-50 group-hover:opacity-100 transition-opacity"></div>
           <BrandLogo className="w-full h-full relative z-10" showText={false} />
-          
-          {/* Visual feedback for developer clicks (Countdown) */}
-          {clickCount > 0 && clickCount < 5 && (
-              <div className="absolute -top-2 -right-2 bg-indigo-600 text-white w-6 h-6 rounded-full flex items-center justify-center text-xs font-black shadow-lg animate-bounce z-20 border-2 border-white">
-                  {5 - clickCount}
-              </div>
-          )}
       </div>
       
       <h1 className="text-5xl font-black mb-2 tracking-tighter text-slate-800">تطبيق راصد</h1>
@@ -89,11 +54,6 @@ const About: React.FC = () => {
       <p className="mt-12 text-[10px] font-bold text-slate-300">
           جميع الحقوق محفوظة © {new Date().getFullYear()}
       </p>
-
-      {/* Admin Mode Modal */}
-      <Modal isOpen={showAdmin} onClose={() => setShowAdmin(false)} className="max-w-xs rounded-[2rem]">
-          <AdminGenerator onClose={() => setShowAdmin(false)} />
-      </Modal>
     </div>
   );
 };

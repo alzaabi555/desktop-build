@@ -242,49 +242,49 @@ const Dashboard: React.FC<DashboardProps> = ({
     return (
         <div className="space-y-6 pb-20 text-slate-900 animate-in fade-in duration-500">
             
-            {/* 1. Top Section: Teacher Profile Card (Sticky Header) - ENHANCED */}
-            <div className="sticky top-0 z-40 -mx-4 -mt-4">
-                <div className="bg-white/90 backdrop-blur-xl p-4 md:p-6 pt-safe relative overflow-hidden rounded-b-[2.5rem] border-b border-indigo-100 shadow-lg shadow-indigo-50/50 group">
-                    {/* Background Decorative Gradient */}
-                    <div className="absolute inset-0 bg-gradient-to-b from-indigo-50/50 to-transparent pointer-events-none"></div>
+            {/* 1. Top Section: Teacher Profile (Clean Design - No Box) */}
+            <div className="sticky top-0 z-40 -mx-4 -mt-4 bg-[#f3f4f6]">
+                <div className="p-4 relative">
                     
-                    <div className="relative z-10 flex items-center justify-between mt-4">
-                        <button 
-                            onClick={() => setShowEditModal(true)}
-                            className="glass-icon p-3 rounded-2xl bg-white border border-gray-200 text-gray-500 hover:text-indigo-600 hover:border-indigo-200 shadow-sm transition-all active:scale-95"
-                        >
-                            <Edit3 className="w-5 h-5" />
-                        </button>
-
-                        <div className="absolute right-3 top-3 flex flex-col items-center gap-1">
+                    {/* Header Controls Container */}
+                    <div className="relative z-10 w-full h-12 mb-2">
+                        {/* Logo (Right Side) */}
+                        <div className="absolute right-2 top-0 flex flex-col items-center gap-1">
                             <BrandLogo className="w-10 h-10" showText={false} />
                             <span className="text-[10px] font-black text-indigo-600 tracking-wider">راصد</span>
                         </div>
 
-                        <div className="flex flex-col items-center w-full">
-                            <div className="mt-2"></div>
-                            <div className="w-24 h-24 rounded-[2rem] bg-white p-1.5 shadow-xl shadow-indigo-100 mb-3 relative group-hover:scale-105 transition-transform border border-white ring-4 ring-indigo-50">
-                                {teacherInfo.avatar ? (
-                                    <img src={teacherInfo.avatar} className="w-full h-full object-cover rounded-[1.6rem]" alt="Profile" />
-                                ) : (
-                                    <div className="w-full h-full bg-gradient-to-tr from-indigo-50 to-blue-50 rounded-[1.6rem] flex items-center justify-center text-3xl font-black text-indigo-600 border border-indigo-100">
-                                        {teacherInfo.name ? teacherInfo.name.charAt(0) : 'T'}
-                                    </div>
-                                )}
-                            </div>
-                            <h1 className="text-xl md:text-2xl font-black text-slate-800 text-center mb-1 drop-shadow-sm">
-                                {teacherInfo.name || 'مرحباً بك يا معلم'}
-                            </h1>
-                            <div className="flex flex-col items-center gap-1.5 text-[11px] font-bold text-slate-500">
-                                {teacherInfo.school && (
-                                    <span className="flex items-center gap-1.5 bg-white px-3 py-1 rounded-full border border-gray-100 shadow-sm">
-                                        <School className="w-3.5 h-3.5 text-indigo-500"/> {teacherInfo.school}
-                                    </span>
-                                )}
-                                <span className="bg-gradient-to-r from-indigo-500 to-blue-600 text-white px-3 py-0.5 rounded-md shadow-md shadow-indigo-200">
-                                    الفصل الدراسي {currentSemester === '1' ? 'الأول' : 'الثاني'}
+                        {/* Edit Button (Left Side) - Moved here as requested */}
+                        <button 
+                            onClick={() => setShowEditModal(true)}
+                            className="absolute left-2 top-0 glass-icon p-3 rounded-2xl bg-white border border-gray-200 text-gray-500 hover:text-indigo-600 hover:border-indigo-200 shadow-sm transition-all active:scale-95"
+                        >
+                            <Edit3 className="w-5 h-5" />
+                        </button>
+                    </div>
+
+                    <div className="flex flex-col items-center w-full">
+                        <div className="w-24 h-24 rounded-[2rem] bg-white p-1.5 shadow-sm mb-3 relative group-hover:scale-105 transition-transform border border-white ring-4 ring-white">
+                            {teacherInfo.avatar ? (
+                                <img src={teacherInfo.avatar} className="w-full h-full object-cover rounded-[1.6rem]" alt="Profile" />
+                            ) : (
+                                <div className="w-full h-full bg-gradient-to-tr from-indigo-50 to-blue-50 rounded-[1.6rem] flex items-center justify-center text-3xl font-black text-indigo-600 border border-indigo-100">
+                                    {teacherInfo.name ? teacherInfo.name.charAt(0) : 'T'}
+                                </div>
+                            )}
+                        </div>
+                        <h1 className="text-xl md:text-2xl font-black text-slate-800 text-center mb-1 drop-shadow-sm">
+                            {teacherInfo.name || 'مرحباً بك يا معلم'}
+                        </h1>
+                        <div className="flex flex-col items-center gap-1.5 text-[11px] font-bold text-slate-500">
+                            {teacherInfo.school && (
+                                <span className="flex items-center gap-1.5 bg-white px-3 py-1 rounded-full border border-gray-100 shadow-sm">
+                                    <School className="w-3.5 h-3.5 text-indigo-500"/> {teacherInfo.school}
                                 </span>
-                            </div>
+                            )}
+                            <span className="bg-gradient-to-r from-indigo-500 to-blue-600 text-white px-3 py-0.5 rounded-md shadow-md shadow-indigo-200">
+                                الفصل الدراسي {currentSemester === '1' ? 'الأول' : 'الثاني'}
+                            </span>
                         </div>
                     </div>
                 </div>

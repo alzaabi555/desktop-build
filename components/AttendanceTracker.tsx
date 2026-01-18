@@ -174,7 +174,8 @@ const AttendanceTracker: React.FC<AttendanceTrackerProps> = ({ students, classes
     <div className="flex flex-col h-full text-slate-800 relative animate-in fade-in duration-500">
         {/* Sticky Header (Light) */}
         <div className="sticky top-0 z-30 pb-2 bg-[#f3f4f6] -mx-4 px-4 -mt-4">
-            <div className="flex justify-between items-center mb-4 pt-safe mt-4">
+            {/* Removed pt-safe and large mt-4 to fix mobile spacing */}
+            <div className="flex justify-between items-center mb-4 mt-2">
                 <h1 className="text-2xl font-black tracking-tight text-slate-900">سجل الغياب</h1>
                 <button onClick={handleExportDailyExcel} disabled={isExportingExcel} className="w-10 h-10 glass-icon bg-white border border-slate-200 rounded-2xl text-emerald-600 shadow-sm flex items-center justify-center active:scale-95 transition-transform hover:shadow-md" title="تصدير سجل شهري">
                      {isExportingExcel ? <Loader2 className="w-5 h-5 animate-spin"/> : <Share2 className="w-5 h-5"/>}

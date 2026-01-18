@@ -4,7 +4,7 @@ import {
   Printer, BookOpen, LayoutDashboard, Users, CalendarCheck, 
   BarChart3, Award, Globe, Database, Settings, ShieldCheck, 
   Menu, X, ChevronLeft, Lightbulb, MousePointerClick, FileText, 
-  Download, Code, Smartphone, Monitor, Apple
+  Download, Code, Smartphone, Monitor, Apple, CheckCircle2
 } from 'lucide-react';
 import html2pdf from 'html2pdf.js';
 import { Filesystem, Directory, Encoding } from '@capacitor/filesystem';
@@ -140,7 +140,7 @@ const UserGuide: React.FC = () => {
     <div className="flex flex-col h-full bg-slate-50 text-slate-900 font-sans relative overflow-hidden user-guide-wrapper">
         
         {/* Header */}
-        <div className="bg-white border-b border-slate-200 p-4 flex justify-between items-center shadow-sm z-20 shrink-0">
+        <div className="bg-white border-b border-slate-200 p-4 flex justify-between items-center shadow-sm z-20 shrink-0 sticky top-0">
             <div className="flex items-center gap-3">
                 <button onClick={() => setSidebarOpen(!isSidebarOpen)} className="p-2 hover:bg-slate-100 rounded-lg lg:hidden text-slate-600">
                     <Menu className="w-6 h-6" />
@@ -165,7 +165,7 @@ const UserGuide: React.FC = () => {
                 </button>
                 <button 
                     onClick={handleDownloadHTML}
-                    className="bg-slate-800 text-white px-4 py-2.5 rounded-xl font-black text-xs flex items-center gap-2 shadow-lg hover:bg-slate-700 transition-all active:scale-95"
+                    className="bg-slate-800 text-white px-4 py-2.5 rounded-xl font-black text-xs flex items-center gap-2 shadow-lg hover:bg-slate-700 transition-all active:scale-95 hidden sm:flex"
                 >
                     <Code className="w-4 h-4" />
                     HTML
@@ -173,7 +173,6 @@ const UserGuide: React.FC = () => {
             </div>
         </div>
 
-        {/* ... Rest of layout ... */}
         <div className="flex flex-1 overflow-hidden relative">
             
             {/* Sidebar Navigation */}
@@ -199,8 +198,9 @@ const UserGuide: React.FC = () => {
             {/* Main Content Area */}
             <main className="flex-1 overflow-y-auto custom-scrollbar bg-slate-50 p-4 md:p-8 scroll-smooth" id="guide-content">
                 <div id="guide-content-inner" className="max-w-4xl mx-auto space-y-8 pb-20">
-                    {/* Content sections remain the same, just rendering them inside this wrapper ensures correct styling */}
-                    <section id="intro" className="bg-white p-8 rounded-[2rem] shadow-sm border border-slate-200 scroll-mt-4">
+                    
+                    {/* 1. Intro */}
+                    <section id="intro" className="bg-white p-8 rounded-[2rem] shadow-sm border border-slate-200 scroll-mt-24">
                         <div className="flex items-center gap-4 mb-6 border-b border-slate-100 pb-4">
                             <div className="w-12 h-12 bg-indigo-100 rounded-2xl flex items-center justify-center text-indigo-600"><Lightbulb className="w-6 h-6" /></div>
                             <h2 className="text-2xl font-black text-slate-800">1. فلسفة راصد</h2>
@@ -209,31 +209,150 @@ const UserGuide: React.FC = () => {
                             <p className="mb-4">
                                 تم تصميم تطبيق <strong>راصد</strong> (Rased App) ليكون المساعد الرقمي الشخصي للمعلم العماني. الفكرة الأساسية هي "الأتمتة الكاملة" لمهام المعلم الروتينية.
                             </p>
-                            {/* ... more content ... */}
+                            <ul className="list-disc pr-5 space-y-2">
+                                <li>يعمل التطبيق <strong>بدون إنترنت</strong> بشكل كامل للحفاظ على الخصوصية والسرعة.</li>
+                                <li>تم تصميم واجهة المستخدم لتكون مريحة للعين وتدعم الاستخدام السريع بيد واحدة.</li>
+                                <li>يدعم التطبيق التزامن مع بوابة الوزارة عند توفر الإنترنت برغبة المعلم.</li>
+                            </ul>
                         </div>
                     </section>
                     
-                    {/* Placeholder for remaining sections to save space, structure is preserved */}
-                    <section id="downloads" className="bg-white p-8 rounded-[2rem] shadow-sm border border-slate-200 scroll-mt-4 no-print">
+                    {/* 2. Downloads */}
+                    <section id="downloads" className="bg-white p-8 rounded-[2rem] shadow-sm border border-slate-200 scroll-mt-24 no-print">
                         <div className="flex items-center gap-4 mb-6 border-b border-slate-100 pb-4">
                             <div className="w-12 h-12 bg-sky-100 rounded-2xl flex items-center justify-center text-sky-600"><Download className="w-6 h-6" /></div>
-                            <h2 className="text-2xl font-black text-slate-800">تحميل التطبيق</h2>
+                            <h2 className="text-2xl font-black text-slate-800">2. تحميل التطبيق</h2>
                         </div>
-                        <p className="text-slate-600 font-medium mb-6">يمكنك تثبيت تطبيق راصد على مختلف أجهزتك.</p>
                         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                            {/* Cards ... */}
-                            <div className="border border-slate-200 rounded-2xl p-5 flex flex-col items-center text-center hover:shadow-lg transition-all hover:border-emerald-200 bg-emerald-50/30">
+                            <div className="border border-slate-200 rounded-2xl p-5 flex flex-col items-center text-center hover:shadow-lg transition-all bg-emerald-50/30">
                                 <h3 className="font-black text-lg text-slate-900">نسخة الأندرويد</h3>
-                                <a href="#" className="w-full py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl font-bold text-sm flex items-center justify-center gap-2 mt-4"><Download className="w-4 h-4" /> تحميل APK</a>
+                                <p className="text-xs text-gray-500 mt-1">ملف APK مباشر</p>
                             </div>
-                            <div className="border border-slate-200 rounded-2xl p-5 flex flex-col items-center text-center hover:shadow-lg transition-all hover:border-slate-300 bg-slate-50">
+                            <div className="border border-slate-200 rounded-2xl p-5 flex flex-col items-center text-center hover:shadow-lg transition-all bg-slate-50">
                                 <h3 className="font-black text-lg text-slate-900">نسخة الآيفون</h3>
-                                <a href="#" className="w-full py-2.5 bg-slate-800 hover:bg-slate-900 text-white rounded-xl font-bold text-sm flex items-center justify-center gap-2 mt-4"><Download className="w-4 h-4" /> تحميل IPA</a>
+                                <p className="text-xs text-gray-500 mt-1">ملف IPA (يتطلب توقيع)</p>
                             </div>
-                            <div className="border border-slate-200 rounded-2xl p-5 flex flex-col items-center text-center hover:shadow-lg transition-all hover:border-blue-200 bg-blue-50/30">
+                            <div className="border border-slate-200 rounded-2xl p-5 flex flex-col items-center text-center hover:shadow-lg transition-all bg-blue-50/30">
                                 <h3 className="font-black text-lg text-slate-900">نسخة الكمبيوتر</h3>
-                                <a href="#" className="w-full py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-xl font-bold text-sm flex items-center justify-center gap-2 mt-4"><Download className="w-4 h-4" /> تحميل EXE</a>
+                                <p className="text-xs text-gray-500 mt-1">نظام Windows (ملف EXE)</p>
                             </div>
+                        </div>
+                    </section>
+
+                    {/* 3. Dashboard */}
+                    <section id="dashboard" className="bg-white p-8 rounded-[2rem] shadow-sm border border-slate-200 scroll-mt-24">
+                        <div className="flex items-center gap-4 mb-6 border-b border-slate-100 pb-4">
+                            <div className="w-12 h-12 bg-violet-100 rounded-2xl flex items-center justify-center text-violet-600"><LayoutDashboard className="w-6 h-6" /></div>
+                            <h2 className="text-2xl font-black text-slate-800">3. لوحة التحكم والجدول</h2>
+                        </div>
+                        <div className="text-slate-600 leading-relaxed font-medium space-y-4">
+                            <p>تعتبر لوحة التحكم هي واجهة الانطلاق اليومية للمعلم، حيث تعرض:</p>
+                            <ul className="space-y-3">
+                                <li className="flex items-start gap-2"><CheckCircle2 className="w-5 h-5 text-emerald-500 shrink-0 mt-0.5"/> <span><strong>جدول الحصص اليومي:</strong> يظهر جدول اليوم الحالي تلقائياً. الحصة الحالية يتم تمييزها بلون مختلف ومؤشر "الآن".</span></li>
+                                <li className="flex items-start gap-2"><CheckCircle2 className="w-5 h-5 text-emerald-500 shrink-0 mt-0.5"/> <span><strong>جرس الحصص:</strong> يمكنك تفعيل التنبيهات للحصول على إشعار صوتي عند بداية ونهاية كل حصة.</span></li>
+                                <li className="flex items-start gap-2"><CheckCircle2 className="w-5 h-5 text-emerald-500 shrink-0 mt-0.5"/> <span><strong>الملف الشخصي:</strong> يمكنك تحديث بياناتك (الاسم، المدرسة، الشعار) من خلال أيقونة القلم في الأعلى.</span></li>
+                            </ul>
+                        </div>
+                    </section>
+
+                    {/* 4. Students */}
+                    <section id="students" className="bg-white p-8 rounded-[2rem] shadow-sm border border-slate-200 scroll-mt-24">
+                        <div className="flex items-center gap-4 mb-6 border-b border-slate-100 pb-4">
+                            <div className="w-12 h-12 bg-blue-100 rounded-2xl flex items-center justify-center text-blue-600"><Users className="w-6 h-6" /></div>
+                            <h2 className="text-2xl font-black text-slate-800">4. إدارة الطلاب والبيانات</h2>
+                        </div>
+                        <div className="text-slate-600 leading-relaxed font-medium">
+                            <p className="mb-4">يمكنك إضافة الطلاب بطريقتين:</p>
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-4">
+                                <div className="p-4 bg-gray-50 rounded-xl border border-gray-200">
+                                    <h4 className="font-bold text-slate-900 mb-2">الإضافة اليدوية</h4>
+                                    <p className="text-sm">إضافة طالب واحد في كل مرة مع تحديد الاسم والصف ورقم ولي الأمر.</p>
+                                </div>
+                                <div className="p-4 bg-gray-50 rounded-xl border border-gray-200">
+                                    <h4 className="font-bold text-slate-900 mb-2">الاستيراد من Excel</h4>
+                                    <p className="text-sm">الطريقة الأسرع. قم برفع ملف إكسل يحتوي على عمودي "الاسم" و"رقم الهاتف" وسيتم إضافة الفصل كاملاً.</p>
+                                </div>
+                            </div>
+                            <p><strong>تلميح:</strong> يمكنك استخدام ميزة "الاختيار العشوائي" في الفصل لطرح الأسئلة بشكل عادل.</p>
+                        </div>
+                    </section>
+
+                    {/* 5. Attendance */}
+                    <section id="attendance" className="bg-white p-8 rounded-[2rem] shadow-sm border border-slate-200 scroll-mt-24">
+                        <div className="flex items-center gap-4 mb-6 border-b border-slate-100 pb-4">
+                            <div className="w-12 h-12 bg-rose-100 rounded-2xl flex items-center justify-center text-rose-600"><CalendarCheck className="w-6 h-6" /></div>
+                            <h2 className="text-2xl font-black text-slate-800">5. نظام الحضور الذكي</h2>
+                        </div>
+                        <div className="text-slate-600 leading-relaxed font-medium space-y-4">
+                            <p>رصد الغياب أصبح أسهل من أي وقت مضى:</p>
+                            <ul className="list-disc pr-5 space-y-2">
+                                <li>اضغط على الأيقونات (صح، خطأ، ساعة، باب) أمام اسم الطالب لتحديد حالته (حضور، غياب، تأخير، تسرب).</li>
+                                <li><strong>تنبيهات الواتساب:</strong> عند تسجيل غياب أو تأخير، يظهر زر لإرسال رسالة جاهزة لولي الأمر بضغطة زر واحدة.</li>
+                                <li>يمكنك تصدير كشف غياب شهري بصيغة Excel من أعلى الصفحة.</li>
+                            </ul>
+                        </div>
+                    </section>
+
+                    {/* 6. Grades */}
+                    <section id="grades" className="bg-white p-8 rounded-[2rem] shadow-sm border border-slate-200 scroll-mt-24">
+                        <div className="flex items-center gap-4 mb-6 border-b border-slate-100 pb-4">
+                            <div className="w-12 h-12 bg-amber-100 rounded-2xl flex items-center justify-center text-amber-600"><BarChart3 className="w-6 h-6" /></div>
+                            <h2 className="text-2xl font-black text-slate-800">6. سجل الدرجات المتطور</h2>
+                        </div>
+                        <div className="text-slate-600 leading-relaxed font-medium space-y-4">
+                            <p>يتيح لك السجل إنشاء أدوات تقويم مخصصة (مثل: اختبار قصير 1، مشروع، واجبات) ورصد الدرجات بسهولة.</p>
+                            <div className="bg-amber-50 p-4 rounded-xl border border-amber-100 text-sm text-amber-900">
+                                <strong>ميزة المصحح الإلكتروني:</strong> يمكنك تصوير ورقة اختبار الطالب وتصحيحها داخل التطبيق وحفظ صورة الورقة المصححة مع الدرجة في ملف الطالب.
+                            </div>
+                        </div>
+                    </section>
+
+                    {/* 7. Gamification */}
+                    <section id="gamification" className="bg-white p-8 rounded-[2rem] shadow-sm border border-slate-200 scroll-mt-24">
+                        <div className="flex items-center gap-4 mb-6 border-b border-slate-100 pb-4">
+                            <div className="w-12 h-12 bg-purple-100 rounded-2xl flex items-center justify-center text-purple-600"><Award className="w-6 h-6" /></div>
+                            <h2 className="text-2xl font-black text-slate-800">7. التحفيز ودوري العباقرة</h2>
+                        </div>
+                        <div className="text-slate-600 leading-relaxed font-medium">
+                            <p className="mb-4">حول فصلك إلى بيئة تنافسية ممتعة:</p>
+                            <ul className="space-y-3">
+                                <li><strong>نقاط السلوك:</strong> امنح نقاطاً إيجابية (👍) أو سلبية (👎) للطلاب. النقاط الإيجابية تتحول إلى "عملات ذهبية".</li>
+                                <li><strong>المتجر:</strong> يمكن للطلاب استبدال عملاتهم بمكافآت (مثل: تغيير المكان، قائد الطابور).</li>
+                                <li><strong>دوري المجموعات:</strong> قسّم الفصل إلى فرق وتنافسوا على اللقب.</li>
+                            </ul>
+                        </div>
+                    </section>
+
+                    {/* 8. Ministry Sync */}
+                    <section id="ministry" className="bg-white p-8 rounded-[2rem] shadow-sm border border-slate-200 scroll-mt-24">
+                        <div className="flex items-center gap-4 mb-6 border-b border-slate-100 pb-4">
+                            <div className="w-12 h-12 bg-cyan-100 rounded-2xl flex items-center justify-center text-cyan-600"><Globe className="w-6 h-6" /></div>
+                            <h2 className="text-2xl font-black text-slate-800">8. الربط الوزاري الآمن</h2>
+                        </div>
+                        <div className="text-slate-600 leading-relaxed font-medium">
+                            <p className="mb-4">ميزة حصرية لربط التطبيق مع البوابة التعليمية لرفع الغياب والدرجات بضغطة زر.</p>
+                            <div className="bg-slate-100 p-4 rounded-xl text-xs font-mono mb-4 text-left" dir="ltr">
+                                https://mobile.moe.gov.om/...
+                            </div>
+                            <p className="text-sm text-slate-500">
+                                <strong>ملاحظة هامة:</strong> يتم الاتصال مباشرة بين جهازك وخوادم الوزارة عبر قناة مشفرة. لا يتم تخزين كلمات المرور أو البيانات الحساسة على أي خوادم خارجية.
+                            </p>
+                        </div>
+                    </section>
+
+                    {/* 9. Data & Security */}
+                    <section id="data" className="bg-white p-8 rounded-[2rem] shadow-sm border border-slate-200 scroll-mt-24">
+                        <div className="flex items-center gap-4 mb-6 border-b border-slate-100 pb-4">
+                            <div className="w-12 h-12 bg-emerald-100 rounded-2xl flex items-center justify-center text-emerald-600"><Database className="w-6 h-6" /></div>
+                            <h2 className="text-2xl font-black text-slate-800">9. البيانات والأمان</h2>
+                        </div>
+                        <div className="text-slate-600 leading-relaxed font-medium space-y-4">
+                            <p>جميع البيانات مخزنة <strong>محلياً على جهازك</strong> ولا يتم رفعها لأي سحابة (Cloud).</p>
+                            <ul className="list-disc pr-5 space-y-2">
+                                <li>قم بعمل <strong>نسخة احتياطية</strong> بشكل دوري من صفحة الإعدادات.</li>
+                                <li>يمكنك استعادة البيانات عند تغيير الجهاز أو حذف التطبيق عن طريق الخطأ.</li>
+                                <li>استخدم ميزة "تصدير PDF" للاحتفاظ بنسخ ورقية من التقارير والسجلات.</li>
+                            </ul>
                         </div>
                     </section>
 

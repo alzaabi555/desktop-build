@@ -63,13 +63,13 @@ const StudentItem = React.memo(({ student, onAction, currentSemester }: {
 
             <div className="flex items-center justify-between sm:justify-end gap-2 pl-1 relative z-10">
                 <div className="flex items-center gap-1.5 bg-slate-50 p-1.5 rounded-xl border border-slate-100 shadow-inner">
-                    <button onClick={(e) => { e.stopPropagation(); onAction(student, 'positive'); }} className="w-10 h-10 rounded-lg flex items-center justify-center bg-white text-emerald-600 hover:text-white hover:bg-emerald-500 shadow-sm active:scale-95 transition-all">
+                    <button onClick={(e) => { e.stopPropagation(); onAction(student, 'positive'); }} className="w-10 h-10 rounded-lg flex items-center justify-center bg-white text-emerald-600 hover:text-white hover:bg-emerald-50 shadow-sm active:scale-95 transition-all">
                         <ThumbsUp className="w-5 h-5" />
                     </button>
-                    <button onClick={(e) => { e.stopPropagation(); onAction(student, 'negative'); }} className="w-10 h-10 rounded-lg flex items-center justify-center bg-white text-rose-600 hover:text-white hover:bg-rose-500 shadow-sm active:scale-95 transition-all">
+                    <button onClick={(e) => { e.stopPropagation(); onAction(student, 'negative'); }} className="w-10 h-10 rounded-lg flex items-center justify-center bg-white text-rose-600 hover:text-white hover:bg-rose-50 shadow-sm active:scale-95 transition-all">
                         <ThumbsDown className="w-5 h-5" />
                     </button>
-                    <button onClick={(e) => { e.stopPropagation(); onAction(student, 'truant'); }} className="w-10 h-10 rounded-lg flex items-center justify-center bg-white text-purple-600 hover:text-white hover:bg-purple-500 shadow-sm active:scale-95 transition-all" title="تسرب">
+                    <button onClick={(e) => { e.stopPropagation(); onAction(student, 'truant'); }} className="w-10 h-10 rounded-lg flex items-center justify-center bg-white text-purple-600 hover:text-white hover:bg-purple-50 shadow-sm active:scale-95 transition-all" title="تسرب">
                         <DoorOpen className="w-5 h-5" />
                     </button>
                 </div>
@@ -261,7 +261,7 @@ const StudentList: React.FC<StudentListProps> = ({ students, classes, onAddClass
   };
 
   return (
-    <div className="flex flex-col h-[calc(100vh-80px)] text-slate-800 pb-20 relative">
+    <div className="flex flex-col h-full text-slate-800 relative">
         
         {/* --- FEEDBACK ANIMATION OVERLAY --- */}
         <AnimatePresence>
@@ -301,7 +301,8 @@ const StudentList: React.FC<StudentListProps> = ({ students, classes, onAddClass
 
         {/* Sticky Header (Light Theme) */}
         <div className="sticky top-0 z-30 pb-2 bg-[#f3f4f6] -mx-4 px-4 -mt-4">
-            <div className="flex justify-between items-center mb-4 pt-safe mt-4">
+            {/* Removed pt-safe and large mt-4 to fix mobile spacing */}
+            <div className="flex justify-between items-center mb-4 mt-2">
                 <h1 className="text-2xl font-black text-slate-900 tracking-tight drop-shadow-sm">قائمة الطلاب</h1>
                 <div className="flex gap-2">
                     <button onClick={() => setShowManualAddModal(true)} className="w-10 h-10 rounded-2xl glass-icon bg-white border border-slate-200 text-indigo-600 active:scale-95 transition-all shadow-sm hover:shadow-md" title="إضافة طالب">
