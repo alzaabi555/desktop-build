@@ -74,7 +74,7 @@ const GradeBook: React.FC<GradeBookProps> = ({
      if (showAddGrade && !editingGrade) { setSelectedToolId(''); setScore(''); }
   }, [showAddGrade, editingGrade]);
 
-  // ✅ 1. تحديث منطق استخراج المراحل (نفس المنطق الموحد الجديد)
+  // ✅ 1. تحديث منطق استخراج المراحل (النظام الموحد الجديد)
   const availableGrades = useMemo(() => {
       const grades = new Set<string>();
       
@@ -84,7 +84,7 @@ const GradeBook: React.FC<GradeBookProps> = ({
           } else {
               const numMatch = c.match(/^(\d+)/);
               if (numMatch) grades.add(numMatch[1]);
-              else grades.add(c.split(' ')[0]);
+              else if(c.trim().split(' ')[0].length > 1) grades.add(c.trim().split(' ')[0]);
           }
       });
 
@@ -96,7 +96,7 @@ const GradeBook: React.FC<GradeBookProps> = ({
           const numA = parseInt(a);
           const numB = parseInt(b);
           if (!isNaN(numA) && !isNaN(numB)) return numA - numB;
-          return a.localeCompare(b);
+          return a.localeCompare(b, 'ar');
       });
   }, [students, classes]);
 
@@ -131,7 +131,7 @@ const GradeBook: React.FC<GradeBookProps> = ({
       return 'text-rose-600 bg-rose-50';
   };
 
-  // ✅ 3. تحديث فلترة الطلاب
+  // ✅ 3. تحديث فلترة الطلاب (مطابق لـ StudentList و Reports)
   const filteredStudents = useMemo(() => {
     if (!Array.isArray(students)) return [];
     return students.filter(s => {
@@ -140,11 +140,12 @@ const GradeBook: React.FC<GradeBookProps> = ({
       
       let matchesGrade = true;
       if (selectedGrade !== 'all') {
-          // التحقق من المرحلة في بداية اسم الفصل أو حقل grade
-          if (s.grade === selectedGrade) matchesGrade = true;
-          else if (s.classes[0]) {
-              if (s.classes[0].includes('/')) matchesGrade = s.classes[0].split('/')[0].trim() === selectedGrade;
-              else matchesGrade = s.classes[0].startsWith(selectedGrade);
+          if (s.grade === selectedGrade) {
+              matchesGrade = true;
+          } else if (s.classes[0]) {
+              const cls = s.classes[0];
+              if (cls.includes('/')) matchesGrade = cls.split('/')[0].trim() === selectedGrade;
+              else matchesGrade = cls.startsWith(selectedGrade);
           } else {
               matchesGrade = false;
           }
@@ -158,7 +159,7 @@ const GradeBook: React.FC<GradeBookProps> = ({
       return student.grades.filter(g => { if (!g.semester) return sem === '1'; return g.semester === sem; }); 
   };
 
-  // ... (Rest of functions: handleAddTool, handleDeleteTool, etc. - Kept Same) ...
+  // ... (Rest of CRUD functions kept same) ...
   const handleAddTool = () => { if (newToolName.trim()) { const finalName = cleanText(newToolName); if (tools.some(t => t.name === finalName)) { alert('هذه الأداة موجودة بالفعل'); return; } const newTool: AssessmentTool = { id: Math.random().toString(36).substr(2, 9), name: finalName, maxScore: 0 }; setAssessmentTools([...tools, newTool]); setNewToolName(''); setIsAddingTool(false); } };
   const handleDeleteTool = (id: string) => { if (confirm('هل أنت متأكد من حذف هذه الأداة؟')) { setAssessmentTools(tools.filter(t => t.id !== id)); } };
   const startEditingTool = (tool: AssessmentTool) => { setEditingToolId(tool.id); setEditToolName(tool.name); };
@@ -228,8 +229,8 @@ const GradeBook: React.FC<GradeBookProps> = ({
   return (
     <div className="flex flex-col h-full text-slate-800 bg-[#f8fafc] relative animate-in fade-in duration-500 font-sans">
         
-        {/* ================= Fixed Header ================= */}
-        <div className="fixed top-0 left-0 right-0 z-50 bg-[#1e3a8a] text-white rounded-b-[2.5rem] shadow-lg px-4 pt-[env(safe-area-inset-top)] pb-6 transition-all duration-300">
+        {/* ================= Fixed Header (Updated Sticky) ================= */}
+        <div className="sticky top-0 z-50 bg-[#1e3a8a] text-white shadow-lg px-4 pt-[env(safe-area-inset-top)] pb-4 transition-all duration-300 rounded-b-[2.5rem] md:rounded-none md:shadow-md">
             
             <div className="flex justify-between items-center mb-6 mt-2">
                 <div className="flex items-center gap-2">
@@ -303,86 +304,61 @@ const GradeBook: React.FC<GradeBookProps> = ({
             </div>
         </div>
 
-        {/* ================= Content List ================= */}
-        <div className="flex-1 h-full overflow-y-auto custom-scrollbar">
-            <div className="w-full h-[280px] shrink-0"></div>
-            <div className="px-4 pb-24 pt-2">
-                <div className="flex justify-between items-center mb-4">
-                    <h3 className="font-bold text-slate-800 text-sm flex items-center gap-2">
-                        <span className="w-1.5 h-1.5 rounded-full bg-[#1e3a8a]"></span>
-                        سجل الطلاب ({filteredStudents.length})
-                    </h3>
-                </div>
-                {filteredStudents.length > 0 ? (
-                    <div className="grid grid-cols-1 gap-3">
-                        {filteredStudents.map((student) => {
-                            const semGrades = getSemesterGrades(student, currentSemester);
-                            const totalScore = semGrades.reduce((sum, g) => sum + (Number(g.score) || 0), 0);
-                            return (
-                                <div key={student.id} onClick={() => setShowAddGrade({ student })} className={`${styles.card} p-4 flex items-center justify-between cursor-pointer active:scale-[0.99]`}>
-                                    <div className="flex items-center gap-4 relative z-10">
-                                        <div className="w-14 h-14 rounded-2xl bg-gray-50 flex items-center justify-center font-bold text-slate-400 overflow-hidden shadow-inner border border-gray-200 group-hover:border-indigo-200 transition-colors">
-                                            {student.avatar ? <img src={student.avatar} className="w-full h-full object-cover"/> : student.name.charAt(0)}
-                                        </div>
-                                        <div>
-                                            <h3 className="text-sm font-black text-slate-900 group-hover:text-indigo-700 transition-colors">{student.name}</h3>
-                                            <div className="flex items-center gap-2 mt-1.5 flex-wrap">
-                                                {tools.slice(0, 3).map(tool => {
-                                                    const grade = semGrades.find(g => g.category.trim() === tool.name.trim());
-                                                    return (<span key={tool.id} className="text-[9px] px-2 py-0.5 rounded-lg bg-slate-50 border border-slate-200 text-slate-600 font-bold">{tool.name}: <span className="text-indigo-600">{grade ? grade.score : '-'}</span></span>)
-                                                })}
-                                            </div>
-                                        </div>
+        {/* ================= Content List (No Spacer) ================= */}
+        <div className="flex-1 h-full overflow-y-auto custom-scrollbar px-4 pt-4 pb-24">
+            
+            <div className="flex justify-between items-center mb-4">
+                <h3 className="font-bold text-slate-800 text-sm flex items-center gap-2">
+                    <span className="w-1.5 h-1.5 rounded-full bg-[#1e3a8a]"></span>
+                    سجل الطلاب ({filteredStudents.length})
+                </h3>
+            </div>
+            {filteredStudents.length > 0 ? (
+                <div className="grid grid-cols-1 gap-3">
+                    {filteredStudents.map((student) => {
+                        const semGrades = getSemesterGrades(student, currentSemester);
+                        const totalScore = semGrades.reduce((sum, g) => sum + (Number(g.score) || 0), 0);
+                        return (
+                            <div key={student.id} onClick={() => setShowAddGrade({ student })} className={`${styles.card} p-4 flex items-center justify-between cursor-pointer active:scale-[0.99]`}>
+                                <div className="flex items-center gap-4 relative z-10">
+                                    <div className="w-14 h-14 rounded-2xl bg-gray-50 flex items-center justify-center font-bold text-slate-400 overflow-hidden shadow-inner border border-gray-200 group-hover:border-indigo-200 transition-colors">
+                                        {student.avatar ? <img src={student.avatar} className="w-full h-full object-cover"/> : student.name.charAt(0)}
                                     </div>
-                                    <div className="text-center bg-slate-50 px-3 py-2 rounded-xl border border-slate-200 shadow-inner group-hover:bg-white transition-colors relative z-10 min-w-[60px]">
-                                        <span className={`block text-xl font-black ${getSymbolColor(totalScore).split(' ')[0]}`}>{totalScore}</span>
-                                        <span className="text-[10px] font-bold text-slate-400">{getGradeSymbol(totalScore)}</span>
+                                    <div>
+                                        <h3 className="text-sm font-black text-slate-900 group-hover:text-indigo-700 transition-colors">{student.name}</h3>
+                                        <div className="flex items-center gap-2 mt-1.5 flex-wrap">
+                                            {tools.slice(0, 3).map(tool => {
+                                                const grade = semGrades.find(g => g.category.trim() === tool.name.trim());
+                                                return (<span key={tool.id} className="text-[9px] px-2 py-0.5 rounded-lg bg-slate-50 border border-slate-200 text-slate-600 font-bold">{tool.name}: <span className="text-indigo-600">{grade ? grade.score : '-'}</span></span>)
+                                            })}
+                                        </div>
                                     </div>
                                 </div>
-                            );
-                        })}
-                    </div>
-                ) : (
-                    <div className="flex flex-col items-center justify-center py-20 text-slate-400 opacity-50"><FileSpreadsheet className="w-16 h-16 mb-4" /><p className="font-bold">لا يوجد طلاب مطابقين</p></div>
-                )}
-            </div>
+                                <div className="text-center bg-slate-50 px-3 py-2 rounded-xl border border-slate-200 shadow-inner group-hover:bg-white transition-colors relative z-10 min-w-[60px]">
+                                    <span className={`block text-xl font-black ${getSymbolColor(totalScore).split(' ')[0]}`}>{totalScore}</span>
+                                    <span className="text-[10px] font-bold text-slate-400">{getGradeSymbol(totalScore)}</span>
+                                </div>
+                            </div>
+                        );
+                    })}
+                </div>
+            ) : (
+                <div className="flex flex-col items-center justify-center py-20 text-slate-400 opacity-50"><FileSpreadsheet className="w-16 h-16 mb-4" /><p className="font-bold">لا يوجد طلاب مطابقين</p></div>
+            )}
         </div>
 
-        {/* --- Grading Settings Modal --- */}
+        {/* ... (Modals remain same, kept inside component) ... */}
         <Modal isOpen={showGradingSettingsModal} onClose={() => setShowGradingSettingsModal(false)} className="max-w-md rounded-[2rem]">
             <div className="text-center p-2">
                 <div className="w-16 h-16 bg-blue-50 rounded-full flex items-center justify-center mx-auto mb-4 text-blue-600 shadow-sm"><Calculator className="w-8 h-8" /></div>
                 <h3 className="font-black text-lg mb-2 text-slate-900">إعدادات توزيع الدرجات</h3>
                 <p className="text-xs text-gray-500 mb-6 font-bold leading-relaxed">قم بضبط الأوزان النسبية للدرجات حسب المرحلة الدراسية التي تدرسها.</p>
-                
                 <div className="space-y-4 text-right">
-                    <div className="bg-slate-50 p-4 rounded-xl border border-slate-100">
-                        <label className="block text-xs font-black text-slate-700 mb-2">1. الدرجة الكلية للمادة</label>
-                        <input type="number" value={gradingSettings.totalScore} onChange={(e) => setGradingSettings({...gradingSettings, totalScore: Number(e.target.value)})} className="w-full p-3 bg-white rounded-xl border border-slate-200 text-center font-black text-slate-900 outline-none focus:border-blue-500" />
-                    </div>
-
-                    <div className="bg-slate-50 p-4 rounded-xl border border-slate-100">
-                        <label className="block text-xs font-black text-slate-700 mb-2">2. درجة الامتحان النهائي (أو المشروع)</label>
-                        <input type="number" value={gradingSettings.finalExamWeight} onChange={(e) => setGradingSettings({...gradingSettings, finalExamWeight: Number(e.target.value)})} className="w-full p-3 bg-white rounded-xl border border-slate-200 text-center font-black text-slate-900 outline-none focus:border-blue-500" />
-                        <p className="text-[10px] text-gray-400 mt-2 font-bold">* ضع 0 إذا كانت المادة تقويم مستمر 100%</p>
-                    </div>
-
-                    <div className="bg-slate-50 p-4 rounded-xl border border-slate-100">
-                        <label className="block text-xs font-black text-slate-700 mb-2">3. مسمى الامتحان النهائي</label>
-                        <input type="text" value={gradingSettings.finalExamName} onChange={(e) => setGradingSettings({...gradingSettings, finalExamName: e.target.value})} className="w-full p-3 bg-white rounded-xl border border-slate-200 text-center font-bold text-slate-900 outline-none focus:border-blue-500" placeholder="مثال: الامتحان النهائي / المشروع" />
-                    </div>
+                    <div className="bg-slate-50 p-4 rounded-xl border border-slate-100"><label className="block text-xs font-black text-slate-700 mb-2">1. الدرجة الكلية للمادة</label><input type="number" value={gradingSettings.totalScore} onChange={(e) => setGradingSettings({...gradingSettings, totalScore: Number(e.target.value)})} className="w-full p-3 bg-white rounded-xl border border-slate-200 text-center font-black text-slate-900 outline-none focus:border-blue-500" /></div>
+                    <div className="bg-slate-50 p-4 rounded-xl border border-slate-100"><label className="block text-xs font-black text-slate-700 mb-2">2. درجة الامتحان النهائي (أو المشروع)</label><input type="number" value={gradingSettings.finalExamWeight} onChange={(e) => setGradingSettings({...gradingSettings, finalExamWeight: Number(e.target.value)})} className="w-full p-3 bg-white rounded-xl border border-slate-200 text-center font-black text-slate-900 outline-none focus:border-blue-500" /><p className="text-[10px] text-gray-400 mt-2 font-bold">* ضع 0 إذا كانت المادة تقويم مستمر 100%</p></div>
+                    <div className="bg-slate-50 p-4 rounded-xl border border-slate-100"><label className="block text-xs font-black text-slate-700 mb-2">3. مسمى الامتحان النهائي</label><input type="text" value={gradingSettings.finalExamName} onChange={(e) => setGradingSettings({...gradingSettings, finalExamName: e.target.value})} className="w-full p-3 bg-white rounded-xl border border-slate-200 text-center font-bold text-slate-900 outline-none focus:border-blue-500" placeholder="مثال: الامتحان النهائي / المشروع" /></div>
                 </div>
-
-                <div className="mt-6 pt-4 border-t border-slate-100">
-                    <div className="flex justify-between items-center text-xs font-bold text-slate-600 mb-4 bg-blue-50 p-3 rounded-xl">
-                        <span>التقويم المستمر: {gradingSettings.totalScore - gradingSettings.finalExamWeight}</span>
-                        <span>+</span>
-                        <span>النهائي: {gradingSettings.finalExamWeight}</span>
-                        <span>=</span>
-                        <span>{gradingSettings.totalScore}</span>
-                    </div>
-                    <button onClick={() => setShowGradingSettingsModal(false)} className="w-full py-3.5 bg-[#1e3a8a] text-white rounded-xl font-black text-sm shadow-lg hover:bg-blue-900 active:scale-95 transition-all">حفظ واعتماد التوزيع</button>
-                </div>
+                <div className="mt-6 pt-4 border-t border-slate-100"><div className="flex justify-between items-center text-xs font-bold text-slate-600 mb-4 bg-blue-50 p-3 rounded-xl"><span>التقويم المستمر: {gradingSettings.totalScore - gradingSettings.finalExamWeight}</span><span>+</span><span>النهائي: {gradingSettings.finalExamWeight}</span><span>=</span><span>{gradingSettings.totalScore}</span></div><button onClick={() => setShowGradingSettingsModal(false)} className="w-full py-3.5 bg-[#1e3a8a] text-white rounded-xl font-black text-sm shadow-lg hover:bg-blue-900 active:scale-95 transition-all">حفظ واعتماد التوزيع</button></div>
             </div>
         </Modal>
 
