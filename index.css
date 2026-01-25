@@ -8,17 +8,35 @@
 :root {
   font-family: 'Tajawal', sans-serif;
   -webkit-tap-highlight-color: transparent;
+  /* متغير لارتفاع الشاشة الديناميكي */
+  --app-height: 100dvh;
 }
 
 /* --- LIGHT MODE SETTINGS (Clean Minimalist) --- */
-html, body {
-  background-color: #f3f4f6; /* العودة للخلفية الفاتحة المريحة للعين */
+html {
+  height: 100%; /* Fallback */
+  height: var(--app-height);
+  width: 100%;
+  margin: 0;
+  padding: 0;
+  overflow: hidden; /* منع تمرير الصفحة بالكامل */
+  background-color: #f3f4f6;
+}
+
+body {
+  background-color: #f3f4f6;
   color: #1e293b;
   height: 100%;
   width: 100%;
   margin: 0;
   padding: 0;
-  overflow: hidden; 
+  overflow: hidden;
+  position: fixed; /* تثبيت الجسم لمنع السحب المطاطي */
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  touch-action: none; /* تحسين استجابة اللمس */
 }
 
 #root {
@@ -27,10 +45,12 @@ html, body {
   overflow: hidden;
   display: flex;
   flex-direction: column;
+  position: relative;
+  z-index: 1;
 }
 
 /* --- SCROLLBARS --- */
-.custom-scrollbar { overflow-y: auto; touch-action: pan-y; }
+.custom-scrollbar { overflow-y: auto; touch-action: pan-y; -webkit-overflow-scrolling: touch; }
 .custom-scrollbar::-webkit-scrollbar { width: 6px; height: 6px; }
 .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
 .custom-scrollbar::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
@@ -42,14 +62,14 @@ html, body {
   background: rgba(255, 255, 255, 0.95);
   backdrop-filter: blur(16px);
   -webkit-backdrop-filter: blur(16px);
-  border-bottom: 1px solid rgba(0, 0, 0, 0.05); /* حدود ناعمة جداً */
+  border-bottom: 1px solid rgba(0, 0, 0, 0.05);
   box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
 }
 
 .glass-card {
   background: #ffffff;
-  border: 1px solid #f1f5f9; /* حدود شبه مخفية للأناقة */
-  box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px -1px rgba(0, 0, 0, 0.1); /* ظل ناعم */
+  border: 1px solid #f1f5f9;
+  box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px -1px rgba(0, 0, 0, 0.1);
   border-radius: 1.25rem;
   transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
 }

@@ -1,11 +1,9 @@
-
 import React, { useState, useEffect } from 'react';
 import { AppProvider, useApp } from './context/AppContext';
 import { ThemeProvider } from './context/ThemeContext';
 import { 
   LayoutDashboard, Users, CalendarCheck, BarChart3, 
-  Settings as SettingsIcon, Grid, Trophy, Crown, 
-  Building2, Globe, Info, Lock, FileText, Menu, BookOpen
+  Settings as SettingsIcon, Grid, FileText, Globe, Info, BookOpen
 } from 'lucide-react';
 import Dashboard from './components/Dashboard';
 import StudentList from './components/StudentList';
@@ -14,25 +12,20 @@ import GradeBook from './components/GradeBook';
 import Reports from './components/Reports';
 import Settings from './components/Settings';
 import Modal from './components/Modal';
-import GamificationHub from './components/GamificationHub';
-import GroupCompetition from './components/GroupCompetition';
-import MinistrySync from './components/MinistrySync';
 import NoorPlatform from './components/NoorPlatform';
 import About from './components/About';
 import UserGuide from './components/UserGuide';
 import BrandLogo from './components/BrandLogo';
-import WelcomeScreen from './components/WelcomeScreen'; // Import WelcomeScreen
+import WelcomeScreen from './components/WelcomeScreen';
 import { Loader2 } from 'lucide-react';
 import { useSchoolBell } from './hooks/useSchoolBell';
-import { App as CapacitorApp } from '@capacitor/app';
 
 // Main App Container
 const AppContent: React.FC = () => {
   const { 
       isDataLoaded, students, setStudents, classes, setClasses, 
       teacherInfo, setTeacherInfo, schedule, setSchedule, 
-      periodTimes, setPeriodTimes, currentSemester, setCurrentSemester,
-      groups, setGroups 
+      periodTimes, setPeriodTimes, currentSemester, setCurrentSemester
   } = useApp();
   
   const [activeTab, setActiveTab] = useState('dashboard');
@@ -68,8 +61,8 @@ const AppContent: React.FC = () => {
   // Handle Loading State
   if (!isDataLoaded) {
       return (
-          <div className="flex h-screen w-full items-center justify-center bg-gray-50">
-              <Loader2 className="w-8 h-8 text-indigo-500 animate-spin" />
+          <div className="flex h-full w-full items-center justify-center bg-[#f8fafc] fixed inset-0 z-[99999]">
+              <Loader2 className="w-8 h-8 text-[#1e3a8a] animate-spin" />
           </div>
       );
   }
@@ -85,7 +78,7 @@ const AppContent: React.FC = () => {
       setShowMoreMenu(false);
   };
 
-  // Helper Wrappers
+  // Helper Wrappers (Pass through props)
   const handleUpdateStudent = (updated: any) => setStudents(prev => prev.map(s => s.id === updated.id ? updated : s));
   const handleAddClass = (name: string) => setClasses(prev => [...prev, name]);
   
@@ -129,27 +122,31 @@ const AppContent: React.FC = () => {
                   students={students} classes={classes} onUpdateStudent={handleUpdateStudent} setStudents={setStudents}
                   currentSemester={currentSemester} onSemesterChange={setCurrentSemester} teacherInfo={teacherInfo}
               />;
-          case 'reports': return <Reports />;
+          case 'reports': 
+              // تم تمرير التبويب الافتراضي إذا تم استدعاؤه من مكان آخر، هنا الافتراضي
+              return <Reports initialTab='student_report' />;
           case 'noor': return <NoorPlatform />;
           case 'guide': return <UserGuide />;
           case 'settings': return <Settings />;
           case 'about': return <About />;
+          // حالة خاصة لفتح صفحة الاستدعاء مباشرة داخل التقارير
+          case 'summon': return <Reports initialTab='summon' />;
           default: return <Dashboard students={students} teacherInfo={teacherInfo} onUpdateTeacherInfo={() => {}} schedule={schedule} onUpdateSchedule={() => {}} onSelectStudent={() => {}} onNavigate={handleNavigate} onOpenSettings={() => {}} periodTimes={periodTimes} setPeriodTimes={() => {}} notificationsEnabled={false} onToggleNotifications={() => {}} currentSemester={currentSemester} onSemesterChange={setCurrentSemester} />;
       }
   };
 
-  // Mobile Bottom Bar Items
+  // Mobile Bottom Bar Items (Reordered: Students before Attendance)
   const mobileNavItems = [
       { id: 'dashboard', label: 'الرئيسية', icon: LayoutDashboard },
-      { id: 'attendance', label: 'الحضور', icon: CalendarCheck },
       { id: 'students', label: 'الطلاب', icon: Users },
+      { id: 'attendance', label: 'الحضور', icon: CalendarCheck },
       { id: 'grades', label: 'الدرجات', icon: BarChart3 },
   ];
 
   const desktopNavItems = [
       { id: 'dashboard', label: 'الرئيسية', icon: LayoutDashboard },
-      { id: 'attendance', label: 'الحضور', icon: CalendarCheck },
       { id: 'students', label: 'الطلاب', icon: Users },
+      { id: 'attendance', label: 'الحضور', icon: CalendarCheck },
       { id: 'grades', label: 'الدرجات', icon: BarChart3 },
       { id: 'reports', label: 'التقارير', icon: FileText },
       { id: 'noor', label: 'منصة نور', icon: Globe },
@@ -161,7 +158,7 @@ const AppContent: React.FC = () => {
   const isMoreActive = !mobileNavItems.some(item => item.id === activeTab);
 
   return (
-    <div className="flex h-screen bg-[#f3f4f6] font-sans overflow-hidden text-slate-900 relative">
+    <div className="flex h-full bg-[#f8fafc] font-sans overflow-hidden text-slate-900 relative">
         
         {/* --- DESKTOP SIDEBAR --- */}
         <aside className="hidden md:flex w-72 flex-col bg-white border-l border-slate-200 z-50 shadow-sm transition-all h-full">
@@ -171,7 +168,7 @@ const AppContent: React.FC = () => {
                 </div>
                 <div>
                     <h1 className="text-2xl font-black text-slate-900 tracking-tight leading-none">راصد</h1>
-                    <span className="text-[10px] font-bold text-indigo-600 tracking-wider">نسخة المعلم</span>
+                    <span className="text-[10px] font-bold text-[#1e3a8a] tracking-wider">نسخة المعلم</span>
                 </div>
             </div>
 
@@ -196,11 +193,11 @@ const AppContent: React.FC = () => {
                             onClick={() => handleNavigate(item.id)}
                             className={`w-full flex items-center gap-3 px-4 py-3.5 rounded-2xl transition-all duration-300 group ${
                                 isActive 
-                                ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-200' 
+                                ? 'bg-[#1e3a8a] text-white shadow-lg shadow-indigo-200' 
                                 : 'text-slate-500 hover:bg-slate-50 hover:text-slate-900 border border-transparent hover:border-slate-100'
                             }`}
                         >
-                            <item.icon className={`w-5 h-5 ${isActive ? 'text-white' : 'text-slate-400 group-hover:text-indigo-500'} transition-colors`} strokeWidth={2.5} />
+                            <item.icon className={`w-5 h-5 ${isActive ? 'text-white' : 'text-slate-400 group-hover:text-[#1e3a8a]'} transition-colors`} strokeWidth={2.5} />
                             <span className="font-bold text-sm">{item.label}</span>
                             {isActive && <div className="mr-auto w-1.5 h-1.5 rounded-full bg-white animate-pulse"></div>}
                         </button>
@@ -214,56 +211,62 @@ const AppContent: React.FC = () => {
         </aside>
 
         {/* --- MAIN CONTENT AREA --- */}
-        {/* تم إزالة القائمة السفلية من هنا لضمان عدم تأثرها بالتمرير أو التراكب */}
-        <main className="flex-1 flex flex-col h-full overflow-hidden relative bg-[#f3f4f6]">
+        <main className="flex-1 flex flex-col h-full overflow-hidden relative bg-[#f8fafc] z-0">
             <div 
-                className="flex-1 overflow-y-auto overflow-x-hidden custom-scrollbar pb-28 md:pb-4 px-4 md:px-8 pt-safe overscroll-contain"
+                className="flex-1 overflow-y-auto overflow-x-hidden custom-scrollbar pb-32 md:pb-4 px-4 md:px-0 pt-safe overscroll-contain"
                 id="main-scroll-container"
             >
-                <div className="max-w-5xl mx-auto w-full min-h-full">
+                {/* Max-width container adjusted for desktop */}
+                <div className="max-w-5xl mx-auto w-full min-h-full md:px-8">
                     {renderContent()}
                 </div>
             </div>
         </main>
 
-        {/* --- MOBILE TAB BAR (Moved to Root Level for better Z-Index & Touch Handling) --- */}
-        <div className="md:hidden fixed bottom-0 left-0 right-0 z-[100] h-[60px] bg-white rounded-t-[2.5rem] shadow-[0_-10px_30px_rgba(0,0,0,0.05)] flex justify-around items-end pb-2 border-t border-slate-100 pb-safe safe-area-bottom">
+        {/* --- MOBILE TAB BAR (NEW FLOATING DESIGN) --- 
+            الخلفية بيضاء، الحواف دائرية من الأعلى، الزر النشط يطفو للأعلى بلون أزرق داكن
+        */}
+        <div className="md:hidden fixed bottom-0 left-0 right-0 z-[9999] h-[80px] bg-white rounded-t-[2.5rem] shadow-[0_-10px_40px_rgba(0,0,0,0.08)] flex justify-around items-end pb-safe safe-area-bottom transition-transform duration-300 translate-z-0 pointer-events-auto border-t border-slate-100">
             {mobileNavItems.map((item) => {
                 const isActive = activeTab === item.id;
                 return (
                     <button
                         key={item.id}
                         onClick={() => handleNavigate(item.id)}
-                        className="relative w-full h-full flex flex-col items-center justify-end group pb-1 touch-manipulation"
+                        className="relative w-full h-full flex flex-col items-center justify-end group pb-2 touch-manipulation active:scale-95 transition-transform"
                     >
+                        {/* الدائرة العائمة */}
                         <span 
                             className={`
-                                absolute top-0 transition-all duration-500 cubic-bezier(0.4, 0, 0.2, 1) pointer-events-none
+                                absolute top-0 transition-all duration-500 cubic-bezier(0.4, 0, 0.2, 1) pointer-events-none flex items-center justify-center
                                 ${isActive 
-                                    ? 'w-14 h-14 bg-indigo-600 rounded-full -mt-6 border-[6px] border-[#f3f4f6] shadow-[0_10px_20px_rgba(79,70,229,0.3)] flex items-center justify-center transform scale-100 opacity-100' 
+                                    // يرتفع للأعلى (-mt-6) بلون #1e3a8a
+                                    ? 'w-14 h-14 bg-[#1e3a8a] rounded-full -mt-7 border-[6px] border-[#f8fafc] shadow-[0_8px_20px_rgba(30,58,138,0.4)] opacity-100 transform scale-100' 
                                     : 'w-0 h-0 bg-transparent border-0 opacity-0 scale-0 translate-y-12'
                                 }
                             `}
                         >
-                           {isActive && <item.icon className="w-6 h-6 text-white animate-in fade-in zoom-in duration-300" strokeWidth={2.5} />}
+                           {isActive && <item.icon className="w-6 h-6 text-white" strokeWidth={2.5} />}
                         </span>
 
+                        {/* الأيقونة العادية (تختفي عند النشاط) */}
                         <span 
                             className={`
-                                transition-all duration-300 mb-1 group-hover:scale-110 group-active:scale-95 pointer-events-none
+                                transition-all duration-300 mb-1 pointer-events-none
                                 ${isActive 
-                                    ? 'opacity-0 scale-0 translate-y-10' 
-                                    : 'opacity-100 scale-100 text-gray-400 group-hover:text-indigo-500'
+                                    ? 'opacity-0 scale-0 translate-y-4' 
+                                    : 'opacity-100 scale-100 text-slate-400'
                                 }
                             `}
                         >
                             <item.icon className="w-6 h-6" strokeWidth={2} />
                         </span>
 
+                        {/* النص */}
                         <span 
                             className={`
                                 text-[10px] font-black transition-all duration-300 pointer-events-none
-                                ${isActive ? 'translate-y-1 text-indigo-600 opacity-100' : 'text-gray-400 opacity-80 group-hover:text-indigo-500'}
+                                ${isActive ? 'translate-y-0 text-[#1e3a8a] opacity-100' : 'text-slate-400 opacity-70'}
                             `}
                         >
                             {item.label}
@@ -272,28 +275,29 @@ const AppContent: React.FC = () => {
                 );
             })}
             
+            {/* زر المزيد */}
             <button
                 onClick={() => setShowMoreMenu(true)}
-                className="relative w-full h-full flex flex-col items-center justify-end group pb-1 touch-manipulation"
+                className="relative w-full h-full flex flex-col items-center justify-end group pb-2 touch-manipulation active:scale-95 transition-transform"
             >
                 <span 
                     className={`
-                        absolute top-0 transition-all duration-500 cubic-bezier(0.4, 0, 0.2, 1) pointer-events-none
+                        absolute top-0 transition-all duration-500 cubic-bezier(0.4, 0, 0.2, 1) pointer-events-none flex items-center justify-center
                         ${isMoreActive 
-                            ? 'w-14 h-14 bg-indigo-600 rounded-full -mt-6 border-[6px] border-[#f3f4f6] shadow-[0_10px_20px_rgba(79,70,229,0.3)] flex items-center justify-center transform scale-100 opacity-100' 
+                            ? 'w-14 h-14 bg-[#1e3a8a] rounded-full -mt-7 border-[6px] border-[#f8fafc] shadow-[0_8px_20px_rgba(30,58,138,0.4)] opacity-100 transform scale-100' 
                             : 'w-0 h-0 bg-transparent border-0 opacity-0 scale-0 translate-y-12'
                         }
                     `}
                 >
-                   {isMoreActive && <Grid className="w-6 h-6 text-white animate-in fade-in zoom-in duration-300" strokeWidth={2.5} />}
+                   {isMoreActive && <Grid className="w-6 h-6 text-white" strokeWidth={2.5} />}
                 </span>
 
                 <span 
                     className={`
-                        transition-all duration-300 mb-1 group-hover:scale-110 group-active:scale-95 pointer-events-none
+                        transition-all duration-300 mb-1 pointer-events-none
                         ${isMoreActive 
-                            ? 'opacity-0 scale-0 translate-y-10' 
-                            : 'opacity-100 scale-100 text-gray-400 group-hover:text-indigo-500'
+                            ? 'opacity-0 scale-0 translate-y-4' 
+                            : 'opacity-100 scale-100 text-slate-400'
                         }
                     `}
                 >
@@ -303,7 +307,7 @@ const AppContent: React.FC = () => {
                 <span 
                     className={`
                         text-[10px] font-black transition-all duration-300 pointer-events-none
-                        ${isMoreActive ? 'translate-y-1 text-indigo-600 opacity-100' : 'text-gray-400 opacity-80 group-hover:text-indigo-500'}
+                        ${isMoreActive ? 'translate-y-0 text-[#1e3a8a] opacity-100' : 'text-slate-400 opacity-70'}
                     `}
                 >
                     المزيد
@@ -312,7 +316,7 @@ const AppContent: React.FC = () => {
         </div>
 
         {/* Mobile Menu Modal */}
-        <Modal isOpen={showMoreMenu} onClose={() => setShowMoreMenu(false)} className="max-w-md rounded-[2rem] mb-28 md:hidden">
+        <Modal isOpen={showMoreMenu} onClose={() => setShowMoreMenu(false)} className="max-w-md rounded-[2rem] mb-28 md:hidden z-[10000]">
             <div className="text-center mb-6">
                 <div className="w-12 h-1 bg-gray-300 rounded-full mx-auto mb-4"></div>
                 <h3 className="font-black text-slate-800 text-lg">القائمة الكاملة</h3>
