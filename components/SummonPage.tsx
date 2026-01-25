@@ -1,16 +1,16 @@
-
 import React from 'react';
 import Reports from './Reports';
 
-// Since the functionality has been merged into Reports.tsx, this component acts as a redirect or wrapper.
-// In the current App structure, SummonPage isn't used directly in the main tabs anymore (it's part of Reports Center).
-// If it is used standalone, we render Reports with the active tab set to 'summon'.
-
 const SummonPage: React.FC = () => {
   return (
-    <div className="w-full">
-        {/* We reuse the Reports component because it contains the fixed PDF logic */}
-        <Reports />
+    // تطبيق خصائص الهوية البصرية الجديدة: الخطوط، الألوان، وحركة الدخول الناعمة
+    <div className="flex flex-col h-full bg-[#f8fafc] text-slate-900 font-sans animate-in fade-in slide-in-from-bottom-4 duration-500">
+        
+        {/* نستدعي مكون التقارير المتكامل (Reports)
+            ونطلب منه فتح تبويب "الاستدعاء" (summon) فوراً
+        */}
+        <Reports initialTab="summon" />
+        
     </div>
   );
 };
