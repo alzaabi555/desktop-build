@@ -88,7 +88,6 @@ const AttendanceTracker: React.FC<AttendanceTrackerProps> = ({ students, classes
           const matchesClass = classFilter === 'all' || s.classes.includes(classFilter);
           let matchesGrade = true;
           if (selectedGrade !== 'all') {
-             // منطق التطابق المحدث
              if (s.grade === selectedGrade) matchesGrade = true;
              else if (s.classes[0]) {
                  if (s.classes[0].includes('/')) matchesGrade = s.classes[0].split('/')[0].trim() === selectedGrade;
@@ -113,29 +112,25 @@ const AttendanceTracker: React.FC<AttendanceTrackerProps> = ({ students, classes
       }));
   };
 
-  // ✅ تحديث: منطق استخراج المراحل الموحد
   const availableGrades = useMemo(() => {
       const grades = new Set<string>();
       classes.forEach(c => {
-          if (c.includes('/')) {
-              grades.add(c.split('/')[0].trim());
-          } else {
+          if (c.includes('/')) grades.add(c.split('/')[0].trim());
+          else {
               const numMatch = c.match(/^(\d+)/);
               if (numMatch) grades.add(numMatch[1]);
-              else grades.add(c.split(' ')[0]);
+              else if(c.trim().split(' ')[0].length > 1) grades.add(c.trim().split(' ')[0]);
           }
       });
       students.forEach(s => { if (s.grade) grades.add(s.grade); });
       
       return Array.from(grades).sort((a, b) => {
-          const numA = parseInt(a);
-          const numB = parseInt(b);
+          const numA = parseInt(a); const numB = parseInt(b);
           if (!isNaN(numA) && !isNaN(numB)) return numA - numB;
-          return a.localeCompare(b);
+          return a.localeCompare(b, 'ar');
       });
   }, [students, classes]);
 
-  // ✅ تحديث: منطق تصفية الفصول بناءً على المرحلة المختارة
   const visibleClasses = useMemo(() => {
       if (selectedGrade === 'all') return classes;
       return classes.filter(c => {
@@ -144,7 +139,6 @@ const AttendanceTracker: React.FC<AttendanceTrackerProps> = ({ students, classes
       });
   }, [classes, selectedGrade]);
 
-  // ✅ تحديث: منطق تصفية الطلاب
   const filteredStudents = useMemo(() => {
     return students.filter(s => {
       const matchesClass = classFilter === 'all' || s.classes.includes(classFilter);
@@ -174,18 +168,11 @@ const AttendanceTracker: React.FC<AttendanceTrackerProps> = ({ students, classes
       
       let cleanPhone = student.parentPhone.replace(/[^0-9]/g, '');
       
-      if (cleanPhone.length === 8) {
-          cleanPhone = '968' + cleanPhone;
-      } else if (cleanPhone.startsWith('00')) {
-          cleanPhone = cleanPhone.substring(2);
-      } else if (cleanPhone.length === 9 && cleanPhone.startsWith('0')) {
-          cleanPhone = '968' + cleanPhone.substring(1);
-      }
+      if (cleanPhone.length === 8) { cleanPhone = '968' + cleanPhone; } 
+      else if (cleanPhone.startsWith('00')) { cleanPhone = cleanPhone.substring(2); } 
+      else if (cleanPhone.length === 9 && cleanPhone.startsWith('0')) { cleanPhone = '968' + cleanPhone.substring(1); }
 
-      if (cleanPhone.length < 8) {
-          alert('رقم الهاتف يبدو غير صحيح');
-          return;
-      }
+      if (cleanPhone.length < 8) { alert('رقم الهاتف يبدو غير صحيح'); return; }
 
       let statusText = '';
       if (type === 'absent') statusText = 'غائب'; 
@@ -194,23 +181,12 @@ const AttendanceTracker: React.FC<AttendanceTrackerProps> = ({ students, classes
       
       const dateText = new Date().toLocaleDateString('ar-EG');
       const msg = `السلام عليكم، نود إشعاركم بأن الطالب *${student.name}* تم تسجيل حالة: *${statusText}* اليوم (${dateText}) في حصة ${teacherInfo.subject}. نرجو المتابعة.`;
-      
       const encodedMsg = encodeURIComponent(msg);
 
       if (method === 'whatsapp') {
           const universalUrl = `https://api.whatsapp.com/send?phone=${cleanPhone}&text=${encodedMsg}`;
-          try { 
-              if (Capacitor.isNativePlatform()) { 
-                  await Browser.open({ url: universalUrl }); 
-              } else { 
-                  window.open(universalUrl, '_blank'); 
-              } 
-          } catch (e) { 
-              window.open(universalUrl, '_blank'); 
-          }
-      } else { 
-          window.location.href = `sms:${cleanPhone}?body=${encodedMsg}`; 
-      }
+          try { if (Capacitor.isNativePlatform()) { await Browser.open({ url: universalUrl }); } else { window.open(universalUrl, '_blank'); } } catch (e) { window.open(universalUrl, '_blank'); }
+      } else { window.location.href = `sms:${cleanPhone}?body=${encodedMsg}`; }
       setNotificationTarget(null);
   };
 
@@ -256,8 +232,8 @@ const AttendanceTracker: React.FC<AttendanceTrackerProps> = ({ students, classes
   return (
     <div className="flex flex-col h-full bg-[#f8fafc] text-slate-800 relative animate-in fade-in duration-500 font-sans">
         
-        {/* ================= HEADER ================= */}
-        <div className="fixed top-0 left-0 right-0 z-50 bg-[#1e3a8a] text-white rounded-b-[2.5rem] shadow-lg px-6 pt-[env(safe-area-inset-top)] pb-8 transition-all duration-300">
+        {/* ================= HEADER FIX ================= */}
+        <div className="sticky top-0 z-50 bg-[#1e3a8a] text-white shadow-lg px-6 pt-[env(safe-area-inset-top)] pb-4 transition-all duration-300 rounded-b-[2.5rem] md:rounded-none md:shadow-md">
             
             <div className="flex justify-center items-center mt-4 mb-2 relative">
                 <h1 className="text-xl font-bold tracking-wide opacity-90">رصد الحضور</h1>
@@ -299,102 +275,70 @@ const AttendanceTracker: React.FC<AttendanceTrackerProps> = ({ students, classes
             </div>
         </div>
 
-        {/* ================= CONTENT ================= */}
-        <div className="flex-1 h-full overflow-y-auto custom-scrollbar">
+        {/* ================= CONTENT LIST (Spacer Removed) ================= */}
+        <div className="flex-1 h-full overflow-y-auto custom-scrollbar px-4 pt-4 pb-24">
             
-            <div className="w-full h-[340px] shrink-0"></div>
-
-            <div className="px-4 pb-24 -mt-4 relative z-10">
-                
-                {/* Stats */}
-                <div className="bg-white rounded-2xl shadow-md border border-slate-100 p-2 mb-6 flex justify-around">
-                     <div className="text-center"><span className="block text-xs text-gray-400 font-bold mb-1">الطلاب</span><span className="text-lg font-black text-slate-800">{filteredStudents.length}</span></div>
-                     <div className="w-px bg-gray-100"></div>
-                     <div className="text-center cursor-pointer hover:bg-rose-50 rounded-lg p-1 transition-colors" onClick={() => handleMarkAll('absent')}><span className="block text-xs text-rose-400 font-bold mb-1">غياب</span><span className="text-lg font-black text-rose-600">{stats.absent}</span></div>
-                     <div className="w-px bg-gray-100"></div>
-                     <div className="text-center cursor-pointer hover:bg-emerald-50 rounded-lg p-1 transition-colors" onClick={() => handleMarkAll('present')}><span className="block text-xs text-emerald-400 font-bold mb-1">حضور</span><span className="text-lg font-black text-emerald-600">{stats.present}</span></div>
-                </div>
-
-                {filteredStudents.length > 0 ? (
-                    <div className="space-y-4">
-                        {filteredStudents.map((student) => {
-                            const status = getStatus(student);
-                            
-                            let cardClasses = "bg-white border-slate-200";
-                            if (status === 'present') cardClasses = "bg-emerald-50 border-emerald-300 ring-1 ring-emerald-300 shadow-emerald-100";
-                            else if (status === 'absent') cardClasses = "bg-rose-50 border-rose-300 ring-1 ring-rose-300 shadow-rose-100";
-                            else if (status === 'late') cardClasses = "bg-amber-50 border-amber-300 ring-1 ring-amber-300 shadow-amber-100";
-                            else if (status === 'truant') cardClasses = "bg-purple-50 border-purple-300 ring-1 ring-purple-300 shadow-purple-100";
-
-                            return (
-                                <div key={student.id} className={`flex flex-col p-5 rounded-[1.5rem] border-2 transition-all duration-300 shadow-sm ${cardClasses}`}>
-                                    
-                                    {/* Student Header */}
-                                    <div className="flex items-center justify-between mb-4">
-                                        <div className="flex items-center gap-3">
-                                            <div className="w-14 h-14 rounded-2xl bg-white flex items-center justify-center overflow-hidden border-2 border-white/50 shadow-sm shrink-0">
-                                                {student.avatar ? <img src={student.avatar} className="w-full h-full object-cover"/> : <span className="text-lg font-black text-slate-300">{student.name.charAt(0)}</span>}
-                                            </div>
-                                            <div>
-                                                <h3 className="text-base font-black text-slate-900 leading-tight">{student.name}</h3>
-                                                <span className="text-[10px] font-bold text-slate-500 bg-white/50 px-2 py-0.5 rounded-lg mt-1 inline-block" dir="ltr">ID: {student.id.substring(0,6)}</span>
-                                            </div>
-                                        </div>
-                                        
-                                        {/* زر الواتساب يظهر هنا عند وجود حالة سلبية */}
-                                        {(status && status !== 'present') && (
-                                            <button onClick={() => setNotificationTarget({ student, type: status as any })} className="w-10 h-10 bg-white rounded-full flex items-center justify-center text-blue-500 shadow-sm border border-slate-100 animate-in zoom-in">
-                                                <MessageCircle className="w-5 h-5" />
-                                            </button>
-                                        )}
-                                    </div>
-
-                                    {/* 3. أزرار كبيرة وملونة */}
-                                    <div className="grid grid-cols-4 gap-2">
-                                        <button 
-                                            onClick={() => toggleAttendance(student.id, 'present')}
-                                            className={`py-3 rounded-xl flex flex-col items-center justify-center gap-1 transition-all active:scale-95 ${status === 'present' ? 'bg-emerald-600 text-white shadow-lg' : 'bg-white text-slate-400 hover:bg-emerald-50 hover:text-emerald-600 border border-slate-100'}`}
-                                        >
-                                            <Check className="w-5 h-5" strokeWidth={3} />
-                                            <span className="text-[10px] font-bold">حضور</span>
-                                        </button>
-
-                                        <button 
-                                            onClick={() => toggleAttendance(student.id, 'late')}
-                                            className={`py-3 rounded-xl flex flex-col items-center justify-center gap-1 transition-all active:scale-95 ${status === 'late' ? 'bg-amber-500 text-white shadow-lg' : 'bg-white text-slate-400 hover:bg-amber-50 hover:text-amber-500 border border-slate-100'}`}
-                                        >
-                                            <Clock className="w-5 h-5" strokeWidth={3} />
-                                            <span className="text-[10px] font-bold">تأخر</span>
-                                        </button>
-
-                                        <button 
-                                            onClick={() => toggleAttendance(student.id, 'absent')}
-                                            className={`py-3 rounded-xl flex flex-col items-center justify-center gap-1 transition-all active:scale-95 ${status === 'absent' ? 'bg-rose-600 text-white shadow-lg' : 'bg-white text-slate-400 hover:bg-rose-50 hover:text-rose-500 border border-slate-100'}`}
-                                        >
-                                            <X className="w-5 h-5" strokeWidth={3} />
-                                            <span className="text-[10px] font-bold">غياب</span>
-                                        </button>
-
-                                        <button 
-                                            onClick={() => toggleAttendance(student.id, 'truant')}
-                                            className={`py-3 rounded-xl flex flex-col items-center justify-center gap-1 transition-all active:scale-95 ${status === 'truant' ? 'bg-purple-600 text-white shadow-lg' : 'bg-white text-slate-400 hover:bg-purple-50 hover:text-purple-500 border border-slate-100'}`}
-                                        >
-                                            <DoorOpen className="w-5 h-5" strokeWidth={3} />
-                                            <span className="text-[10px] font-bold">تسرب</span>
-                                        </button>
-                                    </div>
-
-                                </div>
-                            );
-                        })}
-                    </div>
-                ) : (
-                    <div className="flex flex-col items-center justify-center py-20 opacity-40">
-                        <UserCircle2 className="w-20 h-20 text-gray-300 mb-4" />
-                        <p className="text-sm font-bold text-gray-400">لا يوجد طلاب للعرض</p>
-                    </div>
-                )}
+            {/* Stats */}
+            <div className="bg-white rounded-2xl shadow-md border border-slate-100 p-2 mb-6 flex justify-around">
+                 <div className="text-center"><span className="block text-xs text-gray-400 font-bold mb-1">الطلاب</span><span className="text-lg font-black text-slate-800">{filteredStudents.length}</span></div>
+                 <div className="w-px bg-gray-100"></div>
+                 <div className="text-center cursor-pointer hover:bg-rose-50 rounded-lg p-1 transition-colors" onClick={() => handleMarkAll('absent')}><span className="block text-xs text-rose-400 font-bold mb-1">غياب</span><span className="text-lg font-black text-rose-600">{stats.absent}</span></div>
+                 <div className="w-px bg-gray-100"></div>
+                 <div className="text-center cursor-pointer hover:bg-emerald-50 rounded-lg p-1 transition-colors" onClick={() => handleMarkAll('present')}><span className="block text-xs text-emerald-400 font-bold mb-1">حضور</span><span className="text-lg font-black text-emerald-600">{stats.present}</span></div>
             </div>
+
+            {filteredStudents.length > 0 ? (
+                <div className="space-y-4">
+                    {filteredStudents.map((student) => {
+                        const status = getStatus(student);
+                        
+                        let cardClasses = "bg-white border-slate-200";
+                        if (status === 'present') cardClasses = "bg-emerald-50 border-emerald-300 ring-1 ring-emerald-300 shadow-emerald-100";
+                        else if (status === 'absent') cardClasses = "bg-rose-50 border-rose-300 ring-1 ring-rose-300 shadow-rose-100";
+                        else if (status === 'late') cardClasses = "bg-amber-50 border-amber-300 ring-1 ring-amber-300 shadow-amber-100";
+                        else if (status === 'truant') cardClasses = "bg-purple-50 border-purple-300 ring-1 ring-purple-300 shadow-purple-100";
+
+                        return (
+                            <div key={student.id} className={`flex flex-col p-5 rounded-[1.5rem] border-2 transition-all duration-300 shadow-sm ${cardClasses}`}>
+                                
+                                {/* Student Header */}
+                                <div className="flex items-center justify-between mb-4">
+                                    <div className="flex items-center gap-3">
+                                        <div className="w-14 h-14 rounded-2xl bg-white flex items-center justify-center overflow-hidden border-2 border-white/50 shadow-sm shrink-0">
+                                            {student.avatar ? <img src={student.avatar} className="w-full h-full object-cover"/> : <span className="text-lg font-black text-slate-300">{student.name.charAt(0)}</span>}
+                                        </div>
+                                        <div>
+                                            <h3 className="text-base font-black text-slate-900 leading-tight">{student.name}</h3>
+                                            <span className="text-[10px] font-bold text-slate-500 bg-white/50 px-2 py-0.5 rounded-lg mt-1 inline-block" dir="ltr">ID: {student.id.substring(0,6)}</span>
+                                        </div>
+                                    </div>
+                                    
+                                    {/* زر الواتساب يظهر هنا عند وجود حالة سلبية */}
+                                    {(status && status !== 'present') && (
+                                        <button onClick={() => setNotificationTarget({ student, type: status as any })} className="w-10 h-10 bg-white rounded-full flex items-center justify-center text-blue-500 shadow-sm border border-slate-100 animate-in zoom-in">
+                                            <MessageCircle className="w-5 h-5" />
+                                        </button>
+                                    )}
+                                </div>
+
+                                {/* 3. أزرار كبيرة وملونة */}
+                                <div className="grid grid-cols-4 gap-2">
+                                    <button onClick={() => toggleAttendance(student.id, 'present')} className={`py-3 rounded-xl flex flex-col items-center justify-center gap-1 transition-all active:scale-95 ${status === 'present' ? 'bg-emerald-600 text-white shadow-lg' : 'bg-white text-slate-400 hover:bg-emerald-50 hover:text-emerald-600 border border-slate-100'}`}><Check className="w-5 h-5" strokeWidth={3} /><span className="text-[10px] font-bold">حضور</span></button>
+                                    <button onClick={() => toggleAttendance(student.id, 'late')} className={`py-3 rounded-xl flex flex-col items-center justify-center gap-1 transition-all active:scale-95 ${status === 'late' ? 'bg-amber-500 text-white shadow-lg' : 'bg-white text-slate-400 hover:bg-amber-50 hover:text-amber-500 border border-slate-100'}`}><Clock className="w-5 h-5" strokeWidth={3} /><span className="text-[10px] font-bold">تأخر</span></button>
+                                    <button onClick={() => toggleAttendance(student.id, 'absent')} className={`py-3 rounded-xl flex flex-col items-center justify-center gap-1 transition-all active:scale-95 ${status === 'absent' ? 'bg-rose-600 text-white shadow-lg' : 'bg-white text-slate-400 hover:bg-rose-50 hover:text-rose-500 border border-slate-100'}`}><X className="w-5 h-5" strokeWidth={3} /><span className="text-[10px] font-bold">غياب</span></button>
+                                    <button onClick={() => toggleAttendance(student.id, 'truant')} className={`py-3 rounded-xl flex flex-col items-center justify-center gap-1 transition-all active:scale-95 ${status === 'truant' ? 'bg-purple-600 text-white shadow-lg' : 'bg-white text-slate-400 hover:bg-purple-50 hover:text-purple-500 border border-slate-100'}`}><DoorOpen className="w-5 h-5" strokeWidth={3} /><span className="text-[10px] font-bold">تسرب</span></button>
+                                </div>
+
+                            </div>
+                        );
+                    })}
+                </div>
+            ) : (
+                <div className="flex flex-col items-center justify-center py-20 opacity-40">
+                    <UserCircle2 className="w-20 h-20 text-gray-300 mb-4" />
+                    <p className="text-sm font-bold text-gray-400">لا يوجد طلاب للعرض</p>
+                </div>
+            )}
         </div>
 
         {/* Notification Modal */}
@@ -409,14 +353,9 @@ const AttendanceTracker: React.FC<AttendanceTrackerProps> = ({ students, classes
                     <br/>
                     ({notificationTarget?.type === 'truant' ? 'تسرب' : notificationTarget?.type === 'absent' ? 'غياب' : 'تأخر'})
                 </p>
-                
                 <div className="space-y-3">
-                    <button onClick={() => performNotification('whatsapp')} className="w-full bg-[#25D366] hover:bg-[#128C7E] text-white py-4 rounded-2xl font-black text-sm flex items-center justify-center gap-3 shadow-lg shadow-green-200 active:scale-95 transition-transform">
-                        <Smartphone className="w-5 h-5" /> عبر واتساب
-                    </button>
-                    <button onClick={() => performNotification('sms')} className="w-full bg-slate-800 hover:bg-slate-900 text-white py-4 rounded-2xl font-black text-sm flex items-center justify-center gap-3 shadow-lg active:scale-95 transition-transform">
-                        <Mail className="w-5 h-5" /> رسالة نصية (SMS)
-                    </button>
+                    <button onClick={() => performNotification('whatsapp')} className="w-full bg-[#25D366] hover:bg-[#128C7E] text-white py-4 rounded-2xl font-black text-sm flex items-center justify-center gap-3 shadow-lg shadow-green-200 active:scale-95 transition-transform"><Smartphone className="w-5 h-5" /> عبر واتساب</button>
+                    <button onClick={() => performNotification('sms')} className="w-full bg-slate-800 hover:bg-slate-900 text-white py-4 rounded-2xl font-black text-sm flex items-center justify-center gap-3 shadow-lg active:scale-95 transition-transform"><Mail className="w-5 h-5" /> رسالة نصية (SMS)</button>
                     <button onClick={() => setNotificationTarget(null)} className="text-xs font-bold text-gray-400 mt-2 hover:text-gray-600 py-2">إلغاء</button>
                 </div>
             </div>
