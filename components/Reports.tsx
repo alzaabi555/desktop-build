@@ -25,8 +25,11 @@ const getGradingSettings = () => {
     return saved ? JSON.parse(saved) : { totalScore: 100, finalExamWeight: 40, finalExamName: 'الامتحان النهائي' };
 };
 
+// --- نافذة المعاينة (Print Preview Modal) ---
+// التعديل: استخدام z-[1050] لتغطية القائمة الجانبية + Flexbox للرأس
 const PrintPreviewModal: React.FC<{ isOpen: boolean; onClose: () => void; title: string; content: React.ReactNode; landscape?: boolean; }> = ({ isOpen, onClose, title, content, landscape }) => {
     const [isPrinting, setIsPrinting] = useState(false);
+    
     const handlePrint = async () => {
         const element = document.getElementById('preview-content-area');
         if (!element) return;
@@ -34,27 +37,57 @@ const PrintPreviewModal: React.FC<{ isOpen: boolean; onClose: () => void; title:
         const scrollContainer = document.getElementById('preview-scroll-container');
         if (scrollContainer) scrollContainer.scrollTop = 0;
         
-        const opt = { margin: [0, 0, 0, 0], filename: `${title.replace(/\s/g, '_')}_${new Date().getTime()}.pdf`, image: { type: 'jpeg', quality: 0.98 }, html2canvas: { scale: 2, useCORS: true, logging: false, backgroundColor: '#ffffff', windowWidth: landscape ? 1123 : 794 }, jsPDF: { unit: 'mm', format: 'a4', orientation: landscape ? 'landscape' : 'portrait' }, pagebreak: { mode: ['avoid-all', 'css', 'legacy'] } };
+        const opt = { 
+            margin: [0, 0, 0, 0], 
+            filename: `${title.replace(/\s/g, '_')}_${new Date().getTime()}.pdf`, 
+            image: { type: 'jpeg', quality: 0.98 }, 
+            html2canvas: { scale: 2, useCORS: true, logging: false, backgroundColor: '#ffffff', windowWidth: landscape ? 1123 : 794 }, 
+            jsPDF: { unit: 'mm', format: 'a4', orientation: landscape ? 'landscape' : 'portrait' }, 
+            pagebreak: { mode: ['avoid-all', 'css', 'legacy'] } 
+        };
+        
         try {
             const worker = html2pdf().set(opt).from(element).toPdf();
             if (Capacitor.isNativePlatform()) {
                 const pdfBase64 = await worker.output('datauristring');
-                const base64Data = pdfBase64.split(',')[1];
-                const result = await Filesystem.writeFile({ path: opt.filename, data: base64Data, directory: Directory.Cache });
+                const result = await Filesystem.writeFile({ path: opt.filename, data: pdfBase64.split(',')[1], directory: Directory.Cache });
                 await Share.share({ title: title, url: result.uri, dialogTitle: 'مشاركة التقرير' });
-            } else { worker.save(); }
-        } catch (e) { console.error("Print Error:", e); alert('حدث خطأ أثناء إنشاء ملف PDF.'); } finally { setIsPrinting(false); }
+            } else { 
+                worker.save(); 
+            }
+        } catch (e) { 
+            console.error("Print Error:", e); alert('حدث خطأ أثناء إنشاء ملف PDF.'); 
+        } finally { 
+            setIsPrinting(false); 
+        }
     };
+
     if (!isOpen) return null;
+
     return (
-        <div className="fixed inset-0 z-[9999] bg-black/95 backdrop-blur-sm flex flex-col animate-in fade-in duration-200">
-            <div className="bg-slate-900 text-white p-4 flex justify-between items-center border-b border-white/10 shrink-0 shadow-xl safe-area-top"><div className="flex items-center gap-3"><button onClick={onClose} className="p-2 hover:bg-white/10 rounded-full transition-colors"><ArrowRight className="w-6 h-6" /></button><div><h3 className="font-bold text-lg">{title}</h3><p className="text-xs text-slate-400 font-mono">{landscape ? 'A4 Landscape' : 'A4 Portrait'}</p></div></div><button onClick={handlePrint} disabled={isPrinting} className="bg-indigo-600 hover:bg-indigo-500 text-white px-6 py-2 rounded-xl font-bold flex items-center gap-2 shadow-lg disabled:opacity-50 transition-all active:scale-95">{isPrinting ? <Loader2 className="animate-spin w-5 h-5" /> : <Printer className="w-5 h-5" />} {isPrinting ? 'جاري المعالجة...' : 'تصدير ومشاركة'}</button></div>
-            <div id="preview-scroll-container" className="flex-1 overflow-auto bg-slate-800 p-4 md:p-8 flex justify-center cursor-default"><div id="preview-content-area" className="bg-white text-black shadow-2xl origin-top" style={{ width: landscape ? '297mm' : '210mm', minHeight: landscape ? '210mm' : '297mm', padding: '0', direction: 'rtl', fontFamily: 'Tajawal, sans-serif', backgroundColor: '#ffffff', color: '#000000', boxSizing: 'border-box' }}>{content}</div></div>
+        <div className="fixed inset-0 z-[1050] bg-black/95 backdrop-blur-sm flex flex-col animate-in fade-in duration-200">
+            {/* رأس النافذة الثابت (ليس fixed بل Flex Item ثابت) */}
+            <div className="bg-slate-900 text-white p-4 flex justify-between items-center border-b border-white/10 shrink-0 shadow-xl safe-area-top">
+                <div className="flex items-center gap-3">
+                    <button onClick={onClose} className="p-2 hover:bg-white/10 rounded-full transition-colors"><ArrowRight className="w-6 h-6" /></button>
+                    <div><h3 className="font-bold text-lg">{title}</h3><p className="text-xs text-slate-400 font-mono">{landscape ? 'A4 Landscape' : 'A4 Portrait'}</p></div>
+                </div>
+                <button onClick={handlePrint} disabled={isPrinting} className="bg-indigo-600 hover:bg-indigo-500 text-white px-6 py-2 rounded-xl font-bold flex items-center gap-2 shadow-lg disabled:opacity-50 transition-all active:scale-95">
+                    {isPrinting ? <Loader2 className="animate-spin w-5 h-5" /> : <Printer className="w-5 h-5" />} {isPrinting ? 'جاري المعالجة...' : 'تصدير ومشاركة'}
+                </button>
+            </div>
+            
+            {/* منطقة المحتوى القابلة للتمرير */}
+            <div id="preview-scroll-container" className="flex-1 overflow-auto bg-slate-800 p-4 md:p-8 flex justify-center cursor-default">
+                <div id="preview-content-area" className="bg-white text-black shadow-2xl origin-top" style={{ width: landscape ? '297mm' : '210mm', minHeight: landscape ? '210mm' : '297mm', padding: '0', direction: 'rtl', fontFamily: 'Tajawal, sans-serif', backgroundColor: '#ffffff', color: '#000000', boxSizing: 'border-box' }}>
+                    {content}
+                </div>
+            </div>
         </div>
     );
 };
 
-// ... (Templates: GradesTemplate, CertificatesTemplate, SummonTemplate, ClassReportsTemplate - Kept Same for brevity, assume they are present) ...
+// ... (Templates: GradesTemplate, CertificatesTemplate, SummonTemplate, ClassReportsTemplate - نفس الأكواد السابقة تماماً، لم تتغير) ...
 const GradesTemplate = ({ students, tools, teacherInfo, semester, gradeClass }: any) => { 
     const settings = getGradingSettings();
     const finalExamName = settings.finalExamName.trim();
@@ -81,9 +114,6 @@ const CertificatesTemplate = ({ students, settings, teacherInfo }: any) => { con
 const SummonTemplate = ({ student, teacherInfo, data }: any) => { if (!student) return <div className="p-10 text-center text-black">خطأ: بيانات الطالب غير متوفرة</div>; const safeData = data || {}; const safeProcedures = Array.isArray(safeData.procedures) ? safeData.procedures : []; return (<div className="w-full text-black bg-white p-16 font-serif text-right h-full" dir="rtl"><div className="text-center mb-12 border-b-2 border-black pb-6"><div className="flex justify-center mb-4">{teacherInfo?.ministryLogo ? <img src={teacherInfo.ministryLogo} className="h-24 object-contain" /> : <div className="w-20 h-20 bg-slate-100 rounded-full border"></div>}</div><h3 className="font-bold text-lg mb-1">سلطنة عمان - وزارة التربية والتعليم</h3><h3 className="font-bold text-lg">مدرسة {teacherInfo?.school || '................'}</h3></div><div className="bg-gray-50 border border-gray-300 p-6 rounded-2xl mb-10 flex justify-between items-center shadow-sm"><div><p className="text-gray-500 text-sm font-bold mb-1">إلى الفاضل ولي أمر الطالب:</p><h2 className="text-2xl font-black text-slate-900">{student.name}</h2></div><div className="text-left"><p className="font-bold text-base">الصف: {safeData.className || '...'}</p><p className="font-bold text-base text-gray-500">التاريخ: {safeData.issueDate || '...'}</p></div></div><h2 className="text-center text-4xl font-black underline mb-12">استدعاء ولي أمر</h2><div className="text-2xl leading-loose text-justify mb-10 px-4"><p className="mb-4">السلام عليكم ورحمة الله وبركاته،،،</p><p>نود إفادتكم بضرورة الحضور إلى المدرسة يوم <strong>{safeData.date || '...'}</strong> الساعة <strong>{safeData.time || '...'}</strong>، وذلك لمناقشة الأمر التالي:</p></div><div className="bg-white border-2 border-black p-8 text-center text-2xl font-bold rounded-2xl mb-12 shadow-sm min-h-[120px] flex items-center justify-center">{safeData.reason || '................................'}</div>{safeProcedures.length > 0 && (<div className="mb-12 border border-dashed border-gray-400 p-6 rounded-xl bg-slate-50"><p className="font-bold underline mb-4 text-xl">الإجراءات المتخذة مسبقاً:</p><ul className="list-disc pr-8 text-xl space-y-2">{safeProcedures.map((p:any, i: number) => <li key={i}>{p}</li>)}</ul></div>)}<p className="text-xl mt-12 mb-20 text-center font-bold">شاكرين لكم حسن تعاونكم واهتمامكم بمصلحة الطالب.</p><div className="flex justify-between items-end px-10 mt-auto"><div className="text-center"><p className="font-bold text-xl mb-8">معلم المادة</p><p className="text-2xl font-black">{teacherInfo?.name}</p></div><div className="text-center">{teacherInfo?.stamp && <img src={teacherInfo.stamp} className="w-40 opacity-80 mix-blend-multiply" />}</div><div className="text-center"><p className="font-bold text-xl mb-8">مدير المدرسة</p><p className="text-2xl font-black">....................</p></div></div></div>); };
 const ClassReportsTemplate = ({ students, teacherInfo, semester, assessmentTools }: any) => { const settings = getGradingSettings(); const finalExamName = settings.finalExamName.trim(); if (!students || students.length === 0) return <div className="text-black text-center p-10">لا توجد بيانات طلاب لعرضها</div>; const continuousTools = assessmentTools ? assessmentTools.filter((t: any) => t.name.trim() !== finalExamName) : []; const finalTool = assessmentTools ? assessmentTools.find((t: any) => t.name.trim() === finalExamName) : null; return (<div className="w-full text-black bg-white">{students.map((student: any) => { const behaviors = (student.behaviors || []).filter((b: any) => !b.semester || b.semester === (semester || '1')); const grades = (student.grades || []).filter((g: any) => !g.semester || g.semester === (semester || '1')); let continuousSum = 0; continuousTools.forEach((tool: any) => { const g = grades.find((r: any) => r.category.trim() === tool.name.trim()); if (g) continuousSum += (Number(g.score) || 0); }); let finalScore = 0; if (finalTool) { const g = grades.find((r: any) => r.category.trim() === finalTool.name.trim()); if (g) finalScore = (Number(g.score) || 0); } const totalScore = continuousSum + finalScore; const absenceCount = (student.attendance || []).filter((a: any) => a.status === 'absent').length; const truantCount = (student.attendance || []).filter((a: any) => a.status === 'truant').length; const totalPositive = behaviors.filter((b: any) => b.type === 'positive').reduce((acc: number, b: any) => acc + b.points, 0); const totalNegative = behaviors.filter((b: any) => b.type === 'negative').reduce((acc: number, b: any) => acc + Math.abs(b.points), 0); return (<div key={student.id} className="w-full min-h-[297mm] p-10 border-b border-gray-300 page-break-after-always relative bg-white" style={{ pageBreakAfter: 'always' }}><div className="flex justify-between items-start mb-8 border-b-2 border-slate-200 pb-4"><div className="text-right w-1/3 text-sm font-bold"><p>سلطنة عمان</p><p>وزارة التربية والتعليم</p><p>مدرسة {teacherInfo?.school}</p></div><div className="text-center w-1/3">{teacherInfo?.ministryLogo && <img src={teacherInfo.ministryLogo} className="h-16 object-contain mx-auto" />}<h2 className="text-xl font-black underline mt-2 text-black">تقرير مستوى طالب</h2></div><div className="text-left w-1/3 text-sm font-bold"><p>العام: {teacherInfo?.academicYear}</p><p>الفصل: {semester === '1' ? 'الأول' : 'الثاني'}</p></div></div><div className="bg-slate-50 p-6 rounded-2xl border border-slate-200 mb-8 flex justify-between items-center text-black"><div><h3 className="text-2xl font-black mb-1">{student.name}</h3><p className="text-base text-slate-600 font-bold">الصف: {student.classes[0]}</p></div><div className="flex gap-4 text-xs font-bold"><span className="bg-emerald-100 text-emerald-800 px-3 py-1 rounded">إيجابي: {totalPositive}</span><span className="bg-rose-100 text-rose-800 px-3 py-1 rounded">سلبي: {totalNegative}</span></div></div><h3 className="font-bold text-lg mb-3 border-b-2 border-black inline-block">التحصيل الدراسي</h3><table className="w-full border-collapse border border-black text-sm mb-8"><thead><tr className="bg-gray-100"><th className="border border-black p-3 text-right">المادة</th><th className="border border-black p-3 text-center">أداة التقويم</th><th className="border border-black p-3 text-center w-24">الدرجة</th></tr></thead><tbody>{continuousTools.map((t: any) => { const g = grades.find((r: any) => r.category.trim() === t.name.trim()); return <tr key={t.id}><td className="border border-black p-3 font-bold">{teacherInfo?.subject}</td><td className="border border-black p-3 text-center">{t.name}</td><td className="border border-black p-3 text-center font-bold">{g ? g.score : '-'}</td></tr> })}{finalTool && (() => { const g = grades.find((r: any) => r.category.trim() === finalTool.name.trim()); return <tr><td className="border border-black p-3 font-bold">{teacherInfo?.subject}</td><td className="border border-black p-3 text-center bg-pink-50 font-bold">{finalTool.name}</td><td className="border border-black p-3 text-center font-black">{g ? g.score : '-'}</td></tr> })()}<tr className="bg-slate-200 font-bold"><td colSpan={2} className="border border-black p-3 text-right text-base">المجموع الكلي</td><td className="border border-black p-3 text-center text-lg font-black">{totalScore}</td></tr></tbody></table><div className="flex gap-6 mb-12"><div className="flex-1 border-2 border-slate-200 p-4 rounded-xl text-center"><p className="text-sm font-bold text-slate-500 mb-1">أيام الغياب</p><p className="text-3xl font-black text-rose-600">{absenceCount}</p></div><div className="flex-1 border-2 border-slate-200 p-4 rounded-xl text-center"><p className="text-sm font-bold text-slate-500 mb-1">مرات التسرب</p><p className="text-3xl font-black text-purple-600">{truantCount}</p></div></div><div className="flex justify-between items-end px-12 mt-auto"><div className="text-center"><p className="font-bold text-base mb-8">معلم المادة</p><p className="font-bold text-lg">{teacherInfo?.name}</p></div><div className="text-center">{teacherInfo?.stamp && <img src={teacherInfo.stamp} className="w-24 opacity-80 mix-blend-multiply" />}</div><div className="text-center"><p className="font-bold text-base mb-8">مدير المدرسة</p><p className="font-bold text-lg">........................</p></div></div></div>); })}</div>); };
 
-// =================================================================================
-// 3. UI (Main Component)
-// =================================================================================
 const Reports: React.FC<ReportsProps> = ({ initialTab }) => {
   const { students, setStudents, classes, teacherInfo, currentSemester, assessmentTools, certificateSettings, setCertificateSettings } = useApp();
   const [activeTab, setActiveTab] = useState<'student_report' | 'grades_record' | 'certificates' | 'summon'>(initialTab || 'student_report');
@@ -111,28 +141,28 @@ const Reports: React.FC<ReportsProps> = ({ initialTab }) => {
 
   const [previewData, setPreviewData] = useState<{ isOpen: boolean; title: string; content: React.ReactNode; landscape?: boolean }>({ isOpen: false, title: '', content: null });
 
-  // ✅ تحديث: استخراج المراحل (نفس المنطق الموحد الجديد)
   const availableGrades = useMemo(() => {
       const grades = new Set<string>();
       classes.forEach(c => {
-          if (c.includes('/')) grades.add(c.split('/')[0].trim());
-          else {
+          if (c.includes('/')) {
+              grades.add(c.split('/')[0].trim());
+          } else {
               const numMatch = c.match(/^(\d+)/);
               if (numMatch) grades.add(numMatch[1]);
-              else if(c.trim().split(' ')[0].length > 1) grades.add(c.trim().split(' ')[0]);
+              else grades.add(c.split(' ')[0]);
           }
       });
       students.forEach(s => { if (s.grade) grades.add(s.grade); });
       if (grades.size === 0 && classes.length > 0) return ['عام'];
       
       return Array.from(grades).sort((a, b) => {
-          const numA = parseInt(a); const numB = parseInt(b);
+          const numA = parseInt(a);
+          const numB = parseInt(b);
           if (!isNaN(numA) && !isNaN(numB)) return numA - numB;
-          return a.localeCompare(b, 'ar');
+          return a.localeCompare(b);
       });
   }, [students, classes]);
 
-  // ✅ تحديث: جلب الفصول
   const getClassesForGrade = (grade: string) => {
       if (grade === 'all') return classes;
       return classes.filter(c => {
@@ -167,11 +197,27 @@ const Reports: React.FC<ReportsProps> = ({ initialTab }) => {
   const availableProceduresList = ['تنبيه شفوي', 'تعهد خطي', 'اتصال هاتفي', 'إشعار واتساب', 'تحويل أخصائي'];
   const toggleProcedure = (proc: string) => setTakenProcedures(prev => prev.includes(proc) ? prev.filter(p => p !== proc) : [...prev, proc]);
 
-  // Preview Functions
-  const openGradesPreview = () => { if (filteredStudentsForGrades.length === 0) return alert('لا يوجد طلاب'); setPreviewData({ isOpen: true, title: 'سجل الدرجات', landscape: true, content: <GradesTemplate students={filteredStudentsForGrades} tools={assessmentTools} teacherInfo={teacherInfo} semester={currentSemester} gradeClass={gradesClass === 'all' ? 'الكل' : gradesClass} /> }); };
-  const openCertificatesPreview = () => { const targets = filteredStudentsForCert.filter(s => selectedCertStudents.includes(s.id)); if (targets.length === 0) return; setPreviewData({ isOpen: true, title: 'شهادات التقدير', landscape: true, content: <CertificatesTemplate students={targets} settings={certificateSettings || DEFAULT_CERT_SETTINGS} teacherInfo={teacherInfo} /> }); };
-  const openSummonPreview = () => { const s = availableStudentsForSummon.find(st => st.id === summonStudentId); if (!s) return alert('اختر طالباً'); setPreviewData({ isOpen: true, title: `استدعاء - ${s.name}`, landscape: false, content: <SummonTemplate student={s} teacherInfo={teacherInfo} data={{...summonData, reason: getReasonText(), className: summonClass, procedures: takenProcedures, issueDate: summonData.issueDate}} /> }); };
-  const openClassReportsPreview = () => { if (filteredStudentsForStudentTab.length === 0) return alert('لا يوجد طلاب في هذا الفصل'); setPreviewData({ isOpen: true, title: `تقارير الصف ${stClass}`, landscape: false, content: <ClassReportsTemplate students={filteredStudentsForStudentTab} teacherInfo={teacherInfo} semester={currentSemester} assessmentTools={assessmentTools} /> }); };
+  const openGradesPreview = () => {
+    if (filteredStudentsForGrades.length === 0) return alert('لا يوجد طلاب');
+    setPreviewData({ isOpen: true, title: 'سجل الدرجات', landscape: true, content: <GradesTemplate students={filteredStudentsForGrades} tools={assessmentTools} teacherInfo={teacherInfo} semester={currentSemester} gradeClass={gradesClass === 'all' ? 'الكل' : gradesClass} /> });
+  };
+
+  const openCertificatesPreview = () => {
+    const targets = filteredStudentsForCert.filter(s => selectedCertStudents.includes(s.id));
+    if (targets.length === 0) return;
+    setPreviewData({ isOpen: true, title: 'شهادات التقدير', landscape: true, content: <CertificatesTemplate students={targets} settings={certificateSettings || DEFAULT_CERT_SETTINGS} teacherInfo={teacherInfo} /> });
+  };
+
+  const openSummonPreview = () => {
+    const s = availableStudentsForSummon.find(st => st.id === summonStudentId);
+    if (!s) return alert('اختر طالباً');
+    setPreviewData({ isOpen: true, title: `استدعاء - ${s.name}`, landscape: false, content: <SummonTemplate student={s} teacherInfo={teacherInfo} data={{...summonData, reason: getReasonText(), className: summonClass, procedures: takenProcedures, issueDate: summonData.issueDate}} /> });
+  };
+
+  const openClassReportsPreview = () => {
+      if (filteredStudentsForStudentTab.length === 0) return alert('لا يوجد طلاب في هذا الفصل');
+      setPreviewData({ isOpen: true, title: `تقارير الصف ${stClass}`, landscape: false, content: <ClassReportsTemplate students={filteredStudentsForStudentTab} teacherInfo={teacherInfo} semester={currentSemester} assessmentTools={assessmentTools} /> });
+  };
 
   const selectAllCertStudents = () => { if (selectedCertStudents.length === filteredStudentsForCert.length) { setSelectedCertStudents([]); } else { setSelectedCertStudents(filteredStudentsForCert.map(s => s.id)); } };
   const toggleCertStudent = (id: string) => { setSelectedCertStudents(prev => prev.includes(id) ? prev.filter(sid => sid !== id) : [...prev, id] ); };
@@ -187,9 +233,10 @@ const Reports: React.FC<ReportsProps> = ({ initialTab }) => {
 
   return (
     <div className="flex flex-col h-full bg-[#f8fafc] text-slate-800 relative font-sans animate-in fade-in duration-500">
+      {/* نافذة المعاينة مع Fix للـ z-index */}
       <PrintPreviewModal isOpen={previewData.isOpen} onClose={() => setPreviewData({...previewData, isOpen: false})} title={previewData.title} content={previewData.content} landscape={previewData.landscape} />
       
-      {/* ================= HEADER FIX (Sticky) ================= */}
+      {/* ================= HEADER (Sticky) ================= */}
       <div className="sticky top-0 z-50 bg-[#1e3a8a] text-white shadow-lg px-4 pt-[env(safe-area-inset-top)] pb-4 transition-all duration-300 rounded-b-[2.5rem] md:rounded-none md:shadow-md">
           <div className="flex items-center gap-3 mb-6 mt-4 px-2">
              <div className="p-2.5 bg-white/10 backdrop-blur-md rounded-xl border border-white/20"><FileSpreadsheet className="w-6 h-6 text-white" /></div>
@@ -203,7 +250,8 @@ const Reports: React.FC<ReportsProps> = ({ initialTab }) => {
           </div>
       </div>
 
-      {/* ================= CONTENT AREA ================= */}
+      {/* ================= CONTENT AREA (NO SPACER HERE) ================= */}
+      {/* ✅ تم حذف الفراغ الوهمي ليعمل Sticky Header بشكل صحيح */}
       <div className="flex-1 h-full overflow-y-auto custom-scrollbar px-4 pt-4 pb-24">
          <div className="bg-white rounded-[2rem] p-6 shadow-sm border border-slate-100 min-h-[400px] animate-in slide-in-from-bottom-4 duration-300">
             {activeTab === 'student_report' && (
