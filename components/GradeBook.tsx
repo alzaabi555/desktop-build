@@ -1,12 +1,168 @@
 import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { Student, GradeRecord, AssessmentTool } from '../types';
-import { Plus, X, Trash2, Settings, Check, Loader2, Edit2, FileSpreadsheet, FileUp, Wand2, Menu, Filter, ChevronDown, Download, AlertTriangle, Calculator } from 'lucide-react';
+import { Plus, X, Trash2, Settings, Check, Loader2, Edit2, FileSpreadsheet, AlertTriangle, Calculator } from 'lucide-react';
 import Modal from './Modal';
 import { useApp } from '../context/AppContext';
 import { Filesystem, Directory } from '@capacitor/filesystem';
 import { Share } from '@capacitor/share';
 import { Capacitor } from '@capacitor/core';
 import * as XLSX from 'xlsx';
+
+// --- أيقونات 3D الجديدة (SVG Components) ---
+
+// 1. أيقونة إعدادات توزيع الدرجات (Grading Settings)
+const Icon3DGradingConfig = ({ className }: { className?: string }) => (
+  <svg viewBox="0 0 100 100" className={className || "w-6 h-6"} xmlns="[http://www.w3.org/2000/svg](http://www.w3.org/2000/svg)">
+    <defs>
+      <linearGradient id="gradCalc" x1="0%" y1="0%" x2="100%" y2="100%">
+        <stop offset="0%" stopColor="#60a5fa" />
+        <stop offset="100%" stopColor="#2563eb" />
+      </linearGradient>
+      <filter id="shadowCalc" x="-20%" y="-20%" width="140%" height="140%">
+        <feGaussianBlur in="SourceAlpha" stdDeviation="2" />
+        <feOffset dx="1" dy="2" result="offsetblur" />
+        <feComponentTransfer><feFuncA type="linear" slope="0.3"/></feComponentTransfer>
+        <feMerge><feMergeNode/><feMergeNode in="SourceGraphic"/></feMerge>
+      </filter>
+    </defs>
+    <rect x="20" y="15" width="60" height="70" rx="10" fill="url(#gradCalc)" filter="url(#shadowCalc)" />
+    <rect x="30" y="25" width="40" height="15" rx="4" fill="#dbeafe" />
+    <circle cx="35" cy="55" r="5" fill="white" opacity="0.8" />
+    <circle cx="50" cy="55" r="5" fill="white" opacity="0.8" />
+    <circle cx="65" cy="55" r="5" fill="white" opacity="0.8" />
+    <circle cx="35" cy="70" r="5" fill="white" opacity="0.8" />
+    <circle cx="50" cy="70" r="5" fill="white" opacity="0.8" />
+    <circle cx="65" cy="70" r="5" fill="#fbbf24" />
+  </svg>
+);
+
+// 2. أيقونة القائمة (Menu)
+const Icon3DMenu = ({ className }: { className?: string }) => (
+  <svg viewBox="0 0 100 100" className={className || "w-6 h-6"} xmlns="[http://www.w3.org/2000/svg](http://www.w3.org/2000/svg)">
+    <defs>
+      <linearGradient id="gradMenu" x1="0%" y1="0%" x2="100%" y2="0%">
+        <stop offset="0%" stopColor="#ffffff" />
+        <stop offset="100%" stopColor="#f1f5f9" />
+      </linearGradient>
+      <filter id="shadowMenu" x="-20%" y="-20%" width="140%" height="140%">
+        <feGaussianBlur in="SourceAlpha" stdDeviation="1.5" />
+        <feOffset dx="0" dy="2" result="offsetblur" />
+        <feComponentTransfer><feFuncA type="linear" slope="0.2"/></feComponentTransfer>
+        <feMerge><feMergeNode/><feMergeNode in="SourceGraphic"/></feMerge>
+      </filter>
+    </defs>
+    <rect x="20" y="25" width="60" height="10" rx="5" fill="url(#gradMenu)" filter="url(#shadowMenu)" />
+    <rect x="20" y="45" width="60" height="10" rx="5" fill="url(#gradMenu)" filter="url(#shadowMenu)" />
+    <rect x="20" y="65" width="60" height="10" rx="5" fill="url(#gradMenu)" filter="url(#shadowMenu)" />
+  </svg>
+);
+
+// 3. أيقونة استيراد (Import)
+const Icon3DImport = ({ className }: { className?: string }) => (
+  <svg viewBox="0 0 100 100" className={className || "w-6 h-6"} xmlns="[http://www.w3.org/2000/svg](http://www.w3.org/2000/svg)">
+    <defs>
+      <linearGradient id="gradImportSheet" x1="0%" y1="0%" x2="100%" y2="100%">
+        <stop offset="0%" stopColor="#34d399" />
+        <stop offset="100%" stopColor="#059669" />
+      </linearGradient>
+      <linearGradient id="gradArrowUp" x1="0%" y1="0%" x2="0%" y2="100%">
+        <stop offset="0%" stopColor="#60a5fa" />
+        <stop offset="100%" stopColor="#2563eb" />
+      </linearGradient>
+    </defs>
+    <rect x="25" y="30" width="50" height="55" rx="6" fill="url(#gradImportSheet)" />
+    <path d="M35 45 H65 M35 55 H65 M35 65 H65" stroke="white" strokeWidth="4" strokeLinecap="round" opacity="0.6" />
+    {/* Arrow Up */}
+    <path d="M50 10 L30 30 H40 V50 H60 V30 H70 L50 10 Z" fill="url(#gradArrowUp)" stroke="white" strokeWidth="2" />
+  </svg>
+);
+
+// 4. أيقونة تصدير (Export)
+const Icon3DExport = ({ className }: { className?: string }) => (
+  <svg viewBox="0 0 100 100" className={className || "w-6 h-6"} xmlns="[http://www.w3.org/2000/svg](http://www.w3.org/2000/svg)">
+    <defs>
+      <linearGradient id="gradExportSheet" x1="0%" y1="0%" x2="100%" y2="100%">
+        <stop offset="0%" stopColor="#34d399" />
+        <stop offset="100%" stopColor="#059669" />
+      </linearGradient>
+      <linearGradient id="gradArrowDown" x1="0%" y1="0%" x2="0%" y2="100%">
+        <stop offset="0%" stopColor="#60a5fa" />
+        <stop offset="100%" stopColor="#2563eb" />
+      </linearGradient>
+    </defs>
+    <rect x="25" y="15" width="50" height="55" rx="6" fill="url(#gradExportSheet)" />
+    <path d="M35 30 H65 M35 40 H65 M35 50 H65" stroke="white" strokeWidth="4" strokeLinecap="round" opacity="0.6" />
+    {/* Arrow Down */}
+    <path d="M50 90 L70 70 H60 V50 H40 V70 H30 L50 90 Z" fill="url(#gradArrowDown)" stroke="white" strokeWidth="2" />
+  </svg>
+);
+
+// 5. أيقونة إعدادات الأدوات (Tools Gear)
+const Icon3DTools = ({ className }: { className?: string }) => (
+  <svg viewBox="0 0 100 100" className={className || "w-6 h-6"} xmlns="[http://www.w3.org/2000/svg](http://www.w3.org/2000/svg)">
+    <defs>
+      <linearGradient id="gradGear" x1="0%" y1="0%" x2="100%" y2="100%">
+        <stop offset="0%" stopColor="#e2e8f0" />
+        <stop offset="100%" stopColor="#94a3b8" />
+      </linearGradient>
+      <filter id="shadowGear" x="-20%" y="-20%" width="140%" height="140%">
+        <feGaussianBlur in="SourceAlpha" stdDeviation="1.5" />
+        <feOffset dx="1" dy="1" result="offsetblur" />
+        <feMerge><feMergeNode/><feMergeNode in="SourceGraphic"/></feMerge>
+      </filter>
+    </defs>
+    <circle cx="50" cy="50" r="20" fill="white" stroke="url(#gradGear)" strokeWidth="15" strokeDasharray="10 6" filter="url(#shadowGear)" />
+    <circle cx="50" cy="50" r="10" fill="#cbd5e1" />
+  </svg>
+);
+
+// 6. أيقونة حذف الدرجات (Clear Trash)
+const Icon3DClear = ({ className }: { className?: string }) => (
+  <svg viewBox="0 0 100 100" className={className || "w-6 h-6"} xmlns="[http://www.w3.org/2000/svg](http://www.w3.org/2000/svg)">
+    <defs>
+      <linearGradient id="gradTrash" x1="0%" y1="0%" x2="100%" y2="100%">
+        <stop offset="0%" stopColor="#f87171" />
+        <stop offset="100%" stopColor="#dc2626" />
+      </linearGradient>
+      <filter id="shadowTrash" x="-20%" y="-20%" width="140%" height="140%">
+        <feGaussianBlur in="SourceAlpha" stdDeviation="2" />
+        <feOffset dx="1" dy="2" result="offsetblur" />
+        <feMerge><feMergeNode/><feMergeNode in="SourceGraphic"/></feMerge>
+      </filter>
+    </defs>
+    <path d="M25 30 L30 85 Q32 90 38 90 H62 Q68 90 70 85 L75 30" fill="url(#gradTrash)" filter="url(#shadowTrash)" />
+    <rect x="20" y="20" width="60" height="10" rx="3" fill="#ef4444" />
+    <path d="M40 20 L42 12 Q43 10 46 10 H54 Q57 10 58 12 L60 20" fill="#ef4444" />
+    <path d="M40 45 L40 75 M50 45 L50 75 M60 45 L60 75" stroke="white" strokeWidth="3" strokeLinecap="round" opacity="0.5" />
+  </svg>
+);
+
+// 7. أيقونة رصد جماعي (Bulk Wand)
+const Icon3DBulk = ({ className }: { className?: string }) => (
+  <svg viewBox="0 0 100 100" className={className || "w-6 h-6"} xmlns="[http://www.w3.org/2000/svg](http://www.w3.org/2000/svg)">
+    <defs>
+      <linearGradient id="gradWand" x1="0%" y1="0%" x2="100%" y2="100%">
+        <stop offset="0%" stopColor="#fbbf24" />
+        <stop offset="100%" stopColor="#d97706" />
+      </linearGradient>
+      <linearGradient id="gradHandle" x1="0%" y1="0%" x2="100%" y2="100%">
+        <stop offset="0%" stopColor="#a78bfa" />
+        <stop offset="100%" stopColor="#7c3aed" />
+      </linearGradient>
+      <filter id="shadowWand" x="-20%" y="-20%" width="140%" height="140%">
+        <feGaussianBlur in="SourceAlpha" stdDeviation="1.5" />
+        <feOffset dx="1" dy="1" result="offsetblur" />
+        <feMerge><feMergeNode/><feMergeNode in="SourceGraphic"/></feMerge>
+      </filter>
+    </defs>
+    <path d="M20 80 L40 60" stroke="url(#gradHandle)" strokeWidth="10" strokeLinecap="round" filter="url(#shadowWand)" />
+    <path d="M40 60 L80 20" stroke="url(#gradWand)" strokeWidth="8" strokeLinecap="round" />
+    <path d="M80 20 L90 10 M70 10 L80 20 M90 30 L80 20" stroke="white" strokeWidth="2" opacity="0.8" />
+    <circle cx="80" cy="20" r="5" fill="white" filter="blur(2px)" />
+  </svg>
+);
+
+// -----------------------------------------------------------
 
 interface GradeBookProps {
   students: Student[];
@@ -19,19 +175,19 @@ interface GradeBookProps {
 }
 
 const DEFAULT_GRADING_SETTINGS = {
-    totalScore: 100,
-    finalExamWeight: 40,
-    finalExamName: 'الامتحان النهائي'
+  totalScore: 100,
+  finalExamWeight: 40,
+  finalExamName: 'الامتحان النهائي'
 };
 
 const GradeBook: React.FC<GradeBookProps> = ({ 
-    students = [], 
-    classes = [], 
-    onUpdateStudent, 
-    setStudents, 
-    currentSemester, 
-    onSemesterChange, 
-    teacherInfo 
+  students = [], 
+  classes = [], 
+  onUpdateStudent, 
+  setStudents, 
+  currentSemester, 
+  onSemesterChange, 
+  teacherInfo 
 }) => {
   const { assessmentTools, setAssessmentTools } = useApp();
   const tools = useMemo(() => Array.isArray(assessmentTools) ? assessmentTools : [], [assessmentTools]);
@@ -74,7 +230,7 @@ const GradeBook: React.FC<GradeBookProps> = ({
      if (showAddGrade && !editingGrade) { setSelectedToolId(''); setScore(''); }
   }, [showAddGrade, editingGrade]);
 
-  // ✅ 1. تحديث منطق استخراج المراحل (النظام الموحد الجديد)
+  // ✅ 1. تحديث منطق استخراج المراحل (نفس المنطق الموحد الجديد)
   const availableGrades = useMemo(() => {
       const grades = new Set<string>();
       
@@ -84,7 +240,7 @@ const GradeBook: React.FC<GradeBookProps> = ({
           } else {
               const numMatch = c.match(/^(\d+)/);
               if (numMatch) grades.add(numMatch[1]);
-              else if(c.trim().split(' ')[0].length > 1) grades.add(c.trim().split(' ')[0]);
+              else grades.add(c.split(' ')[0]);
           }
       });
 
@@ -96,7 +252,7 @@ const GradeBook: React.FC<GradeBookProps> = ({
           const numA = parseInt(a);
           const numB = parseInt(b);
           if (!isNaN(numA) && !isNaN(numB)) return numA - numB;
-          return a.localeCompare(b, 'ar');
+          return a.localeCompare(b);
       });
   }, [students, classes]);
 
@@ -131,7 +287,7 @@ const GradeBook: React.FC<GradeBookProps> = ({
       return 'text-rose-600 bg-rose-50';
   };
 
-  // ✅ 3. تحديث فلترة الطلاب (مطابق لـ StudentList و Reports)
+  // ✅ 3. تحديث فلترة الطلاب
   const filteredStudents = useMemo(() => {
     if (!Array.isArray(students)) return [];
     return students.filter(s => {
@@ -140,12 +296,11 @@ const GradeBook: React.FC<GradeBookProps> = ({
       
       let matchesGrade = true;
       if (selectedGrade !== 'all') {
-          if (s.grade === selectedGrade) {
-              matchesGrade = true;
-          } else if (s.classes[0]) {
-              const cls = s.classes[0];
-              if (cls.includes('/')) matchesGrade = cls.split('/')[0].trim() === selectedGrade;
-              else matchesGrade = cls.startsWith(selectedGrade);
+          // التحقق من المرحلة في بداية اسم الفصل أو حقل grade
+          if (s.grade === selectedGrade) matchesGrade = true;
+          else if (s.classes[0]) {
+              if (s.classes[0].includes('/')) matchesGrade = s.classes[0].split('/')[0].trim() === selectedGrade;
+              else matchesGrade = s.classes[0].startsWith(selectedGrade);
           } else {
               matchesGrade = false;
           }
@@ -159,7 +314,6 @@ const GradeBook: React.FC<GradeBookProps> = ({
       return student.grades.filter(g => { if (!g.semester) return sem === '1'; return g.semester === sem; }); 
   };
 
-  // ... (Rest of CRUD functions kept same) ...
   const handleAddTool = () => { if (newToolName.trim()) { const finalName = cleanText(newToolName); if (tools.some(t => t.name === finalName)) { alert('هذه الأداة موجودة بالفعل'); return; } const newTool: AssessmentTool = { id: Math.random().toString(36).substr(2, 9), name: finalName, maxScore: 0 }; setAssessmentTools([...tools, newTool]); setNewToolName(''); setIsAddingTool(false); } };
   const handleDeleteTool = (id: string) => { if (confirm('هل أنت متأكد من حذف هذه الأداة؟')) { setAssessmentTools(tools.filter(t => t.id !== id)); } };
   const startEditingTool = (tool: AssessmentTool) => { setEditingToolId(tool.id); setEditToolName(tool.name); };
@@ -229,42 +383,40 @@ const GradeBook: React.FC<GradeBookProps> = ({
   return (
     <div className="flex flex-col h-full text-slate-800 bg-[#f8fafc] relative animate-in fade-in duration-500 font-sans">
         
-        {/* ================= Fixed Header (Updated Sticky) ================= */}
-        <div className="sticky top-0 z-50 bg-[#1e3a8a] text-white shadow-lg px-4 pt-[env(safe-area-inset-top)] pb-4 transition-all duration-300 rounded-b-[2.5rem] md:rounded-none md:shadow-md">
+        {/* ================= Fixed Header ================= */}
+        <div className="fixed top-0 left-0 right-0 z-50 bg-[#1e3a8a] text-white rounded-b-[2.5rem] shadow-lg px-4 pt-[env(safe-area-inset-top)] pb-6 transition-all duration-300">
             
             <div className="flex justify-between items-center mb-6 mt-2">
                 <div className="flex items-center gap-2">
                     <h1 className="text-2xl font-black tracking-tight">سجل الدرجات</h1>
-                    {/* زر إعدادات الوزن الجديد */}
                     <button onClick={() => setShowGradingSettingsModal(true)} className="p-2 bg-white/10 rounded-xl hover:bg-white/20 transition-colors" title="إعدادات توزيع الدرجات">
-                        <Calculator className="w-5 h-5 text-blue-200" />
+                        <Icon3DGradingConfig className="w-6 h-6" />
                     </button>
                 </div>
                 
                 <div className="relative">
                     <button onClick={() => setShowMenuDropdown(!showMenuDropdown)} className="w-10 h-10 bg-white/10 backdrop-blur-md rounded-2xl flex items-center justify-center text-white hover:bg-white/20 active:scale-95 transition-all shadow-sm border border-white/10">
-                        <Menu className="w-6 h-6" />
+                        <Icon3DMenu className="w-6 h-6" />
                     </button>
-                    {/* القائمة المنسدلة */}
                     {showMenuDropdown && (
                         <>
                             <div className="fixed inset-0 z-40" onClick={() => setShowMenuDropdown(false)}></div>
                             <div className="absolute left-0 top-full mt-2 w-56 bg-white rounded-xl shadow-2xl border border-slate-100 overflow-hidden origin-top-left z-50 animate-in zoom-in-95 duration-200">
                                 <div className="flex flex-col py-1">
                                     <button onClick={() => { fileInputRef.current?.click(); setShowMenuDropdown(false); }} className="flex items-center gap-3 px-4 py-3 hover:bg-slate-50 transition-colors text-right w-full group text-slate-800">
-                                        {isImporting ? <Loader2 className="w-4 h-4 animate-spin text-[#1e3a8a]" /> : <FileUp className="w-4 h-4 text-[#1e3a8a]" />}
+                                        {isImporting ? <Loader2 className="w-5 h-5 animate-spin text-[#1e3a8a]" /> : <Icon3DImport className="w-5 h-5" />}
                                         <span className="text-xs font-bold">استيراد درجات (Excel)</span>
                                     </button>
                                     <button onClick={() => { handleExportExcel(); setShowMenuDropdown(false); }} className="flex items-center gap-3 px-4 py-3 hover:bg-slate-50 transition-colors border-t border-slate-50 text-right w-full group text-slate-800">
-                                        {isExporting ? <Loader2 className="w-4 h-4 animate-spin text-[#1e3a8a]" /> : <FileSpreadsheet className="w-4 h-4 text-[#1e3a8a]" />}
+                                        {isExporting ? <Loader2 className="w-5 h-5 animate-spin text-[#1e3a8a]" /> : <Icon3DExport className="w-5 h-5" />}
                                         <span className="text-xs font-bold">تصدير إلى Excel</span>
                                     </button>
                                     <button onClick={() => { setShowToolsManager(true); setShowMenuDropdown(false); }} className="flex items-center gap-3 px-4 py-3 hover:bg-slate-50 transition-colors border-t border-slate-50 text-right w-full group text-slate-800">
-                                        <Settings className="w-4 h-4 text-[#1e3a8a]" />
+                                        <Icon3DTools className="w-5 h-5" />
                                         <span className="text-xs font-bold">إعدادات أدوات التقويم</span>
                                     </button>
                                     <button onClick={() => { handleClearGrades(); setShowMenuDropdown(false); }} className="flex items-center gap-3 px-4 py-3 hover:bg-rose-50 transition-colors border-t border-slate-50 text-right w-full group text-rose-600">
-                                        <Trash2 className="w-4 h-4 text-rose-600" />
+                                        <Icon3DClear className="w-5 h-5" />
                                         <span className="text-xs font-bold">حذف درجات الفصل</span>
                                     </button>
                                 </div>
@@ -296,7 +448,7 @@ const GradeBook: React.FC<GradeBookProps> = ({
             <div className="overflow-x-auto no-scrollbar flex gap-2 pt-1 pb-1">
                 {tools.length > 0 ? tools.map(tool => (
                     <button key={tool.id} onClick={() => { setBulkFillTool(tool); setBulkScore(''); }} className="px-4 py-2 bg-white/10 backdrop-blur-sm rounded-xl text-[10px] font-bold text-white whitespace-nowrap hover:bg-white/20 border border-white/20 flex items-center gap-1.5 active:scale-95 transition-all">
-                        <Wand2 className="w-3.5 h-3.5" /> رصد {tool.name}
+                        <Icon3DBulk className="w-4 h-4" /> رصد {tool.name}
                     </button>
                 )) : (
                     <span className="text-[10px] text-blue-200 font-bold px-2 py-2 flex items-center gap-1"><AlertTriangle className="w-3 h-3"/> قم بإضافة أدوات من القائمة</span>
@@ -304,61 +456,86 @@ const GradeBook: React.FC<GradeBookProps> = ({
             </div>
         </div>
 
-        {/* ================= Content List (No Spacer) ================= */}
-        <div className="flex-1 h-full overflow-y-auto custom-scrollbar px-4 pt-4 pb-24">
-            
-            <div className="flex justify-between items-center mb-4">
-                <h3 className="font-bold text-slate-800 text-sm flex items-center gap-2">
-                    <span className="w-1.5 h-1.5 rounded-full bg-[#1e3a8a]"></span>
-                    سجل الطلاب ({filteredStudents.length})
-                </h3>
-            </div>
-            {filteredStudents.length > 0 ? (
-                <div className="grid grid-cols-1 gap-3">
-                    {filteredStudents.map((student) => {
-                        const semGrades = getSemesterGrades(student, currentSemester);
-                        const totalScore = semGrades.reduce((sum, g) => sum + (Number(g.score) || 0), 0);
-                        return (
-                            <div key={student.id} onClick={() => setShowAddGrade({ student })} className={`${styles.card} p-4 flex items-center justify-between cursor-pointer active:scale-[0.99]`}>
-                                <div className="flex items-center gap-4 relative z-10">
-                                    <div className="w-14 h-14 rounded-2xl bg-gray-50 flex items-center justify-center font-bold text-slate-400 overflow-hidden shadow-inner border border-gray-200 group-hover:border-indigo-200 transition-colors">
-                                        {student.avatar ? <img src={student.avatar} className="w-full h-full object-cover"/> : student.name.charAt(0)}
-                                    </div>
-                                    <div>
-                                        <h3 className="text-sm font-black text-slate-900 group-hover:text-indigo-700 transition-colors">{student.name}</h3>
-                                        <div className="flex items-center gap-2 mt-1.5 flex-wrap">
-                                            {tools.slice(0, 3).map(tool => {
-                                                const grade = semGrades.find(g => g.category.trim() === tool.name.trim());
-                                                return (<span key={tool.id} className="text-[9px] px-2 py-0.5 rounded-lg bg-slate-50 border border-slate-200 text-slate-600 font-bold">{tool.name}: <span className="text-indigo-600">{grade ? grade.score : '-'}</span></span>)
-                                            })}
+        {/* ================= Content List ================= */}
+        <div className="flex-1 h-full overflow-y-auto custom-scrollbar">
+            <div className="w-full h-[280px] shrink-0"></div>
+            <div className="px-4 pb-24 pt-2">
+                <div className="flex justify-between items-center mb-4">
+                    <h3 className="font-bold text-slate-800 text-sm flex items-center gap-2">
+                        <span className="w-1.5 h-1.5 rounded-full bg-[#1e3a8a]"></span>
+                        سجل الطلاب ({filteredStudents.length})
+                    </h3>
+                </div>
+                {filteredStudents.length > 0 ? (
+                    <div className="grid grid-cols-1 gap-3">
+                        {filteredStudents.map((student) => {
+                            const semGrades = getSemesterGrades(student, currentSemester);
+                            const totalScore = semGrades.reduce((sum, g) => sum + (Number(g.score) || 0), 0);
+                            return (
+                                <div key={student.id} onClick={() => setShowAddGrade({ student })} className={`${styles.card} p-4 flex items-center justify-between cursor-pointer active:scale-[0.99]`}>
+                                    <div className="flex items-center gap-4 relative z-10">
+                                        <div className="w-14 h-14 rounded-2xl bg-gray-50 flex items-center justify-center font-bold text-slate-400 overflow-hidden shadow-inner border border-gray-200 group-hover:border-indigo-200 transition-colors">
+                                            {student.avatar ? <img src={student.avatar} className="w-full h-full object-cover"/> : student.name.charAt(0)}
+                                        </div>
+                                        <div>
+                                            <h3 className="text-sm font-black text-slate-900 group-hover:text-indigo-700 transition-colors">{student.name}</h3>
+                                            <div className="flex items-center gap-2 mt-1.5 flex-wrap">
+                                                {tools.slice(0, 3).map(tool => {
+                                                    const grade = semGrades.find(g => g.category.trim() === tool.name.trim());
+                                                    return (<span key={tool.id} className="text-[9px] px-2 py-0.5 rounded-lg bg-slate-50 border border-slate-200 text-slate-600 font-bold">{tool.name}: <span className="text-indigo-600">{grade ? grade.score : '-'}</span></span>)
+                                                })}
+                                            </div>
                                         </div>
                                     </div>
+                                    <div className="text-center bg-slate-50 px-3 py-2 rounded-xl border border-slate-200 shadow-inner group-hover:bg-white transition-colors relative z-10 min-w-[60px]">
+                                        <span className={`block text-xl font-black ${getSymbolColor(totalScore).split(' ')[0]}`}>{totalScore}</span>
+                                        <span className="text-[10px] font-bold text-slate-400">{getGradeSymbol(totalScore)}</span>
+                                    </div>
                                 </div>
-                                <div className="text-center bg-slate-50 px-3 py-2 rounded-xl border border-slate-200 shadow-inner group-hover:bg-white transition-colors relative z-10 min-w-[60px]">
-                                    <span className={`block text-xl font-black ${getSymbolColor(totalScore).split(' ')[0]}`}>{totalScore}</span>
-                                    <span className="text-[10px] font-bold text-slate-400">{getGradeSymbol(totalScore)}</span>
-                                </div>
-                            </div>
-                        );
-                    })}
-                </div>
-            ) : (
-                <div className="flex flex-col items-center justify-center py-20 text-slate-400 opacity-50"><FileSpreadsheet className="w-16 h-16 mb-4" /><p className="font-bold">لا يوجد طلاب مطابقين</p></div>
-            )}
+                            );
+                        })}
+                    </div>
+                ) : (
+                    <div className="flex flex-col items-center justify-center py-20 text-slate-400 opacity-50"><FileSpreadsheet className="w-16 h-16 mb-4" /><p className="font-bold">لا يوجد طلاب مطابقين</p></div>
+                )}
+            </div>
         </div>
 
-        {/* ... (Modals remain same, kept inside component) ... */}
+        {/* --- Grading Settings Modal --- */}
         <Modal isOpen={showGradingSettingsModal} onClose={() => setShowGradingSettingsModal(false)} className="max-w-md rounded-[2rem]">
             <div className="text-center p-2">
                 <div className="w-16 h-16 bg-blue-50 rounded-full flex items-center justify-center mx-auto mb-4 text-blue-600 shadow-sm"><Calculator className="w-8 h-8" /></div>
                 <h3 className="font-black text-lg mb-2 text-slate-900">إعدادات توزيع الدرجات</h3>
                 <p className="text-xs text-gray-500 mb-6 font-bold leading-relaxed">قم بضبط الأوزان النسبية للدرجات حسب المرحلة الدراسية التي تدرسها.</p>
+                
                 <div className="space-y-4 text-right">
-                    <div className="bg-slate-50 p-4 rounded-xl border border-slate-100"><label className="block text-xs font-black text-slate-700 mb-2">1. الدرجة الكلية للمادة</label><input type="number" value={gradingSettings.totalScore} onChange={(e) => setGradingSettings({...gradingSettings, totalScore: Number(e.target.value)})} className="w-full p-3 bg-white rounded-xl border border-slate-200 text-center font-black text-slate-900 outline-none focus:border-blue-500" /></div>
-                    <div className="bg-slate-50 p-4 rounded-xl border border-slate-100"><label className="block text-xs font-black text-slate-700 mb-2">2. درجة الامتحان النهائي (أو المشروع)</label><input type="number" value={gradingSettings.finalExamWeight} onChange={(e) => setGradingSettings({...gradingSettings, finalExamWeight: Number(e.target.value)})} className="w-full p-3 bg-white rounded-xl border border-slate-200 text-center font-black text-slate-900 outline-none focus:border-blue-500" /><p className="text-[10px] text-gray-400 mt-2 font-bold">* ضع 0 إذا كانت المادة تقويم مستمر 100%</p></div>
-                    <div className="bg-slate-50 p-4 rounded-xl border border-slate-100"><label className="block text-xs font-black text-slate-700 mb-2">3. مسمى الامتحان النهائي</label><input type="text" value={gradingSettings.finalExamName} onChange={(e) => setGradingSettings({...gradingSettings, finalExamName: e.target.value})} className="w-full p-3 bg-white rounded-xl border border-slate-200 text-center font-bold text-slate-900 outline-none focus:border-blue-500" placeholder="مثال: الامتحان النهائي / المشروع" /></div>
+                    <div className="bg-slate-50 p-4 rounded-xl border border-slate-100">
+                        <label className="block text-xs font-black text-slate-700 mb-2">1. الدرجة الكلية للمادة</label>
+                        <input type="number" value={gradingSettings.totalScore} onChange={(e) => setGradingSettings({...gradingSettings, totalScore: Number(e.target.value)})} className="w-full p-3 bg-white rounded-xl border border-slate-200 text-center font-black text-slate-900 outline-none focus:border-blue-500" />
+                    </div>
+
+                    <div className="bg-slate-50 p-4 rounded-xl border border-slate-100">
+                        <label className="block text-xs font-black text-slate-700 mb-2">2. درجة الامتحان النهائي (أو المشروع)</label>
+                        <input type="number" value={gradingSettings.finalExamWeight} onChange={(e) => setGradingSettings({...gradingSettings, finalExamWeight: Number(e.target.value)})} className="w-full p-3 bg-white rounded-xl border border-slate-200 text-center font-black text-slate-900 outline-none focus:border-blue-500" />
+                        <p className="text-[10px] text-gray-400 mt-2 font-bold">* ضع 0 إذا كانت المادة تقويم مستمر 100%</p>
+                    </div>
+
+                    <div className="bg-slate-50 p-4 rounded-xl border border-slate-100">
+                        <label className="block text-xs font-black text-slate-700 mb-2">3. مسمى الامتحان النهائي</label>
+                        <input type="text" value={gradingSettings.finalExamName} onChange={(e) => setGradingSettings({...gradingSettings, finalExamName: e.target.value})} className="w-full p-3 bg-white rounded-xl border border-slate-200 text-center font-bold text-slate-900 outline-none focus:border-blue-500" placeholder="مثال: الامتحان النهائي / المشروع" />
+                    </div>
                 </div>
-                <div className="mt-6 pt-4 border-t border-slate-100"><div className="flex justify-between items-center text-xs font-bold text-slate-600 mb-4 bg-blue-50 p-3 rounded-xl"><span>التقويم المستمر: {gradingSettings.totalScore - gradingSettings.finalExamWeight}</span><span>+</span><span>النهائي: {gradingSettings.finalExamWeight}</span><span>=</span><span>{gradingSettings.totalScore}</span></div><button onClick={() => setShowGradingSettingsModal(false)} className="w-full py-3.5 bg-[#1e3a8a] text-white rounded-xl font-black text-sm shadow-lg hover:bg-blue-900 active:scale-95 transition-all">حفظ واعتماد التوزيع</button></div>
+
+                <div className="mt-6 pt-4 border-t border-slate-100">
+                    <div className="flex justify-between items-center text-xs font-bold text-slate-600 mb-4 bg-blue-50 p-3 rounded-xl">
+                        <span>التقويم المستمر: {gradingSettings.totalScore - gradingSettings.finalExamWeight}</span>
+                        <span>+</span>
+                        <span>النهائي: {gradingSettings.finalExamWeight}</span>
+                        <span>=</span>
+                        <span>{gradingSettings.totalScore}</span>
+                    </div>
+                    <button onClick={() => setShowGradingSettingsModal(false)} className="w-full py-3.5 bg-[#1e3a8a] text-white rounded-xl font-black text-sm shadow-lg hover:bg-blue-900 active:scale-95 transition-all">حفظ واعتماد التوزيع</button>
+                </div>
             </div>
         </Modal>
 
@@ -433,7 +610,7 @@ const GradeBook: React.FC<GradeBookProps> = ({
         <Modal isOpen={!!bulkFillTool} onClose={() => { setBulkFillTool(null); setBulkScore(''); }} className="max-w-xs rounded-[2rem]">
             {bulkFillTool && (
                 <div className="text-center text-slate-900">
-                    <div className="w-14 h-14 bg-indigo-50 rounded-full flex items-center justify-center mx-auto mb-3 text-indigo-500 shadow-sm border border-indigo-100"><Wand2 className="w-7 h-7" /></div>
+                    <div className="w-14 h-14 bg-indigo-50 rounded-full flex items-center justify-center mx-auto mb-3 text-indigo-500 shadow-sm border border-indigo-100"><Icon3DBulk className="w-7 h-7" /></div>
                     <h3 className="font-black text-lg mb-1">رصد جماعي</h3>
                     <p className="text-xs text-indigo-600 font-bold mb-4 bg-indigo-50 inline-block px-3 py-1 rounded-lg">{bulkFillTool.name}</p>
                     <p className="text-[10px] text-gray-500 mb-4 px-2 font-medium">سيتم رصد هذه الدرجة لجميع الطلاب الظاهرين في القائمة الحالية (الذين لم ترصد لهم درجة لهذه الأداة بعد).</p>
