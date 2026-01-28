@@ -10,9 +10,92 @@ import * as XLSX from 'xlsx';
 
 // --- أيقونات 3D الجديدة (SVG Components) ---
 
-// 1. أيقونة إعدادات توزيع الدرجات (Grading Settings)
+// 1. الأفاتار (ولد/بنت) - النسخة المحسنة
+const OmaniBoyAvatarSVG = () => (
+  <svg viewBox="0 0 200 200" className="w-full h-full" xmlns="http://www.w3.org/2000/svg">
+    <defs>
+      <radialGradient id="boySkin3D" cx="50%" cy="50%" r="50%" fx="30%" fy="30%">
+        <stop offset="0%" stopColor="#ffdfc4" />
+        <stop offset="60%" stopColor="#ebb082" />
+        <stop offset="100%" stopColor="#d49066" />
+      </radialGradient>
+      <linearGradient id="dishdasha3D" x1="0%" y1="0%" x2="100%" y2="0%">
+        <stop offset="0%" stopColor="#ffffff" />
+        <stop offset="20%" stopColor="#f1f5f9" />
+        <stop offset="50%" stopColor="#ffffff" />
+        <stop offset="80%" stopColor="#e2e8f0" />
+        <stop offset="100%" stopColor="#cbd5e1" />
+      </linearGradient>
+      <linearGradient id="kummahBase" x1="0%" y1="0%" x2="0%" y2="100%">
+        <stop offset="0%" stopColor="#ffffff" />
+        <stop offset="100%" stopColor="#e2e8f0" />
+      </linearGradient>
+      <filter id="softShadow" x="-20%" y="-20%" width="140%" height="140%">
+        <feGaussianBlur in="SourceAlpha" stdDeviation="3" />
+        <feOffset dx="2" dy="4" result="offsetblur" />
+        <feComponentTransfer>
+          <feFuncA type="linear" slope="0.3" />
+        </feComponentTransfer>
+        <feMerge>
+          <feMergeNode />
+          <feMergeNode in="SourceGraphic" />
+        </feMerge>
+      </filter>
+    </defs>
+    <g filter="url(#softShadow)"><path d="M50 170 C50 140 150 140 150 170 L150 210 L50 210 Z" fill="url(#dishdasha3D)" /><path d="M100 150 L100 180" stroke="#cbd5e1" strokeWidth="3" strokeLinecap="round" /><circle cx="100" cy="183" r="3" fill="#cbd5e1" /></g>
+    <rect x="85" y="115" width="30" height="20" fill="#d49066" />
+    <g filter="url(#softShadow)"><circle cx="100" cy="95" r="48" fill="url(#boySkin3D)" />
+    <path d="M53 85 Q100 95 147 85 L147 65 Q100 15 53 65 Z" fill="url(#kummahBase)" /><path d="M53 85 Q100 95 147 85" fill="none" stroke="#e2e8f0" strokeWidth="1" /><path d="M60 80 Q100 90 140 80" fill="none" stroke="#94a3b8" strokeWidth="2" strokeDasharray="4 2" opacity="0.6" /><path d="M65 70 Q100 40 135 70" fill="none" stroke="#94a3b8" strokeWidth="2" strokeDasharray="2 2" opacity="0.5" />
+    <circle cx="52" cy="95" r="9" fill="#ebb082" /><circle cx="148" cy="95" r="9" fill="#ebb082" /></g>
+    <g><ellipse cx="82" cy="100" rx="6" ry="8" fill="#1e293b" /><circle cx="84" cy="98" r="2.5" fill="white" opacity="0.9" /><ellipse cx="118" cy="100" rx="6" ry="8" fill="#1e293b" /><circle cx="120" cy="98" r="2.5" fill="white" opacity="0.9" /><path d="M75 90 Q82 88 89 90" fill="none" stroke="#475569" strokeWidth="2.5" strokeLinecap="round" /><path d="M111 90 Q118 88 125 90" fill="none" stroke="#475569" strokeWidth="2.5" strokeLinecap="round" /><path d="M90 120 Q100 128 110 120" fill="none" stroke="#9a3412" strokeWidth="2.5" strokeLinecap="round" /><ellipse cx="75" cy="115" rx="6" ry="3" fill="#fda4af" opacity="0.4" filter="blur(2px)" /><ellipse cx="125" cy="115" rx="6" ry="3" fill="#fda4af" opacity="0.4" filter="blur(2px)" /></g>
+  </svg>
+);
+
+const OmaniGirlAvatarSVG = () => (
+  <svg viewBox="0 0 200 200" className="w-full h-full" xmlns="http://www.w3.org/2000/svg">
+    <defs>
+      <radialGradient id="girlSkin3D" cx="50%" cy="50%" r="50%" fx="30%" fy="30%">
+        <stop offset="0%" stopColor="#ffdfc4" />
+        <stop offset="60%" stopColor="#ebb082" />
+        <stop offset="100%" stopColor="#d49066" />
+      </radialGradient>
+      <linearGradient id="hijab3D" x1="0%" y1="0%" x2="100%" y2="100%">
+        <stop offset="0%" stopColor="#ffffff" />
+        <stop offset="50%" stopColor="#f8fafc" />
+        <stop offset="100%" stopColor="#cbd5e1" />
+      </linearGradient>
+      <linearGradient id="uniform3D" x1="0%" y1="0%" x2="0%" y2="100%">
+        <stop offset="0%" stopColor="#3b82f6" />
+        <stop offset="100%" stopColor="#1e3a8a" />
+      </linearGradient>
+      <filter id="girlShadow" x="-20%" y="-20%" width="140%" height="140%">
+        <feGaussianBlur in="SourceAlpha" stdDeviation="3" />
+        <feOffset dx="0" dy="4" result="offsetblur" />
+        <feComponentTransfer>
+           <feFuncA type="linear" slope="0.25"/> 
+        </feComponentTransfer>
+        <feMerge> 
+          <feMergeNode/>
+          <feMergeNode in="SourceGraphic"/> 
+        </feMerge>
+      </filter>
+    </defs>
+    <g filter="url(#girlShadow)"><path d="M40 180 C40 130 160 130 160 180 L160 210 L40 210 Z" fill="url(#uniform3D)" /><path d="M70 160 L70 210 M130 160 L130 210" stroke="#2563eb" strokeWidth="12" opacity="0.3" /></g>
+    <rect x="90" y="120" width="20" height="20" fill="#d49066" />
+    <g filter="url(#girlShadow)"><path d="M45 90 Q100 20 155 90 L155 130 Q155 160 100 170 Q45 160 45 130 Z" fill="url(#hijab3D)" /><circle cx="100" cy="95" r="38" fill="url(#girlSkin3D)" />
+    <path d="M62 90 Q100 100 138 90 L138 50 Q100 40 62 50 Z" fill="url(#hijab3D)" /><path d="M62 90 Q100 100 138 90" fill="none" stroke="#f1f5f9" strokeWidth="1" opacity="0.5" /></g>
+    <g><ellipse cx="86" cy="100" rx="5.5" ry="7.5" fill="#1e293b" /><circle cx="88" cy="98" r="2.5" fill="white" opacity="0.9" /><ellipse cx="114" cy="100" rx="5.5" ry="7.5" fill="#1e293b" /><circle cx="116" cy="98" r="2.5" fill="white" opacity="0.9" /><path d="M80 96 L78 94 M120 96 L122 94" stroke="#1e293b" strokeWidth="1.5" /><path d="M94 118 Q100 122 106 118" fill="none" stroke="#db2777" strokeWidth="2" strokeLinecap="round" /><circle cx="80" cy="110" r="5" fill="#fbcfe8" opacity="0.5" filter="blur(2px)" /><circle cx="120" cy="110" r="5" fill="#fbcfe8" opacity="0.5" filter="blur(2px)" /></g>
+  </svg>
+);
+
+const getStudentAvatar = (student: Student) => {
+    if (student.avatar) return <img src={student.avatar} className="w-full h-full object-cover" alt={student.name} />;
+    return student.gender === 'female' ? <OmaniGirlAvatarSVG /> : <OmaniBoyAvatarSVG />;
+};
+
+// 2. باقي الأيقونات الـ 3D (Grading, Menu, etc.)
 const Icon3DGradingConfig = ({ className }: { className?: string }) => (
-  <svg viewBox="0 0 100 100" className={className || "w-6 h-6"} xmlns="[http://www.w3.org/2000/svg](http://www.w3.org/2000/svg)">
+  <svg viewBox="0 0 100 100" className={className || "w-6 h-6"} xmlns="http://www.w3.org/2000/svg">
     <defs>
       <linearGradient id="gradCalc" x1="0%" y1="0%" x2="100%" y2="100%">
         <stop offset="0%" stopColor="#60a5fa" />
@@ -36,9 +119,8 @@ const Icon3DGradingConfig = ({ className }: { className?: string }) => (
   </svg>
 );
 
-// 2. أيقونة القائمة (Menu)
 const Icon3DMenu = ({ className }: { className?: string }) => (
-  <svg viewBox="0 0 100 100" className={className || "w-6 h-6"} xmlns="[http://www.w3.org/2000/svg](http://www.w3.org/2000/svg)">
+  <svg viewBox="0 0 100 100" className={className || "w-6 h-6"} xmlns="http://www.w3.org/2000/svg">
     <defs>
       <linearGradient id="gradMenu" x1="0%" y1="0%" x2="100%" y2="0%">
         <stop offset="0%" stopColor="#ffffff" />
@@ -57,9 +139,8 @@ const Icon3DMenu = ({ className }: { className?: string }) => (
   </svg>
 );
 
-// 3. أيقونة استيراد (Import)
 const Icon3DImport = ({ className }: { className?: string }) => (
-  <svg viewBox="0 0 100 100" className={className || "w-6 h-6"} xmlns="[http://www.w3.org/2000/svg](http://www.w3.org/2000/svg)">
+  <svg viewBox="0 0 100 100" className={className || "w-6 h-6"} xmlns="http://www.w3.org/2000/svg">
     <defs>
       <linearGradient id="gradImportSheet" x1="0%" y1="0%" x2="100%" y2="100%">
         <stop offset="0%" stopColor="#34d399" />
@@ -72,14 +153,12 @@ const Icon3DImport = ({ className }: { className?: string }) => (
     </defs>
     <rect x="25" y="30" width="50" height="55" rx="6" fill="url(#gradImportSheet)" />
     <path d="M35 45 H65 M35 55 H65 M35 65 H65" stroke="white" strokeWidth="4" strokeLinecap="round" opacity="0.6" />
-    {/* Arrow Up */}
     <path d="M50 10 L30 30 H40 V50 H60 V30 H70 L50 10 Z" fill="url(#gradArrowUp)" stroke="white" strokeWidth="2" />
   </svg>
 );
 
-// 4. أيقونة تصدير (Export)
 const Icon3DExport = ({ className }: { className?: string }) => (
-  <svg viewBox="0 0 100 100" className={className || "w-6 h-6"} xmlns="[http://www.w3.org/2000/svg](http://www.w3.org/2000/svg)">
+  <svg viewBox="0 0 100 100" className={className || "w-6 h-6"} xmlns="http://www.w3.org/2000/svg">
     <defs>
       <linearGradient id="gradExportSheet" x1="0%" y1="0%" x2="100%" y2="100%">
         <stop offset="0%" stopColor="#34d399" />
@@ -92,14 +171,12 @@ const Icon3DExport = ({ className }: { className?: string }) => (
     </defs>
     <rect x="25" y="15" width="50" height="55" rx="6" fill="url(#gradExportSheet)" />
     <path d="M35 30 H65 M35 40 H65 M35 50 H65" stroke="white" strokeWidth="4" strokeLinecap="round" opacity="0.6" />
-    {/* Arrow Down */}
     <path d="M50 90 L70 70 H60 V50 H40 V70 H30 L50 90 Z" fill="url(#gradArrowDown)" stroke="white" strokeWidth="2" />
   </svg>
 );
 
-// 5. أيقونة إعدادات الأدوات (Tools Gear)
 const Icon3DTools = ({ className }: { className?: string }) => (
-  <svg viewBox="0 0 100 100" className={className || "w-6 h-6"} xmlns="[http://www.w3.org/2000/svg](http://www.w3.org/2000/svg)">
+  <svg viewBox="0 0 100 100" className={className || "w-6 h-6"} xmlns="http://www.w3.org/2000/svg">
     <defs>
       <linearGradient id="gradGear" x1="0%" y1="0%" x2="100%" y2="100%">
         <stop offset="0%" stopColor="#e2e8f0" />
@@ -116,9 +193,8 @@ const Icon3DTools = ({ className }: { className?: string }) => (
   </svg>
 );
 
-// 6. أيقونة حذف الدرجات (Clear Trash)
 const Icon3DClear = ({ className }: { className?: string }) => (
-  <svg viewBox="0 0 100 100" className={className || "w-6 h-6"} xmlns="[http://www.w3.org/2000/svg](http://www.w3.org/2000/svg)">
+  <svg viewBox="0 0 100 100" className={className || "w-6 h-6"} xmlns="http://www.w3.org/2000/svg">
     <defs>
       <linearGradient id="gradTrash" x1="0%" y1="0%" x2="100%" y2="100%">
         <stop offset="0%" stopColor="#f87171" />
@@ -137,9 +213,8 @@ const Icon3DClear = ({ className }: { className?: string }) => (
   </svg>
 );
 
-// 7. أيقونة رصد جماعي (Bulk Wand)
 const Icon3DBulk = ({ className }: { className?: string }) => (
-  <svg viewBox="0 0 100 100" className={className || "w-6 h-6"} xmlns="[http://www.w3.org/2000/svg](http://www.w3.org/2000/svg)">
+  <svg viewBox="0 0 100 100" className={className || "w-6 h-6"} xmlns="http://www.w3.org/2000/svg">
     <defs>
       <linearGradient id="gradWand" x1="0%" y1="0%" x2="100%" y2="100%">
         <stop offset="0%" stopColor="#fbbf24" />
@@ -230,10 +305,8 @@ const GradeBook: React.FC<GradeBookProps> = ({
      if (showAddGrade && !editingGrade) { setSelectedToolId(''); setScore(''); }
   }, [showAddGrade, editingGrade]);
 
-  // ✅ 1. تحديث منطق استخراج المراحل (نفس المنطق الموحد الجديد)
   const availableGrades = useMemo(() => {
       const grades = new Set<string>();
-      
       classes.forEach(c => {
           if (c.includes('/')) {
               grades.add(c.split('/')[0].trim());
@@ -243,11 +316,9 @@ const GradeBook: React.FC<GradeBookProps> = ({
               else grades.add(c.split(' ')[0]);
           }
       });
-
       students.forEach(s => {
           if (s.grade) grades.add(s.grade);
       });
-
       return Array.from(grades).sort((a, b) => {
           const numA = parseInt(a);
           const numB = parseInt(b);
@@ -256,7 +327,6 @@ const GradeBook: React.FC<GradeBookProps> = ({
       });
   }, [students, classes]);
 
-  // ✅ 2. تحديث فلترة الفصول بناءً على المرحلة
   const visibleClasses = useMemo(() => {
       if (selectedGrade === 'all') return classes;
       return classes.filter(c => {
@@ -287,7 +357,6 @@ const GradeBook: React.FC<GradeBookProps> = ({
       return 'text-rose-600 bg-rose-50';
   };
 
-  // ✅ 3. تحديث فلترة الطلاب
   const filteredStudents = useMemo(() => {
     if (!Array.isArray(students)) return [];
     return students.filter(s => {
@@ -296,7 +365,6 @@ const GradeBook: React.FC<GradeBookProps> = ({
       
       let matchesGrade = true;
       if (selectedGrade !== 'all') {
-          // التحقق من المرحلة في بداية اسم الفصل أو حقل grade
           if (s.grade === selectedGrade) matchesGrade = true;
           else if (s.classes[0]) {
               if (s.classes[0].includes('/')) matchesGrade = s.classes[0].split('/')[0].trim() === selectedGrade;
@@ -384,7 +452,7 @@ const GradeBook: React.FC<GradeBookProps> = ({
     <div className="flex flex-col h-full text-slate-800 bg-[#f8fafc] relative animate-in fade-in duration-500 font-sans">
         
         {/* ================= Fixed Header ================= */}
-         <div className="fixed md:sticky top-0 z-40 md:z-30 bg-[#1e3a8a] text-white shadow-lg px-4 pt-[env(safe-area-inset-top)] pb-6 transition-all duration-300 rounded-b-[2.5rem] md:rounded-none md:shadow-md w-full md:w-auto left-0 right-0 md:left-auto md:right-auto">
+        <div className="fixed md:sticky top-0 z-40 md:z-30 bg-[#1e3a8a] text-white shadow-lg px-4 pt-[env(safe-area-inset-top)] pb-6 transition-all duration-300 rounded-b-[2.5rem] md:rounded-none md:shadow-md w-full md:w-auto left-0 right-0 md:left-auto md:right-auto">
             
             <div className="flex justify-between items-center mb-6 mt-2">
                 <div className="flex items-center gap-2">
@@ -474,8 +542,9 @@ const GradeBook: React.FC<GradeBookProps> = ({
                             return (
                                 <div key={student.id} onClick={() => setShowAddGrade({ student })} className={`${styles.card} p-4 flex items-center justify-between cursor-pointer active:scale-[0.99]`}>
                                     <div className="flex items-center gap-4 relative z-10">
-                                        <div className="w-14 h-14 rounded-2xl bg-gray-50 flex items-center justify-center font-bold text-slate-400 overflow-hidden shadow-inner border border-gray-200 group-hover:border-indigo-200 transition-colors">
-                                            {student.avatar ? <img src={student.avatar} className="w-full h-full object-cover"/> : student.name.charAt(0)}
+                                        {/* Updated Avatar Rendering Logic */}
+                                        <div className="w-14 h-14 rounded-2xl bg-white flex items-center justify-center overflow-hidden border-2 border-white/50 shadow-sm shrink-0">
+                                            {getStudentAvatar(student)}
                                         </div>
                                         <div>
                                             <h3 className="text-sm font-black text-slate-900 group-hover:text-indigo-700 transition-colors">{student.name}</h3>
