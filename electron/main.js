@@ -1,12 +1,17 @@
-
 const { app, BrowserWindow, shell } = require('electron');
 const path = require('path');
+// ✅ 1. استدعاء مكتبة التحديث التلقائي
+const { autoUpdater } = require('electron-updater');
 
 // إيقاف التسريع المادي لحل مشاكل التعليق والتجميد في الويندوز (حل جذري)
 app.disableHardwareAcceleration();
 
 // زيادة حد الذاكرة لمنع التعليق عند التعامل مع بيانات كبيرة
 app.commandLine.appendSwitch('js-flags', '--max-old-space-size=4096');
+
+// ✅ إعدادات التحديث (تحميل تلقائي وتثبيت عند الإغلاق)
+autoUpdater.autoDownload = true;
+autoUpdater.autoInstallOnAppQuit = true;
 
 let mainWindow;
 
@@ -31,21 +36,20 @@ function createWindow() {
      console.log('Cache cleared successfully');
   });
 
+  // تحميل ملفات التطبيق (النسخة المبنية)
   mainWindow.loadFile(path.join(__dirname, '../www/index.html'));
+  
   mainWindow.setMenuBarVisibility(false);
 
   // التعامل مع فتح الروابط الخارجية (واتساب، مواقع، الخ)
-  // هذا الجزء ضروري جداً لنسخة الويندوز لفتح الروابط في المتصفح الافتراضي
   mainWindow.webContents.setWindowOpenHandler(({ url }) => {
-    // السماح بفتح البروتوكولات الخارجية المعروفة
     if (url.startsWith('https:') || url.startsWith('http:') || url.startsWith('mailto:') || url.startsWith('tel:') || url.startsWith('sms:') || url.startsWith('whatsapp:')) {
       shell.openExternal(url).catch(err => console.error('Failed to open external url:', err));
     }
-    // منع إنشاء نافذة Electron فرعية، والاكتفاء بفتح الرابط خارجياً
     return { action: 'deny' };
   });
 
-  // حماية إضافية لمنع التنقل داخل النافذة الرئيسية إلى مواقع خارجية عن طريق الخطأ
+  // حماية إضافية لمنع التنقل داخل النافذة الرئيسية
   mainWindow.webContents.on('will-navigate', (event, url) => {
     const isLocal = url.startsWith('file://');
     if (!isLocal) {
@@ -62,11 +66,23 @@ function createWindow() {
 app.whenReady().then(() => {
   createWindow();
 
+  // ✅ 2. التحقق من التحديثات فور تشغيل التطبيق (فقط في النسخة النهائية المجمعة)
+  if (app.isPackaged) {
+    autoUpdater.checkForUpdatesAndNotify();
+  }
+
   app.on('activate', () => {
     if (BrowserWindow.getAllWindows().length === 0) {
       createWindow();
     }
   });
+});
+
+// ✅ 3. الاستماع لحدث اكتمال تحميل التحديث
+autoUpdater.on('update-downloaded', () => {
+  // سيتم تثبيت التحديث تلقائياً عند إغلاق التطبيق بفضل autoInstallOnAppQuit = true
+  // يمكنك هنا إرسال رسالة للواجهة لإخبار المستخدم (اختياري)
+  console.log('Update downloaded');
 });
 
 app.on('window-all-closed', () => {
