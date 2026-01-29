@@ -21,7 +21,7 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: 20
-          cache: 'npm'
+          # تم حذف سطر الكاش لحل مشكلة الملف المفقود
 
       - name: Install Dependencies
         # تثبيت المكتبات
