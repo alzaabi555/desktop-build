@@ -1,5 +1,4 @@
-
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react'; // ✅ 1. تمت إضافة useEffect هنا
 import { AppProvider, useApp } from './context/AppContext';
 import { ThemeProvider } from './context/ThemeContext';
 import { 
@@ -124,6 +123,18 @@ const AppContent: React.FC = () => {
   const [activeTab, setActiveTab] = useState('dashboard');
   const [showMoreMenu, setShowMoreMenu] = useState(false);
   
+  // ✅ 2. متغير الحالة لتخزين رقم الإصدار
+  const [appVersion, setAppVersion] = useState('3.6.0');
+
+  // ✅ 3. جلب الإصدار من النظام عند بدء التشغيل
+  useEffect(() => {
+    if (window.electron && window.electron.getAppVersion) {
+      window.electron.getAppVersion().then((ver: string) => {
+        setAppVersion(ver);
+      });
+    }
+  }, []);
+
   // Welcome Screen State
   const [showWelcome, setShowWelcome] = useState<boolean>(() => {
       return !localStorage.getItem('rased_welcome_seen');
@@ -261,7 +272,7 @@ const AppContent: React.FC = () => {
             <div className="px-6 mb-6">
                 <div className="p-4 bg-slate-50 rounded-2xl flex items-center gap-3 border border-slate-100">
                     <div className="w-10 h-10 rounded-full bg-slate-200 flex items-center justify-center overflow-hidden border border-slate-300 shadow-sm shrink-0">
-                         {teacherInfo.avatar ? <img src={teacherInfo.avatar} className="w-full h-full object-cover"/> : <span className="font-black text-slate-500 text-lg">{teacherInfo.name?.[0]}</span>}
+                          {teacherInfo.avatar ? <img src={teacherInfo.avatar} className="w-full h-full object-cover"/> : <span className="font-black text-slate-500 text-lg">{teacherInfo.name?.[0]}</span>}
                     </div>
                     <div className="overflow-hidden">
                         <p className="text-xs font-bold text-slate-900 truncate">{teacherInfo.name || 'مرحباً بك'}</p>
@@ -286,7 +297,8 @@ const AppContent: React.FC = () => {
                 })}
             </nav>
             <div className="p-6 text-center border-t border-slate-200">
-                <p className="text-[10px] font-bold text-gray-400">الإصدار 3.6.0</p>
+                {/* ✅ 4. هنا تم استبدال الرقم الثابت بالمتغير الديناميكي */}
+                <p className="text-[10px] font-bold text-gray-400">الإصدار {appVersion}</p>
             </div>
         </aside>
 
