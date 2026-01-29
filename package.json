@@ -39,7 +39,8 @@
     "canvg": "^4.0.1",
     "firebase": "^10.8.0",
     "react-to-print": "^3.0.0",
-    "electron-updater": "^6.1.7"
+    "electron-updater": "^6.1.7",
+    "electron-log": "^5.0.0"
   },
   "devDependencies": {
     "@capacitor/cli": "^6.0.0",
@@ -81,6 +82,8 @@
         "provider": "github",
         "owner": "alzaabi555",
         "repo": "desktop-build",
-        "releaseType": "release" 
+        "releaseType": "release"
       }
     ]
+  }
+}
