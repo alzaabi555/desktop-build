@@ -1,15 +1,16 @@
 import React, { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import { Student, BehaviorType } from '../types';
-import { Search, ThumbsUp, ThumbsDown, Edit2, Sparkles, Trash2, Plus, Loader2, MessageCircle, DoorOpen, LayoutGrid, FileSpreadsheet, X, UserPlus, Upload, MoreHorizontal, Settings, PartyPopper, Trophy, Frown, CloudRain, PenTool } from 'lucide-react';
+import { Search, Edit2, Trash2, Plus, LayoutGrid, Settings, UserPlus, Upload, Sparkles, X, Trophy, Frown, CloudRain, PartyPopper } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import Modal from './Modal';
 import ExcelImport from './ExcelImport';
 import { useApp } from '../context/AppContext';
 
 // ============================================================================
-// ✅ الأيقونات (3D Style) - نفس الأيقونات المعتمدة والمحسنة
+// ✅ 1. الأيقونات (3D Style Icons) - تم إضافة أيقونات القائمة الناقصة
 // ============================================================================
 
+// --- الأفاتار العماني المحسن (ولد) ---
 const OmaniBoyAvatarSVG = () => (
   <svg viewBox="0 0 200 200" className="w-full h-full" xmlns="http://www.w3.org/2000/svg">
     <defs>
@@ -45,6 +46,7 @@ const OmaniBoyAvatarSVG = () => (
   </svg>
 );
 
+// --- الأفاتار العماني المحسن (بنت) ---
 const OmaniGirlAvatarSVG = () => (
   <svg viewBox="0 0 200 200" className="w-full h-full" xmlns="http://www.w3.org/2000/svg">
     <defs>
@@ -82,15 +84,51 @@ const getStudentAvatar = (student: Student) => {
     return student.gender === 'female' ? <OmaniGirlAvatarSVG /> : <OmaniBoyAvatarSVG />;
 };
 
-// ----------------------------------------------------------
+// --- أيقونات القائمة وأزرار السلوك (3D Style) ---
 
-const Icon3DMenu = ({ className }: { className?: string }) => (<svg viewBox="0 0 100 100" className={className || "w-6 h-6"}><defs><linearGradient id="menuGrad" x1="0%" y1="0%" x2="100%" y2="0%"><stop offset="0%" stopColor="#ffffff" /><stop offset="100%" stopColor="#f1f5f9" /></linearGradient><filter id="menuShadow" x="-20%" y="-20%" width="140%" height="140%"><feDropShadow dx="0" dy="2" stdDeviation="1.5" floodOpacity="0.2" /></filter></defs><rect x="20" y="25" width="60" height="10" rx="5" fill="url(#menuGrad)" filter="url(#menuShadow)" /><rect x="20" y="45" width="60" height="10" rx="5" fill="url(#menuGrad)" filter="url(#menuShadow)" /><rect x="20" y="65" width="60" height="10" rx="5" fill="url(#menuGrad)" filter="url(#menuShadow)" /></svg>);
-const Icon3DPositive = () => (<svg viewBox="0 0 100 100" className="w-10 h-10"><defs><linearGradient id="posGrad" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stopColor="#4ade80" /><stop offset="100%" stopColor="#16a34a" /></linearGradient><filter id="posShadow" x="-20%" y="-20%" width="140%" height="140%"><feDropShadow dx="1" dy="2" stdDeviation="2" floodOpacity="0.3" /></filter></defs><circle cx="50" cy="50" r="45" fill="url(#posGrad)" filter="url(#posShadow)" /><circle cx="35" cy="40" r="5" fill="white" /><circle cx="65" cy="40" r="5" fill="white" /><path d="M30 65 Q50 80 70 65" fill="none" stroke="white" strokeWidth="5" strokeLinecap="round" /></svg>);
-const Icon3DNegative = () => (<svg viewBox="0 0 100 100" className="w-10 h-10"><defs><linearGradient id="negGrad" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stopColor="#f87171" /><stop offset="100%" stopColor="#dc2626" /></linearGradient><filter id="negShadow" x="-20%" y="-20%" width="140%" height="140%"><feDropShadow dx="1" dy="2" stdDeviation="2" floodOpacity="0.3" /></filter></defs><circle cx="50" cy="50" r="45" fill="white" filter="url(#negShadow)" /><circle cx="50" cy="50" r="40" fill="none" stroke="url(#negGrad)" strokeWidth="6" /><path d="M50 25 V55" stroke="url(#negGrad)" strokeWidth="6" strokeLinecap="round" /><circle cx="50" cy="70" r="4" fill="url(#negGrad)" /></svg>);
-const Icon3DAdd = () => (<svg viewBox="0 0 100 100" className="w-5 h-5"><circle cx="50" cy="50" r="45" fill="#e0e7ff" /><path d="M50 25 V75 M25 50 H75" stroke="#4f46e5" strokeWidth="8" strokeLinecap="round" /></svg>);
-const Icon3DExcel = () => (<svg viewBox="0 0 100 100" className="w-5 h-5"><rect x="25" y="20" width="50" height="60" rx="5" fill="#d1fae5" /><path d="M35 35 H65 M35 45 H65 M35 55 H50" stroke="#059669" strokeWidth="4" strokeLinecap="round" /></svg>);
-const Icon3DRandom = () => (<svg viewBox="0 0 100 100" className="w-5 h-5"><path d="M50 15 L60 40 L85 50 L60 60 L50 85 L40 60 L15 50 L40 40 Z" fill="#fef3c7" stroke="#d97706" strokeWidth="3" /></svg>);
-const Icon3DSettings = () => (<svg viewBox="0 0 100 100" className="w-5 h-5"><circle cx="50" cy="50" r="25" fill="none" stroke="#94a3b8" strokeWidth="12" strokeDasharray="10 5" /></svg>);
+const Icon3DMenu = ({ className }: { className?: string }) => (
+  <svg viewBox="0 0 100 100" className={className || "w-6 h-6"} xmlns="http://www.w3.org/2000/svg">
+    <defs>
+      <linearGradient id="gradMenu" x1="0%" y1="0%" x2="100%" y2="0%">
+        <stop offset="0%" stopColor="#ffffff" />
+        <stop offset="100%" stopColor="#f1f5f9" />
+      </linearGradient>
+      <filter id="shadowMenu" x="-20%" y="-20%" width="140%" height="140%">
+        <feGaussianBlur in="SourceAlpha" stdDeviation="1.5" />
+        <feOffset dx="0" dy="2" result="offsetblur" />
+        <feMerge><feMergeNode/><feMergeNode in="SourceGraphic"/></feMerge>
+      </filter>
+    </defs>
+    <rect x="20" y="25" width="60" height="10" rx="5" fill="url(#gradMenu)" filter="url(#shadowMenu)" />
+    <rect x="20" y="45" width="60" height="10" rx="5" fill="url(#gradMenu)" filter="url(#shadowMenu)" />
+    <rect x="20" y="65" width="60" height="10" rx="5" fill="url(#gradMenu)" filter="url(#shadowMenu)" />
+  </svg>
+);
+
+const Icon3DPositive = () => (
+  <svg viewBox="0 0 100 100" className="w-10 h-10"><defs><linearGradient id="posGrad" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stopColor="#4ade80" /><stop offset="100%" stopColor="#16a34a" /></linearGradient><filter id="posShadow" x="-20%" y="-20%" width="140%" height="140%"><feDropShadow dx="1" dy="2" stdDeviation="2" floodOpacity="0.3" /></filter></defs><circle cx="50" cy="50" r="45" fill="url(#posGrad)" filter="url(#posShadow)" /><circle cx="35" cy="40" r="5" fill="white" /><circle cx="65" cy="40" r="5" fill="white" /><path d="M30 65 Q50 80 70 65" fill="none" stroke="white" strokeWidth="5" strokeLinecap="round" /></svg>
+);
+
+const Icon3DNegative = () => (
+  <svg viewBox="0 0 100 100" className="w-10 h-10"><defs><linearGradient id="negGrad" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stopColor="#f87171" /><stop offset="100%" stopColor="#dc2626" /></linearGradient><filter id="negShadow" x="-20%" y="-20%" width="140%" height="140%"><feDropShadow dx="1" dy="2" stdDeviation="2" floodOpacity="0.3" /></filter></defs><circle cx="50" cy="50" r="45" fill="white" filter="url(#negShadow)" /><circle cx="50" cy="50" r="40" fill="none" stroke="url(#negGrad)" strokeWidth="6" /><path d="M50 25 V55" stroke="url(#negGrad)" strokeWidth="6" strokeLinecap="round" /><circle cx="50" cy="70" r="4" fill="url(#negGrad)" /></svg>
+);
+
+const Icon3DAdd = ({ className }: { className?: string }) => (
+  <svg viewBox="0 0 100 100" className={className || "w-5 h-5"}><defs><linearGradient id="gradAdd" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stopColor="#60a5fa" /><stop offset="100%" stopColor="#2563eb" /></linearGradient></defs><circle cx="50" cy="50" r="45" fill="url(#gradAdd)" /><path d="M50 25 V75 M25 50 H75" stroke="white" strokeWidth="8" strokeLinecap="round" /></svg>
+);
+
+const Icon3DExcel = ({ className }: { className?: string }) => (
+  <svg viewBox="0 0 100 100" className={className || "w-5 h-5"}><defs><linearGradient id="gradEx" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stopColor="#34d399" /><stop offset="100%" stopColor="#059669" /></linearGradient></defs><rect x="25" y="20" width="50" height="60" rx="5" fill="url(#gradEx)" /><path d="M35 35 H65 M35 45 H65 M35 55 H50" stroke="white" strokeWidth="4" strokeLinecap="round" /></svg>
+);
+
+const Icon3DRandom = ({ className }: { className?: string }) => (
+  <svg viewBox="0 0 100 100" className={className || "w-5 h-5"}><defs><linearGradient id="gradRand" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stopColor="#fbbf24" /><stop offset="100%" stopColor="#d97706" /></linearGradient></defs><rect x="20" y="20" width="60" height="60" rx="10" fill="url(#gradRand)" /><circle cx="35" cy="35" r="5" fill="white"/><circle cx="65" cy="65" r="5" fill="white"/><circle cx="50" cy="50" r="5" fill="white"/></svg>
+);
+
+const Icon3DSettings = ({ className }: { className?: string }) => (
+  <svg viewBox="0 0 100 100" className={className || "w-5 h-5"}><defs><linearGradient id="gradSet" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stopColor="#94a3b8" /><stop offset="100%" stopColor="#475569" /></linearGradient></defs><circle cx="50" cy="50" r="25" fill="none" stroke="url(#gradSet)" strokeWidth="15" strokeDasharray="10 5" /><circle cx="50" cy="50" r="10" fill="#cbd5e1" /></svg>
+);
+
 const Icon3DDelete = () => (<svg viewBox="0 0 100 100" className="w-5 h-5"><rect x="25" y="25" width="50" height="60" rx="5" fill="#fee2e2" /><path d="M35 15 H65 V25 H35 Z" fill="#ef4444" /><path d="M40 40 V70 M50 40 V70 M60 40 V70" stroke="#ef4444" strokeWidth="3" /></svg>);
 const Icon3DEdit = () => (<svg viewBox="0 0 100 100" className="w-5 h-5"><path d="M20 80 L25 55 L75 5 L95 25 L45 75 Z" fill="#dbeafe" stroke="#3b82f6" strokeWidth="2" /><path d="M20 80 L35 80 L20 65 Z" fill="#3b82f6" /></svg>);
 const Icon3DTruant = () => (<svg viewBox="0 0 100 100" className="w-5 h-5"><rect x="20" y="15" width="60" height="70" rx="2" fill="#f3e8ff" /><path d="M20 15 H50 V85 H20 Z" fill="#a855f7" /><circle cx="45" cy="50" r="3" fill="white" /></svg>);
@@ -123,7 +161,7 @@ const StudentItem = React.memo(({ student, onClick }: { student: Student, onClic
             </div>
 
             {/* الاسم - واضح وغير مقصوص (يلتف) */}
-            <h3 className="font-black text-slate-800 text-[10px] sm:text-xs text-center w-full mb-1 leading-snug line-clamp-3 min-h-[2.5em] flex items-center justify-center break-words px-1">
+            <h3 className="font-black text-slate-900 text-[10px] sm:text-xs text-center w-full mb-1 leading-snug line-clamp-3 min-h-[2.5em] flex items-center justify-center break-words px-1">
                 {student.name}
             </h3>
             
@@ -339,30 +377,31 @@ const StudentList: React.FC<StudentListProps> = ({ students, classes, onAddClass
             )}
         </AnimatePresence>
 
-        {/* HEADER */}
-        <div className="sticky top-0 z-30 pb-2 bg-[#f3f4f6] -mx-4 px-4 -mt-4">
-            <div className="flex justify-between items-center mb-4 mt-2 relative">
+        {/* ================= HEADER (Blue, Fixed/Sticky) ================= */}
+        <div className="fixed md:sticky top-0 z-40 md:z-30 bg-[#1e3a8a] text-white shadow-lg px-4 pt-[env(safe-area-inset-top)] pb-6 transition-all duration-300 rounded-b-[2.5rem] md:rounded-none md:shadow-md w-full md:w-auto left-0 right-0 md:left-auto md:right-auto">
+            
+            <div className="flex justify-between items-center mb-6 mt-2 relative">
                 
-                {/* 1. Hamburger Menu (Left) */}
+                {/* 1. Hamburger Menu (Left) - ✅ Fixed Position Left */}
                 <div className="relative">
-                    <button onClick={() => setShowMenu(!showMenu)} className="w-10 h-10 rounded-2xl glass-icon bg-white border border-slate-200 text-indigo-600 active:scale-95 transition-all shadow-sm flex items-center justify-center">
+                    <button onClick={() => setShowMenu(!showMenu)} className="w-10 h-10 rounded-2xl bg-white/10 backdrop-blur-md flex items-center justify-center text-white hover:bg-white/20 active:scale-95 transition-all shadow-sm border border-white/10">
                         <Icon3DMenu className="w-6 h-6" />
                     </button>
                     {showMenu && (
                         <>
                             <div className="fixed inset-0 z-40" onClick={() => setShowMenu(false)}></div>
-                            <div className="absolute top-full left-0 mt-2 w-56 bg-white rounded-2xl shadow-2xl border border-slate-100 z-50 overflow-hidden animate-in fade-in zoom-in duration-200 origin-top-left">
+                            <div className="absolute top-full left-0 mt-2 w-56 bg-white rounded-2xl shadow-2xl border border-slate-100 z-50 overflow-hidden animate-in fade-in zoom-in duration-200 origin-top-left text-slate-800">
                                 <div className="flex flex-col py-1">
-                                    <button onClick={() => { setShowManualAddModal(true); setShowMenu(false); }} className="flex items-center gap-3 px-4 py-3 hover:bg-slate-50 text-right w-full text-slate-700 font-bold text-sm">
+                                    <button onClick={() => { setShowManualAddModal(true); setShowMenu(false); }} className="flex items-center gap-3 px-4 py-3 hover:bg-slate-50 text-right w-full font-bold text-sm text-slate-700">
                                         <Icon3DAdd /> إضافة طالب
                                     </button>
-                                    <button onClick={() => { setShowImportModal(true); setShowMenu(false); }} className="flex items-center gap-3 px-4 py-3 hover:bg-slate-50 text-right w-full text-slate-700 font-bold text-sm border-t border-slate-50">
+                                    <button onClick={() => { setShowImportModal(true); setShowMenu(false); }} className="flex items-center gap-3 px-4 py-3 hover:bg-slate-50 text-right w-full font-bold text-sm border-t border-slate-50 text-slate-700">
                                         <Icon3DExcel /> استيراد من Excel
                                     </button>
-                                    <button onClick={() => { pickRandomStudent(); setShowMenu(false); }} className="flex items-center gap-3 px-4 py-3 hover:bg-slate-50 text-right w-full text-slate-700 font-bold text-sm border-t border-slate-50">
+                                    <button onClick={() => { pickRandomStudent(); setShowMenu(false); }} className="flex items-center gap-3 px-4 py-3 hover:bg-slate-50 text-right w-full font-bold text-sm border-t border-slate-50 text-slate-700">
                                         <Icon3DRandom /> القرعة العشوائية
                                     </button>
-                                    <button onClick={() => { setShowManageClasses(true); setShowMenu(false); }} className="flex items-center gap-3 px-4 py-3 hover:bg-slate-50 text-right w-full text-slate-700 font-bold text-sm border-t border-slate-50">
+                                    <button onClick={() => { setShowManageClasses(true); setShowMenu(false); }} className="flex items-center gap-3 px-4 py-3 hover:bg-slate-50 text-right w-full font-bold text-sm border-t border-slate-50 text-slate-700">
                                         <Icon3DSettings /> إعدادات عامة
                                     </button>
                                 </div>
@@ -371,52 +410,69 @@ const StudentList: React.FC<StudentListProps> = ({ students, classes, onAddClass
                     )}
                 </div>
 
-                <h1 className="text-2xl font-black text-slate-900 tracking-tight drop-shadow-sm absolute left-1/2 transform -translate-x-1/2">قائمة الطلاب</h1>
+                <h1 className="text-2xl font-black tracking-tight absolute left-1/2 transform -translate-x-1/2 text-white">قائمة الطلاب</h1>
+                
+                {/* Right Placeholder to balance the header */}
                 <div className="w-10"></div>
             </div>
 
-            {/* Hierarchy Filters */}
-            <div className="space-y-3 mb-2">
+            {/* Hierarchy Filters & Search */}
+            <div className="space-y-3 mb-2 px-1">
+                {/* Search Bar (New Design for Blue Header) */}
                 <div className="relative">
-                    <Search className="absolute right-3 top-3 w-4 h-4 text-slate-400" />
-                    <input type="text" placeholder="بحث عن طالب..." value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} className="w-full glass-input bg-white rounded-xl py-2.5 pr-9 pl-3 text-xs font-bold outline-none border border-slate-200 focus:border-indigo-500 shadow-sm text-slate-900" />
+                    <Search className="absolute right-3 top-3 w-4 h-4 text-white/50" />
+                    <input 
+                        type="text" 
+                        placeholder="بحث عن طالب..." 
+                        value={searchTerm} 
+                        onChange={(e) => setSearchTerm(e.target.value)} 
+                        className="w-full bg-white/10 rounded-xl py-2.5 pr-9 pl-3 text-xs font-bold outline-none border border-white/10 focus:border-white/30 text-white placeholder-white/50" 
+                    />
                 </div>
 
-                <div className="flex gap-2 overflow-x-auto no-scrollbar pb-1">
-                    <button onClick={() => { setSelectedGrade('all'); setSelectedClass('all'); }} className={`px-4 py-2 text-[10px] font-black whitespace-nowrap transition-all rounded-xl border ${selectedGrade === 'all' ? 'bg-indigo-600 text-white border-indigo-700 shadow-md' : 'bg-white border-slate-200 text-slate-600 shadow-sm'}`}>كل المراحل</button>
-                    {availableGrades.map(g => (
-                        <button key={g} onClick={() => { setSelectedGrade(g); setSelectedClass('all'); }} className={`px-4 py-2 text-[10px] font-black whitespace-nowrap transition-all rounded-xl border ${selectedGrade === g ? 'bg-indigo-600 text-white border-indigo-700 shadow-md' : 'bg-white border-slate-200 text-slate-600 shadow-sm'}`}>صف {g}</button>
-                    ))}
-                </div>
+                {/* Grade Filter */}
+                {availableGrades.length > 0 && (
+                    <div className="flex gap-2 overflow-x-auto no-scrollbar pb-1">
+                        <button onClick={() => { setSelectedGrade('all'); setSelectedClass('all'); }} className={`px-4 py-1.5 text-[10px] font-bold whitespace-nowrap rounded-full transition-all border ${selectedGrade === 'all' ? 'bg-white text-[#1e3a8a] border-white shadow-md' : 'bg-transparent text-blue-200 border-blue-200/30 hover:bg-white/10'}`}>كل المراحل</button>
+                        {availableGrades.map(g => (
+                            <button key={g} onClick={() => { setSelectedGrade(g); setSelectedClass('all'); }} className={`px-4 py-1.5 text-[10px] font-bold whitespace-nowrap rounded-full transition-all border ${selectedGrade === g ? 'bg-white text-[#1e3a8a] border-white shadow-md' : 'bg-transparent text-blue-200 border-blue-200/30 hover:bg-white/10'}`}>صف {g}</button>
+                        ))}
+                    </div>
+                )}
 
+                {/* Class Filter */}
                 <div className="flex gap-2 overflow-x-auto no-scrollbar pb-1">
                     {visibleClasses.map(c => (
-                        <button key={c} onClick={() => setSelectedClass(c)} className={`px-5 py-2.5 text-xs font-black whitespace-nowrap transition-all rounded-xl border shadow-sm ${selectedClass === c ? 'bg-indigo-600 text-white border-indigo-700 shadow-indigo-200' : 'bg-white border-slate-200 hover:bg-gray-50 text-slate-700'}`}>{c}</button>
+                        <button key={c} onClick={() => setSelectedClass(c)} className={`px-4 py-2 text-xs font-bold whitespace-nowrap rounded-xl transition-all ${selectedClass === c ? 'bg-[#3b82f6] text-white shadow-md' : 'bg-white/10 text-white hover:bg-white/20'}`}>{c}</button>
                     ))}
-                    <button onClick={() => setShowAddClassModal(true)} className="px-4 py-2 rounded-xl glass-card bg-white border border-slate-200 hover:bg-gray-50 active:scale-95 text-slate-500 shadow-sm"><Plus className="w-5 h-5"/></button>
+                    <button onClick={() => setShowAddClassModal(true)} className="px-4 py-2 rounded-xl bg-white/10 border border-white/20 hover:bg-white/20 active:scale-95 text-white shadow-sm flex items-center justify-center"><Plus className="w-4 h-4"/></button>
                 </div>
             </div>
         </div>
 
-        {/* Student List Content (RESPONSIVE GRID VIEW 3-4-6) */}
-        <div className="flex-1 overflow-y-auto px-1 custom-scrollbar">
-            {filteredStudents.length > 0 ? (
-                // ✅ تعديل الشبكة لتكون 3 للهاتف، 4 للتابلت، 6 للشاشات الكبيرة
-                <div className="grid grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-3 pb-24 pt-2">
-                    {filteredStudents.map(student => (
-                        <StudentItem 
-                            key={student.id} 
-                            student={student} 
-                            onClick={handleStudentClick} 
-                        />
-                    ))}
-                </div>
-            ) : (
-                <div className="flex flex-col items-center justify-center py-20 opacity-50">
-                    <LayoutGrid className="w-16 h-16 text-gray-400 mb-4" />
-                    <p className="text-sm font-bold text-gray-500">لا يوجد طلاب مطابقين</p>
-                </div>
-            )}
+        {/* Student List Content (RESPONSIVE GRID VIEW) */}
+        <div className="flex-1 overflow-y-auto custom-scrollbar">
+             {/* Spacer for Fixed Header on Mobile */}
+             <div className="w-full h-[280px] shrink-0 md:h-0"></div>
+
+             <div className="px-4 pb-24 pt-2 -mt-4 relative z-10">
+                {filteredStudents.length > 0 ? (
+                    <div className="grid grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-3">
+                        {filteredStudents.map(student => (
+                            <StudentItem 
+                                key={student.id} 
+                                student={student} 
+                                onClick={handleStudentClick} 
+                            />
+                        ))}
+                    </div>
+                ) : (
+                    <div className="flex flex-col items-center justify-center py-20 opacity-50">
+                        <LayoutGrid className="w-16 h-16 text-gray-400 mb-4" />
+                        <p className="text-sm font-bold text-gray-500">لا يوجد طلاب مطابقين</p>
+                    </div>
+                )}
+            </div>
         </div>
 
         {/* --- STUDENT ACTION MODAL --- */}
@@ -462,7 +518,8 @@ const StudentList: React.FC<StudentListProps> = ({ students, classes, onAddClass
             )}
         </Modal>
 
-        {/* ... Other Existing Modals ... */}
+        {/* ... Other Existing Modals (Add, Import, Settings, Random, Reasons) ... */}
+        {/* (يتم نسخ باقي المودالات كما هي من الكود السابق) */}
         <Modal isOpen={showManualAddModal} onClose={() => { setShowManualAddModal(false); setEditingStudent(null); setEditName(''); setEditPhone(''); setEditClass(''); setEditGender('male'); }}>
             <div className="text-center">
                 <h3 className="font-black text-xl mb-4 text-slate-800">{editingStudent ? 'تعديل بيانات الطالب' : 'إضافة طالب جديد'}</h3>
@@ -568,7 +625,7 @@ const StudentList: React.FC<StudentListProps> = ({ students, classes, onAddClass
             <div className="text-center">
                 <h3 className="font-black text-lg mb-4 text-rose-600">سلوك سلبي</h3>
                 <div className="grid grid-cols-2 gap-2 mb-4">
-                    {['إزعاج', 'نسيان كتاب', 'نوم', 'تأخر', 'ألفاظ', 'شجار'].map(r => (
+                    {['كثرة الكلام ','نسيان الدفتر','إزعاج', 'نسيان كتاب', 'نوم', 'تأخر', 'ألفاظ', 'شجار'].map(r => (
                         <button key={r} onClick={() => { if(showNegativeReasons) handleAddBehavior(showNegativeReasons.student, 'negative', r, -1); }} className="p-3 glass-card bg-white text-xs font-bold hover:bg-rose-50 text-slate-600 transition-colors border border-gray-200 shadow-sm">{r}</button>
                     ))}
                 </div>
