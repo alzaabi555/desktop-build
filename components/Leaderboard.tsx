@@ -1,5 +1,5 @@
 import React, { useState, useMemo } from 'react';
-import { Student } from '../types';
+import { Student, BehaviorType } from '../types';
 import { Trophy, Crown, Star, LayoutGrid, Check, X, Plus } from 'lucide-react';
 import { useApp } from '../context/AppContext';
 import Modal from './Modal';
@@ -86,7 +86,7 @@ const Leaderboard: React.FC<LeaderboardProps> = ({ students, classes, onUpdateSt
     const { currentSemester } = useApp();
     const [selectedClass, setSelectedClass] = useState<string>('all');
     
-    // حالة النافذة المنبثقة (المودال الأنيق)
+    // حالة النافذة المنبثقة
     const [confirmModal, setConfirmModal] = useState<{isOpen: boolean, student: Student | null}>({isOpen: false, student: null});
     
     const today = new Date();
@@ -94,7 +94,7 @@ const Leaderboard: React.FC<LeaderboardProps> = ({ students, classes, onUpdateSt
     const currentYear = today.getFullYear();
     const monthName = ["يناير", "فبراير", "مارس", "أبريل", "مايو", "يونيو", "يوليو", "أغسطس", "سبتمبر", "أكتوبر", "نوفمبر", "ديسمبر"][currentMonth];
 
-    // تصفية وحساب النقاط
+    // تصفية وحساب النقاط وترتيب الطلاب
     const rankedStudents = useMemo(() => {
         let filtered = students;
         if (selectedClass !== 'all') {
@@ -118,7 +118,7 @@ const Leaderboard: React.FC<LeaderboardProps> = ({ students, classes, onUpdateSt
             return { ...student, monthlyPoints };
         });
 
-        // ✅ تم إزالة الفلتر الذي يخفي الطلاب ذوي النقاط الصفرية ليظهر الجميع
+        // الترتيب التنازلي للنقاط (يظهر الجميع)
         return withPoints.sort((a, b) => b.monthlyPoints - a.monthlyPoints);
     }, [students, selectedClass, currentMonth, currentYear]);
 
@@ -135,26 +135,37 @@ const Leaderboard: React.FC<LeaderboardProps> = ({ students, classes, onUpdateSt
         setConfirmModal({ isOpen: true, student });
     };
 
-    // تنفيذ إضافة النقاط (3 نقاط)
+    // ✅ تنفيذ المكافأة (تم تحسين المنطق لضمان العمل)
     const executeBonus = () => {
-        const student = confirmModal.student;
-        if (!student) return;
+        if (!confirmModal.student) return;
+
+        // 1. العثور على أحدث نسخة للطالب من القائمة الرئيسية (لتجنب تعارض البيانات)
+        const freshStudent = students.find(s => s.id === confirmModal.student?.id);
+        
+        if (!freshStudent) {
+            // في حال حدوث خطأ غريب ولم يوجد الطالب، نغلق النافذة
+            setConfirmModal({ isOpen: false, student: null });
+            return;
+        }
 
         const newBehavior = {
-            id: Math.random().toString(36).substr(2, 9),
+            id: Date.now().toString(), // استخدام timestamp لضمان فرادة المعرف
             date: new Date().toISOString(),
             type: 'positive' as const,
             description: 'تحفيز المعلم (نقاط تشجيعية)',
             points: 3, // ✅ إضافة 3 نقاط
-            semester: currentSemester
+            semester: currentSemester || '1' // Fallback
         };
         
         const updatedStudent = {
-            ...student,
-            behaviors: [newBehavior, ...(student.behaviors || [])]
+            ...freshStudent,
+            behaviors: [newBehavior, ...(freshStudent.behaviors || [])]
         };
         
+        // 2. تحديث الحالة
         onUpdateStudent(updatedStudent);
+        
+        // 3. إغلاق النافذة
         setConfirmModal({ isOpen: false, student: null });
     };
 
@@ -208,7 +219,9 @@ const Leaderboard: React.FC<LeaderboardProps> = ({ students, classes, onUpdateSt
                             <div className="bg-white/80 backdrop-blur-sm px-4 py-3 rounded-2xl text-center border border-slate-200 w-28 md:w-32 shadow-sm relative">
                                 <h3 className="font-black text-xs md:text-sm text-slate-800 truncate mb-1">{topThree[1].name.split(' ')[0]}</h3>
                                 <span className="text-slate-500 font-bold text-[10px] bg-slate-100 px-2 py-0.5 rounded-lg">{topThree[1].monthlyPoints} نقطة</span>
-                                <Plus className="w-4 h-4 text-emerald-500 absolute -top-2 -right-2 bg-white rounded-full border border-emerald-100 shadow-sm opacity-0 group-hover:opacity-100 transition-opacity" />
+                                <div className="absolute -top-2 -right-2 bg-white rounded-full border border-emerald-100 shadow-sm opacity-0 group-hover:opacity-100 transition-opacity p-1">
+                                    <Plus className="w-3 h-3 text-emerald-500" />
+                                </div>
                             </div>
                             <div className="h-24 w-full bg-gradient-to-t from-slate-200 to-slate-50/0 rounded-t-lg mt-2 mx-auto opacity-50"></div>
                         </div>
@@ -233,7 +246,9 @@ const Leaderboard: React.FC<LeaderboardProps> = ({ students, classes, onUpdateSt
                                     <Star className="w-4 h-4 text-amber-500 fill-amber-500" />
                                     <span className="text-amber-600 font-black text-xs">{topThree[0].monthlyPoints} نقطة</span>
                                 </div>
-                                <Plus className="w-5 h-5 text-emerald-500 absolute -top-2 -right-2 bg-white rounded-full border border-emerald-100 shadow-sm opacity-0 group-hover:opacity-100 transition-opacity" />
+                                <div className="absolute -top-2 -right-2 bg-white rounded-full border border-amber-100 shadow-sm opacity-0 group-hover:opacity-100 transition-opacity p-1">
+                                    <Plus className="w-3 h-3 text-amber-500" />
+                                </div>
                             </div>
                             <div className="h-32 w-full bg-gradient-to-t from-amber-100 to-amber-50/0 rounded-t-lg mt-2 mx-auto opacity-60"></div>
                         </div>
@@ -252,7 +267,9 @@ const Leaderboard: React.FC<LeaderboardProps> = ({ students, classes, onUpdateSt
                             <div className="bg-white/80 backdrop-blur-sm px-4 py-3 rounded-2xl text-center border border-orange-200 w-28 md:w-32 shadow-sm relative">
                                 <h3 className="font-black text-xs md:text-sm text-slate-800 truncate mb-1">{topThree[2].name.split(' ')[0]}</h3>
                                 <span className="text-orange-600/70 font-bold text-[10px] bg-orange-50 px-2 py-0.5 rounded-lg">{topThree[2].monthlyPoints} نقطة</span>
-                                <Plus className="w-4 h-4 text-emerald-500 absolute -top-2 -right-2 bg-white rounded-full border border-emerald-100 shadow-sm opacity-0 group-hover:opacity-100 transition-opacity" />
+                                <div className="absolute -top-2 -right-2 bg-white rounded-full border border-orange-100 shadow-sm opacity-0 group-hover:opacity-100 transition-opacity p-1">
+                                    <Plus className="w-3 h-3 text-orange-500" />
+                                </div>
                             </div>
                             <div className="h-16 w-full bg-gradient-to-t from-orange-100 to-orange-50/0 rounded-t-lg mt-2 mx-auto opacity-50"></div>
                         </div>
@@ -261,7 +278,7 @@ const Leaderboard: React.FC<LeaderboardProps> = ({ students, classes, onUpdateSt
             ) : (
                 <div className="flex flex-col items-center justify-center py-10 opacity-50">
                     <Trophy className="w-20 h-20 text-slate-300 mb-4" />
-                    <p className="font-bold text-slate-400">ابدأ بجمع النقاط لتظهر هنا!</p>
+                    <p className="font-bold text-slate-400">لا يوجد طلاب في القائمة بعد</p>
                 </div>
             )}
 
@@ -316,7 +333,7 @@ const Leaderboard: React.FC<LeaderboardProps> = ({ students, classes, onUpdateSt
                 {confirmModal.student && (
                     <div className="text-center pt-2 pb-2">
                         {/* Avatar in Circle */}
-                        <div className="w-20 h-20 mx-auto rounded-full border-4 border-slate-50 shadow-inner overflow-hidden bg-slate-50 mb-4 animate-in zoom-in duration-300">
+                        <div className="w-20 h-20 mx-auto rounded-full border-4 border-indigo-50 shadow-inner overflow-hidden bg-slate-50 mb-4 animate-in zoom-in duration-300">
                             {getAvatar(confirmModal.student)}
                         </div>
                         
