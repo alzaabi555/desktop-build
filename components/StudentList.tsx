@@ -1,12 +1,78 @@
-import React, { useState, useEffect, useCallback, useMemo, useRef } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { Student, BehaviorType } from '../types';
-import { Search, ThumbsUp, ThumbsDown, Edit2, Sparkles, Trash2, Plus, Loader2, MessageCircle, DoorOpen, LayoutGrid, FileSpreadsheet, X, UserPlus, Upload, MoreHorizontal, Settings, PartyPopper, Trophy, Frown, CloudRain, PenTool } from 'lucide-react';
+import { Search, Edit2, Trash2, Plus, LayoutGrid, Settings, UserPlus, Upload, Sparkles, X, MoreVertical } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import Modal from './Modal';
 import ExcelImport from './ExcelImport';
 import { useApp } from '../context/AppContext';
 
-// --- تعريفات الشخصيات الكرتونية العمانية (3D Style SVG) - (تم تعديل خط الشعر والكمة) ---
+// ============================================================================
+// ✅ 1. الأيقونات الجديدة (3D Style Icons)
+// ============================================================================
+
+// أيقونة القائمة (3 شرط)
+const Icon3DMenu = ({ className }: { className?: string }) => (
+  <svg viewBox="0 0 100 100" className={className || "w-6 h-6"} xmlns="http://www.w3.org/2000/svg">
+    <defs>
+      <linearGradient id="menuGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+        <stop offset="0%" stopColor="#ffffff" />
+        <stop offset="100%" stopColor="#f1f5f9" />
+      </linearGradient>
+      <filter id="menuShadow" x="-20%" y="-20%" width="140%" height="140%">
+        <feDropShadow dx="0" dy="2" stdDeviation="1.5" floodOpacity="0.2" />
+      </filter>
+    </defs>
+    <rect x="20" y="25" width="60" height="10" rx="5" fill="url(#menuGrad)" filter="url(#menuShadow)" />
+    <rect x="20" y="45" width="60" height="10" rx="5" fill="url(#menuGrad)" filter="url(#menuShadow)" />
+    <rect x="20" y="65" width="60" height="10" rx="5" fill="url(#menuGrad)" filter="url(#menuShadow)" />
+  </svg>
+);
+
+// أيقونة السلوك الإيجابي (وجه مبتسم أخضر)
+const Icon3DPositive = () => (
+  <svg viewBox="0 0 100 100" className="w-6 h-6" xmlns="http://www.w3.org/2000/svg">
+    <defs>
+      <linearGradient id="posGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+        <stop offset="0%" stopColor="#4ade80" />
+        <stop offset="100%" stopColor="#16a34a" />
+      </linearGradient>
+      <filter id="posShadow" x="-20%" y="-20%" width="140%" height="140%">
+        <feDropShadow dx="1" dy="2" stdDeviation="2" floodOpacity="0.3" />
+      </filter>
+    </defs>
+    <circle cx="50" cy="50" r="45" fill="url(#posGrad)" filter="url(#posShadow)" />
+    <circle cx="35" cy="40" r="5" fill="white" />
+    <circle cx="65" cy="40" r="5" fill="white" />
+    <path d="M30 65 Q50 80 70 65" fill="none" stroke="white" strokeWidth="5" strokeLinecap="round" />
+  </svg>
+);
+
+// أيقونة السلوك السلبي (علامة تعجب حمراء)
+const Icon3DNegative = () => (
+  <svg viewBox="0 0 100 100" className="w-6 h-6" xmlns="http://www.w3.org/2000/svg">
+    <defs>
+      <linearGradient id="negGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+        <stop offset="0%" stopColor="#f87171" />
+        <stop offset="100%" stopColor="#dc2626" />
+      </linearGradient>
+      <filter id="negShadow" x="-20%" y="-20%" width="140%" height="140%">
+        <feDropShadow dx="1" dy="2" stdDeviation="2" floodOpacity="0.3" />
+      </filter>
+    </defs>
+    <circle cx="50" cy="50" r="45" fill="white" filter="url(#negShadow)" />
+    <circle cx="50" cy="50" r="40" fill="none" stroke="url(#negGrad)" strokeWidth="6" />
+    <path d="M50 25 V55" stroke="url(#negGrad)" strokeWidth="6" strokeLinecap="round" />
+    <circle cx="50" cy="70" r="4" fill="url(#negGrad)" />
+  </svg>
+);
+
+// أيقونات القائمة (إضافة، استيراد، قرعة، إعدادات)
+const Icon3DAdd = () => (<svg viewBox="0 0 100 100" className="w-5 h-5"><circle cx="50" cy="50" r="45" fill="#e0e7ff" /><path d="M50 25 V75 M25 50 H75" stroke="#4f46e5" strokeWidth="8" strokeLinecap="round" /></svg>);
+const Icon3DExcel = () => (<svg viewBox="0 0 100 100" className="w-5 h-5"><rect x="25" y="20" width="50" height="60" rx="5" fill="#d1fae5" /><path d="M35 35 H65 M35 45 H65 M35 55 H50" stroke="#059669" strokeWidth="4" strokeLinecap="round" /></svg>);
+const Icon3DRandom = () => (<svg viewBox="0 0 100 100" className="w-5 h-5"><path d="M50 15 L60 40 L85 50 L60 60 L50 85 L40 60 L15 50 L40 40 Z" fill="#fef3c7" stroke="#d97706" strokeWidth="3" /></svg>);
+const Icon3DSettings = () => (<svg viewBox="0 0 100 100" className="w-5 h-5"><circle cx="50" cy="50" r="25" fill="none" stroke="#94a3b8" strokeWidth="12" strokeDasharray="10 5" /></svg>);
+
+// --- الأفاتار العماني المحسن (كما اعتمدناه سابقاً) ---
 const OmaniBoyAvatarSVG = () => (
   <svg viewBox="0 0 200 200" className="w-full h-full" xmlns="http://www.w3.org/2000/svg">
     <defs>
@@ -29,42 +95,16 @@ const OmaniBoyAvatarSVG = () => (
       <filter id="softShadow" x="-20%" y="-20%" width="140%" height="140%">
         <feGaussianBlur in="SourceAlpha" stdDeviation="3" />
         <feOffset dx="2" dy="4" result="offsetblur" />
-        <feComponentTransfer>
-          <feFuncA type="linear" slope="0.3" />
-        </feComponentTransfer>
-        <feMerge>
-          <feMergeNode />
-          <feMergeNode in="SourceGraphic" />
-        </feMerge>
+        <feComponentTransfer><feFuncA type="linear" slope="0.3" /></feComponentTransfer>
+        <feMerge><feMergeNode /><feMergeNode in="SourceGraphic" /></feMerge>
       </filter>
     </defs>
-    <g filter="url(#softShadow)">
-      <path d="M50 170 C50 140 150 140 150 170 L150 210 L50 210 Z" fill="url(#dishdasha3D)" />
-      <path d="M100 150 L100 180" stroke="#cbd5e1" strokeWidth="3" strokeLinecap="round" />
-      <circle cx="100" cy="183" r="3" fill="#cbd5e1" />
-    </g>
+    <g filter="url(#softShadow)"><path d="M50 170 C50 140 150 140 150 170 L150 210 L50 210 Z" fill="url(#dishdasha3D)" /><path d="M100 150 L100 180" stroke="#cbd5e1" strokeWidth="3" strokeLinecap="round" /><circle cx="100" cy="183" r="3" fill="#cbd5e1" /></g>
     <rect x="85" y="115" width="30" height="20" fill="#d49066" />
-    <g filter="url(#softShadow)">
-      <circle cx="100" cy="95" r="48" fill="url(#boySkin3D)" />
-      {/* الكمة: تم إنزالها لتغطي الجبهة */}
-      <path d="M53 85 Q100 95 147 85 L147 65 Q100 15 53 65 Z" fill="url(#kummahBase)" />
-      <path d="M53 85 Q100 95 147 85" fill="none" stroke="#e2e8f0" strokeWidth="1" />
-      <path d="M60 80 Q100 90 140 80" fill="none" stroke="#94a3b8" strokeWidth="2" strokeDasharray="4 2" opacity="0.6" />
-      <path d="M65 70 Q100 40 135 70" fill="none" stroke="#94a3b8" strokeWidth="2" strokeDasharray="2 2" opacity="0.5" />
-      <circle cx="52" cy="95" r="9" fill="#ebb082" />
-      <circle cx="148" cy="95" r="9" fill="#ebb082" />
-    </g>
-    <g>
-      <ellipse cx="82" cy="100" rx="6" ry="8" fill="#1e293b" />
-      <circle cx="84" cy="98" r="2.5" fill="white" opacity="0.9" />
-      <ellipse cx="118" cy="100" rx="6" ry="8" fill="#1e293b" />
-      <circle cx="120" cy="98" r="2.5" fill="white" opacity="0.9" />
-      <path d="M75 90 Q82 88 89 90" fill="none" stroke="#475569" strokeWidth="2.5" strokeLinecap="round" />
-      <path d="M111 90 Q118 88 125 90" fill="none" stroke="#475569" strokeWidth="2.5" strokeLinecap="round" />
-      <path d="M90 120 Q100 128 110 120" fill="none" stroke="#9a3412" strokeWidth="2.5" strokeLinecap="round" />
-      <ellipse cx="75" cy="115" rx="6" ry="3" fill="#fda4af" opacity="0.4" filter="blur(2px)" />
-      <ellipse cx="125" cy="115" rx="6" ry="3" fill="#fda4af" opacity="0.4" filter="blur(2px)" />
-    </g>
+    <g filter="url(#softShadow)"><circle cx="100" cy="95" r="48" fill="url(#boySkin3D)" />
+    <path d="M53 85 Q100 95 147 85 L147 65 Q100 15 53 65 Z" fill="url(#kummahBase)" /><path d="M53 85 Q100 95 147 85" fill="none" stroke="#e2e8f0" strokeWidth="1" /><path d="M60 80 Q100 90 140 80" fill="none" stroke="#94a3b8" strokeWidth="2" strokeDasharray="4 2" opacity="0.6" /><path d="M65 70 Q100 40 135 70" fill="none" stroke="#94a3b8" strokeWidth="2" strokeDasharray="2 2" opacity="0.5" />
+    <circle cx="52" cy="95" r="9" fill="#ebb082" /><circle cx="148" cy="95" r="9" fill="#ebb082" /></g>
+    <g><ellipse cx="82" cy="100" rx="6" ry="8" fill="#1e293b" /><circle cx="84" cy="98" r="2.5" fill="white" opacity="0.9" /><ellipse cx="118" cy="100" rx="6" ry="8" fill="#1e293b" /><circle cx="120" cy="98" r="2.5" fill="white" opacity="0.9" /><path d="M75 90 Q82 88 89 90" fill="none" stroke="#475569" strokeWidth="2.5" strokeLinecap="round" /><path d="M111 90 Q118 88 125 90" fill="none" stroke="#475569" strokeWidth="2.5" strokeLinecap="round" /><path d="M90 120 Q100 128 110 120" fill="none" stroke="#9a3412" strokeWidth="2.5" strokeLinecap="round" /><ellipse cx="75" cy="115" rx="6" ry="3" fill="#fda4af" opacity="0.4" filter="blur(2px)" /><ellipse cx="125" cy="115" rx="6" ry="3" fill="#fda4af" opacity="0.4" filter="blur(2px)" /></g>
   </svg>
 );
 
@@ -88,37 +128,15 @@ const OmaniGirlAvatarSVG = () => (
       <filter id="girlShadow" x="-20%" y="-20%" width="140%" height="140%">
         <feGaussianBlur in="SourceAlpha" stdDeviation="3" />
         <feOffset dx="0" dy="4" result="offsetblur" />
-        <feComponentTransfer>
-           <feFuncA type="linear" slope="0.25"/> 
-        </feComponentTransfer>
-        <feMerge> 
-          <feMergeNode/>
-          <feMergeNode in="SourceGraphic"/> 
-        </feMerge>
+        <feComponentTransfer><feFuncA type="linear" slope="0.25"/></feComponentTransfer>
+        <feMerge><feMergeNode/><feMergeNode in="SourceGraphic"/></feMerge>
       </filter>
     </defs>
-    <g filter="url(#girlShadow)">
-      <path d="M40 180 C40 130 160 130 160 180 L160 210 L40 210 Z" fill="url(#uniform3D)" />
-      <path d="M70 160 L70 210 M130 160 L130 210" stroke="#2563eb" strokeWidth="12" opacity="0.3" />
-    </g>
+    <g filter="url(#girlShadow)"><path d="M40 180 C40 130 160 130 160 180 L160 210 L40 210 Z" fill="url(#uniform3D)" /><path d="M70 160 L70 210 M130 160 L130 210" stroke="#2563eb" strokeWidth="12" opacity="0.3" /></g>
     <rect x="90" y="120" width="20" height="20" fill="#d49066" />
-    <g filter="url(#girlShadow)">
-      <path d="M45 90 Q100 20 155 90 L155 130 Q155 160 100 170 Q45 160 45 130 Z" fill="url(#hijab3D)" />
-      <circle cx="100" cy="95" r="38" fill="url(#girlSkin3D)" />
-      {/* الحجاب: تم تعديل المنحنى ليغطي الشعر والجبهة */}
-      <path d="M62 90 Q100 100 138 90 L138 50 Q100 40 62 50 Z" fill="url(#hijab3D)" />
-      <path d="M62 90 Q100 100 138 90" fill="none" stroke="#f1f5f9" strokeWidth="1" opacity="0.5" />
-    </g>
-    <g>
-      <ellipse cx="86" cy="100" rx="5.5" ry="7.5" fill="#1e293b" />
-      <circle cx="88" cy="98" r="2.5" fill="white" opacity="0.9" />
-      <ellipse cx="114" cy="100" rx="5.5" ry="7.5" fill="#1e293b" />
-      <circle cx="116" cy="98" r="2.5" fill="white" opacity="0.9" />
-      <path d="M80 96 L78 94 M120 96 L122 94" stroke="#1e293b" strokeWidth="1.5" />
-      <path d="M94 118 Q100 122 106 118" fill="none" stroke="#db2777" strokeWidth="2" strokeLinecap="round" />
-      <circle cx="80" cy="110" r="5" fill="#fbcfe8" opacity="0.5" filter="blur(2px)" />
-      <circle cx="120" cy="110" r="5" fill="#fbcfe8" opacity="0.5" filter="blur(2px)" />
-    </g>
+    <g filter="url(#girlShadow)"><path d="M45 90 Q100 20 155 90 L155 130 Q155 160 100 170 Q45 160 45 130 Z" fill="url(#hijab3D)" /><circle cx="100" cy="95" r="38" fill="url(#girlSkin3D)" />
+    <path d="M62 90 Q100 100 138 90 L138 50 Q100 40 62 50 Z" fill="url(#hijab3D)" /><path d="M62 90 Q100 100 138 90" fill="none" stroke="#f1f5f9" strokeWidth="1" opacity="0.5" /></g>
+    <g><ellipse cx="86" cy="100" rx="5.5" ry="7.5" fill="#1e293b" /><circle cx="88" cy="98" r="2.5" fill="white" opacity="0.9" /><ellipse cx="114" cy="100" rx="5.5" ry="7.5" fill="#1e293b" /><circle cx="116" cy="98" r="2.5" fill="white" opacity="0.9" /><path d="M80 96 L78 94 M120 96 L122 94" stroke="#1e293b" strokeWidth="1.5" /><path d="M94 118 Q100 122 106 118" fill="none" stroke="#db2777" strokeWidth="2" strokeLinecap="round" /><circle cx="80" cy="110" r="5" fill="#fbcfe8" opacity="0.5" filter="blur(2px)" /><circle cx="120" cy="110" r="5" fill="#fbcfe8" opacity="0.5" filter="blur(2px)" /></g>
   </svg>
 );
 
@@ -126,7 +144,8 @@ const getStudentAvatar = (student: Student) => {
     if (student.avatar) return <img src={student.avatar} className="w-full h-full object-cover" alt={student.name} />;
     return student.gender === 'female' ? <OmaniGirlAvatarSVG /> : <OmaniBoyAvatarSVG />;
 };
-// ----------------------------------------------------------
+
+// ============================================================================
 
 interface StudentListProps {
     students: Student[];
@@ -155,65 +174,57 @@ const StudentItem = React.memo(({ student, onAction, currentSemester, onToggleGe
     onToggleGender: (s: Student) => void
 }) => {
     const totalScore = useMemo(() => (student.grades || []).filter(g => !g.semester || g.semester === currentSemester).reduce((sum, g) => sum + (Number(g.score) || 0), 0), [student.grades, currentSemester]);
-    const gradeSymbol = useMemo(() => { if (totalScore >= 90) return 'أ'; if (totalScore >= 80) return 'ب'; if (totalScore >= 65) return 'ج'; if (totalScore >= 50) return 'د'; return 'هـ'; }, [totalScore]);
     
-    const gradeColor = useMemo(() => { 
-        if (totalScore >= 90) return 'text-emerald-700 bg-emerald-100 border-emerald-200'; 
-        if (totalScore >= 80) return 'text-blue-700 bg-blue-100 border-blue-200'; 
-        if (totalScore >= 65) return 'text-amber-700 bg-amber-100 border-amber-200'; 
-        return 'text-rose-700 bg-rose-100 border-rose-200'; 
-    }, [totalScore]);
+    // حساب النقاط للسلوك
+    const points = useMemo(() => (student.behaviors || []).filter(b => !b.semester || b.semester === currentSemester).reduce((acc, b) => acc + (b.type === 'positive' ? b.points : -b.points), 0), [student.behaviors, currentSemester]);
 
     return (
         <motion.div 
             initial={{ opacity: 0, y: 15 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.3 }}
-            className="group flex flex-col sm:flex-row sm:items-center justify-between p-4 mb-3 rounded-[1.5rem] gap-4 sm:gap-0 relative overflow-hidden transition-all duration-300
-            bg-white hover:bg-white shadow-sm hover:shadow-md border border-slate-100 shimmer-hover hover:-translate-y-0.5"
+            className="group bg-white rounded-[1.5rem] p-4 mb-3 border border-slate-100 shadow-sm relative overflow-hidden"
         >
-            <div className={`absolute left-0 top-0 bottom-0 w-1.5 ${totalScore >= 90 ? 'bg-emerald-500' : totalScore >= 50 ? 'bg-indigo-500' : 'bg-rose-500'}`}></div>
-
-            <div className="flex items-center gap-4 flex-1 min-w-0 relative z-10 pl-3">
-                {/* Avatar with Click-to-Toggle Gender */}
-                <div 
-                    onClick={(e) => { e.stopPropagation(); onToggleGender(student); }}
-                    className={`w-14 h-14 rounded-2xl flex items-center justify-center text-2xl font-bold overflow-hidden shrink-0 shadow-inner border cursor-pointer active:scale-90 transition-transform select-none ${student.gender === 'female' ? 'bg-pink-50 border-pink-100' : 'bg-blue-50 border-blue-100'}`}
-                    title="اضغط لتبديل النوع (ذكر/أنثى)"
-                >
-                    {getStudentAvatar(student)}
+            <div className="flex justify-between items-start mb-4">
+                {/* أدوات التعديل والحذف (يسار) */}
+                <div className="flex gap-2">
+                    <button onClick={(e) => { e.stopPropagation(); onAction(student, 'delete'); }} className="text-slate-300 hover:text-rose-500 transition-colors p-1"><Trash2 size={16} /></button>
+                    <button onClick={(e) => { e.stopPropagation(); onAction(student, 'edit'); }} className="text-slate-300 hover:text-indigo-500 transition-colors p-1"><Edit2 size={16} /></button>
                 </div>
-                
-                <div className="min-w-0">
-                    <h3 className="font-black text-slate-900 text-sm truncate group-hover:text-indigo-700 transition-colors">{student.name}</h3>
-                    <div className="flex items-center gap-2 mt-1.5">
-                        <span className="text-[10px] bg-slate-100 text-slate-700 px-2.5 py-1 rounded-lg font-bold">{student.classes[0]}</span>
-                        <span className={`text-[10px] px-2.5 py-1 rounded-lg font-bold border ${gradeColor}`}>{gradeSymbol} ({totalScore})</span>
+
+                {/* معلومات الطالب (وسط ويمين) */}
+                <div className="flex items-center gap-4 flex-1 justify-end text-right">
+                    <div className="flex flex-col items-end">
+                        <h3 className="font-black text-slate-900 text-sm mb-1">{student.name}</h3>
+                        <div className="flex items-center gap-2">
+                            <span className="text-[10px] bg-slate-100 text-slate-500 px-2 py-0.5 rounded-lg font-bold">{points} نقطة</span>
+                            <span className="text-[10px] bg-indigo-50 text-indigo-600 px-2 py-0.5 rounded-lg font-bold">{student.classes[0]}</span>
+                        </div>
+                    </div>
+                    {/* الأفاتار */}
+                    <div 
+                        onClick={(e) => { e.stopPropagation(); onToggleGender(student); }}
+                        className="w-14 h-14 rounded-2xl bg-white border border-slate-100 shadow-sm flex items-center justify-center overflow-hidden cursor-pointer"
+                    >
+                        {getStudentAvatar(student)}
                     </div>
                 </div>
             </div>
 
-            <div className="flex items-center justify-between sm:justify-end gap-2 pl-1 relative z-10">
-                <div className="flex items-center gap-1.5 bg-slate-50 p-1.5 rounded-xl border border-slate-100 shadow-inner">
-                    <button onClick={(e) => { e.stopPropagation(); onAction(student, 'positive'); }} className="w-10 h-10 rounded-lg flex items-center justify-center bg-white text-emerald-600 hover:text-white hover:bg-emerald-50 shadow-sm active:scale-95 transition-all">
-                        <ThumbsUp className="w-5 h-5" />
-                    </button>
-                    <button onClick={(e) => { e.stopPropagation(); onAction(student, 'negative'); }} className="w-10 h-10 rounded-lg flex items-center justify-center bg-white text-rose-600 hover:text-white hover:bg-rose-50 shadow-sm active:scale-95 transition-all">
-                        <ThumbsDown className="w-5 h-5" />
-                    </button>
-                    <button onClick={(e) => { e.stopPropagation(); onAction(student, 'truant'); }} className="w-10 h-10 rounded-lg flex items-center justify-center bg-white text-purple-600 hover:text-white hover:bg-purple-50 shadow-sm active:scale-95 transition-all" title="تسرب">
-                        <DoorOpen className="w-5 h-5" />
-                    </button>
-                </div>
-                
-                <div className="w-px h-8 bg-slate-200 mx-1 hidden sm:block"></div>
-                
-                <div className="flex items-center gap-1">
-                    <button onClick={(e) => { e.stopPropagation(); onAction(student, 'edit'); }} className="w-9 h-9 rounded-lg flex items-center justify-center text-slate-500 hover:text-indigo-600 hover:bg-indigo-50 transition-colors">
-                        <Edit2 className="w-4 h-4" />
-                    </button>
-                    <button onClick={(e) => { e.stopPropagation(); onAction(student, 'delete'); }} className="w-9 h-9 rounded-lg flex items-center justify-center text-slate-500 hover:text-rose-600 hover:bg-rose-50 transition-colors">
-                        <Trash2 className="w-4 h-4" />
-                    </button>
-                </div>
+            {/* أزرار السلوك (أسفل) - مطابقة للصورة */}
+            <div className="flex gap-3 mt-2">
+                <button 
+                    onClick={(e) => { e.stopPropagation(); onAction(student, 'negative'); }} 
+                    className="flex-1 bg-white border border-rose-100 text-rose-500 py-3 rounded-xl flex items-center justify-center gap-2 font-bold text-xs hover:bg-rose-50 active:scale-95 transition-all shadow-sm"
+                >
+                    <Icon3DNegative />
+                    سلوك سلبي
+                </button>
+                <button 
+                    onClick={(e) => { e.stopPropagation(); onAction(student, 'positive'); }} 
+                    className="flex-1 bg-white border border-emerald-100 text-emerald-600 py-3 rounded-xl flex items-center justify-center gap-2 font-bold text-xs hover:bg-emerald-50 active:scale-95 transition-all shadow-sm"
+                >
+                    <Icon3DPositive />
+                    سلوك إيجابي
+                </button>
             </div>
         </motion.div>
     );
@@ -229,6 +240,7 @@ const StudentList: React.FC<StudentListProps> = ({ students, classes, onAddClass
   const [showImportModal, setShowImportModal] = useState(false);
   const [showAddClassModal, setShowAddClassModal] = useState(false);
   const [showManageClasses, setShowManageClasses] = useState(false); 
+  const [showMenu, setShowMenu] = useState(false); // للقائمة المنسدلة
   
   const [newClassInput, setNewClassInput] = useState('');
   
@@ -238,7 +250,7 @@ const StudentList: React.FC<StudentListProps> = ({ students, classes, onAddClass
   const [editPhone, setEditPhone] = useState('');
   const [editClass, setEditClass] = useState('');
   const [editAvatar, setEditAvatar] = useState('');
-  const [editGender, setEditGender] = useState<'male' | 'female'>('male'); // New Gender State
+  const [editGender, setEditGender] = useState<'male' | 'female'>('male');
   
   const [showNegativeReasons, setShowNegativeReasons] = useState<{student: Student} | null>(null);
   const [showPositiveReasons, setShowPositiveReasons] = useState<{student: Student} | null>(null);
@@ -270,12 +282,10 @@ const StudentList: React.FC<StudentListProps> = ({ students, classes, onAddClass
   const filteredStudents = useMemo(() => students.filter(s => {
       const matchName = s.name.toLowerCase().includes(searchTerm.toLowerCase());
       const matchClass = selectedClass === 'all' || s.classes?.includes(selectedClass);
-      
       let matchGrade = true;
       if (selectedGrade !== 'all') {
           matchGrade = s.grade === selectedGrade || (s.classes[0] && s.classes[0].startsWith(selectedGrade));
       }
-
       return matchName && matchClass && matchGrade;
   }), [students, searchTerm, selectedClass, selectedGrade]);
 
@@ -305,7 +315,7 @@ const StudentList: React.FC<StudentListProps> = ({ students, classes, onAddClass
           setEditClass(student.classes[0]);
           setEditPhone(student.parentPhone || '');
           setEditAvatar(student.avatar || '');
-          setEditGender(student.gender || 'male'); // Load existing gender
+          setEditGender(student.gender || 'male');
           setShowManualAddModal(true);
       }
       else if (type === 'delete') {
@@ -318,7 +328,6 @@ const StudentList: React.FC<StudentListProps> = ({ students, classes, onAddClass
       }
   };
 
-  // وظيفة تبديل الجنس السريع
   const handleToggleGender = (student: Student) => {
       const newGender = student.gender === 'female' ? 'male' : 'female';
       onUpdateStudent({ ...student, gender: newGender });
@@ -401,9 +410,8 @@ const StudentList: React.FC<StudentListProps> = ({ students, classes, onAddClass
   };
 
   return (
-    <div className="flex flex-col h-full text-slate-800 relative">
+    <div className="flex flex-col h-full text-slate-800 relative bg-[#f3f4f6]">
         
-        {/* --- FEEDBACK ANIMATION OVERLAY --- */}
         <AnimatePresence>
             {feedbackAnimation && (
                 <motion.div 
@@ -413,83 +421,70 @@ const StudentList: React.FC<StudentListProps> = ({ students, classes, onAddClass
                     transition={{ type: 'spring', damping: 15 }}
                     className="fixed inset-0 z-[10000] flex items-center justify-center pointer-events-none"
                 >
-                    <div className={`
-                        p-8 rounded-[3rem] shadow-2xl flex flex-col items-center gap-4 border-4
-                        backdrop-blur-xl
-                        ${feedbackAnimation.type === 'positive' 
-                            ? 'bg-emerald-500/90 border-emerald-600 text-white shadow-emerald-500/50' 
-                            : 'bg-rose-500/90 border-rose-600 text-white shadow-rose-500/50'}
-                    `}>
-                        <div className="bg-white/20 p-6 rounded-full shadow-inner">
-                            {feedbackAnimation.type === 'positive' ? (
-                                <div className="relative">
-                                    <Trophy className="w-20 h-20 text-yellow-300 drop-shadow-md" />
-                                    <PartyPopper className="w-12 h-12 text-white absolute -top-4 -right-4 animate-bounce" />
-                                </div>
-                            ) : (
-                                <div className="relative">
-                                    <Frown className="w-20 h-20 text-white drop-shadow-md" />
-                                    <CloudRain className="w-12 h-12 text-slate-200 absolute -top-4 -right-4 animate-pulse" />
-                                </div>
-                            )}
-                        </div>
+                    <div className={`p-8 rounded-[3rem] shadow-2xl flex flex-col items-center gap-4 border-4 backdrop-blur-xl ${feedbackAnimation.type === 'positive' ? 'bg-emerald-500/90 border-emerald-600 text-white' : 'bg-rose-500/90 border-rose-600 text-white'}`}>
                         <h2 className="text-4xl font-black tracking-tight drop-shadow-sm">{feedbackAnimation.text}</h2>
                     </div>
                 </motion.div>
             )}
         </AnimatePresence>
 
-        {/* Sticky Header (Light Theme) */}
-        <div className="fixed md:sticky top-0 z-40 md:z-30 bg-[#1e3a8a] text-white shadow-lg px-4 pt-[env(safe-area-inset-top)] pb-6 transition-all duration-300 rounded-b-[2.5rem] md:rounded-none md:shadow-md w-full md:w-auto left-0 right-0 md:left-auto md:right-auto">
-            {/* Removed pt-safe and large mt-4 to fix mobile spacing */}
-            <div className="flex justify-between items-center mb-4 mt-2">
-                <h1 className="text-2xl font-black text-slate-900 tracking-tight drop-shadow-sm">قائمة الطلاب</h1>
-                <div className="flex gap-2">
-                    <button onClick={() => setShowManualAddModal(true)} className="w-10 h-10 rounded-2xl glass-icon bg-white border border-slate-200 text-indigo-600 active:scale-95 transition-all shadow-sm hover:shadow-md" title="إضافة طالب">
-                        <UserPlus className="w-5 h-5"/>
+        {/* HEADER (With Hamburger Menu) */}
+        <div className="sticky top-0 z-30 pb-2 bg-[#f3f4f6] -mx-4 px-4 -mt-4">
+            <div className="flex justify-between items-center mb-4 mt-2 relative">
+                
+                {/* 1. Hamburger Menu (Left Side) */}
+                <div className="relative">
+                    <button onClick={() => setShowMenu(!showMenu)} className="w-10 h-10 rounded-2xl glass-icon bg-white border border-slate-200 text-indigo-600 active:scale-95 transition-all shadow-sm flex items-center justify-center">
+                        <Icon3DMenu className="w-6 h-6" />
                     </button>
-                    <button onClick={() => setShowImportModal(true)} className="w-10 h-10 rounded-2xl glass-icon bg-white border border-slate-200 text-emerald-600 active:scale-95 transition-all shadow-sm hover:shadow-md" title="استيراد Excel">
-                        <Upload className="w-5 h-5"/>
-                    </button>
-                    <button onClick={pickRandomStudent} className="w-10 h-10 rounded-2xl glass-icon bg-white border border-slate-200 text-purple-600 active:scale-95 transition-all shadow-sm hover:shadow-md" title="اختيار عشوائي">
-                        <Sparkles className="w-5 h-5"/>
-                    </button>
+                    {showMenu && (
+                        <>
+                            <div className="fixed inset-0 z-40" onClick={() => setShowMenu(false)}></div>
+                            <div className="absolute top-full left-0 mt-2 w-56 bg-white rounded-2xl shadow-2xl border border-slate-100 z-50 overflow-hidden animate-in fade-in zoom-in duration-200 origin-top-left">
+                                <div className="flex flex-col py-1">
+                                    <button onClick={() => { setShowManualAddModal(true); setShowMenu(false); }} className="flex items-center gap-3 px-4 py-3 hover:bg-slate-50 text-right w-full text-slate-700 font-bold text-sm">
+                                        <Icon3DAdd className="w-5 h-5"/> إضافة طالب
+                                    </button>
+                                    <button onClick={() => { setShowImportModal(true); setShowMenu(false); }} className="flex items-center gap-3 px-4 py-3 hover:bg-slate-50 text-right w-full text-slate-700 font-bold text-sm border-t border-slate-50">
+                                        <Icon3DExcel className="w-5 h-5"/> استيراد من Excel
+                                    </button>
+                                    <button onClick={() => { pickRandomStudent(); setShowMenu(false); }} className="flex items-center gap-3 px-4 py-3 hover:bg-slate-50 text-right w-full text-slate-700 font-bold text-sm border-t border-slate-50">
+                                        <Icon3DRandom className="w-5 h-5"/> القرعة العشوائية
+                                    </button>
+                                    <button onClick={() => { setShowManageClasses(true); setShowMenu(false); }} className="flex items-center gap-3 px-4 py-3 hover:bg-slate-50 text-right w-full text-slate-700 font-bold text-sm border-t border-slate-50">
+                                        <Icon3DSettings className="w-5 h-5"/> إعدادات عامة
+                                    </button>
+                                </div>
+                            </div>
+                        </>
+                    )}
                 </div>
+
+                <h1 className="text-2xl font-black text-slate-900 tracking-tight drop-shadow-sm absolute left-1/2 transform -translate-x-1/2">قائمة الطلاب</h1>
+                
+                {/* Search Bar (Right Side now, or hidden/moved based on space) - Keeping it simple as per request */}
+                <div className="w-10"></div> {/* Spacer to center title */}
             </div>
 
             {/* Hierarchy Filters */}
             <div className="space-y-3 mb-2">
-                {/* 1. Grades (Level) */}
-                {availableGrades.length > 0 && (
-                    <div className="flex gap-2 overflow-x-auto no-scrollbar pb-1">
-                        <button onClick={() => { setSelectedGrade('all'); setSelectedClass('all'); }} className={`px-4 py-2 text-[10px] font-black whitespace-nowrap transition-all rounded-xl border ${selectedGrade === 'all' ? 'bg-indigo-600 text-white border-indigo-700 shadow-md' : 'bg-white border-slate-200 text-slate-600 shadow-sm'}`}>كل المراحل</button>
-                        {availableGrades.map(g => (
-                            <button key={g} onClick={() => { setSelectedGrade(g); setSelectedClass('all'); }} className={`px-4 py-2 text-[10px] font-black whitespace-nowrap transition-all rounded-xl border ${selectedGrade === g ? 'bg-indigo-600 text-white border-indigo-700 shadow-md' : 'bg-white border-slate-200 text-slate-600 shadow-sm'}`}>صف {g}</button>
-                        ))}
-                    </div>
-                )}
+                <div className="relative">
+                    <Search className="absolute right-3 top-3 w-4 h-4 text-slate-400" />
+                    <input type="text" placeholder="بحث عن طالب..." value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} className="w-full glass-input bg-white rounded-xl py-2.5 pr-9 pl-3 text-xs font-bold outline-none border border-slate-200 focus:border-indigo-500 shadow-sm text-slate-900" />
+                </div>
 
-                {/* 2. Classes (Sub-level) + Search */}
-                <div className="flex items-center gap-3">
-                    <button onClick={() => setShowManageClasses(true)} className="w-10 h-10 flex items-center justify-center rounded-xl glass-card bg-white border border-slate-200 hover:bg-gray-50 active:scale-95 text-slate-500 shadow-sm" title="إدارة الفصول">
-                        <Settings className="w-5 h-5"/>
-                    </button>
-                    <div className="flex gap-2 overflow-x-auto no-scrollbar pb-1 max-w-[55%]">
-                        {visibleClasses.map(c => (
-                            <button key={c} onClick={() => setSelectedClass(c)} className={`px-5 py-2.5 text-xs font-black whitespace-nowrap transition-all rounded-xl border shadow-sm ${selectedClass === c ? 'bg-indigo-600 text-white border-indigo-700 shadow-indigo-200' : 'bg-white border-slate-200 hover:bg-gray-50 text-slate-700'}`}>{c}</button>
-                        ))}
-                        <button onClick={() => setShowAddClassModal(true)} className="px-4 py-2 rounded-xl glass-card bg-white border border-slate-200 hover:bg-gray-50 active:scale-95 text-slate-500 shadow-sm"><Plus className="w-5 h-5"/></button>
-                    </div>
-                    <div className="relative flex-1">
-                        <Search className="absolute right-3 top-3 w-4 h-4 text-slate-400" />
-                        <input 
-                            type="text" 
-                            placeholder="بحث..." 
-                            value={searchTerm}
-                            onChange={(e) => setSearchTerm(e.target.value)}
-                            className="w-full glass-input bg-white rounded-xl py-2.5 pr-9 pl-3 text-xs font-bold outline-none border border-slate-200 focus:border-indigo-500 shadow-sm text-slate-900" 
-                        />
-                    </div>
+                <div className="flex gap-2 overflow-x-auto no-scrollbar pb-1">
+                    <button onClick={() => { setSelectedGrade('all'); setSelectedClass('all'); }} className={`px-4 py-2 text-[10px] font-black whitespace-nowrap transition-all rounded-xl border ${selectedGrade === 'all' ? 'bg-indigo-600 text-white border-indigo-700 shadow-md' : 'bg-white border-slate-200 text-slate-600 shadow-sm'}`}>كل المراحل</button>
+                    {availableGrades.map(g => (
+                        <button key={g} onClick={() => { setSelectedGrade(g); setSelectedClass('all'); }} className={`px-4 py-2 text-[10px] font-black whitespace-nowrap transition-all rounded-xl border ${selectedGrade === g ? 'bg-indigo-600 text-white border-indigo-700 shadow-md' : 'bg-white border-slate-200 text-slate-600 shadow-sm'}`}>صف {g}</button>
+                    ))}
+                </div>
+
+                <div className="flex gap-2 overflow-x-auto no-scrollbar pb-1">
+                    {visibleClasses.map(c => (
+                        <button key={c} onClick={() => setSelectedClass(c)} className={`px-5 py-2.5 text-xs font-black whitespace-nowrap transition-all rounded-xl border shadow-sm ${selectedClass === c ? 'bg-indigo-600 text-white border-indigo-700 shadow-indigo-200' : 'bg-white border-slate-200 hover:bg-gray-50 text-slate-700'}`}>{c}</button>
+                    ))}
+                    <button onClick={() => setShowAddClassModal(true)} className="px-4 py-2 rounded-xl glass-card bg-white border border-slate-200 hover:bg-gray-50 active:scale-95 text-slate-500 shadow-sm"><Plus className="w-5 h-5"/></button>
                 </div>
             </div>
         </div>
@@ -516,8 +511,7 @@ const StudentList: React.FC<StudentListProps> = ({ students, classes, onAddClass
             )}
         </div>
 
-        {/* ... Modals ... */}
-        {/* --- Add/Edit Student Modal with Gender --- */}
+        {/* ... Modals (No changes to logic) ... */}
         <Modal isOpen={showManualAddModal} onClose={() => { setShowManualAddModal(false); setEditingStudent(null); setEditName(''); setEditPhone(''); setEditClass(''); setEditGender('male'); }}>
             <div className="text-center">
                 <h3 className="font-black text-xl mb-4 text-slate-800">{editingStudent ? 'تعديل بيانات الطالب' : 'إضافة طالب جديد'}</h3>
@@ -525,19 +519,15 @@ const StudentList: React.FC<StudentListProps> = ({ students, classes, onAddClass
                     <input className="w-full p-3 glass-input bg-white rounded-xl font-bold text-sm outline-none border-gray-200 focus:border-indigo-500 text-slate-800" placeholder="اسم الطالب" value={editName} onChange={e => setEditName(e.target.value)} />
                     <input className="w-full p-3 glass-input bg-white rounded-xl font-bold text-sm outline-none border-gray-200 focus:border-indigo-500 text-slate-800" placeholder="الصف (مثال: 5/1)" value={editClass} onChange={e => setEditClass(e.target.value)} />
                     <input className="w-full p-3 glass-input bg-white rounded-xl font-bold text-sm outline-none border-gray-200 focus:border-indigo-500 text-slate-800" placeholder="رقم ولي الأمر (اختياري)" value={editPhone} onChange={e => setEditPhone(e.target.value)} type="tel" />
-                    
-                    {/* Gender Selection (لم يتم تغيير الإيموجي هنا لأنه ليس الصورة الرئيسية) */}
                     <div className="flex bg-gray-100 p-1 rounded-xl border border-gray-200">
                         <button onClick={() => setEditGender('male')} className={`flex-1 py-2 rounded-lg text-sm font-bold transition-all ${editGender === 'male' ? 'bg-white shadow text-blue-600' : 'text-gray-500'}`}>ذكر 👨‍🎓</button>
                         <button onClick={() => setEditGender('female')} className={`flex-1 py-2 rounded-lg text-sm font-bold transition-all ${editGender === 'female' ? 'bg-white shadow text-pink-600' : 'text-gray-500'}`}>أنثى 👩‍🎓</button>
                     </div>
-
                     <button onClick={handleSaveStudent} className="w-full py-3 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl font-black text-sm shadow-lg mt-2">حفظ</button>
                 </div>
             </div>
         </Modal>
 
-        {/* ... Other Modals ... */}
         <Modal isOpen={showManageClasses} onClose={() => setShowManageClasses(false)} className="max-w-md rounded-[2rem]">
             <div className="text-center text-slate-900">
                 <h3 className="font-black text-xl mb-4">إعدادات الفصول والصفوف</h3>
@@ -590,7 +580,6 @@ const StudentList: React.FC<StudentListProps> = ({ students, classes, onAddClass
             <div className="text-center py-6">
                 <div className="w-24 h-24 mx-auto mb-4 rounded-full glass-icon border-4 border-indigo-100 shadow-xl overflow-hidden relative bg-white">
                     {randomStudent ? (
-                        // تم تغيير الإيموجي هنا فقط في نافذة الاختيار العشوائي
                         getStudentAvatar(randomStudent)
                     ) : (
                         <Sparkles className="w-10 h-10 text-indigo-400 animate-spin" />
