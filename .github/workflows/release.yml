@@ -1,0 +1,39 @@
+name: Windows Release 🖥️
+
+on:
+  push:
+    branches: [ "main" ]
+  workflow_dispatch: # للسماح بالتشغيل اليدوي
+
+permissions:
+  contents: write
+
+jobs:
+  build-windows:
+    name: Build & Release EXE
+    runs-on: windows-latest # بيئة وندوز لبناء ملف exe
+    
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'npm'
+
+      - name: Install Dependencies
+        # تثبيت المكتبات
+        run: npm install
+
+      - name: Build React App (Vite)
+        # بناء ملفات الواجهة
+        run: npm run build
+
+      - name: Build & Publish Electron
+        env:
+          # هذا التوكن يأتي تلقائياً من جيت هب
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        # يقوم ببناء ملف exe ورفعه تلقائياً إلى Releases
+        run: npx electron-builder --win --publish always
