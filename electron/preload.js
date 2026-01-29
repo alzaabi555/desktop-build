@@ -1,8 +1,11 @@
 
-const { contextBridge, shell } = require('electron');
+const { contextBridge, shell, ipcRenderer } = require('electron');
 
-// نحن نكشف فقط وظيفة 'openExternal' للواجهة الأمامية
-// هذا يحمي التطبيق من الوصول الكامل للنظام مع السماح بفتح الروابط
+// نحن نكشف وظائف آمنة للواجهة الأمامية
 contextBridge.exposeInMainWorld('electron', {
-  openExternal: (url) => shell.openExternal(url)
+  // 1. وظيفتك الحالية (لفتح الروابط) - ممتازة، أبقيتها كما هي
+  openExternal: (url) => shell.openExternal(url),
+
+  // 2. ✅ الوظيفة الجديدة (لجلب رقم الإصدار من النظام)
+  getAppVersion: () => ipcRenderer.invoke('get-app-version')
 });
