@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import { Student, BehaviorType } from '../types';
-import { Search, Edit2, Trash2, Plus, LayoutGrid, Settings, UserPlus, Upload, Sparkles, X, Trophy, Frown, CloudRain, PartyPopper } from 'lucide-react';
+import { Search, Edit2, Trash2, Plus, LayoutGrid, Settings, UserPlus, Upload, Sparkles, X, Trophy, Frown, CloudRain, PartyPopper, Check, Users } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import Modal from './Modal';
 import ExcelImport from './ExcelImport';
@@ -10,7 +10,6 @@ import { useApp } from '../context/AppContext';
 // ✅ 1. الأيقونات (3D Style Icons) 
 // ============================================================================
 
-// --- الأفاتار العماني المحسن (ولد) ---
 const OmaniBoyAvatarSVG = () => (
   <svg viewBox="0 0 200 200" className="w-full h-full" xmlns="http://www.w3.org/2000/svg">
     <defs>
@@ -46,7 +45,6 @@ const OmaniBoyAvatarSVG = () => (
   </svg>
 );
 
-// --- الأفاتار العماني المحسن (بنت) ---
 const OmaniGirlAvatarSVG = () => (
   <svg viewBox="0 0 200 200" className="w-full h-full" xmlns="http://www.w3.org/2000/svg">
     <defs>
@@ -84,51 +82,15 @@ const getStudentAvatar = (student: Student) => {
     return student.gender === 'female' ? <OmaniGirlAvatarSVG /> : <OmaniBoyAvatarSVG />;
 };
 
-// --- أيقونات القائمة وأزرار السلوك (3D Style) ---
+// ----------------------------------------------------------
 
-const Icon3DMenu = ({ className }: { className?: string }) => (
-  <svg viewBox="0 0 100 100" className={className || "w-6 h-6"} xmlns="http://www.w3.org/2000/svg">
-    <defs>
-      <linearGradient id="gradMenu" x1="0%" y1="0%" x2="100%" y2="0%">
-        <stop offset="0%" stopColor="#ffffff" />
-        <stop offset="100%" stopColor="#f1f5f9" />
-      </linearGradient>
-      <filter id="shadowMenu" x="-20%" y="-20%" width="140%" height="140%">
-        <feGaussianBlur in="SourceAlpha" stdDeviation="1.5" />
-        <feOffset dx="0" dy="2" result="offsetblur" />
-        <feMerge><feMergeNode/><feMergeNode in="SourceGraphic"/></feMerge>
-      </filter>
-    </defs>
-    <rect x="20" y="25" width="60" height="10" rx="5" fill="url(#gradMenu)" filter="url(#shadowMenu)" />
-    <rect x="20" y="45" width="60" height="10" rx="5" fill="url(#gradMenu)" filter="url(#shadowMenu)" />
-    <rect x="20" y="65" width="60" height="10" rx="5" fill="url(#gradMenu)" filter="url(#shadowMenu)" />
-  </svg>
-);
-
-const Icon3DPositive = () => (
-  <svg viewBox="0 0 100 100" className="w-10 h-10"><defs><linearGradient id="posGrad" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stopColor="#4ade80" /><stop offset="100%" stopColor="#16a34a" /></linearGradient><filter id="posShadow" x="-20%" y="-20%" width="140%" height="140%"><feDropShadow dx="1" dy="2" stdDeviation="2" floodOpacity="0.3" /></filter></defs><circle cx="50" cy="50" r="45" fill="url(#posGrad)" filter="url(#posShadow)" /><circle cx="35" cy="40" r="5" fill="white" /><circle cx="65" cy="40" r="5" fill="white" /><path d="M30 65 Q50 80 70 65" fill="none" stroke="white" strokeWidth="5" strokeLinecap="round" /></svg>
-);
-
-const Icon3DNegative = () => (
-  <svg viewBox="0 0 100 100" className="w-10 h-10"><defs><linearGradient id="negGrad" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stopColor="#f87171" /><stop offset="100%" stopColor="#dc2626" /></linearGradient><filter id="negShadow" x="-20%" y="-20%" width="140%" height="140%"><feDropShadow dx="1" dy="2" stdDeviation="2" floodOpacity="0.3" /></filter></defs><circle cx="50" cy="50" r="45" fill="white" filter="url(#negShadow)" /><circle cx="50" cy="50" r="40" fill="none" stroke="url(#negGrad)" strokeWidth="6" /><path d="M50 25 V55" stroke="url(#negGrad)" strokeWidth="6" strokeLinecap="round" /><circle cx="50" cy="70" r="4" fill="url(#negGrad)" /></svg>
-);
-
-const Icon3DAdd = ({ className }: { className?: string }) => (
-  <svg viewBox="0 0 100 100" className={className || "w-5 h-5"}><defs><linearGradient id="gradAdd" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stopColor="#60a5fa" /><stop offset="100%" stopColor="#2563eb" /></linearGradient></defs><circle cx="50" cy="50" r="45" fill="url(#gradAdd)" /><path d="M50 25 V75 M25 50 H75" stroke="white" strokeWidth="8" strokeLinecap="round" /></svg>
-);
-
-const Icon3DExcel = ({ className }: { className?: string }) => (
-  <svg viewBox="0 0 100 100" className={className || "w-5 h-5"}><defs><linearGradient id="gradEx" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stopColor="#34d399" /><stop offset="100%" stopColor="#059669" /></linearGradient></defs><rect x="25" y="20" width="50" height="60" rx="5" fill="url(#gradEx)" /><path d="M35 35 H65 M35 45 H65 M35 55 H50" stroke="white" strokeWidth="4" strokeLinecap="round" /></svg>
-);
-
-const Icon3DRandom = ({ className }: { className?: string }) => (
-  <svg viewBox="0 0 100 100" className={className || "w-5 h-5"}><defs><linearGradient id="gradRand" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stopColor="#fbbf24" /><stop offset="100%" stopColor="#d97706" /></linearGradient></defs><rect x="20" y="20" width="60" height="60" rx="10" fill="url(#gradRand)" /><circle cx="35" cy="35" r="5" fill="white"/><circle cx="65" cy="65" r="5" fill="white"/><circle cx="50" cy="50" r="5" fill="white"/></svg>
-);
-
-const Icon3DSettings = ({ className }: { className?: string }) => (
-  <svg viewBox="0 0 100 100" className={className || "w-5 h-5"}><defs><linearGradient id="gradSet" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stopColor="#94a3b8" /><stop offset="100%" stopColor="#475569" /></linearGradient></defs><circle cx="50" cy="50" r="25" fill="none" stroke="url(#gradSet)" strokeWidth="15" strokeDasharray="10 5" /><circle cx="50" cy="50" r="10" fill="#cbd5e1" /></svg>
-);
-
+const Icon3DMenu = ({ className }: { className?: string }) => (<svg viewBox="0 0 100 100" className={className || "w-6 h-6"}><defs><linearGradient id="menuGrad" x1="0%" y1="0%" x2="100%" y2="0%"><stop offset="0%" stopColor="#ffffff" /><stop offset="100%" stopColor="#f1f5f9" /></linearGradient><filter id="menuShadow" x="-20%" y="-20%" width="140%" height="140%"><feDropShadow dx="0" dy="2" stdDeviation="1.5" floodOpacity="0.2" /></filter></defs><rect x="20" y="25" width="60" height="10" rx="5" fill="url(#menuGrad)" filter="url(#menuShadow)" /><rect x="20" y="45" width="60" height="10" rx="5" fill="url(#menuGrad)" filter="url(#menuShadow)" /><rect x="20" y="65" width="60" height="10" rx="5" fill="url(#menuGrad)" filter="url(#menuShadow)" /></svg>);
+const Icon3DPositive = () => (<svg viewBox="0 0 100 100" className="w-10 h-10"><defs><linearGradient id="posGrad" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stopColor="#4ade80" /><stop offset="100%" stopColor="#16a34a" /></linearGradient><filter id="posShadow" x="-20%" y="-20%" width="140%" height="140%"><feDropShadow dx="1" dy="2" stdDeviation="2" floodOpacity="0.3" /></filter></defs><circle cx="50" cy="50" r="45" fill="url(#posGrad)" filter="url(#posShadow)" /><circle cx="35" cy="40" r="5" fill="white" /><circle cx="65" cy="40" r="5" fill="white" /><path d="M30 65 Q50 80 70 65" fill="none" stroke="white" strokeWidth="5" strokeLinecap="round" /></svg>);
+const Icon3DNegative = () => (<svg viewBox="0 0 100 100" className="w-10 h-10"><defs><linearGradient id="negGrad" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stopColor="#f87171" /><stop offset="100%" stopColor="#dc2626" /></linearGradient><filter id="negShadow" x="-20%" y="-20%" width="140%" height="140%"><feDropShadow dx="1" dy="2" stdDeviation="2" floodOpacity="0.3" /></filter></defs><circle cx="50" cy="50" r="45" fill="white" filter="url(#negShadow)" /><circle cx="50" cy="50" r="40" fill="none" stroke="url(#negGrad)" strokeWidth="6" /><path d="M50 25 V55" stroke="url(#negGrad)" strokeWidth="6" strokeLinecap="round" /><circle cx="50" cy="70" r="4" fill="url(#negGrad)" /></svg>);
+const Icon3DAdd = ({ className }: { className?: string }) => (<svg viewBox="0 0 100 100" className={className || "w-5 h-5"}><defs><linearGradient id="gradAdd" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stopColor="#60a5fa" /><stop offset="100%" stopColor="#2563eb" /></linearGradient></defs><circle cx="50" cy="50" r="45" fill="url(#gradAdd)" /><path d="M50 25 V75 M25 50 H75" stroke="white" strokeWidth="8" strokeLinecap="round" /></svg>);
+const Icon3DExcel = ({ className }: { className?: string }) => (<svg viewBox="0 0 100 100" className={className || "w-5 h-5"}><defs><linearGradient id="gradEx" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stopColor="#34d399" /><stop offset="100%" stopColor="#059669" /></linearGradient></defs><rect x="25" y="20" width="50" height="60" rx="5" fill="url(#gradEx)" /><path d="M35 35 H65 M35 45 H65 M35 55 H50" stroke="white" strokeWidth="4" strokeLinecap="round" /></svg>);
+const Icon3DRandom = ({ className }: { className?: string }) => (<svg viewBox="0 0 100 100" className={className || "w-5 h-5"}><defs><linearGradient id="gradRand" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stopColor="#fbbf24" /><stop offset="100%" stopColor="#d97706" /></linearGradient></defs><rect x="20" y="20" width="60" height="60" rx="10" fill="url(#gradRand)" /><circle cx="35" cy="35" r="5" fill="white"/><circle cx="65" cy="65" r="5" fill="white"/><circle cx="50" cy="50" r="5" fill="white"/></svg>);
+const Icon3DSettings = ({ className }: { className?: string }) => (<svg viewBox="0 0 100 100" className={className || "w-5 h-5"}><defs><linearGradient id="gradSet" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stopColor="#94a3b8" /><stop offset="100%" stopColor="#475569" /></linearGradient></defs><circle cx="50" cy="50" r="25" fill="none" stroke="url(#gradSet)" strokeWidth="15" strokeDasharray="10 5" /><circle cx="50" cy="50" r="10" fill="#cbd5e1" /></svg>);
 const Icon3DDelete = () => (<svg viewBox="0 0 100 100" className="w-5 h-5"><rect x="25" y="25" width="50" height="60" rx="5" fill="#fee2e2" /><path d="M35 15 H65 V25 H35 Z" fill="#ef4444" /><path d="M40 40 V70 M50 40 V70 M60 40 V70" stroke="#ef4444" strokeWidth="3" /></svg>);
 const Icon3DEdit = () => (<svg viewBox="0 0 100 100" className="w-5 h-5"><path d="M20 80 L25 55 L75 5 L95 25 L45 75 Z" fill="#dbeafe" stroke="#3b82f6" strokeWidth="2" /><path d="M20 80 L35 80 L20 65 Z" fill="#3b82f6" /></svg>);
 const Icon3DTruant = () => (<svg viewBox="0 0 100 100" className="w-5 h-5"><rect x="20" y="15" width="60" height="70" rx="2" fill="#f3e8ff" /><path d="M20 15 H50 V85 H20 Z" fill="#a855f7" /><circle cx="45" cy="50" r="3" fill="white" /></svg>);
@@ -282,6 +244,18 @@ const StudentList: React.FC<StudentListProps> = ({ students, classes, onAddClass
       onUpdateStudent({ ...student, gender: newGender });
   };
 
+  // ✅ دالة التحديث الجماعي للجنس
+  const handleBulkGenderUpdate = (gender: 'male' | 'female') => {
+      if (confirm(`هل أنت متأكد من تغيير أيقونات جميع الطلاب إلى (${gender === 'male' ? 'بنين 👦' : 'بنات 👧'})؟`)) {
+          students.forEach(student => {
+              if (student.gender !== gender) {
+                  onUpdateStudent({ ...student, gender });
+              }
+          });
+          alert('تم تحديث جميع الأيقونات بنجاح! 🎉');
+      }
+  };
+
   const handleSaveStudent = () => {
       if (editName.trim() && editClass.trim()) {
           const inferredGrade = editClass.trim().match(/^(\d+)/)?.[1] || '';
@@ -378,19 +352,12 @@ const StudentList: React.FC<StudentListProps> = ({ students, classes, onAddClass
         </AnimatePresence>
 
         {/* ================= HEADER (Blue, Fixed/Sticky) ================= */}
-        {/* ✅ Fixed Header Logic (Moved Menu to Left, Spacer to Right) */}
         <div className="fixed md:sticky top-0 z-40 md:z-30 bg-[#1e3a8a] text-white shadow-lg px-4 pt-[env(safe-area-inset-top)] pb-6 transition-all duration-300 rounded-b-[2.5rem] md:rounded-none md:shadow-md w-full md:w-auto left-0 right-0 md:left-auto md:right-auto">
             
             <div className="flex justify-between items-center mb-6 mt-2 relative">
                 
-                {/* 1. Hamburger Menu (Left in RTL is end, but here we place it at the end of flex container to be Left) */}
-                {/* RTL Fix: To put menu on Left, we put it last in DOM order, or force order. */}
-                {/* Assuming RTL layout: First item is Right, Last item is Left. */}
-                
-                {/* Spacer (Right in RTL) */}
                 <div className="w-10"></div>
 
-                {/* Title (Center) */}
                 <h1 className="text-2xl font-black tracking-tight absolute left-1/2 transform -translate-x-1/2 text-white">قائمة الطلاب</h1>
                 
                 {/* Menu Button (Left in RTL) */}
@@ -401,7 +368,6 @@ const StudentList: React.FC<StudentListProps> = ({ students, classes, onAddClass
                     {showMenu && (
                         <>
                             <div className="fixed inset-0 z-40" onClick={() => setShowMenu(false)}></div>
-                            {/* Dropdown position: aligned to left edge of button (which is on left of screen in RTL) */}
                             <div className="absolute top-full left-0 mt-2 w-56 bg-white rounded-2xl shadow-2xl border border-slate-100 z-50 overflow-hidden animate-in fade-in zoom-in duration-200 origin-top-left text-slate-800">
                                 <div className="flex flex-col py-1">
                                     <button onClick={() => { setShowManualAddModal(true); setShowMenu(false); }} className="flex items-center gap-3 px-4 py-3 hover:bg-slate-50 text-right w-full font-bold text-sm text-slate-700">
@@ -425,7 +391,7 @@ const StudentList: React.FC<StudentListProps> = ({ students, classes, onAddClass
 
             {/* Hierarchy Filters & Search */}
             <div className="space-y-3 mb-2 px-1">
-                {/* Search Bar (New Design for Blue Header) */}
+                {/* Search Bar */}
                 <div className="relative">
                     <Search className="absolute right-3 top-3 w-4 h-4 text-white/50" />
                     <input 
@@ -457,9 +423,8 @@ const StudentList: React.FC<StudentListProps> = ({ students, classes, onAddClass
             </div>
         </div>
 
-        {/* Student List Content (RESPONSIVE GRID VIEW) */}
+        {/* Student List Content */}
         <div className="flex-1 overflow-y-auto custom-scrollbar">
-             {/* Spacer for Fixed Header on Mobile */}
              <div className="w-full h-[280px] shrink-0 md:h-0"></div>
 
              <div className="px-4 pb-24 pt-2 -mt-4 relative z-10">
@@ -486,7 +451,6 @@ const StudentList: React.FC<StudentListProps> = ({ students, classes, onAddClass
         <Modal isOpen={!!selectedStudent} onClose={() => setSelectedStudent(null)} className="max-w-xs rounded-[2.5rem]">
             {selectedStudent && (
                 <div className="text-center pt-2">
-                    {/* Avatar & Header */}
                     <div className="flex flex-col items-center mb-6">
                         <div 
                             onClick={() => handleToggleGender(selectedStudent)} 
@@ -499,7 +463,6 @@ const StudentList: React.FC<StudentListProps> = ({ students, classes, onAddClass
                         <span className="text-xs font-bold text-slate-400 bg-slate-100 px-3 py-1 rounded-full">{selectedStudent.classes[0]}</span>
                     </div>
 
-                    {/* Big Action Buttons */}
                     <div className="grid grid-cols-2 gap-3 mb-6">
                         <button onClick={() => handleAction('positive', selectedStudent)} className="flex flex-col items-center justify-center gap-2 bg-emerald-50 border-2 border-emerald-100 p-4 rounded-2xl hover:bg-emerald-100 active:scale-95 transition-all group">
                             <div className="w-12 h-12 bg-white rounded-full flex items-center justify-center shadow-sm group-hover:scale-110 transition-transform">
@@ -515,7 +478,6 @@ const StudentList: React.FC<StudentListProps> = ({ students, classes, onAddClass
                         </button>
                     </div>
 
-                    {/* Secondary Actions */}
                     <div className="flex gap-2 justify-center border-t border-slate-100 pt-4">
                         <button onClick={() => handleAction('edit', selectedStudent)} className="flex-1 py-2 bg-indigo-50 text-indigo-600 rounded-xl font-bold text-xs flex items-center justify-center gap-2 hover:bg-indigo-100"><Icon3DEdit /> تعديل</button>
                         <button onClick={() => handleAction('truant', selectedStudent)} className="flex-1 py-2 bg-purple-50 text-purple-600 rounded-xl font-bold text-xs flex items-center justify-center gap-2 hover:bg-purple-100"><Icon3DTruant /> تسرب</button>
@@ -543,9 +505,35 @@ const StudentList: React.FC<StudentListProps> = ({ students, classes, onAddClass
             </div>
         </Modal>
 
+        {/* ✅ نافذة الإعدادات العامة (تم إضافة خيار تغيير النوع الجماعي هنا) */}
         <Modal isOpen={showManageClasses} onClose={() => setShowManageClasses(false)} className="max-w-md rounded-[2rem]">
             <div className="text-center text-slate-900">
                 <h3 className="font-black text-xl mb-4">إعدادات الفصول والصفوف</h3>
+                
+                {/* 🌟 قسم نوع المدرسة الجديد */}
+                <div className="bg-indigo-50 p-4 rounded-2xl border border-indigo-100 mb-6 shadow-sm">
+                    <h4 className="text-xs font-black text-indigo-700 mb-3 text-right flex items-center gap-2">
+                        <Users className="w-4 h-4"/> نوع المدرسة (تغيير جماعي)
+                    </h4>
+                    <div className="flex gap-3">
+                        <button 
+                            onClick={() => handleBulkGenderUpdate('male')} 
+                            className="flex-1 bg-white py-3 rounded-xl border border-indigo-100 shadow-sm text-sm font-bold text-slate-700 hover:bg-blue-50 hover:text-blue-600 transition-all flex items-center justify-center gap-2"
+                        >
+                            <span className="text-lg">👦</span> بنين
+                        </button>
+                        <button 
+                            onClick={() => handleBulkGenderUpdate('female')} 
+                            className="flex-1 bg-white py-3 rounded-xl border border-indigo-100 shadow-sm text-sm font-bold text-slate-700 hover:bg-pink-50 hover:text-pink-600 transition-all flex items-center justify-center gap-2"
+                        >
+                            <span className="text-lg">👧</span> بنات
+                        </button>
+                    </div>
+                    <p className="text-[9px] text-indigo-400 mt-2 text-right font-bold opacity-70">
+                        * سيتم توحيد أيقونات جميع الطلاب حسب اختيارك.
+                    </p>
+                </div>
+
                 <p className="text-xs text-gray-500 mb-6 font-bold">يمكنك هنا حذف الفصول أو الصفوف الدراسية بالكامل. <br/> <span className="text-rose-500">تنبيه: الحذف سيؤثر على جميع الصفحات.</span></p>
                 <div className="space-y-6 text-right">
                     <div>
