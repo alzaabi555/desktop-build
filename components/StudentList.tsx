@@ -7,7 +7,7 @@ import ExcelImport from './ExcelImport';
 import { useApp } from '../context/AppContext';
 
 // ============================================================================
-// ✅ 1. الأيقونات (3D Style Icons) - تم إضافة أيقونات القائمة الناقصة
+// ✅ 1. الأيقونات (3D Style Icons) 
 // ============================================================================
 
 // --- الأفاتار العماني المحسن (ولد) ---
@@ -378,11 +378,22 @@ const StudentList: React.FC<StudentListProps> = ({ students, classes, onAddClass
         </AnimatePresence>
 
         {/* ================= HEADER (Blue, Fixed/Sticky) ================= */}
+        {/* ✅ Fixed Header Logic (Moved Menu to Left, Spacer to Right) */}
         <div className="fixed md:sticky top-0 z-40 md:z-30 bg-[#1e3a8a] text-white shadow-lg px-4 pt-[env(safe-area-inset-top)] pb-6 transition-all duration-300 rounded-b-[2.5rem] md:rounded-none md:shadow-md w-full md:w-auto left-0 right-0 md:left-auto md:right-auto">
             
             <div className="flex justify-between items-center mb-6 mt-2 relative">
                 
-                {/* 1. Hamburger Menu (Left) - ✅ Fixed Position Left */}
+                {/* 1. Hamburger Menu (Left in RTL is end, but here we place it at the end of flex container to be Left) */}
+                {/* RTL Fix: To put menu on Left, we put it last in DOM order, or force order. */}
+                {/* Assuming RTL layout: First item is Right, Last item is Left. */}
+                
+                {/* Spacer (Right in RTL) */}
+                <div className="w-10"></div>
+
+                {/* Title (Center) */}
+                <h1 className="text-2xl font-black tracking-tight absolute left-1/2 transform -translate-x-1/2 text-white">قائمة الطلاب</h1>
+                
+                {/* Menu Button (Left in RTL) */}
                 <div className="relative">
                     <button onClick={() => setShowMenu(!showMenu)} className="w-10 h-10 rounded-2xl bg-white/10 backdrop-blur-md flex items-center justify-center text-white hover:bg-white/20 active:scale-95 transition-all shadow-sm border border-white/10">
                         <Icon3DMenu className="w-6 h-6" />
@@ -390,6 +401,7 @@ const StudentList: React.FC<StudentListProps> = ({ students, classes, onAddClass
                     {showMenu && (
                         <>
                             <div className="fixed inset-0 z-40" onClick={() => setShowMenu(false)}></div>
+                            {/* Dropdown position: aligned to left edge of button (which is on left of screen in RTL) */}
                             <div className="absolute top-full left-0 mt-2 w-56 bg-white rounded-2xl shadow-2xl border border-slate-100 z-50 overflow-hidden animate-in fade-in zoom-in duration-200 origin-top-left text-slate-800">
                                 <div className="flex flex-col py-1">
                                     <button onClick={() => { setShowManualAddModal(true); setShowMenu(false); }} className="flex items-center gap-3 px-4 py-3 hover:bg-slate-50 text-right w-full font-bold text-sm text-slate-700">
@@ -409,11 +421,6 @@ const StudentList: React.FC<StudentListProps> = ({ students, classes, onAddClass
                         </>
                     )}
                 </div>
-
-                <h1 className="text-2xl font-black tracking-tight absolute left-1/2 transform -translate-x-1/2 text-white">قائمة الطلاب</h1>
-                
-                {/* Right Placeholder to balance the header */}
-                <div className="w-10"></div>
             </div>
 
             {/* Hierarchy Filters & Search */}
@@ -625,7 +632,7 @@ const StudentList: React.FC<StudentListProps> = ({ students, classes, onAddClass
             <div className="text-center">
                 <h3 className="font-black text-lg mb-4 text-rose-600">سلوك سلبي</h3>
                 <div className="grid grid-cols-2 gap-2 mb-4">
-                    {['كثرة الكلام ','نسيان الدفتر','إزعاج', 'نسيان كتاب', 'نوم', 'تأخر', 'ألفاظ', 'شجار'].map(r => (
+                    {['إزعاج', 'نسيان كتاب', 'نوم', 'تأخر', 'ألفاظ', 'شجار'].map(r => (
                         <button key={r} onClick={() => { if(showNegativeReasons) handleAddBehavior(showNegativeReasons.student, 'negative', r, -1); }} className="p-3 glass-card bg-white text-xs font-bold hover:bg-rose-50 text-slate-600 transition-colors border border-gray-200 shadow-sm">{r}</button>
                     ))}
                 </div>
