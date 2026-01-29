@@ -226,7 +226,7 @@ const AppContent: React.FC = () => {
                   students={students} classes={classes} onUpdateStudent={handleUpdateStudent} setStudents={setStudents}
                   currentSemester={currentSemester} onSemesterChange={setCurrentSemester} teacherInfo={teacherInfo}
               />;
-          case 'leaderboard': return <Leaderboard students={students} classes={classes} />;
+          case 'leaderboard': return <Leaderboard students={students} classes={classes} onUpdateStudent={handleUpdateStudent} />;
           case 'reports': return <Reports />;
           case 'guide': return <UserGuide />;
           case 'settings': return <Settings />;
