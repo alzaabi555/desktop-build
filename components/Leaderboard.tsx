@@ -1,8 +1,8 @@
 import React, { useState, useMemo } from 'react';
 import { Student } from '../types';
-import { Trophy, Crown, Sparkles, Star, LayoutGrid, Plus, Check, X } from 'lucide-react';
+import { Trophy, Crown, Star, LayoutGrid, Check, X, Plus } from 'lucide-react';
 import { useApp } from '../context/AppContext';
-import Modal from './Modal'; // تأكد من استيراد المودال
+import Modal from './Modal';
 
 interface LeaderboardProps {
     students: Student[];
@@ -10,7 +10,7 @@ interface LeaderboardProps {
     onUpdateStudent: (student: Student) => void;
 }
 
-// --- مكونات الشخصيات الكرتونية العمانية (3D Style - مفرغة ومحسنة) ---
+// --- مكونات الشخصيات الكرتونية العمانية (3D Style) ---
 
 const OmaniBoyAvatar = () => (
   <svg viewBox="0 0 200 200" className="w-full h-full" xmlns="http://www.w3.org/2000/svg">
@@ -34,19 +34,17 @@ const OmaniBoyAvatar = () => (
       <filter id="softShadow" x="-20%" y="-20%" width="140%" height="140%">
         <feGaussianBlur in="SourceAlpha" stdDeviation="3" />
         <feOffset dx="2" dy="4" result="offsetblur" />
-        <feComponentTransfer>
-          <feFuncA type="linear" slope="0.3" />
-        </feComponentTransfer>
-        <feMerge>
-          <feMergeNode />
-          <feMergeNode in="SourceGraphic" />
-        </feMerge>
+        <feComponentTransfer><feFuncA type="linear" slope="0.3" /></feComponentTransfer>
+        <feMerge><feMergeNode /><feMergeNode in="SourceGraphic" /></feMerge>
       </filter>
     </defs>
     <g filter="url(#softShadow)"><path d="M50 170 C50 140 150 140 150 170 L150 210 L50 210 Z" fill="url(#dishdasha3D)" /><path d="M100 150 L100 180" stroke="#cbd5e1" strokeWidth="3" strokeLinecap="round" /><circle cx="100" cy="183" r="3" fill="#cbd5e1" /></g>
     <rect x="85" y="115" width="30" height="20" fill="#d49066" />
     <g filter="url(#softShadow)"><circle cx="100" cy="95" r="48" fill="url(#boySkin3D)" />
-    <path d="M53 85 Q100 95 147 85 L147 65 Q100 15 53 65 Z" fill="url(#kummahBase)" /><path d="M53 85 Q100 95 147 85" fill="none" stroke="#e2e8f0" strokeWidth="1" /><path d="M60 80 Q100 90 140 80" fill="none" stroke="#94a3b8" strokeWidth="2" strokeDasharray="4 2" opacity="0.6" /><path d="M65 70 Q100 40 135 70" fill="none" stroke="#94a3b8" strokeWidth="2" strokeDasharray="2 2" opacity="0.5" />
+    <path d="M53 85 Q100 95 147 85 L147 65 Q100 15 53 65 Z" fill="url(#kummahBase)" />
+    <path d="M53 85 Q100 95 147 85" fill="none" stroke="#e2e8f0" strokeWidth="1" />
+    <path d="M60 80 Q100 90 140 80" fill="none" stroke="#94a3b8" strokeWidth="2" strokeDasharray="4 2" opacity="0.6" />
+    <path d="M65 70 Q100 40 135 70" fill="none" stroke="#94a3b8" strokeWidth="2" strokeDasharray="2 2" opacity="0.5" />
     <circle cx="52" cy="95" r="9" fill="#ebb082" /><circle cx="148" cy="95" r="9" fill="#ebb082" /></g>
     <g><ellipse cx="82" cy="100" rx="6" ry="8" fill="#1e293b" /><circle cx="84" cy="98" r="2.5" fill="white" opacity="0.9" /><ellipse cx="118" cy="100" rx="6" ry="8" fill="#1e293b" /><circle cx="120" cy="98" r="2.5" fill="white" opacity="0.9" /><path d="M75 90 Q82 88 89 90" fill="none" stroke="#475569" strokeWidth="2.5" strokeLinecap="round" /><path d="M111 90 Q118 88 125 90" fill="none" stroke="#475569" strokeWidth="2.5" strokeLinecap="round" /><path d="M90 120 Q100 128 110 120" fill="none" stroke="#9a3412" strokeWidth="2.5" strokeLinecap="round" /><ellipse cx="75" cy="115" rx="6" ry="3" fill="#fda4af" opacity="0.4" filter="blur(2px)" /><ellipse cx="125" cy="115" rx="6" ry="3" fill="#fda4af" opacity="0.4" filter="blur(2px)" /></g>
   </svg>
@@ -88,15 +86,13 @@ const Leaderboard: React.FC<LeaderboardProps> = ({ students, classes, onUpdateSt
     const { currentSemester } = useApp();
     const [selectedClass, setSelectedClass] = useState<string>('all');
     
-    // حالة نافذة التأكيد (المودال الأنيق)
+    // حالة النافذة المنبثقة (المودال الأنيق)
     const [confirmModal, setConfirmModal] = useState<{isOpen: boolean, student: Student | null}>({isOpen: false, student: null});
     
     const today = new Date();
     const currentMonth = today.getMonth(); 
     const currentYear = today.getFullYear();
-    
-    const months = ["يناير", "فبراير", "مارس", "أبريل", "مايو", "يونيو", "يوليو", "أغسطس", "سبتمبر", "أكتوبر", "نوفمبر", "ديسمبر"];
-    const monthName = months[currentMonth];
+    const monthName = ["يناير", "فبراير", "مارس", "أبريل", "مايو", "يونيو", "يوليو", "أغسطس", "سبتمبر", "أكتوبر", "نوفمبر", "ديسمبر"][currentMonth];
 
     // تصفية وحساب النقاط
     const rankedStudents = useMemo(() => {
@@ -122,8 +118,7 @@ const Leaderboard: React.FC<LeaderboardProps> = ({ students, classes, onUpdateSt
             return { ...student, monthlyPoints };
         });
 
-        // ✅ التعديل هنا: عدم استبعاد الطلاب الذين لديهم 0 نقاط
-        // يتم ترتيبهم تنازلياً فقط، وسيظهر الجميع
+        // ✅ تم إزالة الفلتر الذي يخفي الطلاب ذوي النقاط الصفرية ليظهر الجميع
         return withPoints.sort((a, b) => b.monthlyPoints - a.monthlyPoints);
     }, [students, selectedClass, currentMonth, currentYear]);
 
@@ -131,16 +126,16 @@ const Leaderboard: React.FC<LeaderboardProps> = ({ students, classes, onUpdateSt
     const restOfStudents = rankedStudents.slice(3);
 
     const getAvatar = (student: any) => {
-        if (student.avatar) return <img src={student.avatar} className="w-full h-full object-cover" />;
+        if (student.avatar) return <img src={student.avatar} className="w-full h-full object-cover" alt={student.name} />;
         return student.gender === 'female' ? <OmaniGirlAvatar /> : <OmaniBoyAvatar />;
     };
 
     // فتح نافذة التأكيد
-    const requestBonusPoint = (student: Student) => {
+    const openBonusModal = (student: Student) => {
         setConfirmModal({ isOpen: true, student });
     };
 
-    // ✅ تنفيذ إضافة النقاط (3 نقاط)
+    // تنفيذ إضافة النقاط (3 نقاط)
     const executeBonus = () => {
         const student = confirmModal.student;
         if (!student) return;
@@ -148,9 +143,9 @@ const Leaderboard: React.FC<LeaderboardProps> = ({ students, classes, onUpdateSt
         const newBehavior = {
             id: Math.random().toString(36).substr(2, 9),
             date: new Date().toISOString(),
-            type: 'positive' as const, // Fix type assertion
+            type: 'positive' as const,
             description: 'تحفيز المعلم (نقاط تشجيعية)',
-            points: 3, // ✅ أصبحت 3 نقاط
+            points: 3, // ✅ إضافة 3 نقاط
             semester: currentSemester
         };
         
@@ -204,7 +199,7 @@ const Leaderboard: React.FC<LeaderboardProps> = ({ students, classes, onUpdateSt
                     {topThree[1] && (
                         <div 
                             className="flex flex-col items-center animate-in slide-in-from-bottom-8 duration-700 delay-100 cursor-pointer active:scale-95 transition-transform group"
-                            onClick={() => requestBonusPoint(topThree[1])}
+                            onClick={() => openBonusModal(topThree[1])}
                         >
                             <div className="w-20 h-20 md:w-24 md:h-24 rounded-full border-4 border-slate-300 shadow-xl overflow-hidden mb-2 relative bg-white transform group-hover:scale-105 transition-transform">
                                 {getAvatar(topThree[1])}
@@ -213,9 +208,7 @@ const Leaderboard: React.FC<LeaderboardProps> = ({ students, classes, onUpdateSt
                             <div className="bg-white/80 backdrop-blur-sm px-4 py-3 rounded-2xl text-center border border-slate-200 w-28 md:w-32 shadow-sm relative">
                                 <h3 className="font-black text-xs md:text-sm text-slate-800 truncate mb-1">{topThree[1].name.split(' ')[0]}</h3>
                                 <span className="text-slate-500 font-bold text-[10px] bg-slate-100 px-2 py-0.5 rounded-lg">{topThree[1].monthlyPoints} نقطة</span>
-                                <div className="absolute -top-2 -right-2 bg-white rounded-full border border-emerald-100 shadow-sm opacity-0 group-hover:opacity-100 transition-opacity p-1">
-                                    <Plus className="w-3 h-3 text-emerald-500" />
-                                </div>
+                                <Plus className="w-4 h-4 text-emerald-500 absolute -top-2 -right-2 bg-white rounded-full border border-emerald-100 shadow-sm opacity-0 group-hover:opacity-100 transition-opacity" />
                             </div>
                             <div className="h-24 w-full bg-gradient-to-t from-slate-200 to-slate-50/0 rounded-t-lg mt-2 mx-auto opacity-50"></div>
                         </div>
@@ -225,7 +218,7 @@ const Leaderboard: React.FC<LeaderboardProps> = ({ students, classes, onUpdateSt
                     {topThree[0] && (
                         <div 
                             className="flex flex-col items-center z-10 -mb-4 animate-in slide-in-from-bottom-12 duration-700 cursor-pointer active:scale-95 transition-transform group"
-                            onClick={() => requestBonusPoint(topThree[0])}
+                            onClick={() => openBonusModal(topThree[0])}
                         >
                             <div className="relative">
                                 <Crown className="w-12 h-12 text-amber-400 fill-amber-400 absolute -top-10 left-1/2 -translate-x-1/2 animate-pulse drop-shadow-md" />
@@ -240,9 +233,7 @@ const Leaderboard: React.FC<LeaderboardProps> = ({ students, classes, onUpdateSt
                                     <Star className="w-4 h-4 text-amber-500 fill-amber-500" />
                                     <span className="text-amber-600 font-black text-xs">{topThree[0].monthlyPoints} نقطة</span>
                                 </div>
-                                <div className="absolute -top-2 -right-2 bg-white rounded-full border border-amber-100 shadow-sm opacity-0 group-hover:opacity-100 transition-opacity p-1">
-                                    <Plus className="w-3 h-3 text-amber-500" />
-                                </div>
+                                <Plus className="w-5 h-5 text-emerald-500 absolute -top-2 -right-2 bg-white rounded-full border border-emerald-100 shadow-sm opacity-0 group-hover:opacity-100 transition-opacity" />
                             </div>
                             <div className="h-32 w-full bg-gradient-to-t from-amber-100 to-amber-50/0 rounded-t-lg mt-2 mx-auto opacity-60"></div>
                         </div>
@@ -252,7 +243,7 @@ const Leaderboard: React.FC<LeaderboardProps> = ({ students, classes, onUpdateSt
                     {topThree[2] && (
                         <div 
                             className="flex flex-col items-center animate-in slide-in-from-bottom-4 duration-700 delay-200 cursor-pointer active:scale-95 transition-transform group"
-                            onClick={() => requestBonusPoint(topThree[2])}
+                            onClick={() => openBonusModal(topThree[2])}
                         >
                             <div className="w-20 h-20 md:w-24 md:h-24 rounded-full border-4 border-orange-300 shadow-xl overflow-hidden mb-2 relative bg-white transform group-hover:scale-105 transition-transform">
                                 {getAvatar(topThree[2])}
@@ -261,9 +252,7 @@ const Leaderboard: React.FC<LeaderboardProps> = ({ students, classes, onUpdateSt
                             <div className="bg-white/80 backdrop-blur-sm px-4 py-3 rounded-2xl text-center border border-orange-200 w-28 md:w-32 shadow-sm relative">
                                 <h3 className="font-black text-xs md:text-sm text-slate-800 truncate mb-1">{topThree[2].name.split(' ')[0]}</h3>
                                 <span className="text-orange-600/70 font-bold text-[10px] bg-orange-50 px-2 py-0.5 rounded-lg">{topThree[2].monthlyPoints} نقطة</span>
-                                <div className="absolute -top-2 -right-2 bg-white rounded-full border border-orange-100 shadow-sm opacity-0 group-hover:opacity-100 transition-opacity p-1">
-                                    <Plus className="w-3 h-3 text-orange-500" />
-                                </div>
+                                <Plus className="w-4 h-4 text-emerald-500 absolute -top-2 -right-2 bg-white rounded-full border border-emerald-100 shadow-sm opacity-0 group-hover:opacity-100 transition-opacity" />
                             </div>
                             <div className="h-16 w-full bg-gradient-to-t from-orange-100 to-orange-50/0 rounded-t-lg mt-2 mx-auto opacity-50"></div>
                         </div>
@@ -272,11 +261,11 @@ const Leaderboard: React.FC<LeaderboardProps> = ({ students, classes, onUpdateSt
             ) : (
                 <div className="flex flex-col items-center justify-center py-10 opacity-50">
                     <Trophy className="w-20 h-20 text-slate-300 mb-4" />
-                    <p className="font-bold text-slate-400">لا يوجد طلاب في القائمة بعد</p>
+                    <p className="font-bold text-slate-400">ابدأ بجمع النقاط لتظهر هنا!</p>
                 </div>
             )}
 
-            {/* شبكة عرض باقي الطلاب */}
+            {/* شبكة عرض باقي الطلاب (يظهر الجميع الآن) */}
             <div className="bg-white/50 backdrop-blur-sm rounded-[2rem] p-4 mt-4 border border-white/40 shadow-sm">
                 <h3 className="font-black text-slate-700 mb-4 text-sm flex items-center gap-2 px-2">
                     <LayoutGrid className="w-4 h-4 text-indigo-500" />
@@ -289,7 +278,7 @@ const Leaderboard: React.FC<LeaderboardProps> = ({ students, classes, onUpdateSt
                             <div 
                                 key={student.id} 
                                 className="bg-white rounded-2xl p-3 flex items-center gap-3 border border-slate-100 shadow-sm hover:shadow-md transition-all group cursor-pointer active:scale-95"
-                                onClick={() => requestBonusPoint(student)}
+                                onClick={() => openBonusModal(student)}
                                 title="اضغط لمنح نقطة تشجيعية"
                             >
                                 {/* Avatar Mini */}
@@ -308,7 +297,7 @@ const Leaderboard: React.FC<LeaderboardProps> = ({ students, classes, onUpdateSt
                                     <p className="text-[9px] text-slate-400 font-bold truncate">{student.classes[0]}</p>
                                 </div>
 
-                                {/* Points Badge */}
+                                {/* Points Badge (حتى لو 0 ستظهر) */}
                                 <div className={`${student.monthlyPoints > 0 ? 'bg-indigo-50 text-indigo-600' : 'bg-slate-50 text-slate-400'} px-2 py-1 rounded-lg text-xs font-black text-center min-w-[30px]`}>
                                     {student.monthlyPoints}
                                 </div>
@@ -322,29 +311,36 @@ const Leaderboard: React.FC<LeaderboardProps> = ({ students, classes, onUpdateSt
                 )}
             </div>
 
-            {/* --- Elegant Confirmation Modal --- */}
-            <Modal isOpen={confirmModal.isOpen} onClose={() => setConfirmModal({...confirmModal, isOpen: false})} className="max-w-xs rounded-[2.5rem]">
+            {/* --- Elegant Confirmation Modal (مطابق للصورة) --- */}
+            <Modal isOpen={confirmModal.isOpen} onClose={() => setConfirmModal({...confirmModal, isOpen: false})} className="max-w-xs rounded-[2rem]">
                 {confirmModal.student && (
-                    <div className="text-center pt-2">
-                        <div className="w-20 h-20 mx-auto rounded-full border-4 border-indigo-50 shadow-inner overflow-hidden bg-slate-50 mb-4">
+                    <div className="text-center pt-2 pb-2">
+                        {/* Avatar in Circle */}
+                        <div className="w-20 h-20 mx-auto rounded-full border-4 border-slate-50 shadow-inner overflow-hidden bg-slate-50 mb-4 animate-in zoom-in duration-300">
                             {getAvatar(confirmModal.student)}
                         </div>
-                        <h3 className="text-lg font-black text-slate-900 mb-1">{confirmModal.student.name}</h3>
-                        <p className="text-xs text-gray-500 font-bold mb-6">
+                        
+                        {/* Name */}
+                        <h3 className="text-lg font-black text-slate-900 mb-2 leading-tight px-2">{confirmModal.student.name}</h3>
+                        
+                        {/* Question */}
+                        <p className="text-xs text-gray-500 font-bold mb-6 px-2 leading-relaxed">
                             هل تريد منح <span className="text-emerald-600 font-black">3 نقاط تشجيعية</span> لهذا الطالب؟
                         </p>
-                        <div className="flex gap-3">
-                            <button 
-                                onClick={executeBonus} 
-                                className="flex-1 py-3 bg-emerald-500 text-white rounded-xl font-black text-xs shadow-lg shadow-emerald-200 hover:bg-emerald-600 active:scale-95 transition-all flex items-center justify-center gap-2"
-                            >
-                                <Check className="w-4 h-4" /> نعم، يستحق
-                            </button>
+                        
+                        {/* Buttons */}
+                        <div className="flex gap-3 px-2">
                             <button 
                                 onClick={() => setConfirmModal({...confirmModal, isOpen: false})} 
                                 className="flex-1 py-3 bg-slate-100 text-slate-500 rounded-xl font-bold text-xs hover:bg-slate-200 active:scale-95 transition-all flex items-center justify-center gap-2"
                             >
                                 <X className="w-4 h-4" /> إلغاء
+                            </button>
+                            <button 
+                                onClick={executeBonus} 
+                                className="flex-1 py-3 bg-emerald-500 text-white rounded-xl font-bold text-xs shadow-lg shadow-emerald-200 hover:bg-emerald-600 active:scale-95 transition-all flex items-center justify-center gap-2"
+                            >
+                                <Check className="w-4 h-4" /> نعم، يستحق
                             </button>
                         </div>
                     </div>
