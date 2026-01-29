@@ -1,78 +1,15 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import { Student, BehaviorType } from '../types';
-import { Search, Edit2, Trash2, Plus, LayoutGrid, Settings, UserPlus, Upload, Sparkles, X, MoreVertical } from 'lucide-react';
+import { Search, ThumbsUp, ThumbsDown, Edit2, Sparkles, Trash2, Plus, Loader2, MessageCircle, DoorOpen, LayoutGrid, FileSpreadsheet, X, UserPlus, Upload, MoreHorizontal, Settings, PartyPopper, Trophy, Frown, CloudRain, PenTool } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import Modal from './Modal';
 import ExcelImport from './ExcelImport';
 import { useApp } from '../context/AppContext';
 
 // ============================================================================
-// ✅ 1. الأيقونات الجديدة (3D Style Icons)
+// ✅ الأيقونات (3D Style) - نفس الأيقونات المعتمدة والمحسنة
 // ============================================================================
 
-// أيقونة القائمة (3 شرط)
-const Icon3DMenu = ({ className }: { className?: string }) => (
-  <svg viewBox="0 0 100 100" className={className || "w-6 h-6"} xmlns="http://www.w3.org/2000/svg">
-    <defs>
-      <linearGradient id="menuGrad" x1="0%" y1="0%" x2="100%" y2="0%">
-        <stop offset="0%" stopColor="#ffffff" />
-        <stop offset="100%" stopColor="#f1f5f9" />
-      </linearGradient>
-      <filter id="menuShadow" x="-20%" y="-20%" width="140%" height="140%">
-        <feDropShadow dx="0" dy="2" stdDeviation="1.5" floodOpacity="0.2" />
-      </filter>
-    </defs>
-    <rect x="20" y="25" width="60" height="10" rx="5" fill="url(#menuGrad)" filter="url(#menuShadow)" />
-    <rect x="20" y="45" width="60" height="10" rx="5" fill="url(#menuGrad)" filter="url(#menuShadow)" />
-    <rect x="20" y="65" width="60" height="10" rx="5" fill="url(#menuGrad)" filter="url(#menuShadow)" />
-  </svg>
-);
-
-// أيقونة السلوك الإيجابي (وجه مبتسم أخضر)
-const Icon3DPositive = () => (
-  <svg viewBox="0 0 100 100" className="w-6 h-6" xmlns="http://www.w3.org/2000/svg">
-    <defs>
-      <linearGradient id="posGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-        <stop offset="0%" stopColor="#4ade80" />
-        <stop offset="100%" stopColor="#16a34a" />
-      </linearGradient>
-      <filter id="posShadow" x="-20%" y="-20%" width="140%" height="140%">
-        <feDropShadow dx="1" dy="2" stdDeviation="2" floodOpacity="0.3" />
-      </filter>
-    </defs>
-    <circle cx="50" cy="50" r="45" fill="url(#posGrad)" filter="url(#posShadow)" />
-    <circle cx="35" cy="40" r="5" fill="white" />
-    <circle cx="65" cy="40" r="5" fill="white" />
-    <path d="M30 65 Q50 80 70 65" fill="none" stroke="white" strokeWidth="5" strokeLinecap="round" />
-  </svg>
-);
-
-// أيقونة السلوك السلبي (علامة تعجب حمراء)
-const Icon3DNegative = () => (
-  <svg viewBox="0 0 100 100" className="w-6 h-6" xmlns="http://www.w3.org/2000/svg">
-    <defs>
-      <linearGradient id="negGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-        <stop offset="0%" stopColor="#f87171" />
-        <stop offset="100%" stopColor="#dc2626" />
-      </linearGradient>
-      <filter id="negShadow" x="-20%" y="-20%" width="140%" height="140%">
-        <feDropShadow dx="1" dy="2" stdDeviation="2" floodOpacity="0.3" />
-      </filter>
-    </defs>
-    <circle cx="50" cy="50" r="45" fill="white" filter="url(#negShadow)" />
-    <circle cx="50" cy="50" r="40" fill="none" stroke="url(#negGrad)" strokeWidth="6" />
-    <path d="M50 25 V55" stroke="url(#negGrad)" strokeWidth="6" strokeLinecap="round" />
-    <circle cx="50" cy="70" r="4" fill="url(#negGrad)" />
-  </svg>
-);
-
-// أيقونات القائمة (إضافة، استيراد، قرعة، إعدادات)
-const Icon3DAdd = () => (<svg viewBox="0 0 100 100" className="w-5 h-5"><circle cx="50" cy="50" r="45" fill="#e0e7ff" /><path d="M50 25 V75 M25 50 H75" stroke="#4f46e5" strokeWidth="8" strokeLinecap="round" /></svg>);
-const Icon3DExcel = () => (<svg viewBox="0 0 100 100" className="w-5 h-5"><rect x="25" y="20" width="50" height="60" rx="5" fill="#d1fae5" /><path d="M35 35 H65 M35 45 H65 M35 55 H50" stroke="#059669" strokeWidth="4" strokeLinecap="round" /></svg>);
-const Icon3DRandom = () => (<svg viewBox="0 0 100 100" className="w-5 h-5"><path d="M50 15 L60 40 L85 50 L60 60 L50 85 L40 60 L15 50 L40 40 Z" fill="#fef3c7" stroke="#d97706" strokeWidth="3" /></svg>);
-const Icon3DSettings = () => (<svg viewBox="0 0 100 100" className="w-5 h-5"><circle cx="50" cy="50" r="25" fill="none" stroke="#94a3b8" strokeWidth="12" strokeDasharray="10 5" /></svg>);
-
-// --- الأفاتار العماني المحسن (كما اعتمدناه سابقاً) ---
 const OmaniBoyAvatarSVG = () => (
   <svg viewBox="0 0 200 200" className="w-full h-full" xmlns="http://www.w3.org/2000/svg">
     <defs>
@@ -145,90 +82,58 @@ const getStudentAvatar = (student: Student) => {
     return student.gender === 'female' ? <OmaniGirlAvatarSVG /> : <OmaniBoyAvatarSVG />;
 };
 
-// ============================================================================
+// ----------------------------------------------------------
 
-interface StudentListProps {
-    students: Student[];
-    classes: string[];
-    onAddClass: (name: string) => void;
-    onAddStudentManually: (name: string, className: string, phone?: string, avatar?: string, gender?: 'male'|'female') => void;
-    onBatchAddStudents: (students: Student[]) => void;
-    onUpdateStudent: (student: Student) => void;
-    onDeleteStudent: (id: string) => void;
-    onViewReport: (student: Student) => void;
-    currentSemester: '1' | '2';
-    onDeleteClass?: (className: string) => void; 
-    onSemesterChange?: (sem: '1' | '2') => void;
-    onEditClass?: (oldName: string, newName: string) => void;
-}
+const Icon3DMenu = ({ className }: { className?: string }) => (<svg viewBox="0 0 100 100" className={className || "w-6 h-6"}><defs><linearGradient id="menuGrad" x1="0%" y1="0%" x2="100%" y2="0%"><stop offset="0%" stopColor="#ffffff" /><stop offset="100%" stopColor="#f1f5f9" /></linearGradient><filter id="menuShadow" x="-20%" y="-20%" width="140%" height="140%"><feDropShadow dx="0" dy="2" stdDeviation="1.5" floodOpacity="0.2" /></filter></defs><rect x="20" y="25" width="60" height="10" rx="5" fill="url(#menuGrad)" filter="url(#menuShadow)" /><rect x="20" y="45" width="60" height="10" rx="5" fill="url(#menuGrad)" filter="url(#menuShadow)" /><rect x="20" y="65" width="60" height="10" rx="5" fill="url(#menuGrad)" filter="url(#menuShadow)" /></svg>);
+const Icon3DPositive = () => (<svg viewBox="0 0 100 100" className="w-10 h-10"><defs><linearGradient id="posGrad" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stopColor="#4ade80" /><stop offset="100%" stopColor="#16a34a" /></linearGradient><filter id="posShadow" x="-20%" y="-20%" width="140%" height="140%"><feDropShadow dx="1" dy="2" stdDeviation="2" floodOpacity="0.3" /></filter></defs><circle cx="50" cy="50" r="45" fill="url(#posGrad)" filter="url(#posShadow)" /><circle cx="35" cy="40" r="5" fill="white" /><circle cx="65" cy="40" r="5" fill="white" /><path d="M30 65 Q50 80 70 65" fill="none" stroke="white" strokeWidth="5" strokeLinecap="round" /></svg>);
+const Icon3DNegative = () => (<svg viewBox="0 0 100 100" className="w-10 h-10"><defs><linearGradient id="negGrad" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stopColor="#f87171" /><stop offset="100%" stopColor="#dc2626" /></linearGradient><filter id="negShadow" x="-20%" y="-20%" width="140%" height="140%"><feDropShadow dx="1" dy="2" stdDeviation="2" floodOpacity="0.3" /></filter></defs><circle cx="50" cy="50" r="45" fill="white" filter="url(#negShadow)" /><circle cx="50" cy="50" r="40" fill="none" stroke="url(#negGrad)" strokeWidth="6" /><path d="M50 25 V55" stroke="url(#negGrad)" strokeWidth="6" strokeLinecap="round" /><circle cx="50" cy="70" r="4" fill="url(#negGrad)" /></svg>);
+const Icon3DAdd = () => (<svg viewBox="0 0 100 100" className="w-5 h-5"><circle cx="50" cy="50" r="45" fill="#e0e7ff" /><path d="M50 25 V75 M25 50 H75" stroke="#4f46e5" strokeWidth="8" strokeLinecap="round" /></svg>);
+const Icon3DExcel = () => (<svg viewBox="0 0 100 100" className="w-5 h-5"><rect x="25" y="20" width="50" height="60" rx="5" fill="#d1fae5" /><path d="M35 35 H65 M35 45 H65 M35 55 H50" stroke="#059669" strokeWidth="4" strokeLinecap="round" /></svg>);
+const Icon3DRandom = () => (<svg viewBox="0 0 100 100" className="w-5 h-5"><path d="M50 15 L60 40 L85 50 L60 60 L50 85 L40 60 L15 50 L40 40 Z" fill="#fef3c7" stroke="#d97706" strokeWidth="3" /></svg>);
+const Icon3DSettings = () => (<svg viewBox="0 0 100 100" className="w-5 h-5"><circle cx="50" cy="50" r="25" fill="none" stroke="#94a3b8" strokeWidth="12" strokeDasharray="10 5" /></svg>);
+const Icon3DDelete = () => (<svg viewBox="0 0 100 100" className="w-5 h-5"><rect x="25" y="25" width="50" height="60" rx="5" fill="#fee2e2" /><path d="M35 15 H65 V25 H35 Z" fill="#ef4444" /><path d="M40 40 V70 M50 40 V70 M60 40 V70" stroke="#ef4444" strokeWidth="3" /></svg>);
+const Icon3DEdit = () => (<svg viewBox="0 0 100 100" className="w-5 h-5"><path d="M20 80 L25 55 L75 5 L95 25 L45 75 Z" fill="#dbeafe" stroke="#3b82f6" strokeWidth="2" /><path d="M20 80 L35 80 L20 65 Z" fill="#3b82f6" /></svg>);
+const Icon3DTruant = () => (<svg viewBox="0 0 100 100" className="w-5 h-5"><rect x="20" y="15" width="60" height="70" rx="2" fill="#f3e8ff" /><path d="M20 15 H50 V85 H20 Z" fill="#a855f7" /><circle cx="45" cy="50" r="3" fill="white" /></svg>);
+
+// ============================================================================
 
 const SOUNDS = {
     positive: 'https://assets.mixkit.co/active_storage/sfx/2000/2000-preview.mp3',
     negative: 'https://assets.mixkit.co/active_storage/sfx/2955/2955-preview.mp3'
 };
 
-const StudentItem = React.memo(({ student, onAction, currentSemester, onToggleGender }: { 
-    student: Student, 
-    onAction: (s: Student, type: 'positive' | 'negative' | 'edit' | 'delete' | 'truant') => void, 
-    currentSemester: '1' | '2',
-    onToggleGender: (s: Student) => void
-}) => {
-    const totalScore = useMemo(() => (student.grades || []).filter(g => !g.semester || g.semester === currentSemester).reduce((sum, g) => sum + (Number(g.score) || 0), 0), [student.grades, currentSemester]);
-    
-    // حساب النقاط للسلوك
-    const points = useMemo(() => (student.behaviors || []).filter(b => !b.semester || b.semester === currentSemester).reduce((acc, b) => acc + (b.type === 'positive' ? b.points : -b.points), 0), [student.behaviors, currentSemester]);
+// --- بطاقة الطالب (Grid Item) ---
+const StudentItem = React.memo(({ student, onClick }: { student: Student, onClick: (s: Student) => void }) => {
+    const points = useMemo(() => (student.behaviors || []).reduce((acc, b) => acc + (b.type === 'positive' ? b.points : -b.points), 0), [student.behaviors]);
 
     return (
         <motion.div 
-            initial={{ opacity: 0, y: 15 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.3 }}
-            className="group bg-white rounded-[1.5rem] p-4 mb-3 border border-slate-100 shadow-sm relative overflow-hidden"
+            initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} transition={{ duration: 0.2 }}
+            onClick={() => onClick(student)}
+            className="bg-white rounded-3xl p-3 border border-slate-100 shadow-sm hover:shadow-md transition-all active:scale-95 cursor-pointer flex flex-col items-center relative overflow-hidden group h-full justify-between"
         >
-            <div className="flex justify-between items-start mb-4">
-                {/* أدوات التعديل والحذف (يسار) */}
-                <div className="flex gap-2">
-                    <button onClick={(e) => { e.stopPropagation(); onAction(student, 'delete'); }} className="text-slate-300 hover:text-rose-500 transition-colors p-1"><Trash2 size={16} /></button>
-                    <button onClick={(e) => { e.stopPropagation(); onAction(student, 'edit'); }} className="text-slate-300 hover:text-indigo-500 transition-colors p-1"><Edit2 size={16} /></button>
-                </div>
-
-                {/* معلومات الطالب (وسط ويمين) */}
-                <div className="flex items-center gap-4 flex-1 justify-end text-right">
-                    <div className="flex flex-col items-end">
-                        <h3 className="font-black text-slate-900 text-sm mb-1">{student.name}</h3>
-                        <div className="flex items-center gap-2">
-                            <span className="text-[10px] bg-slate-100 text-slate-500 px-2 py-0.5 rounded-lg font-bold">{points} نقطة</span>
-                            <span className="text-[10px] bg-indigo-50 text-indigo-600 px-2 py-0.5 rounded-lg font-bold">{student.classes[0]}</span>
-                        </div>
-                    </div>
-                    {/* الأفاتار */}
-                    <div 
-                        onClick={(e) => { e.stopPropagation(); onToggleGender(student); }}
-                        className="w-14 h-14 rounded-2xl bg-white border border-slate-100 shadow-sm flex items-center justify-center overflow-hidden cursor-pointer"
-                    >
-                        {getStudentAvatar(student)}
-                    </div>
-                </div>
+            {/* النقاط (شارة في الزاوية) */}
+            <div className={`absolute top-2 right-2 text-[9px] font-black px-1.5 py-0.5 rounded-lg ${points >= 0 ? 'bg-indigo-50 text-indigo-600' : 'bg-rose-50 text-rose-600'}`}>
+                {points}
             </div>
 
-            {/* أزرار السلوك (أسفل) - مطابقة للصورة */}
-            <div className="flex gap-3 mt-2">
-                <button 
-                    onClick={(e) => { e.stopPropagation(); onAction(student, 'negative'); }} 
-                    className="flex-1 bg-white border border-rose-100 text-rose-500 py-3 rounded-xl flex items-center justify-center gap-2 font-bold text-xs hover:bg-rose-50 active:scale-95 transition-all shadow-sm"
-                >
-                    <Icon3DNegative />
-                    سلوك سلبي
-                </button>
-                <button 
-                    onClick={(e) => { e.stopPropagation(); onAction(student, 'positive'); }} 
-                    className="flex-1 bg-white border border-emerald-100 text-emerald-600 py-3 rounded-xl flex items-center justify-center gap-2 font-bold text-xs hover:bg-emerald-50 active:scale-95 transition-all shadow-sm"
-                >
-                    <Icon3DPositive />
-                    سلوك إيجابي
-                </button>
+            {/* الأفاتار - متمركز في المنتصف */}
+            <div className="w-16 h-16 sm:w-20 sm:h-20 mb-2 mt-2 rounded-full border-4 border-indigo-50 shadow-inner overflow-hidden bg-slate-50 transform group-hover:scale-105 transition-transform flex-shrink-0">
+                {getStudentAvatar(student)}
             </div>
+
+            {/* الاسم - واضح وغير مقصوص (يلتف) */}
+            <h3 className="font-black text-slate-800 text-[10px] sm:text-xs text-center w-full mb-1 leading-snug line-clamp-3 min-h-[2.5em] flex items-center justify-center break-words px-1">
+                {student.name}
+            </h3>
+            
+            {/* الصف */}
+            <p className="text-[9px] text-slate-400 font-bold bg-slate-50 px-3 py-0.5 rounded-full mt-auto">
+                {student.classes[0]}
+            </p>
         </motion.div>
     );
-}, (prev, next) => prev.student === next.student && prev.currentSemester === next.currentSemester);
+}, (prev, next) => prev.student === next.student);
 
 const StudentList: React.FC<StudentListProps> = ({ students, classes, onAddClass, onAddStudentManually, onBatchAddStudents, onUpdateStudent, onDeleteStudent, onViewReport, currentSemester, onDeleteClass }) => {
   const { teacherInfo } = useApp();
@@ -240,11 +145,11 @@ const StudentList: React.FC<StudentListProps> = ({ students, classes, onAddClass
   const [showImportModal, setShowImportModal] = useState(false);
   const [showAddClassModal, setShowAddClassModal] = useState(false);
   const [showManageClasses, setShowManageClasses] = useState(false); 
-  const [showMenu, setShowMenu] = useState(false); // للقائمة المنسدلة
+  const [showMenu, setShowMenu] = useState(false);
   
+  const [selectedStudent, setSelectedStudent] = useState<Student | null>(null);
   const [newClassInput, setNewClassInput] = useState('');
   
-  // Edit/Add Student States
   const [editingStudent, setEditingStudent] = useState<Student | null>(null);
   const [editName, setEditName] = useState('');
   const [editPhone, setEditPhone] = useState('');
@@ -306,9 +211,13 @@ const StudentList: React.FC<StudentListProps> = ({ students, classes, onAddClass
       }
   };
 
-  const handleAction = (student: Student, type: 'positive' | 'negative' | 'edit' | 'delete' | 'truant') => {
-      if (type === 'positive') setShowPositiveReasons({ student });
-      else if (type === 'negative') setShowNegativeReasons({ student });
+  const handleStudentClick = (student: Student) => {
+      setSelectedStudent(student);
+  };
+
+  const handleAction = (type: 'positive' | 'negative' | 'edit' | 'delete' | 'truant', student: Student) => {
+      if (type === 'positive') { setShowPositiveReasons({ student }); setSelectedStudent(null); }
+      else if (type === 'negative') { setShowNegativeReasons({ student }); setSelectedStudent(null); }
       else if (type === 'edit') {
           setEditingStudent(student);
           setEditName(student.name);
@@ -317,13 +226,15 @@ const StudentList: React.FC<StudentListProps> = ({ students, classes, onAddClass
           setEditAvatar(student.avatar || '');
           setEditGender(student.gender || 'male');
           setShowManualAddModal(true);
+          setSelectedStudent(null);
       }
       else if (type === 'delete') {
-          if(confirm(`حذف الطالب ${student.name}؟`)) onDeleteStudent(student.id);
+          if(confirm(`حذف الطالب ${student.name}؟`)) { onDeleteStudent(student.id); setSelectedStudent(null); }
       }
       else if (type === 'truant') {
           if(confirm('تسجيل هروب (تسرب) لهذا الطالب؟')) {
               handleAddBehavior(student, 'negative', 'تسرب من الحصة', 3);
+              setSelectedStudent(null);
           }
       }
   };
@@ -364,10 +275,7 @@ const StudentList: React.FC<StudentListProps> = ({ students, classes, onAddClass
 
   const handleAddBehavior = (student: Student, type: BehaviorType, reason: string, points: number) => {
       playBehaviorSound(type);
-      setFeedbackAnimation({ 
-          type, 
-          text: type === 'positive' ? 'أحسنت!' : 'انتبه!' 
-      });
+      setFeedbackAnimation({ type, text: type === 'positive' ? 'أحسنت!' : 'انتبه!' });
       const newBehavior = {
           id: Math.random().toString(36).substr(2, 9),
           date: new Date().toISOString(),
@@ -422,17 +330,20 @@ const StudentList: React.FC<StudentListProps> = ({ students, classes, onAddClass
                     className="fixed inset-0 z-[10000] flex items-center justify-center pointer-events-none"
                 >
                     <div className={`p-8 rounded-[3rem] shadow-2xl flex flex-col items-center gap-4 border-4 backdrop-blur-xl ${feedbackAnimation.type === 'positive' ? 'bg-emerald-500/90 border-emerald-600 text-white' : 'bg-rose-500/90 border-rose-600 text-white'}`}>
+                        <div className="bg-white/20 p-6 rounded-full shadow-inner">
+                            {feedbackAnimation.type === 'positive' ? <Trophy className="w-20 h-20 text-yellow-300 drop-shadow-md" /> : <Frown className="w-20 h-20 text-white drop-shadow-md" />}
+                        </div>
                         <h2 className="text-4xl font-black tracking-tight drop-shadow-sm">{feedbackAnimation.text}</h2>
                     </div>
                 </motion.div>
             )}
         </AnimatePresence>
 
-        {/* HEADER (With Hamburger Menu) */}
+        {/* HEADER */}
         <div className="sticky top-0 z-30 pb-2 bg-[#f3f4f6] -mx-4 px-4 -mt-4">
             <div className="flex justify-between items-center mb-4 mt-2 relative">
                 
-                {/* 1. Hamburger Menu (Left Side) */}
+                {/* 1. Hamburger Menu (Left) */}
                 <div className="relative">
                     <button onClick={() => setShowMenu(!showMenu)} className="w-10 h-10 rounded-2xl glass-icon bg-white border border-slate-200 text-indigo-600 active:scale-95 transition-all shadow-sm flex items-center justify-center">
                         <Icon3DMenu className="w-6 h-6" />
@@ -443,16 +354,16 @@ const StudentList: React.FC<StudentListProps> = ({ students, classes, onAddClass
                             <div className="absolute top-full left-0 mt-2 w-56 bg-white rounded-2xl shadow-2xl border border-slate-100 z-50 overflow-hidden animate-in fade-in zoom-in duration-200 origin-top-left">
                                 <div className="flex flex-col py-1">
                                     <button onClick={() => { setShowManualAddModal(true); setShowMenu(false); }} className="flex items-center gap-3 px-4 py-3 hover:bg-slate-50 text-right w-full text-slate-700 font-bold text-sm">
-                                        <Icon3DAdd className="w-5 h-5"/> إضافة طالب
+                                        <Icon3DAdd /> إضافة طالب
                                     </button>
                                     <button onClick={() => { setShowImportModal(true); setShowMenu(false); }} className="flex items-center gap-3 px-4 py-3 hover:bg-slate-50 text-right w-full text-slate-700 font-bold text-sm border-t border-slate-50">
-                                        <Icon3DExcel className="w-5 h-5"/> استيراد من Excel
+                                        <Icon3DExcel /> استيراد من Excel
                                     </button>
                                     <button onClick={() => { pickRandomStudent(); setShowMenu(false); }} className="flex items-center gap-3 px-4 py-3 hover:bg-slate-50 text-right w-full text-slate-700 font-bold text-sm border-t border-slate-50">
-                                        <Icon3DRandom className="w-5 h-5"/> القرعة العشوائية
+                                        <Icon3DRandom /> القرعة العشوائية
                                     </button>
                                     <button onClick={() => { setShowManageClasses(true); setShowMenu(false); }} className="flex items-center gap-3 px-4 py-3 hover:bg-slate-50 text-right w-full text-slate-700 font-bold text-sm border-t border-slate-50">
-                                        <Icon3DSettings className="w-5 h-5"/> إعدادات عامة
+                                        <Icon3DSettings /> إعدادات عامة
                                     </button>
                                 </div>
                             </div>
@@ -461,9 +372,7 @@ const StudentList: React.FC<StudentListProps> = ({ students, classes, onAddClass
                 </div>
 
                 <h1 className="text-2xl font-black text-slate-900 tracking-tight drop-shadow-sm absolute left-1/2 transform -translate-x-1/2">قائمة الطلاب</h1>
-                
-                {/* Search Bar (Right Side now, or hidden/moved based on space) - Keeping it simple as per request */}
-                <div className="w-10"></div> {/* Spacer to center title */}
+                <div className="w-10"></div>
             </div>
 
             {/* Hierarchy Filters */}
@@ -489,17 +398,16 @@ const StudentList: React.FC<StudentListProps> = ({ students, classes, onAddClass
             </div>
         </div>
 
-        {/* Student List Content */}
+        {/* Student List Content (RESPONSIVE GRID VIEW 3-4-6) */}
         <div className="flex-1 overflow-y-auto px-1 custom-scrollbar">
             {filteredStudents.length > 0 ? (
-                <div className="flex flex-col gap-3 pb-24 pt-2">
+                // ✅ تعديل الشبكة لتكون 3 للهاتف، 4 للتابلت، 6 للشاشات الكبيرة
+                <div className="grid grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-3 pb-24 pt-2">
                     {filteredStudents.map(student => (
                         <StudentItem 
                             key={student.id} 
                             student={student} 
-                            onAction={handleAction} 
-                            currentSemester={currentSemester}
-                            onToggleGender={handleToggleGender}
+                            onClick={handleStudentClick} 
                         />
                     ))}
                 </div>
@@ -511,7 +419,50 @@ const StudentList: React.FC<StudentListProps> = ({ students, classes, onAddClass
             )}
         </div>
 
-        {/* ... Modals (No changes to logic) ... */}
+        {/* --- STUDENT ACTION MODAL --- */}
+        <Modal isOpen={!!selectedStudent} onClose={() => setSelectedStudent(null)} className="max-w-xs rounded-[2.5rem]">
+            {selectedStudent && (
+                <div className="text-center pt-2">
+                    {/* Avatar & Header */}
+                    <div className="flex flex-col items-center mb-6">
+                        <div 
+                            onClick={() => handleToggleGender(selectedStudent)} 
+                            className="w-24 h-24 rounded-full border-4 border-slate-100 shadow-lg overflow-hidden bg-slate-50 mb-3 cursor-pointer active:scale-95 transition-transform"
+                            title="اضغط لتبديل النوع"
+                        >
+                            {getStudentAvatar(selectedStudent)}
+                        </div>
+                        <h2 className="text-xl font-black text-slate-900 leading-tight mb-1">{selectedStudent.name}</h2>
+                        <span className="text-xs font-bold text-slate-400 bg-slate-100 px-3 py-1 rounded-full">{selectedStudent.classes[0]}</span>
+                    </div>
+
+                    {/* Big Action Buttons */}
+                    <div className="grid grid-cols-2 gap-3 mb-6">
+                        <button onClick={() => handleAction('positive', selectedStudent)} className="flex flex-col items-center justify-center gap-2 bg-emerald-50 border-2 border-emerald-100 p-4 rounded-2xl hover:bg-emerald-100 active:scale-95 transition-all group">
+                            <div className="w-12 h-12 bg-white rounded-full flex items-center justify-center shadow-sm group-hover:scale-110 transition-transform">
+                                <Icon3DPositive />
+                            </div>
+                            <span className="font-black text-xs text-emerald-700">سلوك إيجابي</span>
+                        </button>
+                        <button onClick={() => handleAction('negative', selectedStudent)} className="flex flex-col items-center justify-center gap-2 bg-rose-50 border-2 border-rose-100 p-4 rounded-2xl hover:bg-rose-100 active:scale-95 transition-all group">
+                            <div className="w-12 h-12 bg-white rounded-full flex items-center justify-center shadow-sm group-hover:scale-110 transition-transform">
+                                <Icon3DNegative />
+                            </div>
+                            <span className="font-black text-xs text-rose-700">سلوك سلبي</span>
+                        </button>
+                    </div>
+
+                    {/* Secondary Actions */}
+                    <div className="flex gap-2 justify-center border-t border-slate-100 pt-4">
+                        <button onClick={() => handleAction('edit', selectedStudent)} className="flex-1 py-2 bg-indigo-50 text-indigo-600 rounded-xl font-bold text-xs flex items-center justify-center gap-2 hover:bg-indigo-100"><Icon3DEdit /> تعديل</button>
+                        <button onClick={() => handleAction('truant', selectedStudent)} className="flex-1 py-2 bg-purple-50 text-purple-600 rounded-xl font-bold text-xs flex items-center justify-center gap-2 hover:bg-purple-100"><Icon3DTruant /> تسرب</button>
+                        <button onClick={() => handleAction('delete', selectedStudent)} className="flex-1 py-2 bg-rose-50 text-rose-600 rounded-xl font-bold text-xs flex items-center justify-center gap-2 hover:bg-rose-100"><Icon3DDelete /> حذف</button>
+                    </div>
+                </div>
+            )}
+        </Modal>
+
+        {/* ... Other Existing Modals ... */}
         <Modal isOpen={showManualAddModal} onClose={() => { setShowManualAddModal(false); setEditingStudent(null); setEditName(''); setEditPhone(''); setEditClass(''); setEditGender('male'); }}>
             <div className="text-center">
                 <h3 className="font-black text-xl mb-4 text-slate-800">{editingStudent ? 'تعديل بيانات الطالب' : 'إضافة طالب جديد'}</h3>
