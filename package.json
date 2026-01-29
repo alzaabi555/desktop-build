@@ -6,7 +6,7 @@
   "main": "electron/main.js",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/<<alzaabi555>>/<<desktop-build>>.git"
+    "url": "git+https://github.com/alzaabi555/desktop-build.git"
   },
   "scripts": {
     "dev": "concurrently \"npx tailwindcss -i ./index.css -o ./www/index.css --watch\" \"npx esbuild index.tsx --bundle --outfile=www/index.js --format=esm --sourcemap --watch --target=es2020 --loader:.js=jsx --define:process.env.NODE_ENV=\\\"development\\\"\" \"npx capacitor-assets generate --icon-only && node ./copy-assets.js && electron .\"",
@@ -79,8 +79,8 @@
     "publish": [
       {
         "provider": "github",
-        "owner": "<<alzaabi555>>",
-        "repo": "<<desktop-build>>"
+        "owner": "alzaabi555",
+        "repo": "desktop-build"
       }
     ]
   }
