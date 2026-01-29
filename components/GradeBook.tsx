@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { Student, GradeRecord, AssessmentTool } from '../types';
-import { Plus, X, Trash2, Settings, Check, Loader2, Edit2, FileSpreadsheet, AlertTriangle, Calculator } from 'lucide-react';
+import { Plus, X, Trash2, Settings, Check, Loader2, Edit2, FileSpreadsheet, AlertTriangle, Calculator, LayoutGrid } from 'lucide-react';
 import Modal from './Modal';
 import { useApp } from '../context/AppContext';
 import { Filesystem, Directory } from '@capacitor/filesystem';
@@ -93,149 +93,13 @@ const getStudentAvatar = (student: Student) => {
     return student.gender === 'female' ? <OmaniGirlAvatarSVG /> : <OmaniBoyAvatarSVG />;
 };
 
-// 2. باقي الأيقونات الـ 3D (Grading, Menu, etc.)
-const Icon3DGradingConfig = ({ className }: { className?: string }) => (
-  <svg viewBox="0 0 100 100" className={className || "w-6 h-6"} xmlns="http://www.w3.org/2000/svg">
-    <defs>
-      <linearGradient id="gradCalc" x1="0%" y1="0%" x2="100%" y2="100%">
-        <stop offset="0%" stopColor="#60a5fa" />
-        <stop offset="100%" stopColor="#2563eb" />
-      </linearGradient>
-      <filter id="shadowCalc" x="-20%" y="-20%" width="140%" height="140%">
-        <feGaussianBlur in="SourceAlpha" stdDeviation="2" />
-        <feOffset dx="1" dy="2" result="offsetblur" />
-        <feComponentTransfer><feFuncA type="linear" slope="0.3"/></feComponentTransfer>
-        <feMerge><feMergeNode/><feMergeNode in="SourceGraphic"/></feMerge>
-      </filter>
-    </defs>
-    <rect x="20" y="15" width="60" height="70" rx="10" fill="url(#gradCalc)" filter="url(#shadowCalc)" />
-    <rect x="30" y="25" width="40" height="15" rx="4" fill="#dbeafe" />
-    <circle cx="35" cy="55" r="5" fill="white" opacity="0.8" />
-    <circle cx="50" cy="55" r="5" fill="white" opacity="0.8" />
-    <circle cx="65" cy="55" r="5" fill="white" opacity="0.8" />
-    <circle cx="35" cy="70" r="5" fill="white" opacity="0.8" />
-    <circle cx="50" cy="70" r="5" fill="white" opacity="0.8" />
-    <circle cx="65" cy="70" r="5" fill="#fbbf24" />
-  </svg>
-);
-
-const Icon3DMenu = ({ className }: { className?: string }) => (
-  <svg viewBox="0 0 100 100" className={className || "w-6 h-6"} xmlns="http://www.w3.org/2000/svg">
-    <defs>
-      <linearGradient id="gradMenu" x1="0%" y1="0%" x2="100%" y2="0%">
-        <stop offset="0%" stopColor="#ffffff" />
-        <stop offset="100%" stopColor="#f1f5f9" />
-      </linearGradient>
-      <filter id="shadowMenu" x="-20%" y="-20%" width="140%" height="140%">
-        <feGaussianBlur in="SourceAlpha" stdDeviation="1.5" />
-        <feOffset dx="0" dy="2" result="offsetblur" />
-        <feComponentTransfer><feFuncA type="linear" slope="0.2"/></feComponentTransfer>
-        <feMerge><feMergeNode/><feMergeNode in="SourceGraphic"/></feMerge>
-      </filter>
-    </defs>
-    <rect x="20" y="25" width="60" height="10" rx="5" fill="url(#gradMenu)" filter="url(#shadowMenu)" />
-    <rect x="20" y="45" width="60" height="10" rx="5" fill="url(#gradMenu)" filter="url(#shadowMenu)" />
-    <rect x="20" y="65" width="60" height="10" rx="5" fill="url(#gradMenu)" filter="url(#shadowMenu)" />
-  </svg>
-);
-
-const Icon3DImport = ({ className }: { className?: string }) => (
-  <svg viewBox="0 0 100 100" className={className || "w-6 h-6"} xmlns="http://www.w3.org/2000/svg">
-    <defs>
-      <linearGradient id="gradImportSheet" x1="0%" y1="0%" x2="100%" y2="100%">
-        <stop offset="0%" stopColor="#34d399" />
-        <stop offset="100%" stopColor="#059669" />
-      </linearGradient>
-      <linearGradient id="gradArrowUp" x1="0%" y1="0%" x2="0%" y2="100%">
-        <stop offset="0%" stopColor="#60a5fa" />
-        <stop offset="100%" stopColor="#2563eb" />
-      </linearGradient>
-    </defs>
-    <rect x="25" y="30" width="50" height="55" rx="6" fill="url(#gradImportSheet)" />
-    <path d="M35 45 H65 M35 55 H65 M35 65 H65" stroke="white" strokeWidth="4" strokeLinecap="round" opacity="0.6" />
-    <path d="M50 10 L30 30 H40 V50 H60 V30 H70 L50 10 Z" fill="url(#gradArrowUp)" stroke="white" strokeWidth="2" />
-  </svg>
-);
-
-const Icon3DExport = ({ className }: { className?: string }) => (
-  <svg viewBox="0 0 100 100" className={className || "w-6 h-6"} xmlns="http://www.w3.org/2000/svg">
-    <defs>
-      <linearGradient id="gradExportSheet" x1="0%" y1="0%" x2="100%" y2="100%">
-        <stop offset="0%" stopColor="#34d399" />
-        <stop offset="100%" stopColor="#059669" />
-      </linearGradient>
-      <linearGradient id="gradArrowDown" x1="0%" y1="0%" x2="0%" y2="100%">
-        <stop offset="0%" stopColor="#60a5fa" />
-        <stop offset="100%" stopColor="#2563eb" />
-      </linearGradient>
-    </defs>
-    <rect x="25" y="15" width="50" height="55" rx="6" fill="url(#gradExportSheet)" />
-    <path d="M35 30 H65 M35 40 H65 M35 50 H65" stroke="white" strokeWidth="4" strokeLinecap="round" opacity="0.6" />
-    <path d="M50 90 L70 70 H60 V50 H40 V70 H30 L50 90 Z" fill="url(#gradArrowDown)" stroke="white" strokeWidth="2" />
-  </svg>
-);
-
-const Icon3DTools = ({ className }: { className?: string }) => (
-  <svg viewBox="0 0 100 100" className={className || "w-6 h-6"} xmlns="http://www.w3.org/2000/svg">
-    <defs>
-      <linearGradient id="gradGear" x1="0%" y1="0%" x2="100%" y2="100%">
-        <stop offset="0%" stopColor="#e2e8f0" />
-        <stop offset="100%" stopColor="#94a3b8" />
-      </linearGradient>
-      <filter id="shadowGear" x="-20%" y="-20%" width="140%" height="140%">
-        <feGaussianBlur in="SourceAlpha" stdDeviation="1.5" />
-        <feOffset dx="1" dy="1" result="offsetblur" />
-        <feMerge><feMergeNode/><feMergeNode in="SourceGraphic"/></feMerge>
-      </filter>
-    </defs>
-    <circle cx="50" cy="50" r="20" fill="white" stroke="url(#gradGear)" strokeWidth="15" strokeDasharray="10 6" filter="url(#shadowGear)" />
-    <circle cx="50" cy="50" r="10" fill="#cbd5e1" />
-  </svg>
-);
-
-const Icon3DClear = ({ className }: { className?: string }) => (
-  <svg viewBox="0 0 100 100" className={className || "w-6 h-6"} xmlns="http://www.w3.org/2000/svg">
-    <defs>
-      <linearGradient id="gradTrash" x1="0%" y1="0%" x2="100%" y2="100%">
-        <stop offset="0%" stopColor="#f87171" />
-        <stop offset="100%" stopColor="#dc2626" />
-      </linearGradient>
-      <filter id="shadowTrash" x="-20%" y="-20%" width="140%" height="140%">
-        <feGaussianBlur in="SourceAlpha" stdDeviation="2" />
-        <feOffset dx="1" dy="2" result="offsetblur" />
-        <feMerge><feMergeNode/><feMergeNode in="SourceGraphic"/></feMerge>
-      </filter>
-    </defs>
-    <path d="M25 30 L30 85 Q32 90 38 90 H62 Q68 90 70 85 L75 30" fill="url(#gradTrash)" filter="url(#shadowTrash)" />
-    <rect x="20" y="20" width="60" height="10" rx="3" fill="#ef4444" />
-    <path d="M40 20 L42 12 Q43 10 46 10 H54 Q57 10 58 12 L60 20" fill="#ef4444" />
-    <path d="M40 45 L40 75 M50 45 L50 75 M60 45 L60 75" stroke="white" strokeWidth="3" strokeLinecap="round" opacity="0.5" />
-  </svg>
-);
-
-const Icon3DBulk = ({ className }: { className?: string }) => (
-  <svg viewBox="0 0 100 100" className={className || "w-6 h-6"} xmlns="http://www.w3.org/2000/svg">
-    <defs>
-      <linearGradient id="gradWand" x1="0%" y1="0%" x2="100%" y2="100%">
-        <stop offset="0%" stopColor="#fbbf24" />
-        <stop offset="100%" stopColor="#d97706" />
-      </linearGradient>
-      <linearGradient id="gradHandle" x1="0%" y1="0%" x2="100%" y2="100%">
-        <stop offset="0%" stopColor="#a78bfa" />
-        <stop offset="100%" stopColor="#7c3aed" />
-      </linearGradient>
-      <filter id="shadowWand" x="-20%" y="-20%" width="140%" height="140%">
-        <feGaussianBlur in="SourceAlpha" stdDeviation="1.5" />
-        <feOffset dx="1" dy="1" result="offsetblur" />
-        <feMerge><feMergeNode/><feMergeNode in="SourceGraphic"/></feMerge>
-      </filter>
-    </defs>
-    <path d="M20 80 L40 60" stroke="url(#gradHandle)" strokeWidth="10" strokeLinecap="round" filter="url(#shadowWand)" />
-    <path d="M40 60 L80 20" stroke="url(#gradWand)" strokeWidth="8" strokeLinecap="round" />
-    <path d="M80 20 L90 10 M70 10 L80 20 M90 30 L80 20" stroke="white" strokeWidth="2" opacity="0.8" />
-    <circle cx="80" cy="20" r="5" fill="white" filter="blur(2px)" />
-  </svg>
-);
+const Icon3DGradingConfig = ({ className }: { className?: string }) => (<svg viewBox="0 0 100 100" className={className || "w-6 h-6"}><defs><linearGradient id="gradCalc" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stopColor="#60a5fa" /><stop offset="100%" stopColor="#2563eb" /></linearGradient><filter id="shadowCalc" x="-20%" y="-20%" width="140%" height="140%"><feGaussianBlur in="SourceAlpha" stdDeviation="2" /><feOffset dx="1" dy="2" result="offsetblur" /><feComponentTransfer><feFuncA type="linear" slope="0.3"/></feComponentTransfer><feMerge><feMergeNode/><feMergeNode in="SourceGraphic"/></feMerge></filter></defs><rect x="20" y="15" width="60" height="70" rx="10" fill="url(#gradCalc)" filter="url(#shadowCalc)" /><rect x="30" y="25" width="40" height="15" rx="4" fill="#dbeafe" /><circle cx="35" cy="55" r="5" fill="white" opacity="0.8" /><circle cx="50" cy="55" r="5" fill="white" opacity="0.8" /><circle cx="65" cy="55" r="5" fill="white" opacity="0.8" /><circle cx="35" cy="70" r="5" fill="white" opacity="0.8" /><circle cx="50" cy="70" r="5" fill="white" opacity="0.8" /><circle cx="65" cy="70" r="5" fill="#fbbf24" /></svg>);
+const Icon3DMenu = ({ className }: { className?: string }) => (<svg viewBox="0 0 100 100" className={className || "w-6 h-6"}><defs><linearGradient id="gradMenu" x1="0%" y1="0%" x2="100%" y2="0%"><stop offset="0%" stopColor="#ffffff" /><stop offset="100%" stopColor="#f1f5f9" /></linearGradient><filter id="shadowMenu" x="-20%" y="-20%" width="140%" height="140%"><feGaussianBlur in="SourceAlpha" stdDeviation="1.5" /><feOffset dx="0" dy="2" result="offsetblur" /><feComponentTransfer><feFuncA type="linear" slope="0.2"/></feComponentTransfer><feMerge><feMergeNode/><feMergeNode in="SourceGraphic"/></feMerge></filter></defs><rect x="20" y="25" width="60" height="10" rx="5" fill="url(#gradMenu)" filter="url(#shadowMenu)" /><rect x="20" y="45" width="60" height="10" rx="5" fill="url(#gradMenu)" filter="url(#shadowMenu)" /><rect x="20" y="65" width="60" height="10" rx="5" fill="url(#gradMenu)" filter="url(#shadowMenu)" /></svg>);
+const Icon3DImport = ({ className }: { className?: string }) => (<svg viewBox="0 0 100 100" className={className || "w-6 h-6"}><defs><linearGradient id="gradImportSheet" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stopColor="#34d399" /><stop offset="100%" stopColor="#059669" /></linearGradient><linearGradient id="gradArrowUp" x1="0%" y1="0%" x2="0%" y2="100%"><stop offset="0%" stopColor="#60a5fa" /><stop offset="100%" stopColor="#2563eb" /></linearGradient></defs><rect x="25" y="30" width="50" height="55" rx="6" fill="url(#gradImportSheet)" /><path d="M35 45 H65 M35 55 H65 M35 65 H65" stroke="white" strokeWidth="4" strokeLinecap="round" opacity="0.6" /><path d="M50 10 L30 30 H40 V50 H60 V30 H70 L50 10 Z" fill="url(#gradArrowUp)" stroke="white" strokeWidth="2" /></svg>);
+const Icon3DExport = ({ className }: { className?: string }) => (<svg viewBox="0 0 100 100" className={className || "w-6 h-6"}><defs><linearGradient id="gradExportSheet" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stopColor="#34d399" /><stop offset="100%" stopColor="#059669" /></linearGradient><linearGradient id="gradArrowDown" x1="0%" y1="0%" x2="0%" y2="100%"><stop offset="0%" stopColor="#60a5fa" /><stop offset="100%" stopColor="#2563eb" /></linearGradient></defs><rect x="25" y="15" width="50" height="55" rx="6" fill="url(#gradExportSheet)" /><path d="M35 30 H65 M35 40 H65 M35 50 H65" stroke="white" strokeWidth="4" strokeLinecap="round" opacity="0.6" /><path d="M50 90 L70 70 H60 V50 H40 V70 H30 L50 90 Z" fill="url(#gradArrowDown)" stroke="white" strokeWidth="2" /></svg>);
+const Icon3DTools = ({ className }: { className?: string }) => (<svg viewBox="0 0 100 100" className={className || "w-6 h-6"}><defs><linearGradient id="gradGear" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stopColor="#e2e8f0" /><stop offset="100%" stopColor="#94a3b8" /></linearGradient><filter id="shadowGear" x="-20%" y="-20%" width="140%" height="140%"><feGaussianBlur in="SourceAlpha" stdDeviation="1.5" /><feOffset dx="1" dy="1" result="offsetblur" /><feMerge><feMergeNode/><feMergeNode in="SourceGraphic"/></feMerge></filter></defs><circle cx="50" cy="50" r="20" fill="white" stroke="url(#gradGear)" strokeWidth="15" strokeDasharray="10 6" filter="url(#shadowGear)" /><circle cx="50" cy="50" r="10" fill="#cbd5e1" /></svg>);
+const Icon3DClear = ({ className }: { className?: string }) => (<svg viewBox="0 0 100 100" className={className || "w-6 h-6"}><defs><linearGradient id="gradTrash" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stopColor="#f87171" /><stop offset="100%" stopColor="#dc2626" /></linearGradient><filter id="shadowTrash" x="-20%" y="-20%" width="140%" height="140%"><feGaussianBlur in="SourceAlpha" stdDeviation="2" /><feOffset dx="1" dy="2" result="offsetblur" /><feMerge><feMergeNode/><feMergeNode in="SourceGraphic"/></feMerge></filter></defs><path d="M25 30 L30 85 Q32 90 38 90 H62 Q68 90 70 85 L75 30" fill="url(#gradTrash)" filter="url(#shadowTrash)" /><rect x="20" y="20" width="60" height="10" rx="3" fill="#ef4444" /><path d="M40 20 L42 12 Q43 10 46 10 H54 Q57 10 58 12 L60 20" fill="#ef4444" /><path d="M40 45 L40 75 M50 45 L50 75 M60 45 L60 75" stroke="white" strokeWidth="3" strokeLinecap="round" opacity="0.5" /></svg>);
+const Icon3DBulk = ({ className }: { className?: string }) => (<svg viewBox="0 0 100 100" className={className || "w-6 h-6"}><defs><linearGradient id="gradWand" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stopColor="#fbbf24" /><stop offset="100%" stopColor="#d97706" /></linearGradient><linearGradient id="gradHandle" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stopColor="#a78bfa" /><stop offset="100%" stopColor="#7c3aed" /></linearGradient><filter id="shadowWand" x="-20%" y="-20%" width="140%" height="140%"><feGaussianBlur in="SourceAlpha" stdDeviation="1.5" /><feOffset dx="1" dy="1" result="offsetblur" /><feMerge><feMergeNode/><feMergeNode in="SourceGraphic"/></feMerge></filter></defs><path d="M20 80 L40 60" stroke="url(#gradHandle)" strokeWidth="10" strokeLinecap="round" filter="url(#shadowWand)" /><path d="M40 60 L80 20" stroke="url(#gradWand)" strokeWidth="8" strokeLinecap="round" /><path d="M80 20 L90 10 M70 10 L80 20 M90 30 L80 20" stroke="white" strokeWidth="2" opacity="0.8" /><circle cx="80" cy="20" r="5" fill="white" filter="blur(2px)" /></svg>);
 
 // -----------------------------------------------------------
 
@@ -296,11 +160,6 @@ const GradeBook: React.FC<GradeBookProps> = ({
       localStorage.setItem('rased_grading_settings', JSON.stringify(gradingSettings));
   }, [gradingSettings]);
 
-  const styles = {
-      card: `bg-white border border-slate-100 rounded-[1.5rem] hover:border-blue-200 hover:shadow-md transition-all duration-300 relative overflow-hidden shadow-sm group`,
-      pill: 'rounded-xl border border-slate-200 shadow-sm hover:shadow-md',
-  };
-
   useEffect(() => {
      if (showAddGrade && !editingGrade) { setSelectedToolId(''); setScore(''); }
   }, [showAddGrade, editingGrade]);
@@ -316,9 +175,7 @@ const GradeBook: React.FC<GradeBookProps> = ({
               else grades.add(c.split(' ')[0]);
           }
       });
-      students.forEach(s => {
-          if (s.grade) grades.add(s.grade);
-      });
+      students.forEach(s => { if (s.grade) grades.add(s.grade); });
       return Array.from(grades).sort((a, b) => {
           const numA = parseInt(a);
           const numB = parseInt(b);
@@ -362,16 +219,13 @@ const GradeBook: React.FC<GradeBookProps> = ({
     return students.filter(s => {
       if (!s || typeof s !== 'object') return false;
       const matchesClass = selectedClass === 'all' || (s.classes && s.classes.includes(selectedClass));
-      
       let matchesGrade = true;
       if (selectedGrade !== 'all') {
           if (s.grade === selectedGrade) matchesGrade = true;
           else if (s.classes[0]) {
               if (s.classes[0].includes('/')) matchesGrade = s.classes[0].split('/')[0].trim() === selectedGrade;
               else matchesGrade = s.classes[0].startsWith(selectedGrade);
-          } else {
-              matchesGrade = false;
-          }
+          } else matchesGrade = false;
       }
       return matchesClass && matchesGrade;
     });
@@ -524,7 +378,7 @@ const GradeBook: React.FC<GradeBookProps> = ({
             </div>
         </div>
 
-        {/* ================= Content List ================= */}
+        {/* ================= Content List (GRID VIEW) ================= */}
         <div className="flex-1 h-full overflow-y-auto custom-scrollbar">
             <div className="w-full h-[280px] shrink-0"></div>
             <div className="px-4 pb-24 pt-2">
@@ -535,31 +389,45 @@ const GradeBook: React.FC<GradeBookProps> = ({
                     </h3>
                 </div>
                 {filteredStudents.length > 0 ? (
-                    <div className="grid grid-cols-1 gap-3">
+                    // ✅ Grid System (Responsive: 2 mobile, 3 tablet, 4 desktop)
+                    <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
                         {filteredStudents.map((student) => {
                             const semGrades = getSemesterGrades(student, currentSemester);
                             const totalScore = semGrades.reduce((sum, g) => sum + (Number(g.score) || 0), 0);
                             return (
-                                <div key={student.id} onClick={() => setShowAddGrade({ student })} className={`${styles.card} p-4 flex items-center justify-between cursor-pointer active:scale-[0.99]`}>
-                                    <div className="flex items-center gap-4 relative z-10">
-                                        {/* Updated Avatar Rendering Logic */}
-                                        <div className="w-14 h-14 rounded-2xl bg-white flex items-center justify-center overflow-hidden border-2 border-white/50 shadow-sm shrink-0">
-                                            {getStudentAvatar(student)}
-                                        </div>
-                                        <div>
-                                            <h3 className="text-sm font-black text-slate-900 group-hover:text-indigo-700 transition-colors">{student.name}</h3>
-                                            <div className="flex items-center gap-2 mt-1.5 flex-wrap">
-                                                {tools.slice(0, 3).map(tool => {
-                                                    const grade = semGrades.find(g => g.category.trim() === tool.name.trim());
-                                                    return (<span key={tool.id} className="text-[9px] px-2 py-0.5 rounded-lg bg-slate-50 border border-slate-200 text-slate-600 font-bold">{tool.name}: <span className="text-indigo-600">{grade ? grade.score : '-'}</span></span>)
-                                                })}
-                                            </div>
-                                        </div>
+                                <div key={student.id} onClick={() => setShowAddGrade({ student })} className="bg-white rounded-3xl p-3 border border-slate-100 shadow-sm hover:shadow-md transition-all active:scale-95 cursor-pointer flex flex-col items-center relative overflow-hidden group h-full justify-between">
+                                    
+                                    {/* Avatar */}
+                                    <div className="w-16 h-16 sm:w-20 sm:h-20 mt-2 mb-2 rounded-full border-4 border-indigo-50 shadow-inner overflow-hidden bg-slate-50 transform group-hover:scale-105 transition-transform flex-shrink-0">
+                                        {getStudentAvatar(student)}
                                     </div>
-                                    <div className="text-center bg-slate-50 px-3 py-2 rounded-xl border border-slate-200 shadow-inner group-hover:bg-white transition-colors relative z-10 min-w-[60px]">
-                                        <span className={`block text-xl font-black ${getSymbolColor(totalScore).split(' ')[0]}`}>{totalScore}</span>
-                                        <span className="text-[10px] font-bold text-slate-400">{getGradeSymbol(totalScore)}</span>
+                                    
+                                    {/* Name */}
+                                    <h3 className="font-black text-slate-900 text-[10px] sm:text-xs text-center w-full mb-3 leading-snug line-clamp-3 min-h-[2.5em] flex items-center justify-center break-words px-1">
+                                        {student.name}
+                                    </h3>
+
+                                    {/* Grades Preview (Top 3 tools) */}
+                                    <div className="flex gap-1 mb-3 w-full justify-center">
+                                        {tools.slice(0, 3).map(tool => {
+                                            const grade = semGrades.find(g => g.category.trim() === tool.name.trim());
+                                            return (
+                                                <div key={tool.id} className="flex flex-col items-center">
+                                                    <span className="text-[8px] text-slate-400 font-bold mb-0.5 max-w-[40px] truncate">{tool.name}</span>
+                                                    <span className={`text-[10px] font-black px-2 py-0.5 rounded-md ${grade ? 'bg-indigo-50 text-indigo-600' : 'bg-slate-50 text-slate-300'}`}>
+                                                        {grade ? grade.score : '-'}
+                                                    </span>
+                                                </div>
+                                            )
+                                        })}
                                     </div>
+
+                                    {/* Total Score Badge (Bottom) */}
+                                    <div className="w-full bg-slate-50 border border-slate-200 rounded-xl py-2 flex items-center justify-center gap-2 mt-auto">
+                                        <span className={`text-lg font-black ${getSymbolColor(totalScore).split(' ')[0]}`}>{totalScore}</span>
+                                        <span className="text-[10px] font-bold text-slate-400 bg-white px-2 py-0.5 rounded-lg shadow-sm border border-slate-100">{getGradeSymbol(totalScore)}</span>
+                                    </div>
+
                                 </div>
                             );
                         })}
