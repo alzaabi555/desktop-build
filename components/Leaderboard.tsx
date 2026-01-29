@@ -1,16 +1,17 @@
 import React, { useState, useMemo } from 'react';
 import { Student } from '../types';
-import { Trophy, Crown, Sparkles, Star, LayoutGrid, Plus } from 'lucide-react';
-import { useApp } from '../context/AppContext'; // Import context for updating student
+import { Trophy, Crown, Sparkles, Star, LayoutGrid, Plus, Check, X } from 'lucide-react';
+import { useApp } from '../context/AppContext';
+import Modal from './Modal'; // تأكد من استيراد المودال
 
 interface LeaderboardProps {
     students: Student[];
     classes: string[];
-    onUpdateStudent: (student: Student) => void; // Prop to update student data
+    onUpdateStudent: (student: Student) => void;
 }
 
 // --- مكونات الشخصيات الكرتونية العمانية (3D Style - مفرغة ومحسنة) ---
-// ... (نفس مكونات الأفاتار السابقة OmaniBoyAvatar و OmaniGirlAvatar) ...
+
 const OmaniBoyAvatar = () => (
   <svg viewBox="0 0 200 200" className="w-full h-full" xmlns="http://www.w3.org/2000/svg">
     <defs>
@@ -84,10 +85,12 @@ const OmaniGirlAvatar = () => (
 );
 
 const Leaderboard: React.FC<LeaderboardProps> = ({ students, classes, onUpdateStudent }) => {
-    const { currentSemester } = useApp(); // Get semester to log points correctly
+    const { currentSemester } = useApp();
     const [selectedClass, setSelectedClass] = useState<string>('all');
     
-    // تحديد الشهر الحالي
+    // حالة نافذة التأكيد (المودال الأنيق)
+    const [confirmModal, setConfirmModal] = useState<{isOpen: boolean, student: Student | null}>({isOpen: false, student: null});
+    
     const today = new Date();
     const currentMonth = today.getMonth(); 
     const currentYear = today.getFullYear();
@@ -119,39 +122,45 @@ const Leaderboard: React.FC<LeaderboardProps> = ({ students, classes, onUpdateSt
             return { ...student, monthlyPoints };
         });
 
-        // ترتيب الطلاب حسب النقاط
-        const activeStudents = withPoints.filter(s => s.monthlyPoints > 0);
-        return activeStudents.sort((a, b) => b.monthlyPoints - a.monthlyPoints);
+        // ✅ التعديل هنا: عدم استبعاد الطلاب الذين لديهم 0 نقاط
+        // يتم ترتيبهم تنازلياً فقط، وسيظهر الجميع
+        return withPoints.sort((a, b) => b.monthlyPoints - a.monthlyPoints);
     }, [students, selectedClass, currentMonth, currentYear]);
 
     const topThree = rankedStudents.slice(0, 3);
     const restOfStudents = rankedStudents.slice(3);
 
     const getAvatar = (student: any) => {
-        if (student.avatar) return <img src={student.avatar} className="w-full h-full object-cover" alt={student.name} />;
+        if (student.avatar) return <img src={student.avatar} className="w-full h-full object-cover" />;
         return student.gender === 'female' ? <OmaniGirlAvatar /> : <OmaniBoyAvatar />;
     };
 
-    // ✅ دالة إضافة نقطة تشجيعية عند النقر
-    const handleAddBonusPoint = (student: Student) => {
-        if (confirm(`هل تريد منح نقطة تشجيعية للطالب ${student.name}؟`)) {
-            const newBehavior = {
-                id: Math.random().toString(36).substr(2, 9),
-                date: new Date().toISOString(),
-                type: 'positive',
-                description: 'تحفيز المعلم (نقطة تشجيعية)',
-                points: 3,
-                semester: currentSemester
-            };
-            
-            const updatedStudent = {
-                ...student,
-                behaviors: [newBehavior, ...(student.behaviors || [])]
-            };
-            
-            onUpdateStudent(updatedStudent);
-            // يمكنك إضافة صوت هنا إذا رغبت: playSound('positive');
-        }
+    // فتح نافذة التأكيد
+    const requestBonusPoint = (student: Student) => {
+        setConfirmModal({ isOpen: true, student });
+    };
+
+    // ✅ تنفيذ إضافة النقاط (3 نقاط)
+    const executeBonus = () => {
+        const student = confirmModal.student;
+        if (!student) return;
+
+        const newBehavior = {
+            id: Math.random().toString(36).substr(2, 9),
+            date: new Date().toISOString(),
+            type: 'positive' as const, // Fix type assertion
+            description: 'تحفيز المعلم (نقاط تشجيعية)',
+            points: 3, // ✅ أصبحت 3 نقاط
+            semester: currentSemester
+        };
+        
+        const updatedStudent = {
+            ...student,
+            behaviors: [newBehavior, ...(student.behaviors || [])]
+        };
+        
+        onUpdateStudent(updatedStudent);
+        setConfirmModal({ isOpen: false, student: null });
     };
 
     return (
@@ -189,38 +198,38 @@ const Leaderboard: React.FC<LeaderboardProps> = ({ students, classes, onUpdateSt
             </div>
 
             {/* Podium (المراكز الثلاثة الأولى) */}
-            {topThree.length > 0 && topThree[0].monthlyPoints > 0 ? (
+            {topThree.length > 0 ? (
                 <div className="flex justify-center items-end gap-2 md:gap-6 py-6 min-h-[280px]">
                     {/* المركز الثاني */}
-                    {topThree[1] && topThree[1].monthlyPoints > 0 && (
+                    {topThree[1] && (
                         <div 
-                            className="flex flex-col items-center animate-in slide-in-from-bottom-8 duration-700 delay-100 cursor-pointer active:scale-95 transition-transform"
-                            onClick={() => handleAddBonusPoint(topThree[1])}
-                            title="اضغط لمنح نقطة تشجيعية"
+                            className="flex flex-col items-center animate-in slide-in-from-bottom-8 duration-700 delay-100 cursor-pointer active:scale-95 transition-transform group"
+                            onClick={() => requestBonusPoint(topThree[1])}
                         >
-                            <div className="w-20 h-20 md:w-24 md:h-24 rounded-full border-4 border-slate-300 shadow-xl overflow-hidden mb-2 relative bg-white transform hover:scale-105 transition-transform">
+                            <div className="w-20 h-20 md:w-24 md:h-24 rounded-full border-4 border-slate-300 shadow-xl overflow-hidden mb-2 relative bg-white transform group-hover:scale-105 transition-transform">
                                 {getAvatar(topThree[1])}
                                 <div className="absolute -bottom-1 -right-1 bg-slate-300 text-white w-8 h-8 rounded-full flex items-center justify-center font-black border-2 border-white shadow-sm text-sm">2</div>
                             </div>
                             <div className="bg-white/80 backdrop-blur-sm px-4 py-3 rounded-2xl text-center border border-slate-200 w-28 md:w-32 shadow-sm relative">
                                 <h3 className="font-black text-xs md:text-sm text-slate-800 truncate mb-1">{topThree[1].name.split(' ')[0]}</h3>
                                 <span className="text-slate-500 font-bold text-[10px] bg-slate-100 px-2 py-0.5 rounded-lg">{topThree[1].monthlyPoints} نقطة</span>
-                                <Plus className="w-4 h-4 text-emerald-500 absolute -top-2 -right-2 bg-white rounded-full border border-emerald-100 shadow-sm opacity-0 group-hover:opacity-100 transition-opacity" />
+                                <div className="absolute -top-2 -right-2 bg-white rounded-full border border-emerald-100 shadow-sm opacity-0 group-hover:opacity-100 transition-opacity p-1">
+                                    <Plus className="w-3 h-3 text-emerald-500" />
+                                </div>
                             </div>
                             <div className="h-24 w-full bg-gradient-to-t from-slate-200 to-slate-50/0 rounded-t-lg mt-2 mx-auto opacity-50"></div>
                         </div>
                     )}
 
                     {/* المركز الأول */}
-                    {topThree[0] && topThree[0].monthlyPoints > 0 && (
+                    {topThree[0] && (
                         <div 
-                            className="flex flex-col items-center z-10 -mb-4 animate-in slide-in-from-bottom-12 duration-700 cursor-pointer active:scale-95 transition-transform"
-                            onClick={() => handleAddBonusPoint(topThree[0])}
-                            title="اضغط لمنح نقطة تشجيعية"
+                            className="flex flex-col items-center z-10 -mb-4 animate-in slide-in-from-bottom-12 duration-700 cursor-pointer active:scale-95 transition-transform group"
+                            onClick={() => requestBonusPoint(topThree[0])}
                         >
                             <div className="relative">
                                 <Crown className="w-12 h-12 text-amber-400 fill-amber-400 absolute -top-10 left-1/2 -translate-x-1/2 animate-pulse drop-shadow-md" />
-                                <div className="w-28 h-28 md:w-32 md:h-32 rounded-full border-4 border-amber-400 shadow-2xl overflow-hidden mb-2 relative bg-white ring-4 ring-amber-100 transform hover:scale-105 transition-transform">
+                                <div className="w-28 h-28 md:w-32 md:h-32 rounded-full border-4 border-amber-400 shadow-2xl overflow-hidden mb-2 relative bg-white ring-4 ring-amber-100 transform group-hover:scale-105 transition-transform">
                                     {getAvatar(topThree[0])}
                                     <div className="absolute -bottom-1 -right-1 bg-amber-400 text-white w-10 h-10 rounded-full flex items-center justify-center font-black border-2 border-white shadow-sm text-lg">1</div>
                                 </div>
@@ -231,27 +240,30 @@ const Leaderboard: React.FC<LeaderboardProps> = ({ students, classes, onUpdateSt
                                     <Star className="w-4 h-4 text-amber-500 fill-amber-500" />
                                     <span className="text-amber-600 font-black text-xs">{topThree[0].monthlyPoints} نقطة</span>
                                 </div>
-                                <Plus className="w-5 h-5 text-emerald-500 absolute -top-2 -right-2 bg-white rounded-full border border-emerald-100 shadow-sm opacity-0 group-hover:opacity-100 transition-opacity" />
+                                <div className="absolute -top-2 -right-2 bg-white rounded-full border border-amber-100 shadow-sm opacity-0 group-hover:opacity-100 transition-opacity p-1">
+                                    <Plus className="w-3 h-3 text-amber-500" />
+                                </div>
                             </div>
                             <div className="h-32 w-full bg-gradient-to-t from-amber-100 to-amber-50/0 rounded-t-lg mt-2 mx-auto opacity-60"></div>
                         </div>
                     )}
 
                     {/* المركز الثالث */}
-                    {topThree[2] && topThree[2].monthlyPoints > 0 && (
+                    {topThree[2] && (
                         <div 
-                            className="flex flex-col items-center animate-in slide-in-from-bottom-4 duration-700 delay-200 cursor-pointer active:scale-95 transition-transform"
-                            onClick={() => handleAddBonusPoint(topThree[2])}
-                            title="اضغط لمنح نقطة تشجيعية"
+                            className="flex flex-col items-center animate-in slide-in-from-bottom-4 duration-700 delay-200 cursor-pointer active:scale-95 transition-transform group"
+                            onClick={() => requestBonusPoint(topThree[2])}
                         >
-                            <div className="w-20 h-20 md:w-24 md:h-24 rounded-full border-4 border-orange-300 shadow-xl overflow-hidden mb-2 relative bg-white transform hover:scale-105 transition-transform">
+                            <div className="w-20 h-20 md:w-24 md:h-24 rounded-full border-4 border-orange-300 shadow-xl overflow-hidden mb-2 relative bg-white transform group-hover:scale-105 transition-transform">
                                 {getAvatar(topThree[2])}
                                 <div className="absolute -bottom-1 -right-1 bg-orange-300 text-white w-8 h-8 rounded-full flex items-center justify-center font-black border-2 border-white shadow-sm text-sm">3</div>
                             </div>
                             <div className="bg-white/80 backdrop-blur-sm px-4 py-3 rounded-2xl text-center border border-orange-200 w-28 md:w-32 shadow-sm relative">
                                 <h3 className="font-black text-xs md:text-sm text-slate-800 truncate mb-1">{topThree[2].name.split(' ')[0]}</h3>
                                 <span className="text-orange-600/70 font-bold text-[10px] bg-orange-50 px-2 py-0.5 rounded-lg">{topThree[2].monthlyPoints} نقطة</span>
-                                <Plus className="w-4 h-4 text-emerald-500 absolute -top-2 -right-2 bg-white rounded-full border border-emerald-100 shadow-sm opacity-0 group-hover:opacity-100 transition-opacity" />
+                                <div className="absolute -top-2 -right-2 bg-white rounded-full border border-orange-100 shadow-sm opacity-0 group-hover:opacity-100 transition-opacity p-1">
+                                    <Plus className="w-3 h-3 text-orange-500" />
+                                </div>
                             </div>
                             <div className="h-16 w-full bg-gradient-to-t from-orange-100 to-orange-50/0 rounded-t-lg mt-2 mx-auto opacity-50"></div>
                         </div>
@@ -260,11 +272,11 @@ const Leaderboard: React.FC<LeaderboardProps> = ({ students, classes, onUpdateSt
             ) : (
                 <div className="flex flex-col items-center justify-center py-10 opacity-50">
                     <Trophy className="w-20 h-20 text-slate-300 mb-4" />
-                    <p className="font-bold text-slate-400">ابدأ بجمع النقاط لتظهر هنا!</p>
+                    <p className="font-bold text-slate-400">لا يوجد طلاب في القائمة بعد</p>
                 </div>
             )}
 
-            {/* شبكة عرض باقي الطلاب (Vertical Grid for All Other Students) */}
+            {/* شبكة عرض باقي الطلاب */}
             <div className="bg-white/50 backdrop-blur-sm rounded-[2rem] p-4 mt-4 border border-white/40 shadow-sm">
                 <h3 className="font-black text-slate-700 mb-4 text-sm flex items-center gap-2 px-2">
                     <LayoutGrid className="w-4 h-4 text-indigo-500" />
@@ -277,7 +289,7 @@ const Leaderboard: React.FC<LeaderboardProps> = ({ students, classes, onUpdateSt
                             <div 
                                 key={student.id} 
                                 className="bg-white rounded-2xl p-3 flex items-center gap-3 border border-slate-100 shadow-sm hover:shadow-md transition-all group cursor-pointer active:scale-95"
-                                onClick={() => handleAddBonusPoint(student)}
+                                onClick={() => requestBonusPoint(student)}
                                 title="اضغط لمنح نقطة تشجيعية"
                             >
                                 {/* Avatar Mini */}
@@ -304,9 +316,41 @@ const Leaderboard: React.FC<LeaderboardProps> = ({ students, classes, onUpdateSt
                         ))}
                     </div>
                 ) : (
-                    <p className="text-center text-slate-400 text-xs font-bold py-4">لا يوجد طلاب آخرين للعرض</p>
+                    <p className="text-center text-slate-400 text-xs font-bold py-4">
+                        {topThree.length > 0 ? "جميع الطلاب في المراكز الأولى! 👏" : "لا يوجد طلاب لعرضهم"}
+                    </p>
                 )}
             </div>
+
+            {/* --- Elegant Confirmation Modal --- */}
+            <Modal isOpen={confirmModal.isOpen} onClose={() => setConfirmModal({...confirmModal, isOpen: false})} className="max-w-xs rounded-[2.5rem]">
+                {confirmModal.student && (
+                    <div className="text-center pt-2">
+                        <div className="w-20 h-20 mx-auto rounded-full border-4 border-indigo-50 shadow-inner overflow-hidden bg-slate-50 mb-4">
+                            {getAvatar(confirmModal.student)}
+                        </div>
+                        <h3 className="text-lg font-black text-slate-900 mb-1">{confirmModal.student.name}</h3>
+                        <p className="text-xs text-gray-500 font-bold mb-6">
+                            هل تريد منح <span className="text-emerald-600 font-black">3 نقاط تشجيعية</span> لهذا الطالب؟
+                        </p>
+                        <div className="flex gap-3">
+                            <button 
+                                onClick={executeBonus} 
+                                className="flex-1 py-3 bg-emerald-500 text-white rounded-xl font-black text-xs shadow-lg shadow-emerald-200 hover:bg-emerald-600 active:scale-95 transition-all flex items-center justify-center gap-2"
+                            >
+                                <Check className="w-4 h-4" /> نعم، يستحق
+                            </button>
+                            <button 
+                                onClick={() => setConfirmModal({...confirmModal, isOpen: false})} 
+                                className="flex-1 py-3 bg-slate-100 text-slate-500 rounded-xl font-bold text-xs hover:bg-slate-200 active:scale-95 transition-all flex items-center justify-center gap-2"
+                            >
+                                <X className="w-4 h-4" /> إلغاء
+                            </button>
+                        </div>
+                    </div>
+                )}
+            </Modal>
+
         </div>
     );
 };
