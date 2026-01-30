@@ -64,7 +64,7 @@ const LoginScreen: React.FC<LoginScreenProps> = ({ onLoginSuccess }) => {
 
         // استخدمنا المعرف الحقيقي هنا
         await api.startGoogleLogin({
-          clientId: '87037584903-lavg5se9f7mfkuvhnqbj53skmorord0u.apps.googleusercontent.com',
+          clientId: '87037584903-3uc4aeg3nc5lk3pu8crjbaad184bhjth.apps.googleusercontent.com',
           redirectUri: 'rasedapp://oauth',
           scopes: ['openid', 'email', 'profile'],
           state: String(Date.now()),
