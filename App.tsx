@@ -3,8 +3,12 @@ import { AppProvider, useApp } from './context/AppContext';
 import { ThemeProvider } from './context/ThemeContext';
 import {
   LayoutDashboard, Users, CalendarCheck, BarChart3,
-  Settings as SettingsIcon, Info, FileText, BookOpen, Medal
+  Settings as SettingsIcon, Info, FileText, BookOpen, Medal, Loader2
 } from 'lucide-react';
+
+// ✅ استيراد المصادقة من فايربيس
+import { auth } from './services/firebase'; 
+import { onAuthStateChanged } from 'firebase/auth';
 
 // ✅ استدعاء مكتبات الموبايل (للإصدار)
 import { App as CapacitorApp } from '@capacitor/app';
@@ -23,12 +27,10 @@ import UserGuide from './components/UserGuide';
 import BrandLogo from './components/BrandLogo';
 import WelcomeScreen from './components/WelcomeScreen';
 import LoginScreen from './components/LoginScreen';
-import { Loader2 } from 'lucide-react';
 import { useSchoolBell } from './hooks/useSchoolBell';
 import SyncStatusBar from './components/SyncStatusBar';
 
 // --- 3D ICONS COMPONENTS (SVG) ---
-// ... (نفس الأيقونات السابقة، اختصرتها لعدم الإطالة) ...
 const Dashboard3D = ({ active }: { active: boolean }) => (
   <svg viewBox="0 0 64 64" className={`w-full h-full transition-all duration-300 ${active ? 'filter drop-shadow-lg scale-110' : 'opacity-60 grayscale-[0.8] hover:grayscale-0 hover:opacity-100 hover:scale-105'}`} xmlns="http://www.w3.org/2000/svg">
     <defs><linearGradient id="dash_bg" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stopColor="#6366f1" /><stop offset="100%" stopColor="#4338ca" /></linearGradient><filter id="inset_shadow"><feOffset dx="0" dy="2" /><feGaussianBlur stdDeviation="2" result="offset-blur" /><feComposite operator="out" in="SourceGraphic" in2="offset-blur" result="inverse" /><feFlood floodColor="black" floodOpacity="0.2" result="color" /><feComposite operator="in" in="color" in2="inverse" result="shadow" /><feComposite operator="over" in="shadow" in2="SourceGraphic" /></filter></defs>
@@ -80,13 +82,12 @@ const AppContent: React.FC = () => {
     isDataLoaded, students, setStudents, classes, setClasses,
     teacherInfo, setTeacherInfo, schedule, setSchedule,
     periodTimes, setPeriodTimes, currentSemester, setCurrentSemester,
-    currentUser,
   } = useApp();
 
   const [activeTab, setActiveTab] = useState('dashboard');
   const [showMoreMenu, setShowMoreMenu] = useState(false);
   const [authStatus, setAuthStatus] = useState<'checking' | 'logged_in' | 'logged_out'>('checking');
-  
+   
   // ✅ 1. متغير الحالة للإصدار (الجديد)
   const [appVersion, setAppVersion] = useState('3.6.0');
 
@@ -108,14 +109,28 @@ const AppContent: React.FC = () => {
     fetchVersion();
   }, []);
 
+  // ---------------------------------------------------------
+  // 🔐 3. الاستماع الحقيقي لحالة المصادقة (الحل للمشكلة)
+  // ---------------------------------------------------------
   useEffect(() => {
-    const isGuest = localStorage.getItem('guest_mode') === 'true';
-    if (isGuest) {
-      setAuthStatus('logged_in');
-      return;
-    }
-    setAuthStatus(currentUser ? 'logged_in' : 'logged_out');
-  }, [currentUser]);
+    // هذه الدالة السحرية من فايربيس تخبرنا فوراً إذا كان المستخدم مسجلاً
+    const unsubscribe = onAuthStateChanged(auth, (firebaseUser) => {
+        const isGuest = localStorage.getItem('guest_mode') === 'true';
+
+        if (isGuest) {
+            setAuthStatus('logged_in');
+        } else if (firebaseUser) {
+            // وجدنا مستخدماً مسجلاً في فايربيس! ادخل فوراً
+            setAuthStatus('logged_in');
+        } else {
+            // لا يوجد مستخدم ولا زائر
+            setAuthStatus('logged_out');
+        }
+    });
+
+    // تنظيف المستمع عند الإغلاق
+    return () => unsubscribe();
+  }, []);
 
   // Deep link listener
   useEffect(() => {
@@ -124,7 +139,6 @@ const AppContent: React.FC = () => {
 
     const unsubscribe = api.onDeepLink((url: string) => {
       console.log('Deep link received:', url);
-      // معالجة الرابط هنا مستقبلاً
     });
 
     return () => {
@@ -164,10 +178,12 @@ const AppContent: React.FC = () => {
     setShowWelcome(false);
   };
 
+  // شاشة التحميل (تظهر فقط أثناء التأكد من فايربيس)
   if (!isDataLoaded || authStatus === 'checking') {
     return (
-      <div className="flex h-full w-full items-center justify-center bg-gray-50 fixed inset-0 z-[99999]">
-        <Loader2 className="w-8 h-8 text-indigo-500 animate-spin" />
+      <div className="flex flex-col h-full w-full items-center justify-center bg-gray-50 fixed inset-0 z-[99999]">
+        <Loader2 className="w-12 h-12 text-indigo-500 animate-spin mb-4" />
+        <p className="text-slate-500 font-medium">جاري استعادة البيانات...</p>
       </div>
     );
   }
@@ -285,7 +301,6 @@ const AppContent: React.FC = () => {
           })}
         </nav>
         <div className="p-6 text-center border-t border-slate-200">
-          {/* ✅ 3. استخدام المتغير الديناميكي */}
           <p className="text-[10px] font-bold text-gray-400">الإصدار {appVersion}</p>
         </div>
       </aside>
