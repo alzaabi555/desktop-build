@@ -62,10 +62,10 @@ const LoginScreen: React.FC<LoginScreenProps> = ({ onLoginSuccess }) => {
         const api = (window as any)?.electron;
         if (!api?.startGoogleLogin) throw new Error('Electron bridge غير جاهز');
 
-        // استخدمنا المعرف الحقيقي هنا
+        // 👇 التعديل الهام جداً: الرابط الجديد المتوافق مع جوجل
         await api.startGoogleLogin({
           clientId: '87037584903-3uc4aeg3nc5lk3pu8crjbaad184bhjth.apps.googleusercontent.com',
-          redirectUri: 'rasedapp://oauth',
+          redirectUri: 'com.googleusercontent.apps.87037584903-3uc4aeg3nc5lk3pu8crjbaad184bhjth:/oauth', 
           scopes: ['openid', 'email', 'profile'],
           state: String(Date.now()),
         });
@@ -74,7 +74,6 @@ const LoginScreen: React.FC<LoginScreenProps> = ({ onLoginSuccess }) => {
 
       // 📱 ب. موبايل (Android / iOS)
       if (Capacitor.isNativePlatform()) {
-        // ✅ استيراد ديناميكي آمن (الحل السحري للشاشة البيضاء)
         const { GoogleAuth } = await import('@codetrix-studio/capacitor-google-auth');
         
         await GoogleAuth.initialize({
@@ -104,14 +103,13 @@ const LoginScreen: React.FC<LoginScreenProps> = ({ onLoginSuccess }) => {
   const handleGuestMode = () => onLoginSuccess(null);
 
   // ---------------------------------------------------------
-  // 🎨 3. الواجهة (JSX) - يجب أن تكون موجودة!
+  // 🎨 3. الواجهة (JSX)
   // ---------------------------------------------------------
   return (
     <div className="min-h-screen bg-slate-50 flex flex-col justify-center py-12 sm:px-6 lg:px-8">
       <div className="sm:mx-auto sm:w-full sm:max-w-md">
         <div className="flex justify-center mb-6">
             <div className="w-20 h-20">
-                {/* تأكد أن ملف BrandLogo موجود وإلا احذف هذا السطر */}
                 <BrandLogo className="w-full h-full" showText={false} />
             </div>
         </div>
