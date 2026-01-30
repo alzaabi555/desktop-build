@@ -1,4 +1,3 @@
-
 import { initializeApp } from "firebase/app";
 import {
   getAuth,
@@ -9,7 +8,9 @@ import {
 } from "firebase/auth";
 import {
   getFirestore,
-  enableIndexedDbPersistence,
+  initializeFirestore,
+  persistentLocalCache,
+  indexedDbLocalPersistence
 } from "firebase/firestore";
 
 // ------------------------------------------------------------------
@@ -32,87 +33,36 @@ const app = initializeApp(firebaseConfig);
 export const auth = getAuth(app);
 export const googleProvider = new GoogleAuthProvider();
 
-// تهيئة قاعدة البيانات
-export const db = getFirestore(app);
+// تهيئة قاعدة البيانات مع دعم العمل بدون إنترنت (Offline Persistence)
+// استخدام الطريقة الحديثة لتجنب تحذيرات Deprecation
+export const db = initializeFirestore(app, {
+  localCache: persistentLocalCache({
+    tabManager: indexedDbLocalPersistence()
+  })
+});
 
-// تفعيل الكاش المحلي للعمل بدون إنترنت (Offline Persistence)
-try {
-  enableIndexedDbPersistence(db).catch((err: any) => {
-    if (err.code === "failed-precondition") {
-      console.warn(
-        "Multiple tabs open, persistence can only be enabled in one tab at a time."
-      );
-    } else if (err.code === "unimplemented") {
-      console.warn(
-        "The current browser does not support all features required to enable persistence."
-      );
-    }
-  });
-} catch (e) {
-  console.log("Persistence setup error (might be running in non-browser env):", e);
-}
+// ------------------------------------------------------------------
+// دوال المصادقة
+// ------------------------------------------------------------------
 
-// ✅ Helper: detect Electron safely
-function isElectron(): boolean {
-  return typeof window !== "undefined" && !!(window as any)?.electron;
-}
-
-// ✅ Windows/Electron Google Sign-in via native flow (expects IPC implemented in main)
-async function signInWithGoogleOnElectron() {
-  const api = (window as any)?.electron;
-  if (!api?.startGoogleLogin || !api?.completeGoogleLogin || !api?.onDeepLink) {
-    throw new Error("Electron auth bridge is not available (preload/main not wired).");
-  }
-
-  // 1) اطلب من main فتح المتصفح الخارجي (OAuth)
-  await api.startGoogleLogin();
-
-  // 2) انتظر deep link (rasedapp://auth?...code=...)
-  const deepLinkUrl: string = await new Promise((resolve, reject) => {
-    let timeout: any;
-
-    const unsubscribe = api.onDeepLink((url: string) => {
-      try {
-        clearTimeout(timeout);
-        unsubscribe?.();
-      } catch {}
-
-      resolve(url);
-    });
-
-    timeout = setTimeout(() => {
-      try {
-        unsubscribe?.();
-      } catch {}
-      reject(new Error("Timed out waiting for deep link."));
-    }, 120000); // 2 minutes
-  });
-
-  // 3) أرسل الرابط إلى main ليبدّل code -> Firebase custom token (عبر backend)
-  const tokenResult = await api.completeGoogleLogin(deepLinkUrl);
-
-  if (!tokenResult?.firebaseCustomToken) {
-    throw new Error("No firebaseCustomToken returned from main process.");
-  }
-
-  // 4) سجّل دخول Firebase عبر custom token
-  const cred = await signInWithCustomToken(auth, tokenResult.firebaseCustomToken);
-  return cred.user;
-}
-
-// دوال مساعدة لتسجيل الدخول والخروج
+// تسجيل الدخول (للويب فقط - الويندوز يتم معالجته في LoginScreen)
 export const signInWithGoogle = async () => {
   try {
-    // ✅ Electron (Windows) path
-    if (isElectron()) {
-      return await signInWithGoogleOnElectron();
-    }
-
-    // ✅ Web/Mobile path
     const result = await signInWithPopup(auth, googleProvider);
     return result.user;
   } catch (error) {
-    console.error("Login Error:", error);
+    console.error("Web Login Error:", error);
+    throw error;
+  }
+};
+
+// تسجيل الدخول باستخدام Custom Token (سنحتاجه لاحقاً لاستكمال دورة الويندوز)
+export const signInWithToken = async (token: string) => {
+  try {
+    const result = await signInWithCustomToken(auth, token);
+    return result.user;
+  } catch (error) {
+    console.error("Token Login Error:", error);
     throw error;
   }
 };
