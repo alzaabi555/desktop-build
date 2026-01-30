@@ -1,6 +1,4 @@
 // electron/main.js
-
-// 1. ✅ تمت إضافة ipcMain هنا
 const { app, BrowserWindow, shell, dialog, ipcMain } = require('electron');
 const path = require('path');
 const { autoUpdater } = require('electron-updater');
@@ -11,7 +9,6 @@ const { autoUpdater } = require('electron-updater');
 const PROTOCOL = 'rasedapp';
 
 function registerProtocol() {
-  // أثناء التطوير: نمرر execPath + مسار سكربت التشغيل
   if (process.defaultApp) {
     if (process.argv.length >= 2) {
       app.setAsDefaultProtocolClient(PROTOCOL, process.execPath, [
@@ -19,7 +16,6 @@ function registerProtocol() {
       ]);
     }
   } else {
-    // أثناء الإنتاج (بعد التثبيت)
     app.setAsDefaultProtocolClient(PROTOCOL);
   }
 }
@@ -67,9 +63,7 @@ function createWindow() {
 
   mainWindow.setMenuBarVisibility(false);
 
-  // ---------------------------------------------------------
-  // 🔗 التعامل مع الروابط الخارجية
-  // ---------------------------------------------------------
+  // فتح الروابط الخارجية في المتصفح
   mainWindow.webContents.setWindowOpenHandler(({ url }) => {
     if (
       url.startsWith('https:') ||
@@ -106,14 +100,10 @@ const gotLock = app.requestSingleInstanceLock();
 if (!gotLock) {
   app.quit();
 } else {
-  // على Windows: عند فتح rasedapp:// وهو يعمل، النظام يشغّل instance ثانية،
-  // والـ primary يستقبل argv هنا.
   app.on('second-instance', (event, argv) => {
     const url = extractDeepLink(argv);
-    if (url) {
-      if (mainWindow && !mainWindow.isDestroyed()) {
-        mainWindow.webContents.send('deep-link', url);
-      }
+    if (url && mainWindow && !mainWindow.isDestroyed()) {
+      mainWindow.webContents.send('deep-link', url);
     }
 
     if (mainWindow) {
@@ -122,20 +112,14 @@ if (!gotLock) {
     }
   });
 
-  // ---------------------------------------------------------
-  // 🏁 عند بدء تشغيل التطبيق
-  // ---------------------------------------------------------
   app.whenReady().then(() => {
     registerProtocol();
 
-    // 2. ✅ هذا هو الكود الجديد: الرد على طلب الرياكت لمعرفة رقم الإصدار
-    ipcMain.handle('get-app-version', () => {
-      return app.getVersion(); // يعيد الرقم الموجود في package.json
-    });
+    ipcMain.handle('get-app-version', () => app.getVersion());
 
     createWindow();
 
-    // إذا فتح التطبيق “أول مرة” عبر deep link وهو كان مغلق
+    // أول فتح عبر deep link والتطبيق كان مغلق
     const firstUrl = extractDeepLink(process.argv);
     if (firstUrl && mainWindow && !mainWindow.isDestroyed()) {
       mainWindow.webContents.once('did-finish-load', () => {
@@ -148,9 +132,7 @@ if (!gotLock) {
     }
 
     app.on('activate', () => {
-      if (BrowserWindow.getAllWindows().length === 0) {
-        createWindow();
-      }
+      if (BrowserWindow.getAllWindows().length === 0) createWindow();
     });
   });
 }
@@ -179,9 +161,7 @@ autoUpdater.on('update-downloaded', (info) => {
         'إذا اخترت "ليس الآن"، سيتم تثبيت التحديث تلقائياً بمجرد إغلاقك للتطبيق.',
     })
     .then((returnValue) => {
-      if (returnValue.response === 0) {
-        autoUpdater.quitAndInstall();
-      }
+      if (returnValue.response === 0) autoUpdater.quitAndInstall();
     });
 });
 
@@ -189,11 +169,6 @@ autoUpdater.on('error', (err) => {
   console.error('Error in auto-updater:', err);
 });
 
-// ---------------------------------------------------------
-// 🚪 عند إغلاق النوافذ
-// ---------------------------------------------------------
 app.on('window-all-closed', () => {
-  if (process.platform !== 'darwin') {
-    app.quit();
-  }
+  if (process.platform !== 'darwin') app.quit();
 });
