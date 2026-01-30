@@ -22,6 +22,9 @@ import LoginScreen from './components/LoginScreen';
 import { Loader2 } from 'lucide-react';
 import { useSchoolBell } from './hooks/useSchoolBell';
 
+// ✅ NEW
+import SyncStatusBar from './components/SyncStatusBar';
+
 // --- 3D ICONS COMPONENTS (SVG) ---
 // NOTE: Keeping all existing 3D icons code exactly as is.
 const Dashboard3D = ({ active }: { active: boolean }) => (
@@ -121,46 +124,36 @@ const AppContent: React.FC = () => {
     currentSemester,
     setCurrentSemester,
     currentUser, // ✅ from AppContext (source of truth for auth)
-  } = useApp(); // AppContext now handles auth + cloud sync [file:28]
+  } = useApp();
 
   const [activeTab, setActiveTab] = useState('dashboard');
   const [showMoreMenu, setShowMoreMenu] = useState(false);
 
-  // State to manage authentication status
-  // 'checking': Initial load
-  // 'logged_in': User authenticated via Firebase or Guest Mode
-  // 'logged_out': Needs to show LoginScreen
   const [authStatus, setAuthStatus] = useState<'checking' | 'logged_in' | 'logged_out'>('checking');
 
   useEffect(() => {
-    // Guest mode overrides auth
     const isGuest = localStorage.getItem('guest_mode') === 'true';
     if (isGuest) {
       setAuthStatus('logged_in');
       return;
     }
 
-    // Otherwise, rely on AppContext currentUser (AppContext already listens to Firebase Auth) [file:28]
     setAuthStatus(currentUser ? 'logged_in' : 'logged_out');
   }, [currentUser]);
 
   const handleLoginSuccess = (user: any | null) => {
     if (user) {
-      // Logged in with Firebase
       localStorage.setItem('guest_mode', 'false');
     } else {
-      // Guest Mode
       localStorage.setItem('guest_mode', 'true');
     }
     setAuthStatus('logged_in');
   };
 
-  // Welcome Screen State
   const [showWelcome, setShowWelcome] = useState<boolean>(() => {
     return !localStorage.getItem('rased_welcome_seen');
   });
 
-  // Notification State
   const [notificationsEnabled, setNotificationsEnabled] = useState<boolean>(() => {
     return localStorage.getItem('bell_enabled') === 'true';
   });
@@ -180,7 +173,6 @@ const AppContent: React.FC = () => {
     setShowWelcome(false);
   };
 
-  // 1. Loading State
   if (!isDataLoaded || authStatus === 'checking') {
     return (
       <div className="flex h-full w-full items-center justify-center bg-gray-50 fixed inset-0 z-[99999]">
@@ -189,17 +181,14 @@ const AppContent: React.FC = () => {
     );
   }
 
-  // 2. Welcome Screen (First Time Only)
   if (showWelcome) {
     return <WelcomeScreen onFinish={handleFinishWelcome} />;
   }
 
-  // 3. Login Screen (If not logged in and not guest)
   if (authStatus === 'logged_out') {
     return <LoginScreen onLoginSuccess={handleLoginSuccess} />;
   }
 
-  // 4. Main App
   const handleNavigate = (tab: string) => {
     setActiveTab(tab);
     setShowMoreMenu(false);
@@ -256,8 +245,6 @@ const AppContent: React.FC = () => {
           students={students} classes={classes} onUpdateStudent={handleUpdateStudent} setStudents={setStudents}
           currentSemester={currentSemester} onSemesterChange={setCurrentSemester} teacherInfo={teacherInfo}
         />;
-
-      // ✅ FIX 1: keep the Leaderboard update hook
       case 'leaderboard':
         return (
           <Leaderboard
@@ -266,7 +253,6 @@ const AppContent: React.FC = () => {
             onUpdateStudent={handleUpdateStudent}
           />
         );
-
       case 'reports': return <Reports />;
       case 'guide': return <UserGuide />;
       case 'settings': return <Settings />;
@@ -362,7 +348,13 @@ const AppContent: React.FC = () => {
 
       {/* Content */}
       <main className="flex-1 flex flex-col h-full overflow-hidden relative bg-[#f3f4f6] z-0">
-        <div className="flex-1 overflow-y-auto overflow-x-hidden custom-scrollbar pb-32 md:pb-4 px-4 md:px-8 pt-safe overscroll-contain" id="main-scroll-container">
+        <div
+          className="flex-1 overflow-y-auto overflow-x-hidden custom-scrollbar pb-32 md:pb-4 px-4 md:px-8 pt-safe overscroll-contain"
+          id="main-scroll-container"
+        >
+          {/* ✅ NEW: Sync status bar always visible inside main scroll area */}
+          <SyncStatusBar />
+
           <div className="max-w-5xl mx-auto w-full min-h-full">
             {renderContent()}
           </div>
@@ -391,7 +383,6 @@ const AppContent: React.FC = () => {
                 {item.label}
               </span>
 
-              {/* Active Indicator Dot */}
               {isActive && <div className="absolute bottom-1 w-1 h-1 bg-indigo-600 rounded-full"></div>}
             </button>
           );
