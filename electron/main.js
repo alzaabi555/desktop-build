@@ -1,37 +1,26 @@
-
-const { app, BrowserWindow, shell, ipcMain } = require('electron');
+const { app, BrowserWindow, shell, ipcMain, dialog } = require('electron');
 const path = require('path');
+const { autoUpdater } = require('electron-updater');
 const crypto = require('crypto');
 
-let mainWindow = null;
+// ---------------------------------------------------------
+// 🚀 1. إعدادات الأداء والنظام
+// ---------------------------------------------------------
+app.disableHardwareAcceleration();
+app.commandLine.appendSwitch('js-flags', '--max-old-space-size=4096');
 
-// ----------------------------------------------------
-// 0) مسارات/إعدادات عامة
-// ----------------------------------------------------
-
-// اجبر Electron يكتب بياناته في AppData (حل مشاكل الكاش/Quota)
+// جعل مسار البيانات في AppData لتجنب مشاكل الصلاحيات
 app.setPath('userData', path.join(app.getPath('appData'), 'RasedApp'));
 
-// امنع تشغيل أكثر من نسخة
+// منع تشغيل أكثر من نسخة (Single Instance Lock)
 const gotLock = app.requestSingleInstanceLock();
 if (!gotLock) {
   app.quit();
-  return;
 }
 
-// إيقاف التسريع المادي (حسب تجربتك مع ويندوز)
-app.disableHardwareAcceleration();
-
-// زيادة حد الذاكرة
-app.commandLine.appendSwitch('js-flags', '--max-old-space-size=4096');
-
-// ----------------------------------------------------
-// 1) Deep Link: تسجيل البروتوكول rasedapp://
-// ----------------------------------------------------
+// تسجيل البروتوكول (Deep Link) لفتح التطبيق من المتصفح
+// rasedapp://
 const PROTOCOL = 'rasedapp';
-
-// تسجيل التطبيق كبروتوكول افتراضي
-// مهم خصوصًا في dev defaultApp
 if (process.defaultApp) {
   if (process.argv.length >= 2) {
     app.setAsDefaultProtocolClient(PROTOCOL, process.execPath, [path.resolve(process.argv[1])]);
@@ -40,43 +29,14 @@ if (process.defaultApp) {
   app.setAsDefaultProtocolClient(PROTOCOL);
 }
 
-// Helper: إرسال deep link للواجهة
-function sendDeepLink(url) {
-  try {
-    if (mainWindow && mainWindow.webContents) {
-      mainWindow.webContents.send('deep-link', url);
-    }
-  } catch (e) {
-    console.error('sendDeepLink failed:', e);
-  }
-}
+// ---------------------------------------------------------
+// 🔄 2. إعدادات التحديث التلقائي
+// ---------------------------------------------------------
+autoUpdater.autoDownload = true;
+autoUpdater.autoInstallOnAppQuit = true;
 
-// macOS: event open-url
-app.on('open-url', (event, url) => {
-  event.preventDefault();
-  sendDeepLink(url);
-});
+let mainWindow;
 
-// Windows/Linux: deep link يأتي في argv عند التشغيل أو عند second-instance
-function extractDeepLinkFromArgv(argv) {
-  const prefix = `${PROTOCOL}://`;
-  return argv.find(a => typeof a === 'string' && a.startsWith(prefix)) || null;
-}
-
-app.on('second-instance', (_event, argv) => {
-  // ركّز النافذة الحالية
-  if (mainWindow) {
-    if (mainWindow.isMinimized()) mainWindow.restore();
-    mainWindow.focus();
-  }
-
-  const url = extractDeepLinkFromArgv(argv);
-  if (url) sendDeepLink(url);
-});
-
-// ----------------------------------------------------
-// 2) نافذة التطبيق الرئيسية
-// ----------------------------------------------------
 function createWindow() {
   mainWindow = new BrowserWindow({
     width: 1200,
@@ -87,42 +47,23 @@ function createWindow() {
     webPreferences: {
       nodeIntegration: false,
       contextIsolation: true,
-      preload: path.join(__dirname, 'preload.js'),
-      devTools: false,
-      sandbox: false
+      preload: path.join(__dirname, 'preload.js'), // تأكد أن ملف البريلود الجديد موجود هنا
+      devTools: false, // اجعله true للتطوير
+      sandbox: false 
     }
   });
 
   mainWindow.loadFile(path.join(__dirname, '../www/index.html'));
   mainWindow.setMenuBarVisibility(false);
 
-  // ملاحظة: لا تمسح الكاش هنا (خصوصًا لو عندك OAuth/جلسات)
-  // لو تحتاج لاحقًا، اعمله بزر داخل الإعدادات وليس عند الإقلاع.
-
-  // فتح الروابط الخارجية فقط (بحذر)
+  // التعامل مع الروابط الخارجية (فتحها في المتصفح وليس داخل التطبيق)
   mainWindow.webContents.setWindowOpenHandler(({ url }) => {
-    try {
-      const u = new URL(url);
-
-      // اسمح فقط بالبروتوكولات الآمنة المعروفة
-      const allowed = ['https:', 'http:', 'mailto:', 'tel:', 'sms:'];
-      if (allowed.includes(u.protocol)) {
-        shell.openExternal(url).catch(console.error);
-      }
-    } catch {
-      // تجاهل أي URL غير صالح
-    }
-    return { action: 'deny' };
-  });
-
-  // منع أي تنقل خارجي داخل نافذتك (يبقى كل شيء داخل file://)
-  mainWindow.webContents.on('will-navigate', (event, url) => {
-    const isLocal = url.startsWith('file://');
-    if (!isLocal) {
-      event.preventDefault();
-      // اختياري: افتح خارجيًا لو تحب
+    const allowed = ['https:', 'http:', 'mailto:', 'tel:', 'sms:', 'whatsapp:'];
+    const u = new URL(url);
+    if (allowed.includes(u.protocol)) {
       shell.openExternal(url).catch(console.error);
     }
+    return { action: 'deny' };
   });
 
   mainWindow.on('closed', () => {
@@ -130,67 +71,86 @@ function createWindow() {
   });
 }
 
-// ----------------------------------------------------
-// 3) IPC: خدمات للـ preload/renderer
-// ----------------------------------------------------
-ipcMain.handle('get-app-version', async () => {
-  return app.getVersion();
+// ---------------------------------------------------------
+// 🔗 3. معالجة الروابط العميقة (Deep Links & OAuth Callbacks)
+// ---------------------------------------------------------
+function handleDeepLink(url) {
+  if (!mainWindow || !url) return;
+
+  // 1. إرسال الرابط الخام للواجهة (لمن يريد استخدامه)
+  mainWindow.webContents.send('deep-link', url);
+
+  // 2. معالجة خاصة لـ Google OAuth
+  // إذا الرابط يحتوي على code= أو error=
+  try {
+    const urlObj = new URL(url);
+    const code = urlObj.searchParams.get('code');
+    const error = urlObj.searchParams.get('error');
+    const state = urlObj.searchParams.get('state');
+
+    if (code) {
+      // إرسال الكود للواجهة (يتوافق مع preload الخاص بك)
+      mainWindow.webContents.send('google-auth-code', { code, state, url });
+      
+      // إغلاق أي نافذة مصادقة معلقة لو وجدت
+      if (pendingAuth?.timeout) clearTimeout(pendingAuth.timeout);
+      pendingAuth = null;
+    } 
+    else if (error) {
+      mainWindow.webContents.send('google-auth-error', { error, url });
+    }
+  } catch (e) {
+    console.error('Error parsing deep link:', e);
+  }
+}
+
+// الاستماع للروابط في الويندوز (argv)
+app.on('second-instance', (_event, argv) => {
+  if (mainWindow) {
+    if (mainWindow.isMinimized()) mainWindow.restore();
+    mainWindow.focus();
+  }
+  const url = argv.find(arg => arg.startsWith(PROTOCOL + '://'));
+  if (url) handleDeepLink(url);
 });
 
-// Google OAuth: نفتح المتصفح الخارجي وننتظر deep link يعود
-let pendingAuth = null; // { state, createdAt, timeout }
+// الاستماع للروابط في الماك (open-url)
+app.on('open-url', (event, url) => {
+  event.preventDefault();
+  handleDeepLink(url);
+});
+
+// ---------------------------------------------------------
+// 🔐 4. دوال المصادقة (IPC Handlers)
+// ---------------------------------------------------------
+ipcMain.handle('get-app-version', () => app.getVersion());
+
+let pendingAuth = null;
 
 ipcMain.handle('auth:start-google', async (_event, payload) => {
-  // payload: { clientId, redirectUri, scopes, state, prompt?, accessType? }
-  const clientId = payload?.clientId;
-  const redirectUri = payload?.redirectUri;
-  const scopes = Array.isArray(payload?.scopes) ? payload.scopes : ['openid', 'email', 'profile'];
-  const state = String(payload?.state || crypto.randomBytes(16).toString('hex'));
-  const prompt = payload?.prompt;
-  const accessType = payload?.accessType;
+  const { clientId, redirectUri, scopes, state: userState } = payload;
+  
+  if (!clientId || !redirectUri) throw new Error('Missing params');
 
-  if (!clientId || !redirectUri) {
-    throw new Error('Missing clientId or redirectUri');
-  }
+  const state = userState || crypto.randomBytes(16).toString('hex');
+  const scopeString = Array.isArray(scopes) ? scopes.join(' ') : 'openid email profile';
 
-  // جهّز رابط OAuth (Authorization Code + PKCE غير مضاف هنا لتبسيط المثال)
-  const params = new URLSearchParams({
-    client_id: clientId,
-    redirect_uri: redirectUri,
-    response_type: 'code',
-    scope: scopes.join(' '),
-    state
-  });
+  // بناء رابط جوجل
+  const authUrl = `https://accounts.google.com/o/oauth2/v2/auth?client_id=${clientId}&redirect_uri=${redirectUri}&response_type=code&scope=${scopeString}&state=${state}`;
 
-  if (prompt) params.set('prompt', prompt);
-  if (accessType) params.set('access_type', accessType);
-
-  const authUrl = `https://accounts.google.com/o/oauth2/v2/auth?${params.toString()}`;
-
-  // خزّن حالة انتظار (اختياري)
-  if (pendingAuth?.timeout) clearTimeout(pendingAuth.timeout);
-  pendingAuth = {
-    state,
-    createdAt: Date.now(),
-    timeout: setTimeout(() => {
-      pendingAuth = null;
-      try {
-        if (mainWindow) {
-          mainWindow.webContents.send('google-auth-error', {
-            error: 'timeout',
-            url: authUrl,
-            via: 'external-browser'
-          });
-        }
-      } catch {}
-    }, 2 * 60 * 1000) // 2 دقائق
-  };
-
-  // افتح المتصفح الخارجي
+  // فتح الرابط في المتصفح الخارجي (Chrome/Edge)
   await shell.openExternal(authUrl);
 
-  // نرجع state للواجهة (اختياري)
-  return { ok: true, state, url: authUrl, via: 'external-browser' };
+  // إعداد Timeout (اختياري)
+  pendingAuth = {
+    state,
+    timeout: setTimeout(() => {
+      pendingAuth = null;
+      if (mainWindow) mainWindow.webContents.send('google-auth-error', { error: 'timeout' });
+    }, 120000) // دقيقتين
+  };
+
+  return { ok: true, state };
 });
 
 ipcMain.handle('auth:cancel-google', async () => {
@@ -199,21 +159,49 @@ ipcMain.handle('auth:cancel-google', async () => {
   return { ok: true };
 });
 
-// ----------------------------------------------------
-// 4) عند الإقلاع: التقط deep link من argv (Windows/Linux)
-// ----------------------------------------------------
+// ---------------------------------------------------------
+// 🏁 5. بدء التشغيل
+// ---------------------------------------------------------
 app.whenReady().then(() => {
   createWindow();
 
-  // إذا التطبيق بدأ عبر deep link
-  const deep = extractDeepLinkFromArgv(process.argv);
-  if (deep) {
-    // تأخير بسيط حتى تجهز الواجهة
-    setTimeout(() => sendDeepLink(deep), 800);
+  // التحقق من التحديثات (للنسخة المحزمة فقط)
+  if (app.isPackaged) {
+    autoUpdater.checkForUpdatesAndNotify();
+  }
+
+  // التقاط Deep Link عند فتح التطبيق لأول مرة
+  const deepUrl = process.argv.find(arg => arg.startsWith(PROTOCOL + '://'));
+  if (deepUrl) {
+    setTimeout(() => handleDeepLink(deepUrl), 1000); // تأخير بسيط لتجهز الواجهة
   }
 
   app.on('activate', () => {
     if (BrowserWindow.getAllWindows().length === 0) createWindow();
+  });
+});
+
+// ---------------------------------------------------------
+// 📢 6. أحداث التحديث التلقائي (Dialogs)
+// ---------------------------------------------------------
+autoUpdater.on('update-available', (info) => {
+  dialog.showMessageBox({
+    type: 'info',
+    title: 'تحديث جديد',
+    message: `يوجد إصدار جديد (${info.version}). يتم التحميل...`,
+    buttons: ['حسناً']
+  });
+});
+
+autoUpdater.on('update-downloaded', (info) => {
+  dialog.showMessageBox({
+    type: 'question',
+    buttons: ['تثبيت الآن', 'لاحقاً'],
+    defaultId: 0,
+    title: 'اكتمل التحميل',
+    message: `تم تحميل الإصدار ${info.version}. هل تريد إعادة التشغيل للتثبيت؟`
+  }).then(({ response }) => {
+    if (response === 0) autoUpdater.quitAndInstall();
   });
 });
 
