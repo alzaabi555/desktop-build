@@ -1,11 +1,15 @@
-
+// electron/preload.js
 const { contextBridge, shell, ipcRenderer } = require('electron');
 
-// نحن نكشف وظائف آمنة للواجهة الأمامية
 contextBridge.exposeInMainWorld('electron', {
-  // 1. وظيفتك الحالية (لفتح الروابط) - ممتازة، أبقيتها كما هي
   openExternal: (url) => shell.openExternal(url),
+  getAppVersion: () => ipcRenderer.invoke('get-app-version'),
 
-  // 2. ✅ الوظيفة الجديدة (لجلب رقم الإصدار من النظام)
-  getAppVersion: () => ipcRenderer.invoke('get-app-version')
+  // استقبال deep link
+  onDeepLink: (callback) => {
+    if (typeof callback !== 'function') return () => {};
+    const listener = (_event, url) => callback(url);
+    ipcRenderer.on('deep-link', listener);
+    return () => ipcRenderer.removeListener('deep-link', listener);
+  },
 });
