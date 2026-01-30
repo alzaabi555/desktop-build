@@ -47,16 +47,20 @@ function createWindow() {
     webPreferences: {
       nodeIntegration: false,
       contextIsolation: true,
-      preload: path.join(__dirname, 'preload.js'), // تأكد أن ملف البريلود الجديد موجود هنا
-      devTools: false, // اجعله true للتطوير
+      preload: path.join(__dirname, 'preload.js'),
+      devTools: true, // 👈 1. غيرناها إلى true لنسمح بفتح الأدوات
       sandbox: false 
     }
   });
 
   mainWindow.loadFile(path.join(__dirname, '../www/index.html'));
+  
+  // 👈 2. أضفنا هذا السطر ليفتح لك شاشة الأخطاء فوراً عند التشغيل
+  mainWindow.webContents.openDevTools(); 
+
   mainWindow.setMenuBarVisibility(false);
 
-  // التعامل مع الروابط الخارجية (فتحها في المتصفح وليس داخل التطبيق)
+  // التعامل مع الروابط الخارجية
   mainWindow.webContents.setWindowOpenHandler(({ url }) => {
     const allowed = ['https:', 'http:', 'mailto:', 'tel:', 'sms:', 'whatsapp:'];
     const u = new URL(url);
