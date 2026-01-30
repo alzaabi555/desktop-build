@@ -1,4 +1,4 @@
-onst { app, BrowserWindow, shell, ipcMain, dialog, clipboard } = require('electron');
+const { app, BrowserWindow, shell, ipcMain, dialog, clipboard } = require('electron');
 const path = require('path');
 const { autoUpdater } = require('electron-updater');
 const crypto = require('crypto');
