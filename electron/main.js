@@ -1,4 +1,4 @@
-const { app, BrowserWindow, shell, ipcMain, dialog } = require('electron');
+onst { app, BrowserWindow, shell, ipcMain, dialog, clipboard } = require('electron');
 const path = require('path');
 const { autoUpdater } = require('electron-updater');
 const crypto = require('crypto');
@@ -55,12 +55,12 @@ function createWindow() {
 
   mainWindow.loadFile(path.join(__dirname, '../www/index.html'));
   
-  // فتح أدوات المطور لرؤية الأخطاء
+  // فتح أدوات المطور (يمكنك تعطيلها لاحقاً بوضع false)
   mainWindow.webContents.openDevTools(); 
 
   mainWindow.setMenuBarVisibility(false);
 
-  // التعامل مع الروابط الخارجية
+  // التعامل مع الروابط الخارجية (فتحها في المتصفح)
   mainWindow.webContents.setWindowOpenHandler(({ url }) => {
     const allowed = ['https:', 'http:', 'mailto:', 'tel:', 'sms:', 'whatsapp:'];
     const u = new URL(url);
@@ -81,10 +81,9 @@ function createWindow() {
 function handleDeepLink(url) {
   if (!mainWindow || !url) return;
 
-  // 1. إرسال الرابط الخام للواجهة
+  // إرسال الرابط الخام للواجهة
   mainWindow.webContents.send('deep-link', url);
 
-  // 2. معالجة خاصة لـ Google OAuth
   try {
     const urlObj = new URL(url);
     const code = urlObj.searchParams.get('code');
@@ -105,6 +104,7 @@ function handleDeepLink(url) {
   }
 }
 
+// الاستماع للروابط في الويندوز (عندما يكون التطبيق مفتوحاً مسبقاً)
 app.on('second-instance', (_event, argv) => {
   if (mainWindow) {
     if (mainWindow.isMinimized()) mainWindow.restore();
@@ -114,13 +114,14 @@ app.on('second-instance', (_event, argv) => {
   if (url) handleDeepLink(url);
 });
 
+// الاستماع للروابط في الماك
 app.on('open-url', (event, url) => {
   event.preventDefault();
   handleDeepLink(url);
 });
 
 // ---------------------------------------------------------
-// 🔐 4. دوال المصادقة (IPC Handlers) - تم التعديل هنا 👇
+// 🔐 4. دوال المصادقة (IPC Handlers) + النسخ التلقائي
 // ---------------------------------------------------------
 ipcMain.handle('get-app-version', () => app.getVersion());
 
@@ -137,22 +138,25 @@ ipcMain.handle('auth:start-google', async (_event, payload) => {
   // بناء رابط جوجل
   const authUrl = `https://accounts.google.com/o/oauth2/v2/auth?client_id=${clientId}&redirect_uri=${redirectUri}&response_type=code&scope=${scopeString}&state=${state}`;
 
-  // -------------------------------------------------------
-  // 🔴 هام جداً: طباعة الرابط في الكونسول للطوارئ
-  // -------------------------------------------------------
-  console.log('\n\n================================================================');
-  console.log('👉 انسخ هذا الرابط وضعه في المتصفح يدوياً إذا لم يفتح تلقائياً:');
-  console.log(authUrl);
-  console.log('================================================================\n\n');
+  // 1️⃣ نسخ الرابط للحافظة فوراً (الحل السحري)
+  clipboard.writeText(authUrl);
 
-  // محاولة فتح المتصفح
+  // 2️⃣ محاولة فتح المتصفح
   try {
     await shell.openExternal(authUrl);
   } catch (err) {
     console.error('❌ فشل فتح المتصفح آلياً:', err);
   }
 
-  // إعداد Timeout (زدنا الوقت لـ 5 دقائق ليعطيك فرصة للنسخ)
+  // 3️⃣ إظهار رسالة تأكيد للمستخدم
+  dialog.showMessageBox(mainWindow, {
+    type: 'info',
+    title: 'تسجيل الدخول',
+    message: 'تم نسخ رابط الدخول!\n\nإذا لم يفتح المتصفح تلقائياً، افتح Chrome والصق الرابط (Ctrl+V) ثم أكمل التسجيل.',
+    buttons: ['حسناً']
+  });
+
+  // إعداد مهلة زمنية (5 دقائق)
   pendingAuth = {
     state,
     timeout: setTimeout(() => {
@@ -180,6 +184,7 @@ app.whenReady().then(() => {
     autoUpdater.checkForUpdatesAndNotify();
   }
 
+  // التقاط Deep Link عند فتح التطبيق لأول مرة
   const deepUrl = process.argv.find(arg => arg.startsWith(PROTOCOL + '://'));
   if (deepUrl) {
     setTimeout(() => handleDeepLink(deepUrl), 1000); 
@@ -190,13 +195,28 @@ app.whenReady().then(() => {
   });
 });
 
+// ---------------------------------------------------------
+// 📢 6. أحداث التحديث التلقائي
+// ---------------------------------------------------------
 autoUpdater.on('update-available', (info) => {
-  dialog.showMessageBox({ type: 'info', title: 'تحديث جديد', message: `يوجد إصدار جديد...`, buttons: ['حسناً'] });
+  dialog.showMessageBox({
+    type: 'info',
+    title: 'تحديث جديد',
+    message: `يوجد إصدار جديد (${info.version}). يتم التحميل...`,
+    buttons: ['حسناً']
+  });
 });
 
 autoUpdater.on('update-downloaded', (info) => {
-  dialog.showMessageBox({ type: 'question', buttons: ['تثبيت الآن', 'لاحقاً'], title: 'اكتمل التحميل', message: `تم التحميل...` })
-  .then(({ response }) => { if (response === 0) autoUpdater.quitAndInstall(); });
+  dialog.showMessageBox({
+    type: 'question',
+    buttons: ['تثبيت الآن', 'لاحقاً'],
+    defaultId: 0,
+    title: 'اكتمل التحميل',
+    message: `تم تحميل الإصدار ${info.version}. هل تريد إعادة التشغيل للتثبيت؟`
+  }).then(({ response }) => {
+    if (response === 0) autoUpdater.quitAndInstall();
+  });
 });
 
 app.on('window-all-closed', () => {
