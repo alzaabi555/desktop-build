@@ -7,12 +7,13 @@ import {
 } from "firebase/auth";
 import {
   getFirestore,
-  initializeFirestore,
-  persistentLocalCache,
-  indexedDbLocalPersistence
+  enableIndexedDbPersistence,
 } from "firebase/firestore";
 
-// إعدادات Firebase
+// ------------------------------------------------------------------
+// إعدادات Firebase الخاصة بتطبيق راصد
+// ------------------------------------------------------------------
+
 const firebaseConfig = {
   apiKey: "AIzaSyB93x2kKaFd7-Ni3O2zzkqfi4BveVrsQ1U",
   authDomain: "rasedapp-m555.firebaseapp.com",
@@ -22,18 +23,35 @@ const firebaseConfig = {
   appId: "1:87037584903:web:ea709deb8d2203fa41eca2",
 };
 
+// تهيئة التطبيق
 const app = initializeApp(firebaseConfig);
+
+// تهيئة المصادقة
 export const auth = getAuth(app);
 export const googleProvider = new GoogleAuthProvider();
 
-// إعداد قاعدة البيانات مع الكاش
-export const db = initializeFirestore(app, {
-  localCache: persistentLocalCache({
-    tabManager: indexedDbLocalPersistence()
-  })
-});
+// تهيئة قاعدة البيانات (الطريقة الكلاسيكية المضمونة للبناء)
+export const db = getFirestore(app);
 
-// دوال المصادقة (للويب فقط - الويندوز يتم عبر LoginScreen)
+// تفعيل الكاش (داخل try/catch لمنع تحطم التطبيق في بيئات لا تدعمه)
+try {
+  enableIndexedDbPersistence(db).catch((err) => {
+    if (err.code == 'failed-precondition') {
+       // تعدد التبويبات مفتوح
+    } else if (err.code == 'unimplemented') {
+       // المتصفح لا يدعم
+    }
+  });
+} catch (e) {
+  // تجاهل الأخطاء في بيئة Node/Electron إذا حدثت
+  console.log("Persistence skipped");
+}
+
+// ------------------------------------------------------------------
+// دوال المصادقة
+// ------------------------------------------------------------------
+
+// تسجيل الدخول (للويب فقط - الويندوز يتم معالجته في LoginScreen)
 export const signInWithGoogle = async () => {
   try {
     const result = await signInWithPopup(auth, googleProvider);
