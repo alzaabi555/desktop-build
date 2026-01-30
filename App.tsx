@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { AppProvider, useApp } from './context/AppContext';
 import { ThemeProvider } from './context/ThemeContext';
@@ -26,7 +27,6 @@ import { useSchoolBell } from './hooks/useSchoolBell';
 import SyncStatusBar from './components/SyncStatusBar';
 
 // --- 3D ICONS COMPONENTS (SVG) ---
-// NOTE: Keeping all existing 3D icons code exactly as is.
 const Dashboard3D = ({ active }: { active: boolean }) => (
   <svg viewBox="0 0 64 64" className={`w-full h-full transition-all duration-300 ${active ? 'filter drop-shadow-lg scale-110' : 'opacity-60 grayscale-[0.8] hover:grayscale-0 hover:opacity-100 hover:scale-105'}`} xmlns="http://www.w3.org/2000/svg">
     <defs>
@@ -61,7 +61,7 @@ const Attendance3D = ({ active }: { active: boolean }) => (
 );
 
 const Students3D = ({ active }: { active: boolean }) => (
-  <svg viewBox="0 0 64 64" className={`w-full h-full transition-all duration-300 ${active ? 'filter drop-shadow-lg scale-110' : 'opacity-60 grayscale-[0.8] hover:grayscale-0 hover:opacity-100 hover:scale-105'}`} xmlns="http://www.w3.org/2000/svg">
+  <svg viewBox="0 0 64 64" className={`w-full h-full transition-all duration-300 ${active ? 'filter drop-shadow-lg scale-110' : 'opacity-60 grayscale-[0.8] hover:grayscale-0 hover:opacity-100 hover:scale-105'}`} xmlns="http://www.w3.org/2000svg">
     <defs>
       <linearGradient id="user_grad" x1="0%" y1="0%" x2="100%" y2="100%">
         <stop offset="0%" stopColor="#3b82f6" />
@@ -140,6 +140,29 @@ const AppContent: React.FC = () => {
 
     setAuthStatus(currentUser ? 'logged_in' : 'logged_out');
   }, [currentUser]);
+
+  // ✅ NEW: Deep link listener (Windows Electron)
+  useEffect(() => {
+    // موجود فقط في نسخة Electron
+    const api = (window as any)?.electron;
+    if (!api?.onDeepLink) return;
+
+    const unsubscribe = api.onDeepLink((url: string) => {
+      console.log('Deep link received:', url);
+
+      // مؤقت للاختبار — احذفه بعد التأكد
+      // ملاحظة: في الخطوة القادمة سنحلل url ونكمل OAuth
+      try {
+        alert(url);
+      } catch {}
+    });
+
+    return () => {
+      try {
+        unsubscribe?.();
+      } catch {}
+    };
+  }, []);
 
   const handleLoginSuccess = (user: any | null) => {
     if (user) {
