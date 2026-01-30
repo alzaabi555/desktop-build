@@ -2,10 +2,28 @@
 const { app, BrowserWindow, shell } = require('electron');
 const path = require('path');
 
-// إيقاف التسريع المادي لحل مشاكل التعليق والتجميد في الويندوز (حل جذري)
+// 1) اجبر Electron يكتب بياناته في AppData (حل مشكلة Access is denied للكاش/Quota)
+app.setPath('userData', path.join(app.getPath('appData'), 'RasedApp')); // غيّر الاسم إذا تريد
+
+// 2) امنع تشغيل أكثر من نسخة (يخفف مشاكل الكاش/Quota)
+const gotLock = app.requestSingleInstanceLock();
+if (!gotLock) {
+  app.quit();
+  return;
+}
+
+// (اختياري) إذا حاول المستخدم فتح التطبيق مرة ثانية، ركّز النافذة الحالية
+app.on('second-instance', () => {
+  if (mainWindow) {
+    if (mainWindow.isMinimized()) mainWindow.restore();
+    mainWindow.focus();
+  }
+});
+
+// إيقاف التسريع المادي لحل مشاكل التعليق والتجميد في الويندوز
 app.disableHardwareAcceleration();
 
-// زيادة حد الذاكرة لمنع التعليق عند التعامل مع بيانات كبيرة
+// زيادة حد الذاكرة
 app.commandLine.appendSwitch('js-flags', '--max-old-space-size=4096');
 
 let mainWindow;
@@ -21,36 +39,38 @@ function createWindow() {
       nodeIntegration: false,
       contextIsolation: true,
       preload: path.join(__dirname, 'preload.js'),
-      devTools: false, // اجعلها true إذا كنت بحاجة لفحص الأخطاء
-      sandbox: false 
+      devTools: false,
+      sandbox: false
     }
-  });
-
-  // مسح الكاش لضمان تحميل التحديثات الجديدة في الواجهة
-  mainWindow.webContents.session.clearCache().then(() => {
-     console.log('Cache cleared successfully');
   });
 
   mainWindow.loadFile(path.join(__dirname, '../www/index.html'));
   mainWindow.setMenuBarVisibility(false);
 
-  // التعامل مع فتح الروابط الخارجية (واتساب، مواقع، الخ)
-  // هذا الجزء ضروري جداً لنسخة الويندوز لفتح الروابط في المتصفح الافتراضي
+  // 3) (اختياري/أنصح به) امسح الكاش بعد اكتمال التحميل بدل قبل التحميل
+  mainWindow.webContents.once('did-finish-load', () => {
+    mainWindow.webContents.session.clearCache()
+      .then(() => console.log('Cache cleared successfully'))
+      .catch(err => console.error('clearCache failed:', err));
+  });
+
+  // فتح الروابط الخارجية
   mainWindow.webContents.setWindowOpenHandler(({ url }) => {
-    // السماح بفتح البروتوكولات الخارجية المعروفة
-    if (url.startsWith('https:') || url.startsWith('http:') || url.startsWith('mailto:') || url.startsWith('tel:') || url.startsWith('sms:') || url.startsWith('whatsapp:')) {
+    if (
+      url.startsWith('https:') || url.startsWith('http:') ||
+      url.startsWith('mailto:') || url.startsWith('tel:') ||
+      url.startsWith('sms:') || url.startsWith('whatsapp:')
+    ) {
       shell.openExternal(url).catch(err => console.error('Failed to open external url:', err));
     }
-    // منع إنشاء نافذة Electron فرعية، والاكتفاء بفتح الرابط خارجياً
     return { action: 'deny' };
   });
 
-  // حماية إضافية لمنع التنقل داخل النافذة الرئيسية إلى مواقع خارجية عن طريق الخطأ
   mainWindow.webContents.on('will-navigate', (event, url) => {
     const isLocal = url.startsWith('file://');
     if (!isLocal) {
-        event.preventDefault();
-        shell.openExternal(url);
+      event.preventDefault();
+      shell.openExternal(url);
     }
   });
 
@@ -63,14 +83,10 @@ app.whenReady().then(() => {
   createWindow();
 
   app.on('activate', () => {
-    if (BrowserWindow.getAllWindows().length === 0) {
-      createWindow();
-    }
+    if (BrowserWindow.getAllWindows().length === 0) createWindow();
   });
 });
 
 app.on('window-all-closed', () => {
-  if (process.platform !== 'darwin') {
-    app.quit();
-  }
+  if (process.platform !== 'darwin') app.quit();
 });
