@@ -49,14 +49,14 @@ function createWindow() {
       nodeIntegration: false,
       contextIsolation: true,
       preload: path.join(__dirname, 'preload.js'),
-      devTools: true,
+      devTools: false,
       sandbox: false 
     }
   });
 
   mainWindow.loadFile(path.join(__dirname, '../www/index.html'));
   
-  mainWindow.webContents.openDevTools(); 
+  // mainWindow.webContents.openDevTools();
 
   mainWindow.setMenuBarVisibility(false);
 
