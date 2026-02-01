@@ -28,17 +28,15 @@ import BrandLogo from './components/BrandLogo';
 import WelcomeScreen from './components/WelcomeScreen';
 import LoginScreen from './components/LoginScreen';
 import { useSchoolBell } from './hooks/useSchoolBell';
-import SyncStatusBar from './components/SyncStatusBar';
 
 // --- 3D ICONS COMPONENTS (SVG) ---
 const Dashboard3D = ({ active }: { active: boolean }) => (
   <svg viewBox="0 0 64 64" className={`w-full h-full transition-all duration-300 ${active ? 'filter drop-shadow-lg scale-110' : 'opacity-60 grayscale-[0.8] hover:grayscale-0 hover:opacity-100 hover:scale-105'}`} xmlns="http://www.w3.org/2000/svg">
-    <defs><linearGradient id="dash_bg" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stopColor="#6366f1" /><stop offset="100%" stopColor="#4338ca" /></linearGradient><filter id="inset_shadow"><feOffset dx="0" dy="2" /><feGaussianBlur stdDeviation="2" result="offset-blur" /><feComposite operator="out" in="SourceGraphic" in2="offset-blur" result="inverse" /><feFlood floodColor="black" floodOpacity="0.2" result="color" /><feComposite operator="in" in="color" in2="inverse" result="shadow" /><feComposite operator="over" in="shadow" in2="SourceGraphic" /></filter></defs>
+    <defs><linearGradient id="dash_bg" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stopColor="#6366f1" /><stop offset="100%" stopColor="#4338ca" /></linearGradient></defs>
     <rect x="10" y="10" width="20" height="20" rx="6" fill="url(#dash_bg)" />
     <rect x="34" y="10" width="20" height="20" rx="6" fill="#a5b4fc" />
     <rect x="10" y="34" width="20" height="20" rx="6" fill="#c7d2fe" />
     <rect x="34" y="34" width="20" height="20" rx="6" fill="url(#dash_bg)" />
-    <path d="M10 16 Q20 10 30 16 L30 30 L10 30 Z" fill="white" opacity="0.1" />
   </svg>
 );
 const Attendance3D = ({ active }: { active: boolean }) => (
@@ -47,13 +45,13 @@ const Attendance3D = ({ active }: { active: boolean }) => (
     <rect x="12" y="14" width="40" height="40" rx="8" fill="white" stroke="#e5e7eb" strokeWidth="2" />
     <path d="M12 24 L52 24 L52 18 Q52 14 48 14 L16 14 Q12 14 12 18 Z" fill="url(#cal_bg)" />
     <circle cx="20" cy="12" r="3" fill="#991b1b" /><circle cx="44" cy="12" r="3" fill="#991b1b" />
-    <path d="M22 38 L30 46 L44 30" fill="none" stroke="#10b981" strokeWidth="5" strokeLinecap="round" strokeLinejoin="round" style={{ filter: 'drop-shadow(0 2px 2px rgba(0,0,0,0.2))' }} />
+    <path d="M22 38 L30 46 L44 30" fill="none" stroke="#10b981" strokeWidth="5" strokeLinecap="round" strokeLinejoin="round" />
   </svg>
 );
 const Students3D = ({ active }: { active: boolean }) => (
-  <svg viewBox="0 0 64 64" className={`w-full h-full transition-all duration-300 ${active ? 'filter drop-shadow-lg scale-110' : 'opacity-60 grayscale-[0.8] hover:grayscale-0 hover:opacity-100 hover:scale-105'}`} xmlns="http://www.w3.org/2000svg">
+  <svg viewBox="0 0 64 64" className={`w-full h-full transition-all duration-300 ${active ? 'filter drop-shadow-lg scale-110' : 'opacity-60 grayscale-[0.8] hover:grayscale-0 hover:opacity-100 hover:scale-105'}`} xmlns="http://www.w3.org/2000/svg">
     <defs><linearGradient id="user_grad" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stopColor="#3b82f6" /><stop offset="100%" stopColor="#1d4ed8" /></linearGradient></defs>
-    <circle cx="32" cy="24" r="12" fill="url(#user_grad)" /><path d="M14 54 C14 40 50 40 50 54 L50 58 L14 58 Z" fill="url(#user_grad)" /><ellipse cx="32" cy="20" rx="6" ry="3" fill="white" opacity="0.3" />
+    <circle cx="32" cy="24" r="12" fill="url(#user_grad)" /><path d="M14 54 C14 40 50 40 50 54 L50 58 L14 58 Z" fill="url(#user_grad)" />
   </svg>
 );
 const Grades3D = ({ active }: { active: boolean }) => (
@@ -63,16 +61,13 @@ const Grades3D = ({ active }: { active: boolean }) => (
       <linearGradient id="bar2" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stopColor="#34d399" /><stop offset="1" stopColor="#059669" /></linearGradient>
       <linearGradient id="bar3" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stopColor="#818cf8" /><stop offset="1" stopColor="#4f46e5" /></linearGradient>
     </defs>
-    <path d="M12 44 L22 44 L22 54 L12 54 Z" fill="url(#bar1)" transform="translate(0, -10)" />
     <rect x="12" y="34" width="10" height="20" rx="2" fill="url(#bar1)" /><rect x="27" y="24" width="10" height="30" rx="2" fill="url(#bar2)" /><rect x="42" y="14" width="10" height="40" rx="2" fill="url(#bar3)" />
-    <path d="M22 36 L25 33 L25 51 L22 54 Z" fill="#b45309" opacity="0.5" /><path d="M37 26 L40 23 L40 51 L37 54 Z" fill="#047857" opacity="0.5" /><path d="M52 16 L55 13 L55 51 L52 54 Z" fill="#3730a3" opacity="0.5" />
   </svg>
 );
 const More3D = ({ active }: { active: boolean }) => (
   <svg viewBox="0 0 64 64" className={`w-full h-full transition-all duration-300 ${active ? 'filter drop-shadow-lg scale-110' : 'opacity-60 grayscale-[0.8] hover:grayscale-0 hover:opacity-100 hover:scale-105'}`} xmlns="http://www.w3.org/2000/svg">
     <defs><linearGradient id="grid_grad" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stopColor="#f472b6" /><stop offset="1" stopColor="#db2777" /></linearGradient></defs>
     <rect x="14" y="14" width="16" height="16" rx="4" fill="url(#grid_grad)" /><rect x="34" y="14" width="16" height="16" rx="4" fill="url(#grid_grad)" /><rect x="14" y="34" width="16" height="16" rx="4" fill="url(#grid_grad)" /><rect x="34" y="34" width="16" height="16" rx="4" fill="url(#grid_grad)" />
-    <circle cx="22" cy="22" r="3" fill="white" opacity="0.2" /><circle cx="42" cy="22" r="3" fill="white" opacity="0.2" /><circle cx="22" cy="42" r="3" fill="white" opacity="0.2" /><circle cx="42" cy="42" r="3" fill="white" opacity="0.2" />
   </svg>
 );
 
@@ -87,11 +82,8 @@ const AppContent: React.FC = () => {
   const [activeTab, setActiveTab] = useState('dashboard');
   const [showMoreMenu, setShowMoreMenu] = useState(false);
   const [authStatus, setAuthStatus] = useState<'checking' | 'logged_in' | 'logged_out'>('checking');
-   
-  // ✅ 1. متغير الحالة للإصدار (الجديد)
   const [appVersion, setAppVersion] = useState('3.6.0');
 
-  // ✅ 2. جلب الإصدار تلقائياً
   useEffect(() => {
     const fetchVersion = async () => {
       try {
@@ -109,59 +101,26 @@ const AppContent: React.FC = () => {
     fetchVersion();
   }, []);
 
-  // ---------------------------------------------------------
-  // 🔐 3. الاستماع الحقيقي لحالة المصادقة (الحل للمشكلة)
-  // ---------------------------------------------------------
   useEffect(() => {
-    // هذه الدالة السحرية من فايربيس تخبرنا فوراً إذا كان المستخدم مسجلاً
     const unsubscribe = onAuthStateChanged(auth, (firebaseUser) => {
         const isGuest = localStorage.getItem('guest_mode') === 'true';
-
-        if (isGuest) {
-            setAuthStatus('logged_in');
-        } else if (firebaseUser) {
-            // وجدنا مستخدماً مسجلاً في فايربيس! ادخل فوراً
+        if (isGuest || firebaseUser) {
             setAuthStatus('logged_in');
         } else {
-            // لا يوجد مستخدم ولا زائر
             setAuthStatus('logged_out');
         }
     });
-
-    // تنظيف المستمع عند الإغلاق
     return () => unsubscribe();
   }, []);
 
-  // Deep link listener
-  useEffect(() => {
-    const api = (window as any)?.electron;
-    if (!api?.onDeepLink) return;
-
-    const unsubscribe = api.onDeepLink((url: string) => {
-      console.log('Deep link received:', url);
-    });
-
-    return () => {
-      try { unsubscribe?.(); } catch {}
-    };
-  }, []);
-
   const handleLoginSuccess = (user: any | null) => {
-    if (user) {
-      localStorage.setItem('guest_mode', 'false');
-    } else {
-      localStorage.setItem('guest_mode', 'true');
-    }
+    if (user) { localStorage.setItem('guest_mode', 'false'); } 
+    else { localStorage.setItem('guest_mode', 'true'); }
     setAuthStatus('logged_in');
   };
 
-  const [showWelcome, setShowWelcome] = useState<boolean>(() => {
-    return !localStorage.getItem('rased_welcome_seen');
-  });
-
-  const [notificationsEnabled, setNotificationsEnabled] = useState<boolean>(() => {
-    return localStorage.getItem('bell_enabled') === 'true';
-  });
+  const [showWelcome, setShowWelcome] = useState<boolean>(() => !localStorage.getItem('rased_welcome_seen'));
+  const [notificationsEnabled, setNotificationsEnabled] = useState<boolean>(() => localStorage.getItem('bell_enabled') === 'true');
 
   useSchoolBell(periodTimes, schedule, notificationsEnabled);
 
@@ -178,7 +137,6 @@ const AppContent: React.FC = () => {
     setShowWelcome(false);
   };
 
-  // شاشة التحميل (تظهر فقط أثناء التأكد من فايربيس)
   if (!isDataLoaded || authStatus === 'checking') {
     return (
       <div className="flex flex-col h-full w-full items-center justify-center bg-gray-50 fixed inset-0 z-[99999]">
@@ -200,12 +158,7 @@ const AppContent: React.FC = () => {
   const handleAddClass = (name: string) => setClasses(prev => [...prev, name]);
   const handleDeleteClass = (className: string) => {
     setClasses(prev => prev.filter(c => c !== className));
-    setStudents(prev => prev.map(s => {
-      if (s.classes.includes(className)) {
-        return { ...s, classes: s.classes.filter(c => c !== className) };
-      }
-      return s;
-    }));
+    setStudents(prev => prev.map(s => s.classes.includes(className) ? { ...s, classes: s.classes.filter(c => c !== className) } : s));
   };
   const handleAddStudent = (name: string, className: string, phone?: string, avatar?: string, gender?: 'male' | 'female') => {
     setStudents(prev => [...prev, {
@@ -268,7 +221,6 @@ const AppContent: React.FC = () => {
 
   return (
     <div className="flex h-full bg-[#f3f4f6] font-sans overflow-hidden text-slate-900 relative">
-      {/* Sidebar */}
       <aside className="hidden md:flex w-72 flex-col bg-white border-l border-slate-200 z-50 shadow-sm transition-all h-full">
         <div className="p-8 flex items-center gap-4">
           <div className="w-12 h-12"><BrandLogo className="w-full h-full" showText={false} /></div>
@@ -289,33 +241,27 @@ const AppContent: React.FC = () => {
           </div>
         </div>
         <nav className="flex-1 overflow-y-auto px-4 space-y-2 custom-scrollbar pb-4">
-          {desktopNavItems.map(item => {
-            const isActive = activeTab === item.id;
-            return (
-              <button key={item.id} onClick={() => handleNavigate(item.id)} className={`w-full flex items-center gap-3 px-4 py-3.5 rounded-2xl transition-all duration-300 group ${isActive ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-200 scale-[1.02]' : 'text-slate-500 hover:bg-slate-50 hover:text-slate-900 border border-transparent hover:border-slate-100'}`}>
-                <item.icon className={`w-5 h-5 ${isActive ? 'text-white' : 'text-slate-400 group-hover:text-indigo-500'} transition-colors`} strokeWidth={2.5} />
-                <span className="font-bold text-sm">{item.label}</span>
-                {isActive && <div className="mr-auto w-1.5 h-1.5 rounded-full bg-white animate-pulse"></div>}
-              </button>
-            );
-          })}
+          {desktopNavItems.map(item => (
+            <button key={item.id} onClick={() => handleNavigate(item.id)} className={`w-full flex items-center gap-3 px-4 py-3.5 rounded-2xl transition-all duration-300 group ${activeTab === item.id ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-200 scale-[1.02]' : 'text-slate-500 hover:bg-slate-50 hover:text-slate-900 border border-transparent hover:border-slate-100'}`}>
+              <item.icon className={`w-5 h-5 ${activeTab === item.id ? 'text-white' : 'text-slate-400 group-hover:text-indigo-500'} transition-colors`} strokeWidth={2.5} />
+              <span className="font-bold text-sm">{item.label}</span>
+              {activeTab === item.id && <div className="mr-auto w-1.5 h-1.5 rounded-full bg-white animate-pulse"></div>}
+            </button>
+          ))}
         </nav>
         <div className="p-6 text-center border-t border-slate-200">
           <p className="text-[10px] font-bold text-gray-400">الإصدار {appVersion}</p>
         </div>
       </aside>
 
-      {/* Content */}
       <main className="flex-1 flex flex-col h-full overflow-hidden relative bg-[#f3f4f6] z-0">
         <div className="flex-1 overflow-y-auto overflow-x-hidden custom-scrollbar pb-32 md:pb-4 px-4 md:px-8 pt-safe overscroll-contain" id="main-scroll-container">
-          <SyncStatusBar />
           <div className="max-w-5xl mx-auto w-full min-h-full">
             {renderContent()}
           </div>
         </div>
       </main>
 
-      {/* Mobile Nav */}
       <div className="md:hidden fixed bottom-0 left-0 right-0 z-[9999] h-[85px] bg-white/95 backdrop-blur-xl rounded-t-[2.5rem] shadow-[0_-10px_40px_rgba(0,0,0,0.08)] flex justify-around items-end pb-4 border-t border-slate-200/60 pb-safe safe-area-bottom transition-transform duration-300 translate-z-0 pointer-events-auto">
         {mobileNavItems.map((item) => {
           const isActive = activeTab === item.id;
@@ -338,7 +284,6 @@ const AppContent: React.FC = () => {
         </button>
       </div>
 
-      {/* Menu Modal */}
       <Modal isOpen={showMoreMenu} onClose={() => setShowMoreMenu(false)} className="max-w-md rounded-[2rem] mb-28 md:hidden z-[10000]">
         <div className="text-center mb-6">
           <div className="w-12 h-1 bg-gray-300 rounded-full mx-auto mb-4"></div>
@@ -360,7 +305,6 @@ const App: React.FC = () => {
   return (
     <ThemeProvider>
       <AppProvider>
-        {/* لاحظ: لا تضع HashRouter هنا، لقد وضعناه في index.tsx وهو يكفي */}
         <AppContent />
       </AppProvider>
     </ThemeProvider>
