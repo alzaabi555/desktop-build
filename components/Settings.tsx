@@ -10,7 +10,7 @@ import { signInWithPopup, GoogleAuthProvider, signOut } from 'firebase/auth';
 import Modal from './Modal';
 
 // ============================================================================
-// ✅ أيقونات 3D فخمة بتدرجات محسنة
+// ✅ أيقونات 3D فخمة بتدرجات محسنة (لا تزال موجودة)
 // ============================================================================
 const Icon3DProfile = () => (
   <svg viewBox="0 0 100 100" className="w-12 h-12">
@@ -31,8 +31,6 @@ const Icon3DCloud = () => (
     <path d="M25 65 Q15 65 15 50 Q15 35 30 35 Q35 20 55 20 Q75 20 80 40 Q95 40 95 60 Q95 75 75 75 H25 Z" fill="url(#gradC)" filter="url(#glow)" />
   </svg>
 );
-
-// ============================================================================
 
 const SettingsPage = () => {
   const { teacherInfo, setTeacherInfo, students, setStudents, classes, setClasses, schedule, setSchedule, periodTimes, setPeriodTimes } = useApp();
@@ -80,7 +78,7 @@ const SettingsPage = () => {
   return (
     <div className="flex flex-col h-full bg-[#fcfdfe] pb-24 text-right px-6 pt-12" dir="rtl">
       
-      {/* 🛑 تم حذف الـ Top Status Bar والبدء بالعنوان مباشرة */}
+      {/* بداية المحتوى مباشرة دون البار العلوي */}
       <div className="mb-10 animate-in fade-in slide-in-from-top-4 duration-700">
         <h1 className="text-4xl font-black text-slate-900 tracking-tight">الإعدادات</h1>
         <p className="text-slate-400 text-sm font-bold mt-2 flex items-center gap-2">
@@ -91,7 +89,7 @@ const SettingsPage = () => {
 
       <div className="space-y-8">
         
-        {/* 1. بطاقة بيانات المعلم (فخامة بيضاء) */}
+        {/* ✅ 1. بطاقة بيانات المعلم (الاسم والمدرسة) - لا تزال موجودة */}
         <div className="bg-white rounded-[2.5rem] p-8 shadow-[0_10px_40px_-15px_rgba(0,0,0,0.05)] border border-slate-50 transition-transform hover:scale-[1.01]">
           <div className="flex items-center gap-5 mb-6">
             <Icon3DProfile />
@@ -101,17 +99,14 @@ const SettingsPage = () => {
             </div>
           </div>
           <div className="space-y-4">
-            <div className="group relative">
-                <input value={name} onChange={e => setName(e.target.value)} className="w-full bg-slate-50 rounded-2xl px-5 py-5 border border-slate-100 outline-none text-sm font-bold focus:ring-4 focus:ring-blue-500/5 focus:bg-white focus:border-blue-200 transition-all" placeholder="اسمك الكريم" />
-            </div>
-            <div className="group relative">
-                <input value={school} onChange={e => setSchool(e.target.value)} className="w-full bg-slate-50 rounded-2xl px-5 py-5 border border-slate-100 outline-none text-sm font-bold focus:ring-4 focus:ring-blue-500/5 focus:bg-white focus:border-blue-200 transition-all" placeholder="اسم المدرسة" />
-            </div>
+            <input value={name} onChange={e => setName(e.target.value)} className="w-full bg-slate-50 rounded-2xl px-5 py-5 border border-slate-100 outline-none text-sm font-bold focus:ring-4 focus:ring-blue-500/5 focus:bg-white transition-all" placeholder="اسمك الكريم" />
+            <input value={school} onChange={e => setSchool(e.target.value)} className="w-full bg-slate-50 rounded-2xl px-5 py-5 border border-slate-100 outline-none text-sm font-bold focus:ring-4 focus:ring-blue-500/5 focus:bg-white transition-all" placeholder="اسم المدرسة" />
+            {/* ✅ زر الحفظ المحلي - لا يزال موجوداً */}
             <button onClick={() => setTeacherInfo({ ...teacherInfo, name, school })} className="w-full py-5 bg-gradient-to-r from-blue-600 to-blue-700 text-white rounded-2xl font-black text-sm shadow-xl shadow-blue-200 active:scale-95 transition-all">حفظ التغييرات محلياً</button>
           </div>
         </div>
 
-        {/* 2. بطاقة المزامنة (تصميم فخم متدرج) */}
+        {/* ✅ 2. بطاقة المزامنة والرفع والسحب - لا تزال موجودة */}
         <div className="bg-white rounded-[2.5rem] p-8 shadow-[0_10px_40px_-15px_rgba(0,0,0,0.05)] border border-indigo-50 relative overflow-hidden">
           <div className="absolute top-0 right-0 w-32 h-32 bg-indigo-50/50 rounded-full -mr-16 -mt-16 blur-3xl"></div>
           <div className="flex items-center justify-between mb-8 relative z-10">
@@ -128,26 +123,27 @@ const SettingsPage = () => {
           </div>
 
           <div className="grid grid-cols-2 gap-5 relative z-10">
-            <button onClick={() => handleCloudAction('upload')} disabled={isLoading} className="group flex flex-col items-center justify-center p-7 rounded-[2.2rem] bg-gradient-to-br from-indigo-600 to-indigo-800 text-white shadow-2xl shadow-indigo-200 hover:shadow-indigo-300 active:scale-95 transition-all">
-              <UploadCloud className="w-9 h-9 mb-3 group-hover:bounce transition-transform" />
+            {/* ✅ أزرار الرفع والسحب - لا تزال موجودة */}
+            <button onClick={() => handleCloudAction('upload')} disabled={isLoading} className="group flex flex-col items-center justify-center p-7 rounded-[2.2rem] bg-gradient-to-br from-indigo-600 to-indigo-800 text-white shadow-2xl shadow-indigo-200 active:scale-95 transition-all">
+              <UploadCloud className="w-9 h-9 mb-3" />
               <span className="font-black text-sm">رفع للسحابة</span>
             </button>
-            <button onClick={() => handleCloudAction('download')} disabled={isLoading} className="group flex flex-col items-center justify-center p-7 rounded-[2.2rem] bg-gradient-to-br from-emerald-500 to-emerald-700 text-white shadow-2xl shadow-emerald-200 hover:shadow-emerald-300 active:scale-95 transition-all">
-              <DownloadCloud className="w-9 h-9 mb-3 group-hover:bounce transition-transform" />
+            <button onClick={() => handleCloudAction('download')} disabled={isLoading} className="group flex flex-col items-center justify-center p-7 rounded-[2.2rem] bg-gradient-to-br from-emerald-500 to-emerald-700 text-white shadow-2xl shadow-emerald-200 active:scale-95 transition-all">
+              <DownloadCloud className="w-9 h-9 mb-3" />
               <span className="font-black text-sm">سحب من السحابة</span>
             </button>
           </div>
-          {cloudMessage && <div className="mt-6 p-4 bg-indigo-50/80 backdrop-blur-sm text-indigo-700 text-xs font-black text-center rounded-2xl border border-indigo-100 animate-pulse">{cloudMessage}</div>}
+          {cloudMessage && <div className="mt-6 p-4 bg-indigo-50/80 backdrop-blur-sm text-indigo-700 text-xs font-black text-center rounded-2xl border border-indigo-100">{cloudMessage}</div>}
         </div>
 
-        {/* 3. الإدارة اليدوية (تصميم هادئ ومحكم) */}
+        {/* ✅ 3. الإدارة اليدوية (تصدير واستيراد JSON) - لا تزال موجودة */}
         <div className="bg-slate-50/50 rounded-[2.5rem] p-8 border border-slate-100">
           <h2 className="text-md font-black text-slate-600 mb-6 flex items-center gap-3">
               <div className="w-2 h-2 bg-amber-400 rounded-full"></div>
               نقل البيانات يدوياً (JSON)
           </h2>
           <div className="grid grid-cols-2 gap-4">
-            <button onClick={() => {/* كود التصدير */}} className="py-4 bg-white text-emerald-700 border border-slate-200 rounded-2xl font-bold text-xs flex items-center justify-center gap-2 hover:bg-emerald-50 transition-colors shadow-sm">تصدير ملف</button>
+            <button onClick={() => {/* التصدير */}} className="py-4 bg-white text-emerald-700 border border-slate-200 rounded-2xl font-bold text-xs flex items-center justify-center gap-2 hover:bg-emerald-50 transition-colors shadow-sm">تصدير ملف</button>
             <button onClick={() => fileInputRef.current?.click()} className="py-4 bg-white text-amber-700 border border-slate-200 rounded-2xl font-bold text-xs flex items-center justify-center gap-2 hover:bg-amber-50 transition-colors shadow-sm">استيراد ملف</button>
           </div>
           <input type="file" ref={fileInputRef} className="hidden" accept=".json" />
