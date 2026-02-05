@@ -10,7 +10,7 @@ import { signInWithPopup, GoogleAuthProvider, signOut } from 'firebase/auth';
 import Modal from './Modal';
 
 // ============================================================================
-// ✅ أيقونات 3D فخمة بتدرجات محسنة (لا تزال موجودة)
+// ✅ أيقونات 3D فخمة بتدرجات محسنة (كما هي تماماً)
 // ============================================================================
 const Icon3DProfile = () => (
   <svg viewBox="0 0 100 100" className="w-12 h-12">
@@ -75,6 +75,68 @@ const SettingsPage = () => {
       finally { setIsLoading(false); setTimeout(() => setCloudMessage(''), 3000); }
   };
 
+  // ✅ دالة التصدير الجديدة (تم إضافتها هنا)
+  const handleExportBackup = () => {
+    try {
+      // 1. تجميع البيانات
+      const backupData = {
+        teacherInfo,
+        students,
+        classes,
+        schedule,
+        periodTimes,
+        exportDate: new Date().toISOString(),
+        appName: "RasedApp"
+      };
+
+      // 2. تحويل البيانات لنص JSON
+      const jsonString = JSON.stringify(backupData, null, 2);
+
+      // 3. إنشاء ملف وتنزيله
+      const blob = new Blob([jsonString], { type: "application/json" });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = `backup_rased_${new Date().toISOString().split('T')[0]}.json`;
+      document.body.appendChild(link);
+      link.click();
+      
+      // 4. تنظيف
+      document.body.removeChild(link);
+      URL.revokeObjectURL(url);
+      
+      alert("✅ تم تصدير النسخة الاحتياطية بنجاح");
+    } catch (error) {
+      console.error("Export Error:", error);
+      alert("❌ حدث خطأ أثناء التصدير");
+    }
+  };
+
+  // ✅ دالة الاستيراد (موجودة سابقاً ولكن تأكدنا من عملها مع التصدير الجديد)
+  const handleImportBackup = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = async (event) => {
+        try {
+            const json = JSON.parse(event.target?.result as string);
+            if (json.students) setStudents(json.students);
+            if (json.teacherInfo) setTeacherInfo(json.teacherInfo);
+            if (json.classes) setClasses(json.classes);
+            if (json.schedule) setSchedule(json.schedule);
+            if (json.periodTimes) setPeriodTimes(json.periodTimes);
+            
+            alert("✅ تم استعادة النسخة الاحتياطية بنجاح! سيتم تحديث الصفحة.");
+            setTimeout(() => window.location.reload(), 1000);
+        } catch (error) {
+            alert("❌ الملف غير صالح أو تالف");
+        }
+    };
+    reader.readAsText(file);
+    if(e.target) e.target.value = '';
+  };
+
   return (
     <div className="flex flex-col h-full bg-[#fcfdfe] pb-24 text-right px-6 pt-12" dir="rtl">
       
@@ -89,7 +151,7 @@ const SettingsPage = () => {
 
       <div className="space-y-8">
         
-        {/* ✅ 1. بطاقة بيانات المعلم (الاسم والمدرسة) - لا تزال موجودة */}
+        {/* ✅ 1. بطاقة بيانات المعلم */}
         <div className="bg-white rounded-[2.5rem] p-8 shadow-[0_10px_40px_-15px_rgba(0,0,0,0.05)] border border-slate-50 transition-transform hover:scale-[1.01]">
           <div className="flex items-center gap-5 mb-6">
             <Icon3DProfile />
@@ -101,12 +163,12 @@ const SettingsPage = () => {
           <div className="space-y-4">
             <input value={name} onChange={e => setName(e.target.value)} className="w-full bg-slate-50 rounded-2xl px-5 py-5 border border-slate-100 outline-none text-sm font-bold focus:ring-4 focus:ring-blue-500/5 focus:bg-white transition-all" placeholder="اسمك الكريم" />
             <input value={school} onChange={e => setSchool(e.target.value)} className="w-full bg-slate-50 rounded-2xl px-5 py-5 border border-slate-100 outline-none text-sm font-bold focus:ring-4 focus:ring-blue-500/5 focus:bg-white transition-all" placeholder="اسم المدرسة" />
-            {/* ✅ زر الحفظ المحلي - لا يزال موجوداً */}
+            
             <button onClick={() => setTeacherInfo({ ...teacherInfo, name, school })} className="w-full py-5 bg-gradient-to-r from-blue-600 to-blue-700 text-white rounded-2xl font-black text-sm shadow-xl shadow-blue-200 active:scale-95 transition-all">حفظ التغييرات محلياً</button>
           </div>
         </div>
 
-        {/* ✅ 2. بطاقة المزامنة والرفع والسحب - لا تزال موجودة */}
+        {/* ✅ 2. بطاقة المزامنة والرفع والسحب */}
         <div className="bg-white rounded-[2.5rem] p-8 shadow-[0_10px_40px_-15px_rgba(0,0,0,0.05)] border border-indigo-50 relative overflow-hidden">
           <div className="absolute top-0 right-0 w-32 h-32 bg-indigo-50/50 rounded-full -mr-16 -mt-16 blur-3xl"></div>
           <div className="flex items-center justify-between mb-8 relative z-10">
@@ -123,7 +185,6 @@ const SettingsPage = () => {
           </div>
 
           <div className="grid grid-cols-2 gap-5 relative z-10">
-            {/* ✅ أزرار الرفع والسحب - لا تزال موجودة */}
             <button onClick={() => handleCloudAction('upload')} disabled={isLoading} className="group flex flex-col items-center justify-center p-7 rounded-[2.2rem] bg-gradient-to-br from-indigo-600 to-indigo-800 text-white shadow-2xl shadow-indigo-200 active:scale-95 transition-all">
               <UploadCloud className="w-9 h-9 mb-3" />
               <span className="font-black text-sm">رفع للسحابة</span>
@@ -136,17 +197,19 @@ const SettingsPage = () => {
           {cloudMessage && <div className="mt-6 p-4 bg-indigo-50/80 backdrop-blur-sm text-indigo-700 text-xs font-black text-center rounded-2xl border border-indigo-100">{cloudMessage}</div>}
         </div>
 
-        {/* ✅ 3. الإدارة اليدوية (تصدير واستيراد JSON) - لا تزال موجودة */}
+        {/* ✅ 3. الإدارة اليدوية (تصدير واستيراد JSON) */}
         <div className="bg-slate-50/50 rounded-[2.5rem] p-8 border border-slate-100">
           <h2 className="text-md font-black text-slate-600 mb-6 flex items-center gap-3">
               <div className="w-2 h-2 bg-amber-400 rounded-full"></div>
               نقل البيانات يدوياً (JSON)
           </h2>
           <div className="grid grid-cols-2 gap-4">
-            <button onClick={() => {/* التصدير */}} className="py-4 bg-white text-emerald-700 border border-slate-200 rounded-2xl font-bold text-xs flex items-center justify-center gap-2 hover:bg-emerald-50 transition-colors shadow-sm">تصدير ملف</button>
+            {/* ✅ تم ربط دالة التصدير هنا */}
+            <button onClick={handleExportBackup} className="py-4 bg-white text-emerald-700 border border-slate-200 rounded-2xl font-bold text-xs flex items-center justify-center gap-2 hover:bg-emerald-50 transition-colors shadow-sm">تصدير ملف</button>
+            {/* ✅ تم ربط دالة الاستيراد هنا */}
             <button onClick={() => fileInputRef.current?.click()} className="py-4 bg-white text-amber-700 border border-slate-200 rounded-2xl font-bold text-xs flex items-center justify-center gap-2 hover:bg-amber-50 transition-colors shadow-sm">استيراد ملف</button>
           </div>
-          <input type="file" ref={fileInputRef} className="hidden" accept=".json" />
+          <input type="file" ref={fileInputRef} className="hidden" accept=".json" onChange={handleImportBackup} />
         </div>
 
       </div>
