@@ -1,193 +1,14 @@
-import React, { useState, useMemo, useEffect } from 'react';
+import React, { useState, useMemo, useEffect, useRef } from 'react';
 import { Student, AttendanceStatus } from '../types';
-import { ChevronDown, Loader2, UserCircle2, ArrowRight, Smartphone, Mail, Calendar, LayoutGrid } from 'lucide-react'; 
+import { Check, X, Clock, Calendar, MessageCircle, ChevronDown, Loader2, Share2, DoorOpen, UserCircle2, Filter, ChevronLeft, ChevronRight, CalendarCheck, Search } from 'lucide-react';
 import { Browser } from '@capacitor/browser';
 import * as XLSX from 'xlsx';
 import Modal from './Modal';
 import { Filesystem, Directory } from '@capacitor/filesystem';
 import { Share } from '@capacitor/share';
 import { Capacitor } from '@capacitor/core';
-import { useApp } from '../context/AppContext';
-
-// --- أيقونات 3D الجديدة (SVG Components) ---
-
-// 1. الأفاتار (ولد/بنت) - النسخة المحسنة (تغطي الجبهة)
-const OmaniBoyAvatarSVG = () => (
-  <svg viewBox="0 0 200 200" className="w-full h-full" xmlns="http://www.w3.org/2000/svg">
-    <defs>
-      <radialGradient id="boySkin3D" cx="50%" cy="50%" r="50%" fx="30%" fy="30%">
-        <stop offset="0%" stopColor="#ffdfc4" />
-        <stop offset="60%" stopColor="#ebb082" />
-        <stop offset="100%" stopColor="#d49066" />
-      </radialGradient>
-      <linearGradient id="dishdasha3D" x1="0%" y1="0%" x2="100%" y2="0%">
-        <stop offset="0%" stopColor="#ffffff" />
-        <stop offset="20%" stopColor="#f1f5f9" />
-        <stop offset="50%" stopColor="#ffffff" />
-        <stop offset="80%" stopColor="#e2e8f0" />
-        <stop offset="100%" stopColor="#cbd5e1" />
-      </linearGradient>
-      <linearGradient id="kummahBase" x1="0%" y1="0%" x2="0%" y2="100%">
-        <stop offset="0%" stopColor="#ffffff" />
-        <stop offset="100%" stopColor="#e2e8f0" />
-      </linearGradient>
-      <filter id="softShadow" x="-20%" y="-20%" width="140%" height="140%">
-        <feGaussianBlur in="SourceAlpha" stdDeviation="3" />
-        <feOffset dx="2" dy="4" result="offsetblur" />
-        <feComponentTransfer>
-          <feFuncA type="linear" slope="0.3" />
-        </feComponentTransfer>
-        <feMerge>
-          <feMergeNode />
-          <feMergeNode in="SourceGraphic" />
-        </feMerge>
-      </filter>
-    </defs>
-    <g filter="url(#softShadow)"><path d="M50 170 C50 140 150 140 150 170 L150 210 L50 210 Z" fill="url(#dishdasha3D)" /><path d="M100 150 L100 180" stroke="#cbd5e1" strokeWidth="3" strokeLinecap="round" /><circle cx="100" cy="183" r="3" fill="#cbd5e1" /></g>
-    <rect x="85" y="115" width="30" height="20" fill="#d49066" />
-    <g filter="url(#softShadow)"><circle cx="100" cy="95" r="48" fill="url(#boySkin3D)" />
-    <path d="M53 85 Q100 95 147 85 L147 65 Q100 15 53 65 Z" fill="url(#kummahBase)" /><path d="M53 85 Q100 95 147 85" fill="none" stroke="#e2e8f0" strokeWidth="1" /><path d="M60 80 Q100 90 140 80" fill="none" stroke="#94a3b8" strokeWidth="2" strokeDasharray="4 2" opacity="0.6" /><path d="M65 70 Q100 40 135 70" fill="none" stroke="#94a3b8" strokeWidth="2" strokeDasharray="2 2" opacity="0.5" />
-    <circle cx="52" cy="95" r="9" fill="#ebb082" /><circle cx="148" cy="95" r="9" fill="#ebb082" /></g>
-    <g><ellipse cx="82" cy="100" rx="6" ry="8" fill="#1e293b" /><circle cx="84" cy="98" r="2.5" fill="white" opacity="0.9" /><ellipse cx="118" cy="100" rx="6" ry="8" fill="#1e293b" /><circle cx="120" cy="98" r="2.5" fill="white" opacity="0.9" /><path d="M75 90 Q82 88 89 90" fill="none" stroke="#475569" strokeWidth="2.5" strokeLinecap="round" /><path d="M111 90 Q118 88 125 90" fill="none" stroke="#475569" strokeWidth="2.5" strokeLinecap="round" /><path d="M90 120 Q100 128 110 120" fill="none" stroke="#9a3412" strokeWidth="2.5" strokeLinecap="round" /><ellipse cx="75" cy="115" rx="6" ry="3" fill="#fda4af" opacity="0.4" filter="blur(2px)" /><ellipse cx="125" cy="115" rx="6" ry="3" fill="#fda4af" opacity="0.4" filter="blur(2px)" /></g>
-  </svg>
-);
-
-const OmaniGirlAvatarSVG = () => (
-  <svg viewBox="0 0 200 200" className="w-full h-full" xmlns="http://www.w3.org/2000/svg">
-    <defs>
-      <radialGradient id="girlSkin3D" cx="50%" cy="50%" r="50%" fx="30%" fy="30%">
-        <stop offset="0%" stopColor="#ffdfc4" />
-        <stop offset="60%" stopColor="#ebb082" />
-        <stop offset="100%" stopColor="#d49066" />
-      </radialGradient>
-      <linearGradient id="hijab3D" x1="0%" y1="0%" x2="100%" y2="100%">
-        <stop offset="0%" stopColor="#ffffff" />
-        <stop offset="50%" stopColor="#f8fafc" />
-        <stop offset="100%" stopColor="#cbd5e1" />
-      </linearGradient>
-      <linearGradient id="uniform3D" x1="0%" y1="0%" x2="0%" y2="100%">
-        <stop offset="0%" stopColor="#3b82f6" />
-        <stop offset="100%" stopColor="#1e3a8a" />
-      </linearGradient>
-      <filter id="girlShadow" x="-20%" y="-20%" width="140%" height="140%">
-        <feGaussianBlur in="SourceAlpha" stdDeviation="3" />
-        <feOffset dx="0" dy="4" result="offsetblur" />
-        <feComponentTransfer><feFuncA type="linear" slope="0.25"/></feComponentTransfer>
-        <feMerge><feMergeNode/><feMergeNode in="SourceGraphic"/></feMerge>
-      </filter>
-    </defs>
-    <g filter="url(#girlShadow)"><path d="M40 180 C40 130 160 130 160 180 L160 210 L40 210 Z" fill="url(#uniform3D)" /><path d="M70 160 L70 210 M130 160 L130 210" stroke="#2563eb" strokeWidth="12" opacity="0.3" /></g>
-    <rect x="90" y="120" width="20" height="20" fill="#d49066" />
-    <g filter="url(#girlShadow)"><path d="M45 90 Q100 20 155 90 L155 130 Q155 160 100 170 Q45 160 45 130 Z" fill="url(#hijab3D)" /><circle cx="100" cy="95" r="38" fill="url(#girlSkin3D)" />
-    <path d="M62 90 Q100 100 138 90 L138 50 Q100 40 62 50 Z" fill="url(#hijab3D)" /><path d="M62 90 Q100 100 138 90" fill="none" stroke="#f1f5f9" strokeWidth="1" opacity="0.5" /></g>
-    <g><ellipse cx="86" cy="100" rx="5.5" ry="7.5" fill="#1e293b" /><circle cx="88" cy="98" r="2.5" fill="white" opacity="0.9" /><ellipse cx="114" cy="100" rx="5.5" ry="7.5" fill="#1e293b" /><circle cx="116" cy="98" r="2.5" fill="white" opacity="0.9" /><path d="M80 96 L78 94 M120 96 L122 94" stroke="#1e293b" strokeWidth="1.5" /><path d="M94 118 Q100 122 106 118" fill="none" stroke="#db2777" strokeWidth="2" strokeLinecap="round" /><circle cx="80" cy="110" r="5" fill="#fbcfe8" opacity="0.5" filter="blur(2px)" /><circle cx="120" cy="110" r="5" fill="#fbcfe8" opacity="0.5" filter="blur(2px)" /></g>
-  </svg>
-);
-
-const getStudentAvatar = (student: Student) => {
-    if (student.avatar) return <img src={student.avatar} className="w-full h-full object-cover" alt={student.name} />;
-    return student.gender === 'female' ? <OmaniGirlAvatarSVG /> : <OmaniBoyAvatarSVG />;
-};
-
-const Icon3DPresent = () => (
-  <svg viewBox="0 0 100 100" className="w-6 h-6" xmlns="http://www.w3.org/2000/svg">
-    <defs>
-      <linearGradient id="gradGreen" x1="0%" y1="0%" x2="100%" y2="100%">
-        <stop offset="0%" stopColor="#4ade80" />
-        <stop offset="100%" stopColor="#16a34a" />
-      </linearGradient>
-      <filter id="shadowGreen" x="-20%" y="-20%" width="140%" height="140%">
-        <feDropShadow dx="1" dy="1" stdDeviation="1" floodOpacity="0.3" />
-      </filter>
-    </defs>
-    <circle cx="50" cy="50" r="45" fill="url(#gradGreen)" filter="url(#shadowGreen)" />
-    <path d="M30 50 L45 65 L70 35" fill="none" stroke="white" strokeWidth="8" strokeLinecap="round" strokeLinejoin="round" />
-  </svg>
-);
-
-const Icon3DLate = () => (
-  <svg viewBox="0 0 100 100" className="w-6 h-6" xmlns="http://www.w3.org/2000/svg">
-    <defs>
-      <linearGradient id="gradAmber" x1="0%" y1="0%" x2="100%" y2="100%">
-        <stop offset="0%" stopColor="#fbbf24" />
-        <stop offset="100%" stopColor="#d97706" />
-      </linearGradient>
-      <filter id="shadowAmber" x="-20%" y="-20%" width="140%" height="140%">
-        <feDropShadow dx="1" dy="1" stdDeviation="1" floodOpacity="0.3" />
-      </filter>
-    </defs>
-    <circle cx="50" cy="50" r="45" fill="url(#gradAmber)" filter="url(#shadowAmber)" />
-    <path d="M50 25 V50 L65 60" fill="none" stroke="white" strokeWidth="6" strokeLinecap="round" />
-  </svg>
-);
-
-const Icon3DAbsent = () => (
-  <svg viewBox="0 0 100 100" className="w-6 h-6" xmlns="http://www.w3.org/2000/svg">
-    <defs>
-      <linearGradient id="gradRed" x1="0%" y1="0%" x2="100%" y2="100%">
-        <stop offset="0%" stopColor="#f87171" />
-        <stop offset="100%" stopColor="#dc2626" />
-      </linearGradient>
-      <filter id="shadowRed" x="-20%" y="-20%" width="140%" height="140%">
-        <feDropShadow dx="1" dy="1" stdDeviation="1" floodOpacity="0.3" />
-      </filter>
-    </defs>
-    <circle cx="50" cy="50" r="45" fill="url(#gradRed)" filter="url(#shadowRed)" />
-    <path d="M35 35 L65 65 M65 35 L35 65" stroke="white" strokeWidth="8" strokeLinecap="round" />
-  </svg>
-);
-
-const Icon3DTruant = () => (
-  <svg viewBox="0 0 100 100" className="w-6 h-6" xmlns="http://www.w3.org/2000/svg">
-    <defs>
-      <linearGradient id="gradPurple" x1="0%" y1="0%" x2="0%" y2="100%">
-        <stop offset="0%" stopColor="#a78bfa" />
-        <stop offset="100%" stopColor="#7c3aed" />
-      </linearGradient>
-      <filter id="shadowPurple" x="-20%" y="-20%" width="140%" height="140%">
-        <feDropShadow dx="1" dy="1" stdDeviation="1" floodOpacity="0.3" />
-      </filter>
-    </defs>
-    <rect x="20" y="15" width="60" height="70" rx="4" fill="#ddd6fe" filter="url(#shadowPurple)" />
-    <rect x="25" y="20" width="50" height="65" rx="2" fill="#5b21b6" />
-    <path d="M25 20 L65 25 L65 80 L25 85 Z" fill="url(#gradPurple)" />
-  </svg>
-);
-
-const Icon3DExport = () => (
-  <svg viewBox="0 0 100 100" className="w-6 h-6" xmlns="http://www.w3.org/2000/svg">
-    <defs>
-      <linearGradient id="gradExcel" x1="0%" y1="0%" x2="100%" y2="100%">
-        <stop offset="0%" stopColor="#34d399" />
-        <stop offset="100%" stopColor="#059669" />
-      </linearGradient>
-      <filter id="shadowExport" x="-20%" y="-20%" width="140%" height="140%">
-        <feDropShadow dx="1" dy="1" stdDeviation="1" floodOpacity="0.3" />
-      </filter>
-    </defs>
-    <rect x="20" y="20" width="60" height="60" rx="8" fill="url(#gradExcel)" filter="url(#shadowExport)" />
-    <path d="M35 35 H65 M35 50 H65 M35 65 H50" stroke="white" strokeWidth="4" strokeLinecap="round" opacity="0.8" />
-    <path d="M60 60 L75 75 M75 75 L60 75 M75 75 L75 60" stroke="white" strokeWidth="5" strokeLinecap="round" strokeLinejoin="round" />
-  </svg>
-);
-
-const Icon3DMessage = ({ className }: { className?: string }) => (
-  <svg viewBox="0 0 100 100" className={className || "w-6 h-6"} xmlns="http://www.w3.org/2000/svg">
-    <defs>
-      <linearGradient id="gradChat" x1="0%" y1="0%" x2="100%" y2="100%">
-        <stop offset="0%" stopColor="#4ade80" />
-        <stop offset="100%" stopColor="#16a34a" />
-      </linearGradient>
-      <filter id="shadowChat" x="-20%" y="-20%" width="140%" height="140%">
-        <feDropShadow dx="1" dy="1" stdDeviation="1" floodOpacity="0.3" />
-      </filter>
-    </defs>
-    <path d="M50 15 C26 15 6 32 6 54 C6 63 9 71 14 78 L9 93 L26 88 C33 92 41 94 50 94 C74 94 94 76 94 54 C94 32 74 15 50 15" fill="url(#gradChat)" filter="url(#shadowChat)" />
-    <path d="M35 40 C35 40 37 38 39 38 C41 38 43 39 44 42 L46 47 C47 48 46 50 45 51 L43 53 C43 53 44 57 48 61 C52 65 56 66 56 66 L58 64 C59 63 61 63 62 63 L67 65 C69 66 69 68 69 70 C69 72 67 74 65 74 C62 74 58 73 53 69 C48 65 42 59 38 54 C35 49 34 44 34 42 C34 40 35 40 35 40" fill="white" />
-  </svg>
-);
-
-// -----------------------------------------------------------
+// ✅ استيراد الأفاتار من الملف المنفصل
+import { StudentAvatar } from './StudentAvatar';
 
 interface AttendanceTrackerProps {
   students: Student[];
@@ -196,46 +17,29 @@ interface AttendanceTrackerProps {
 }
 
 const AttendanceTracker: React.FC<AttendanceTrackerProps> = ({ students, classes, setStudents }) => {
-  const { teacherInfo, periodTimes } = useApp();
-  const today = new Date().toLocaleDateString('en-CA'); 
-  const [selectedDate, setSelectedDate] = useState(today);
+  const today = new Date();
+  const [selectedDate, setSelectedDate] = useState(today.toLocaleDateString('en-CA'));
   const [selectedGrade, setSelectedGrade] = useState<string>('all');
   const [classFilter, setClassFilter] = useState<string>('all');
+  const [searchTerm, setSearchTerm] = useState('');
   const [isExportingExcel, setIsExportingExcel] = useState(false);
   const [notificationTarget, setNotificationTarget] = useState<{student: Student, type: 'absent' | 'late' | 'truant'} | null>(null);
   
-  const [currentSessionInfo, setCurrentSessionInfo] = useState<{period: string, time: string}>({period: '', time: ''});
-
-  useEffect(() => {
-      const updateTime = () => {
-          const now = new Date();
-          const currentMinutes = now.getHours() * 60 + now.getMinutes();
-          const activePeriod = periodTimes.find(pt => {
-              const [sh, sm] = pt.startTime.split(':').map(Number);
-              const [eh, em] = pt.endTime.split(':').map(Number);
-              const start = sh * 60 + sm;
-              const end = eh * 60 + em;
-              return currentMinutes >= start && currentMinutes <= end;
-          });
-
-          if (activePeriod) {
-              setCurrentSessionInfo({
-                  period: `الحصة ${activePeriod.periodNumber}`,
-                  time: `${activePeriod.startTime} - ${activePeriod.endTime}`
-              });
-          } else {
-              setCurrentSessionInfo({ period: 'خارج الدوام', time: new Date().toLocaleTimeString('ar-EG', {hour: '2-digit', minute:'2-digit'}) });
-          }
-      };
-      updateTime();
-      const interval = setInterval(updateTime, 60000);
-      return () => clearInterval(interval);
-  }, [periodTimes]);
-
-  const formatDateDisplay = (dateString: string) => {
-      const d = new Date(dateString);
-      return d.toLocaleDateString('ar-EG', { weekday: 'long', day: 'numeric', month: 'long' });
-  };
+  // شريط التواريخ (Week View)
+  const [weekOffset, setWeekOffset] = useState(0);
+  
+  const weekDates = useMemo(() => {
+      const dates = [];
+      const startOfWeek = new Date();
+      startOfWeek.setDate(today.getDate() - (today.getDay()) + (weekOffset * 7)); // Start from Sunday
+      
+      for (let i = 0; i < 5; i++) { // Sunday to Thursday
+          const d = new Date(startOfWeek);
+          d.setDate(startOfWeek.getDate() + i);
+          dates.push(d);
+      }
+      return dates;
+  }, [weekOffset]);
 
   const getStatus = (student: Student) => {
     return student.attendance.find(a => a.date === selectedDate)?.status;
@@ -249,76 +53,45 @@ const AttendanceTracker: React.FC<AttendanceTrackerProps> = ({ students, classes
       
       const newStudent = {
         ...s,
-        attendance: currentStatus === status ? filtered : [...filtered, { 
-            date: selectedDate, 
-            status,
-            period: (status === 'truant' || status === 'absent') ? currentSessionInfo.period : undefined
-        }]
+        attendance: currentStatus === status ? filtered : [...filtered, { date: selectedDate, status }]
       };
+
+      // منطق التبليغ
+      if ((status === 'absent' || status === 'late' || status === 'truant') && currentStatus !== status) {
+          setTimeout(() => setNotificationTarget({ student: newStudent, type: status }), 50);
+      }
+
       return newStudent;
     }));
   };
 
-  const handleMarkAll = (status: AttendanceStatus | 'reset') => {
-      if (classFilter === 'all' && students.length > 50) {
-          if (!confirm(`سيتم تطبيق هذا الإجراء على جميع الطلاب (${students.length}). هل أنت متأكد؟`)) return;
-      }
-      
+  const markAll = (status: AttendanceStatus) => {
+      const visibleIds = new Set(filteredStudents.map(s => s.id));
       setStudents(prev => prev.map(s => {
-          const matchesClass = classFilter === 'all' || s.classes.includes(classFilter);
-          let matchesGrade = true;
-          if (selectedGrade !== 'all') {
-             if (s.grade === selectedGrade) matchesGrade = true;
-             else if (s.classes[0]) {
-                 if (s.classes[0].includes('/')) matchesGrade = s.classes[0].split('/')[0].trim() === selectedGrade;
-                 else matchesGrade = s.classes[0].startsWith(selectedGrade);
-             }
-          }
-
-          if (!matchesClass || !matchesGrade) return s;
-
+          if (!visibleIds.has(s.id)) return s;
           const filtered = s.attendance.filter(a => a.date !== selectedDate);
-          if (status === 'reset') {
-              return { ...s, attendance: filtered };
-          }
           return {
               ...s,
-              attendance: [...filtered, { 
-                  date: selectedDate, 
-                  status,
-                  period: (status === 'truant' || status === 'absent') ? currentSessionInfo.period : undefined
-              }]
+              attendance: [...filtered, { date: selectedDate, status }]
           };
       }));
   };
 
   const availableGrades = useMemo(() => {
       const grades = new Set<string>();
-      classes.forEach(c => {
-          if (c.includes('/')) {
-              grades.add(c.split('/')[0].trim());
-          } else {
-              const numMatch = c.match(/^(\d+)/);
-              if (numMatch) grades.add(numMatch[1]);
-              else grades.add(c.split(' ')[0]);
+      students.forEach(s => {
+          if (s.grade) grades.add(s.grade);
+          else if (s.classes[0]) {
+              const match = s.classes[0].match(/^(\d+)/);
+              if (match) grades.add(match[1]);
           }
       });
-      students.forEach(s => { if (s.grade) grades.add(s.grade); });
-      
-      return Array.from(grades).sort((a, b) => {
-          const numA = parseInt(a);
-          const numB = parseInt(b);
-          if (!isNaN(numA) && !isNaN(numB)) return numA - numB;
-          return a.localeCompare(b);
-      });
+      return Array.from(grades).sort();
   }, [students, classes]);
 
   const visibleClasses = useMemo(() => {
       if (selectedGrade === 'all') return classes;
-      return classes.filter(c => {
-          if (c.includes('/')) return c.split('/')[0].trim() === selectedGrade;
-          return c.startsWith(selectedGrade);
-      });
+      return classes.filter(c => c.startsWith(selectedGrade));
   }, [classes, selectedGrade]);
 
   const filteredStudents = useMemo(() => {
@@ -326,15 +99,12 @@ const AttendanceTracker: React.FC<AttendanceTrackerProps> = ({ students, classes
       const matchesClass = classFilter === 'all' || s.classes.includes(classFilter);
       let matchesGrade = true;
       if (selectedGrade !== 'all') {
-          if (s.grade === selectedGrade) matchesGrade = true;
-          else if (s.classes[0]) {
-              if (s.classes[0].includes('/')) matchesGrade = s.classes[0].split('/')[0].trim() === selectedGrade;
-              else matchesGrade = s.classes[0].startsWith(selectedGrade);
-          } else matchesGrade = false;
+          matchesGrade = s.grade === selectedGrade || (s.classes[0] && s.classes[0].startsWith(selectedGrade));
       }
-      return matchesClass && matchesGrade;
+      const matchesSearch = s.name.toLowerCase().includes(searchTerm.toLowerCase());
+      return matchesClass && matchesGrade && matchesSearch;
     });
-  }, [students, classFilter, selectedGrade]);
+  }, [students, classFilter, selectedGrade, searchTerm]);
 
   const stats = useMemo(() => {
       const present = filteredStudents.filter(s => getStatus(s) === 'present').length;
@@ -347,45 +117,31 @@ const AttendanceTracker: React.FC<AttendanceTrackerProps> = ({ students, classes
   const performNotification = async (method: 'whatsapp' | 'sms') => {
       if(!notificationTarget || !notificationTarget.student.parentPhone) { alert('لا يوجد رقم هاتف مسجل'); return; }
       const { student, type } = notificationTarget;
-      
       let cleanPhone = student.parentPhone.replace(/[^0-9]/g, '');
+      if (!cleanPhone || cleanPhone.length < 5) return alert('رقم الهاتف غير صحيح');
+      if (cleanPhone.startsWith('00')) cleanPhone = cleanPhone.substring(2);
+      if (cleanPhone.length === 8) cleanPhone = '968' + cleanPhone;
+      else if (cleanPhone.length === 9 && cleanPhone.startsWith('0')) cleanPhone = '968' + cleanPhone.substring(1);
       
-      if (cleanPhone.length === 8) {
-          cleanPhone = '968' + cleanPhone;
-      } else if (cleanPhone.startsWith('00')) {
-          cleanPhone = cleanPhone.substring(2);
-      } else if (cleanPhone.length === 9 && cleanPhone.startsWith('0')) {
-          cleanPhone = '968' + cleanPhone.substring(1);
-      }
-
-      if (cleanPhone.length < 8) {
-          alert('رقم الهاتف يبدو غير صحيح');
-          return;
-      }
-
       let statusText = '';
       if (type === 'absent') statusText = 'غائب'; 
       else if (type === 'late') statusText = 'متأخر'; 
       else if (type === 'truant') statusText = 'تسرب من الحصة (هروب)';
       
       const dateText = new Date().toLocaleDateString('ar-EG');
-      const msg = `السلام عليكم، نود إشعاركم بأن الطالب *${student.name}* تم تسجيل حالة: *${statusText}* اليوم (${dateText}) في حصة ${teacherInfo.subject}. نرجو المتابعة.`;
+      const msg = encodeURIComponent(`السلام عليكم، نود إشعاركم بأن الطالب ${student.name} تم تسجيل حالة: *${statusText}* اليوم (${dateText}). نرجو المتابعة.`);
       
-      const encodedMsg = encodeURIComponent(msg);
-
       if (method === 'whatsapp') {
-          const universalUrl = `https://api.whatsapp.com/send?phone=${cleanPhone}&text=${encodedMsg}`;
-          try { 
-              if (Capacitor.isNativePlatform()) { 
-                  await Browser.open({ url: universalUrl }); 
-              } else { 
-                  window.open(universalUrl, '_blank'); 
-              } 
-          } catch (e) { 
-              window.open(universalUrl, '_blank'); 
+          if (window.electron) { window.electron.openExternal(`whatsapp://send?phone=${cleanPhone}&text=${msg}`); } 
+          else { 
+              const universalUrl = `https://api.whatsapp.com/send?phone=${cleanPhone}&text=${msg}`; 
+              try { 
+                  if (Capacitor.isNativePlatform()) { await Browser.open({ url: universalUrl }); } 
+                  else { window.open(universalUrl, '_blank'); } 
+              } catch (e) { window.open(universalUrl, '_blank'); } 
           }
       } else { 
-          window.location.href = `sms:${cleanPhone}?body=${encodedMsg}`; 
+          window.location.href = `sms:${cleanPhone}?body=${msg}`; 
       }
       setNotificationTarget(null);
   };
@@ -416,9 +172,8 @@ const AttendanceTracker: React.FC<AttendanceTrackerProps> = ({ students, classes
               row['مجموع الغياب'] = abs; row['مجموع التأخير'] = late; row['مجموع التسرب'] = truant;
               return row;
           });
-          const wb = XLSX.utils.book_new(); const ws = XLSX.utils.json_to_sheet(data);
-          const wscols = [{wch:5}, {wch:25}, {wch:10}]; for(let i=0; i<daysInMonth; i++) wscols.push({wch:3});
-          ws['!cols'] = wscols; if(!ws['!views']) ws['!views'] = []; ws['!views'].push({ rightToLeft: true });
+          const wb = XLSX.utils.book_new(); 
+          const ws = XLSX.utils.json_to_sheet(data);
           XLSX.utils.book_append_sheet(wb, ws, `شهر_${month + 1}`);
           const fileName = `Attendance_${month + 1}_${year}.xlsx`;
           if (Capacitor.isNativePlatform()) {
@@ -430,144 +185,166 @@ const AttendanceTracker: React.FC<AttendanceTrackerProps> = ({ students, classes
   };
 
   return (
-    <div className="flex flex-col h-full bg-[#f8fafc] text-slate-800 relative animate-in fade-in duration-500 font-sans">
+    <div className="flex flex-col h-full text-slate-800 relative animate-in fade-in duration-500">
         
-        {/* ================= HEADER ================= */}
-        <div className="fixed md:sticky top-0 z-40 md:z-30 bg-[#1e3a8a] text-white shadow-lg px-4 pt-[env(safe-area-inset-top)] pb-6 transition-all duration-300 rounded-b-[2.5rem] md:rounded-none md:shadow-md w-full md:w-auto left-0 right-0 md:left-auto md:right-auto">
+        {/* ================= FIXED HEADER ================= */}
+        <div className="fixed md:sticky top-0 z-40 md:z-30 bg-[#446A8D] text-white shadow-lg px-4 pt-[env(safe-area-inset-top)] pb-6 transition-all duration-300  md:rounded-none md:shadow-md w-full md:w-auto left-0 right-0 md:left-auto md:right-auto">
             
-            <div className="flex justify-center items-center mt-4 mb-2 relative">
-                <h1 className="text-xl font-bold tracking-wide opacity-90">رصد الحضور</h1>
-                <button onClick={handleExportDailyExcel} disabled={isExportingExcel} className="absolute left-0 w-10 h-10 bg-white/10 backdrop-blur-md rounded-xl flex items-center justify-center text-white hover:bg-white/20 active:scale-95 transition-all" title="تصدير سجل شهري">
-                     {isExportingExcel ? <Loader2 className="w-5 h-5 animate-spin"/> : <Icon3DExport />}
+            <div className="flex justify-between items-center mb-6 mt-2 gap-3">
+                <div className="flex items-center gap-3 shrink-0">
+                    <div className="bg-white/10 p-2 rounded-xl backdrop-blur-md border border-white/20">
+                        <CalendarCheck className="w-5 h-5 text-white" />
+                    </div>
+                    <h1 className="text-2xl font-black tracking-wide">سجل الغياب</h1>
+                </div>
+
+                <div className="flex-1 mx-2 relative group">
+                    <Search className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-blue-200 group-focus-within:text-white transition-colors" />
+                    <input 
+                        type="text" 
+                        value={searchTerm}
+                        onChange={(e) => setSearchTerm(e.target.value)}
+                        placeholder="بحث عن طالب..." 
+                        className="w-full bg-white/10 border border-white/20 rounded-xl py-2.5 pr-10 pl-4 text-xs font-bold text-white placeholder:text-blue-200/70 outline-none focus:bg-white/20 focus:border-white/40 transition-all"
+                    />
+                </div>
+
+                <button onClick={handleExportDailyExcel} disabled={isExportingExcel} className="w-10 h-10 shrink-0 rounded-xl bg-white/10 border border-white/20 text-white flex items-center justify-center hover:bg-white/20 active:scale-95 transition-all shadow-sm">
+                     {isExportingExcel ? <Loader2 className="w-5 h-5 animate-spin"/> : <Share2 className="w-5 h-5"/>}
                 </button>
             </div>
 
-            <div className="text-center space-y-2 mb-6">
-                <h2 className="text-3xl font-black tracking-tight drop-shadow-md truncate px-4">
-                    {teacherInfo.subject || 'المادة'}
-                    {classFilter !== 'all' && <span className="text-2xl font-bold mx-2 block mt-1">{classFilter}</span>}
-                </h2>
-                <div className="flex justify-center items-center gap-3 text-blue-200 text-sm font-bold dir-ltr bg-white/10 w-fit mx-auto px-4 py-1 rounded-full">
-                    <span>{currentSessionInfo.time}</span>
-                    <span>•</span>
-                    <span>{currentSessionInfo.period}</span>
+            <div className="flex items-center justify-between gap-1 mb-4 bg-white/10 p-2 rounded-2xl border border-white/10 shadow-inner">
+                <button onClick={() => setWeekOffset(prev => prev - 1)} className="p-1 text-white hover:bg-white/10 rounded-lg transition-colors"><ChevronRight className="w-5 h-5 rtl:rotate-180"/></button>
+                <div className="flex flex-1 justify-between gap-1 text-center">
+                    {weekDates.map((date, idx) => {
+                        const isSelected = date.toLocaleDateString('en-CA') === selectedDate;
+                        const isToday = date.toLocaleDateString('en-CA') === today.toLocaleDateString('en-CA');
+                        return (
+                            <button 
+                                key={idx} 
+                                onClick={() => setSelectedDate(date.toLocaleDateString('en-CA'))}
+                                className={`flex flex-col items-center justify-center py-2 px-1 rounded-xl flex-1 transition-all ${isSelected ? 'bg-white text-[#1e3a8a] shadow-md scale-105' : 'text-blue-100 hover:bg-white/5'}`}
+                            >
+                                <span className={`text-[9px] font-bold mb-0.5 ${isSelected ? 'text-[#1e3a8a]/70' : 'text-blue-200'}`}>{date.toLocaleDateString('ar-EG', { weekday: 'short' })}</span>
+                                <span className="text-sm font-black">{date.getDate()}</span>
+                                {isToday && !isSelected && <div className="w-1 h-1 bg-amber-400 rounded-full mt-1 shadow-[0_0_5px_rgba(251,191,36,0.8)]"></div>}
+                            </button>
+                        );
+                    })}
                 </div>
+                <button onClick={() => setWeekOffset(prev => prev + 1)} className="p-1 text-white hover:bg-white/10 rounded-lg transition-colors"><ChevronLeft className="w-5 h-5 rtl:rotate-180"/></button>
             </div>
 
-            <div className="space-y-3">
-                {/* Date Selection */}
-                <div className="flex items-center justify-center gap-4 bg-white/10 backdrop-blur-md border border-white/10 rounded-2xl p-2 max-w-sm mx-auto">
-                    <button onClick={() => { const d = new Date(selectedDate); d.setDate(d.getDate() - 1); setSelectedDate(d.toLocaleDateString('en-CA')); }} className="p-2 rounded-xl hover:bg-white/10 active:scale-95 transition-all text-white"><ArrowRight className="w-5 h-5"/></button>
-                    <div className="flex items-center gap-2 font-bold text-sm text-white">
-                        <Calendar className="w-4 h-4 text-blue-200"/>
-                        {formatDateDisplay(selectedDate)}
-                    </div>
-                    <button onClick={() => { const d = new Date(selectedDate); d.setDate(d.getDate() + 1); setSelectedDate(d.toLocaleDateString('en-CA')); }} className="p-2 rounded-xl hover:bg-white/10 active:scale-95 transition-all text-white"><ArrowRight className="w-5 h-5 rotate-180"/></button>
-                </div>
-
-                {/* Filters */}
-                <div className="flex items-center gap-2 overflow-x-auto no-scrollbar justify-center pb-2">
-                    <button onClick={() => { setClassFilter('all'); setSelectedGrade('all'); }} className={`px-5 py-2 text-xs font-bold whitespace-nowrap rounded-full transition-all border ${classFilter === 'all' ? 'bg-white text-[#1e3a8a] shadow-md' : 'bg-transparent text-blue-200 border-blue-200/30'}`}>الكل</button>
+            <div className="space-y-2 mb-1 px-1">
+                <div className="flex gap-2 overflow-x-auto no-scrollbar pb-1">
+                    {availableGrades.length > 0 && (
+                        <>
+                            <button onClick={() => { setSelectedGrade('all'); setClassFilter('all'); }} className={`px-4 py-1.5 text-[10px] font-bold whitespace-nowrap rounded-xl transition-all border ${selectedGrade === 'all' ? 'bg-white text-[#1e3a8a] shadow-md border-white' : 'bg-white/10 text-blue-100 border-white/20 hover:bg-white/20'}`}>الكل</button>
+                            {availableGrades.map(g => (
+                                <button key={g} onClick={() => { setSelectedGrade(g); setClassFilter('all'); }} className={`px-4 py-1.5 text-[10px] font-bold whitespace-nowrap rounded-xl transition-all border ${selectedGrade === g ? 'bg-white text-[#1e3a8a] shadow-md border-white' : 'bg-white/10 text-blue-100 border-white/20 hover:bg-white/20'}`}>صف {g}</button>
+                            ))}
+                        </>
+                    )}
                     {visibleClasses.map(c => (
-                        <button key={c} onClick={() => setClassFilter(c)} className={`px-5 py-2 text-xs font-bold whitespace-nowrap rounded-full transition-all border ${classFilter === c ? 'bg-white text-[#1e3a8a] shadow-md' : 'bg-transparent text-blue-200 border-blue-200/30'}`}>{c}</button>
+                        <button key={c} onClick={() => setClassFilter(c)} className={`px-4 py-1.5 text-[10px] font-bold whitespace-nowrap rounded-xl transition-all border ${classFilter === c ? 'bg-white text-[#1e3a8a] shadow-md border-white' : 'bg-white/10 text-blue-100 border-white/20 hover:bg-white/20'}`}>{c}</button>
                     ))}
                 </div>
             </div>
         </div>
 
-        {/* ================= CONTENT ================= */}
-        <div className="flex-1 h-full overflow-y-auto custom-scrollbar">
+        {/* Content Area */}
+        <div className="flex-1 overflow-y-auto px-2 pb-20 custom-scrollbar pt-2">
             
-            <div className="w-full h-[340px] shrink-0"></div>
+            <div className="w-full h-[280px] shrink-0 md:h-0"></div>
 
-            <div className="px-4 pb-24 -mt-4 relative z-10">
-                
-                {/* Stats */}
-                <div className="bg-white rounded-2xl shadow-md border border-slate-100 p-2 mb-6 flex justify-around">
-                     <div className="text-center"><span className="block text-xs text-gray-400 font-bold mb-1">الطلاب</span><span className="text-lg font-black text-slate-800">{filteredStudents.length}</span></div>
-                     <div className="w-px bg-gray-100"></div>
-                     <div className="text-center cursor-pointer hover:bg-rose-50 rounded-lg p-1 transition-colors" onClick={() => handleMarkAll('absent')}><span className="block text-xs text-rose-400 font-bold mb-1">غياب</span><span className="text-lg font-black text-rose-600">{stats.absent}</span></div>
-                     <div className="w-px bg-gray-100"></div>
-                     <div className="text-center cursor-pointer hover:bg-emerald-50 rounded-lg p-1 transition-colors" onClick={() => handleMarkAll('present')}><span className="block text-xs text-emerald-400 font-bold mb-1">حضور</span><span className="text-lg font-black text-emerald-600">{stats.present}</span></div>
+            <div className="-mt-4 relative z-10 px-2">
+                {/* Stats Section */}
+                <div className="mb-4">
+                    <div className="flex justify-between items-center gap-2 text-center">
+                        <button onClick={() => markAll('present')} className="flex-1 bg-emerald-50 rounded-2xl p-2.5 border border-emerald-100 shadow-sm active:scale-95 transition-all group">
+                            <span className="block text-[10px] text-emerald-600 font-bold mb-1 group-hover:underline">حضور (الكل)</span>
+                            <span className="block text-xl font-black text-emerald-700">{stats.present}</span>
+                        </button>
+                        <button onClick={() => markAll('absent')} className="flex-1 bg-rose-50 rounded-2xl p-2.5 border border-rose-100 shadow-sm active:scale-95 transition-all group">
+                            <span className="block text-[10px] text-rose-600 font-bold mb-1 group-hover:underline">غياب (الكل)</span>
+                            <span className="block text-xl font-black text-rose-700">{stats.absent}</span>
+                        </button>
+                        <div className="flex-1 bg-amber-50 rounded-2xl p-2.5 border border-amber-100 shadow-sm">
+                            <span className="block text-[10px] text-amber-600 font-bold mb-1">تأخير</span>
+                            <span className="block text-xl font-black text-amber-700">{stats.late}</span>
+                        </div>
+                    </div>
                 </div>
 
+                {/* Cards Grid */}
                 {filteredStudents.length > 0 ? (
-                    // ✅ Grid System Applied Here: 2 cols mobile, 3 cols tablet, 4 cols desktop
-                    <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
-                        {filteredStudents.map((student) => {
+                    <div className="grid grid-cols-2 gap-3">
+                        {filteredStudents.map(student => {
                             const status = getStatus(student);
-                            
-                            // Dynamic Border Color
-                            let borderColorClass = "border-slate-200";
-                            if (status === 'present') borderColorClass = "border-emerald-400 shadow-emerald-100 ring-1 ring-emerald-100";
-                            else if (status === 'absent') borderColorClass = "border-rose-400 shadow-rose-100 ring-1 ring-rose-100";
-                            else if (status === 'late') borderColorClass = "border-amber-400 shadow-amber-100 ring-1 ring-amber-100";
-                            else if (status === 'truant') borderColorClass = "border-purple-400 shadow-purple-100 ring-1 ring-purple-100";
-
                             return (
-                                <div key={student.id} className={`bg-white rounded-[1.5rem] p-4 flex flex-col items-center justify-between shadow-sm border-2 transition-all duration-300 relative overflow-hidden ${borderColorClass}`}>
-                                    
-                                    {/* WhatsApp Floating Button */}
-                                    {(status && status !== 'present') && (
-                                        <button onClick={() => setNotificationTarget({ student, type: status as any })} className="absolute top-2 left-2 w-8 h-8 bg-white rounded-full flex items-center justify-center shadow-md border border-slate-100 active:scale-90 transition-transform z-20">
-                                            <Icon3DMessage className="w-5 h-5" />
-                                        </button>
-                                    )}
-
-                                    {/* Avatar Center */}
-                                    <div className="w-20 h-20 rounded-full border-4 border-slate-50 shadow-inner overflow-hidden bg-slate-50 mb-3 flex-shrink-0">
-                                        {getStudentAvatar(student)}
-                                    </div>
-                                    
-                                    {/* Name & ID */}
-                                    <div className="text-center w-full mb-4">
-                                        <h3 className="text-xs font-black text-slate-900 leading-tight mb-1 truncate w-full">{student.name.split(' ').slice(0, 2).join(' ')}</h3>
-                                        <span className="text-[9px] font-bold text-slate-400 bg-slate-50 px-2 py-0.5 rounded-lg" dir="ltr">ID: {student.id.substring(0,6)}</span>
+                                <div key={student.id} className={`bg-white rounded-[1.5rem] border-2 flex flex-col items-center overflow-hidden transition-all duration-200 ${
+                                    status === 'present' ? 'border-emerald-400 shadow-md' : 
+                                    status === 'absent' ? 'border-red-400 shadow-md' : 
+                                    status === 'late' ? 'border-amber-400 shadow-md' :
+                                    status === 'truant' ? 'border-purple-400 shadow-md' :
+                                    'border-transparent shadow-sm'
+                                }`}>
+                                    {/* Upper Part: Image & Name */}
+                                    <div className="p-4 flex flex-col items-center w-full">
+                                        {/* ✅ استخدام الكومبوننت الجديد */}
+                                        <StudentAvatar 
+                                            gender={student.gender}
+                                            className="w-16 h-16"
+                                        />
+                                        <h3 className="font-bold text-slate-900 text-sm text-center line-clamp-1 w-full mt-3">{student.name}</h3>
+                                        <span className="text-[10px] text-slate-400 bg-slate-100 px-2 py-0.5 rounded-full mt-1 font-bold">{student.classes[0]}</span>
                                     </div>
 
-                                    {/* Actions Grid 2x2 */}
-                                    <div className="grid grid-cols-2 gap-2 w-full mt-auto">
-                                        <button 
-                                            onClick={() => toggleAttendance(student.id, 'present')}
-                                            className={`flex flex-col items-center justify-center py-2 rounded-xl border transition-all active:scale-95 ${status === 'present' ? 'bg-emerald-50 border-emerald-200' : 'bg-white border-slate-100 hover:bg-slate-50'}`}
-                                        >
-                                            <Icon3DPresent />
-                                            <span className={`text-[9px] font-bold mt-1 ${status === 'present' ? 'text-emerald-700' : 'text-slate-500'}`}>حضور</span>
-                                        </button>
-
-                                        <button 
-                                            onClick={() => toggleAttendance(student.id, 'late')}
-                                            className={`flex flex-col items-center justify-center py-2 rounded-xl border transition-all active:scale-95 ${status === 'late' ? 'bg-amber-50 border-amber-200' : 'bg-white border-slate-100 hover:bg-slate-50'}`}
-                                        >
-                                            <Icon3DLate />
-                                            <span className={`text-[9px] font-bold mt-1 ${status === 'late' ? 'text-amber-700' : 'text-slate-500'}`}>تأخر</span>
-                                        </button>
-
+                                    {/* Bottom Part: Action Buttons */}
+                                    <div className="flex w-full border-t border-slate-100 divide-x divide-x-reverse divide-slate-100">
                                         <button 
                                             onClick={() => toggleAttendance(student.id, 'absent')}
-                                            className={`flex flex-col items-center justify-center py-2 rounded-xl border transition-all active:scale-95 ${status === 'absent' ? 'bg-rose-50 border-rose-200' : 'bg-white border-slate-100 hover:bg-slate-50'}`}
+                                            className={`flex-1 py-3 flex flex-col items-center justify-center gap-1 hover:bg-red-50 active:bg-red-100 transition-colors ${status === 'absent' ? 'bg-red-50 text-red-600' : 'text-slate-400'}`}
                                         >
-                                            <Icon3DAbsent />
-                                            <span className={`text-[9px] font-bold mt-1 ${status === 'absent' ? 'text-rose-700' : 'text-slate-500'}`}>غياب</span>
+                                            <div className={`w-6 h-6 rounded-full flex items-center justify-center ${status === 'absent' ? 'bg-red-500 text-white' : 'bg-slate-200 text-white'}`}>✕</div>
+                                            <span className="text-[10px] font-bold">غياب</span>
                                         </button>
 
                                         <button 
                                             onClick={() => toggleAttendance(student.id, 'truant')}
-                                            className={`flex flex-col items-center justify-center py-2 rounded-xl border transition-all active:scale-95 ${status === 'truant' ? 'bg-purple-50 border-purple-200' : 'bg-white border-slate-100 hover:bg-slate-50'}`}
+                                            className={`flex-1 py-3 flex flex-col items-center justify-center gap-1 hover:bg-purple-50 active:bg-purple-100 transition-colors ${status === 'truant' ? 'bg-purple-50 text-purple-600' : 'text-slate-400'}`}
                                         >
-                                            <Icon3DTruant />
-                                            <span className={`text-[9px] font-bold mt-1 ${status === 'truant' ? 'text-purple-700' : 'text-slate-500'}`}>تسرب</span>
+                                            <div className={`w-6 h-6 rounded-full flex items-center justify-center ${status === 'truant' ? 'bg-purple-500 text-white' : 'bg-slate-200 text-white'}`}>
+                                                <DoorOpen className="w-3.5 h-3.5" />
+                                            </div>
+                                            <span className="text-[10px] font-bold">تسرب</span>
+                                        </button>
+
+                                        <button 
+                                            onClick={() => toggleAttendance(student.id, 'late')}
+                                            className={`flex-1 py-3 flex flex-col items-center justify-center gap-1 hover:bg-amber-50 active:bg-amber-100 transition-colors ${status === 'late' ? 'bg-amber-50 text-amber-600' : 'text-slate-400'}`}
+                                        >
+                                            <div className={`w-6 h-6 rounded-full flex items-center justify-center ${status === 'late' ? 'bg-amber-500 text-white' : 'bg-slate-200 text-white'}`}>⏰</div>
+                                            <span className="text-[10px] font-bold">تأخر</span>
+                                        </button>
+
+                                        <button 
+                                            onClick={() => toggleAttendance(student.id, 'present')}
+                                            className={`flex-1 py-3 flex flex-col items-center justify-center gap-1 hover:bg-emerald-50 active:bg-emerald-100 transition-colors ${status === 'present' ? 'bg-emerald-50 text-emerald-600' : 'text-slate-400'}`}
+                                        >
+                                            <div className={`w-6 h-6 rounded-full flex items-center justify-center ${status === 'present' ? 'bg-emerald-500 text-white' : 'bg-slate-200 text-white'}`}>✓</div>
+                                            <span className="text-[10px] font-bold">حضور</span>
                                         </button>
                                     </div>
-
                                 </div>
                             );
                         })}
                     </div>
                 ) : (
-                    <div className="flex flex-col items-center justify-center py-20 opacity-40">
-                        <UserCircle2 className="w-20 h-20 text-gray-300 mb-4" />
-                        <p className="text-sm font-bold text-gray-400">لا يوجد طلاب للعرض</p>
+                    <div className="flex flex-col items-center justify-center py-20 opacity-50">
+                        <UserCircle2 className="w-16 h-16 text-gray-300 mb-4" />
+                        <p className="text-sm font-bold text-gray-400">لا يوجد طلاب</p>
                     </div>
                 )}
             </div>
@@ -575,27 +352,28 @@ const AttendanceTracker: React.FC<AttendanceTrackerProps> = ({ students, classes
 
         {/* Notification Modal */}
         <Modal isOpen={!!notificationTarget} onClose={() => setNotificationTarget(null)} className="max-w-xs rounded-[2rem]">
-            <div className="text-center p-2">
-                <div className="w-16 h-16 bg-blue-50 rounded-full flex items-center justify-center mx-auto mb-4 shadow-sm border border-blue-100">
-                    <Icon3DMessage className="w-10 h-10" />
+            {notificationTarget && (
+                <div className="text-center">
+                    <div className={`w-16 h-16 mx-auto mb-4 rounded-full flex items-center justify-center ${notificationTarget.type === 'absent' ? 'bg-rose-100 text-rose-600' : notificationTarget.type === 'late' ? 'bg-amber-100 text-amber-600' : 'bg-purple-100 text-purple-600'}`}>
+                        <MessageCircle className="w-8 h-8" />
+                    </div>
+                    <h3 className="font-black text-lg text-slate-800 mb-2">إشعار ولي الأمر</h3>
+                    <p className="text-xs text-gray-500 font-bold mb-6">
+                        هل تود إرسال رسالة لولي أمر الطالب <span className="text-indigo-600">{notificationTarget.student.name}</span> بخصوص {notificationTarget.type === 'absent' ? 'الغياب' : notificationTarget.type === 'late' ? 'التأخير' : 'التسرب'}؟
+                    </p>
+                    <div className="space-y-2">
+                        <button onClick={() => performNotification('whatsapp')} className="w-full py-3 bg-[#25D366] text-white rounded-xl font-black text-xs shadow-lg shadow-green-200 flex items-center justify-center gap-2">
+                            إرسال عبر واتساب
+                        </button>
+                        <button onClick={() => performNotification('sms')} className="w-full py-3 bg-slate-100 text-slate-600 rounded-xl font-black text-xs hover:bg-slate-200">
+                            إرسال SMS
+                        </button>
+                        <button onClick={() => setNotificationTarget(null)} className="w-full py-2 text-slate-400 font-bold text-xs">
+                            إلغاء
+                        </button>
+                    </div>
                 </div>
-                <h3 className="font-black text-lg mb-1 text-slate-900">إشعار ولي الأمر</h3>
-                <p className="text-xs text-gray-500 mb-6 font-bold leading-relaxed">
-                    إرسال تنبيه بخصوص حالة الطالب <span className="text-slate-900">{notificationTarget?.student.name}</span>
-                    <br/>
-                    ({notificationTarget?.type === 'truant' ? 'تسرب' : notificationTarget?.type === 'absent' ? 'غياب' : 'تأخر'})
-                </p>
-                
-                <div className="space-y-3">
-                    <button onClick={() => performNotification('whatsapp')} className="w-full bg-[#25D366] hover:bg-[#128C7E] text-white py-4 rounded-2xl font-black text-sm flex items-center justify-center gap-3 shadow-lg shadow-green-200 active:scale-95 transition-transform">
-                        <Smartphone className="w-5 h-5" /> عبر واتساب
-                    </button>
-                    <button onClick={() => performNotification('sms')} className="w-full bg-slate-800 hover:bg-slate-900 text-white py-4 rounded-2xl font-black text-sm flex items-center justify-center gap-3 shadow-lg active:scale-95 transition-transform">
-                        <Mail className="w-5 h-5" /> رسالة نصية (SMS)
-                    </button>
-                    <button onClick={() => setNotificationTarget(null)} className="text-xs font-bold text-gray-400 mt-2 hover:text-gray-600 py-2">إلغاء</button>
-                </div>
-            </div>
+            )}
         </Modal>
 
     </div>
