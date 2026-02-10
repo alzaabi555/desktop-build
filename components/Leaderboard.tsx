@@ -342,7 +342,7 @@ const handleDownloadPDF = async () => {
                                 <div className="flex justify-between items-start mb-8 relative z-10 px-4">
                                     <div className="text-right text-[10px] font-bold leading-relaxed text-slate-600">
                                         <p>سلطنة عمان</p>
-                                        <p>وزارة التربية والتعليم</p>
+                                        <p>وزارة التعليم</p>
                                         <p>{teacherInfo?.governorate || 'المديرية العامة...'}</p>
                                         <p>{teacherInfo?.school || 'المدرسة...'}</p>
                                     </div>
