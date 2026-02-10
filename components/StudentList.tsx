@@ -240,67 +240,50 @@ const StudentList: React.FC<StudentListProps> = ({
         }
     };
 
-   // ✅ دالة إرسال تقرير الواتساب المحدثة (بنفس منطق AttendanceTracker الناجح)
-const handleSendWhatsAppReport = async (student: Student) => {
-    if (!student.parentPhone) {
-        alert('⚠️ عذراً، لا يوجد رقم هاتف مسجل لولي أمر هذا الطالب.\nيرجى تعديل بيانات الطالب وإضافة الرقم أولاً.');
-        return;
-    }
+    // ✅ دالة إرسال تقرير الواتساب المعدلة (لتعمل على ويندوز وموبايل)
+    const handleSendWhatsAppReport = async (student: Student) => {
+        if (!student.parentPhone) {
+            alert('⚠️ عذراً، لا يوجد رقم هاتف مسجل لولي أمر هذا الطالب.\nيرجى تعديل بيانات الطالب وإضافة الرقم أولاً.');
+            return;
+        }
 
-    const negativeBehaviors = (student.behaviors || []).filter(b => b.type === 'negative');
+        const negativeBehaviors = (student.behaviors || []).filter(b => b.type === 'negative');
 
-    if (negativeBehaviors.length === 0) {
-        alert('🎉 هذا الطالب متميز! لا توجد لديه سلوكيات سلبية مسجلة لإرسالها.');
-        return;
-    }
+        if (negativeBehaviors.length === 0) {
+            alert('🎉 هذا الطالب متميز! لا توجد لديه سلوكيات سلبية مسجلة لإرسالها.');
+            return;
+        }
 
-    let message = `السلام عليكم، ولي أمر الطالب *${student.name}* المحترم.\n`;
-    message += `تحية طيبة،\nنود إشعاركم بتقرير بالملاحظات السلوكية المسجلة على الطالب مؤخراً:\n\n`;
+        let message = `السلام عليكم، ولي أمر الطالب *${student.name}* المحترم.\n`;
+        message += `تحية طيبة،\nنود إشعاركم بتقرير بالملاحظات السلوكية المسجلة على الطالب مؤخراً:\n\n`;
 
-    negativeBehaviors.slice(0, 5).forEach(b => {
-        const dateObj = new Date(b.date);
-        const date = dateObj.toLocaleDateString('ar-EG');
-        const time = dateObj.toLocaleTimeString('ar-EG', { hour: '2-digit', minute: '2-digit' });
-        
-        message += `🔴 *${b.description}*\n📅 ${date} - ⏰ ${time}\n─────────────────\n`;
-    });
+        negativeBehaviors.slice(0, 5).forEach(b => {
+            const dateObj = new Date(b.date);
+            const date = dateObj.toLocaleDateString('ar-EG');
+            const time = dateObj.toLocaleTimeString('ar-EG', { hour: '2-digit', minute: '2-digit' });
+            
+            message += `🔴 *${b.description}*\n📅 ${date} - ⏰ ${time}\n─────────────────\n`;
+        });
 
-    message += `\nنأمل منكم التكرم بمتابعة الطالب وتوجيهه.\nشكراً لتعاونكم.\n*إدارة المدرسة*`;
+        message += `\nنأمل منكم التكرم بمتابعة الطالب وتوجيهه.\nشكراً لتعاونكم.\n*إدارة المدرسة*`;
 
-    // ✅ نفس المنطق الناجح من AttendanceTracker
-    let cleanPhone = student.parentPhone.replace(/[^0-9]/g, '');
-    
-    // التحقق من صحة الرقم
-    if (!cleanPhone || cleanPhone.length < 5) {
-        alert('⚠️ رقم الهاتف غير صحيح');
-        return;
-    }
-    
-    // إزالة 00 من البداية إذا وجدت
-    if (cleanPhone.startsWith('00')) {
-        cleanPhone = cleanPhone.substring(2);
-    }
-    
-    // إضافة كود عمان 968 للأرقام المحلية
-    if (cleanPhone.length === 8) {
-        cleanPhone = '968' + cleanPhone;
-    } else if (cleanPhone.length === 9 && cleanPhone.startsWith('0')) {
-        cleanPhone = '968' + cleanPhone.substring(1);
-    }
+        // ✅ المنطق الجديد: تنظيف الرقم واستخدام الرابط العالمي
+        const cleanPhone = student.parentPhone.replace(/[^0-9]/g, '');
+        const universalUrl = `https://api.whatsapp.com/send?phone=${cleanPhone}&text=${encodeURIComponent(message)}`;
 
-    // ✅ استخدام نفس الرابط والمنطق الناجح
-    const universalUrl = `https://api.whatsapp.com/send?phone=${cleanPhone}&text=${encodeURIComponent(message)}`;
-
-    try {
-        if (Capacitor.isNativePlatform()) {
-            await Browser.open({ url: universalUrl });
-        } else {
+        try {
+            if (Capacitor.isNativePlatform()) {
+                // للموبايل: فتح التطبيق
+                await Browser.open({ url: universalUrl });
+            } else {
+                // للويندوز/الويب: فتح في تاب جديد
+                window.open(universalUrl, '_blank');
+            }
+        } catch (e) {
+            // كخيار احتياطي
             window.open(universalUrl, '_blank');
         }
-    } catch (e) {
-        window.open(universalUrl, '_blank');
-    }
-};
+    };
 
     const confirmPositiveBehavior = (title: string, points: number) => {
         if (!selectedStudentForBehavior) return;
@@ -364,12 +347,14 @@ const handleSendWhatsAppReport = async (student: Student) => {
         }
     };
 
+    // ✅ التصحيح هنا: تصفير الأيقونة (Avatar) عند تغيير الجنس لضمان ظهور الأيقونة الجديدة
     const handleBatchGenderUpdate = (gender: 'male' | 'female') => {
         if (confirm('هل أنت متأكد؟ سيتم تغيير أيقونات جميع الطلاب المسجلين حالياً ليتناسب مع النوع المختار.')) {
             setDefaultStudentGender(gender);
             setStudents(prev => prev.map(s => ({
                 ...s,
-                gender: gender
+                gender: gender,
+                avatar: undefined // ✅ إعادة تعيين الأفاتار ليأخذ الافتراضي الجديد
             })));
         }
     };
