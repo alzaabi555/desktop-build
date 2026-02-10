@@ -1,20 +1,21 @@
 import React, { useState, useMemo, useRef } from 'react';
 import { Student } from '../types';
-import { Trophy, Crown, Sparkles, Star, Search, Award, Download, X, Loader2 } from 'lucide-react';
+import { Trophy, Crown, Sparkles, Star, Search, Award, Download, X, Loader2, MinusCircle } from 'lucide-react'; // ✅ إضافة MinusCircle
 import { useApp } from '../context/AppContext';
 import { StudentAvatar } from './StudentAvatar';
 import Modal from './Modal';
 import positiveSound from '../assets/positive.mp3';
 
-// ✅ استيراد المكتبات الموجودة لديك
-import html2canvas from 'html2canvas';
-import jsPDF from 'jspdf';
+// ✅ تحديث المكتبات لتطابق طريقة الموبايل الصحيحة
+import { Filesystem, Directory } from '@capacitor/filesystem';
+import { Share } from '@capacitor/share';
+import { Capacitor } from '@capacitor/core';
+import html2pdf from 'html2pdf.js';
 
 interface LeaderboardProps {
     students: Student[];
     classes: string[];
     onUpdateStudent?: (student: Student) => void;
-    // ✅ التأكد من استقبال كافة حقول الهوية بشكل صحيح
     teacherInfo?: { 
         name: string; 
         school: string; 
@@ -95,70 +96,78 @@ const Leaderboard: React.FC<LeaderboardProps> = ({ students, classes, onUpdateSt
         alert(`تم إضافة 3 نقاط للطالب ${student.name} 🌟`);
     };
 
-    // ✅ دالة حفظ الشهادة كملف PDF
-   // ✅ دالة حفظ الشهادة كملف PDF (تعمل على الويندوز والموبايل)
-const handleDownloadPDF = async () => {
-    if (!certificateRef.current || !certificateStudent) return;
-    
-    try {
-        setIsGeneratingPdf(true); 
-
-        // 1. التقاط الصورة بجودة عالية
-        const canvas = await html2canvas(certificateRef.current, {
-            scale: 2, 
-            useCORS: true,
-            backgroundColor: '#ffffff',
-            logging: false,
-            allowTaint: true, // ✅ مهم للصور الخارجية
-        });
-
-        // 2. إعداد ملف PDF (عرضي Landscape A4)
-        const imgData = canvas.toDataURL('image/png');
-        const pdf = new jsPDF('l', 'mm', 'a4'); 
-
-        const pdfWidth = pdf.internal.pageSize.getWidth();
-        const pdfHeight = pdf.internal.pageSize.getHeight();
-
-        // 3. إضافة الصورة
-        pdf.addImage(imgData, 'PNG', 0, 0, pdfWidth, pdfHeight);
-
-        // ✅ 4. الحفظ حسب البيئة
-        const fileName = `شهادة_تميز_${certificateStudent.name.replace(/\s+/g, '_')}.pdf`;
-
-        if (Capacitor.isNativePlatform()) {
-            // ✅ للموبايل (iOS & Android)
-            const pdfOutput = pdf.output('datauristring'); // تحويل إلى base64
-            const base64Data = pdfOutput.split(',')[1]; // استخراج Base64 فقط
-
-            // حفظ الملف في الكاش
-            const savedFile = await Filesystem.writeFile({
-                path: fileName,
-                data: base64Data,
-                directory: Directory.Cache
-            });
-
-            // مشاركة الملف
-            await Share.share({
-                title: 'شهادة تميز',
-                text: `شهادة تميز للطالب ${certificateStudent.name}`,
-                url: savedFile.uri,
-                dialogTitle: 'مشاركة الشهادة'
-            });
-
-            alert('✅ تم حفظ الشهادة بنجاح!');
-            
-        } else {
-            // ✅ للويب/الويندوز
-            pdf.save(fileName);
+    // ✅ دالة الخصم الجديدة (تصحيح الخطأ)
+    const handleDeductPoint = (student: Student) => {
+        if (!onUpdateStudent) return;
+        
+        if(confirm(`هل تريد خصم نقطة واحدة من الطالب ${student.name}؟ (تصحيح خطأ)`)) {
+            // نقوم بإضافة "سلوك إيجابي" لكن بنقاط سالبة لتقليل المجموع في الفرسان فقط
+            // (لأن الفرسان يحسب النقاط الإيجابية فقط، فنضيف "إيجابي" بقيمة سالبة لضبط العداد)
+            const correctionBehavior = {
+                id: Math.random().toString(36).substr(2, 9),
+                date: new Date().toISOString(),
+                type: 'positive' as const, // نستخدم النوع positive لكي يدخل في حسبة الفرسان
+                description: 'تصحيح نقاط (خصم)',
+                points: -3, // قيمة سالبة للخصم
+                semester: currentSemester
+            };
+            onUpdateStudent({ ...student, behaviors: [correctionBehavior, ...(student.behaviors || [])] });
         }
+    };
 
-    } catch (error) {
-        console.error('Error generating PDF:', error);
-        alert('❌ حدث خطأ أثناء حفظ الملف: ' + error);
-    } finally {
-        setIsGeneratingPdf(false); 
-    }
-};
+    // ✅ دالة الحفظ المعدلة لتعمل على الموبايل والويندوز
+    const handleDownloadPDF = async () => {
+        if (!certificateRef.current || !certificateStudent) return;
+        
+        setIsGeneratingPdf(true);
+
+        const element = certificateRef.current;
+        // اسم الملف
+        const fileName = `Certificate_${certificateStudent.name.replace(/\s+/g, '_')}.pdf`;
+
+        // إعدادات html2pdf
+        const opt = {
+            margin: 0, 
+            filename: fileName,
+            image: { type: 'jpeg', quality: 0.98 },
+            html2canvas: { scale: 2, useCORS: true, logging: false },
+            jsPDF: { unit: 'mm', format: 'a4', orientation: 'landscape' }
+        };
+
+        try {
+            // تحويل العنصر إلى PDF
+            const worker = html2pdf().set(opt).from(element).toPdf();
+
+            if (Capacitor.isNativePlatform()) {
+                // ✅ الخطوة الحاسمة للموبايل: الحصول على البيانات كـ Base64
+                const pdfBase64 = await worker.output('datauristring');
+                const base64Data = pdfBase64.split(',')[1]; // إزالة المقدمة (data:application/pdf;base64,)
+
+                // 1. حفظ الملف في ذاكرة الكاش للجهاز
+                const result = await Filesystem.writeFile({
+                    path: fileName,
+                    data: base64Data,
+                    directory: Directory.Cache
+                });
+
+                // 2. فتح نافذة المشاركة (Share Sheet) ليختار المستخدم أين يحفظه أو يرسله
+                await Share.share({
+                    title: 'شهادة تميز',
+                    url: result.uri,
+                    dialogTitle: 'مشاركة الشهادة'
+                });
+            } else {
+                // ✅ للويب/الويندوز: التحميل المباشر التقليدي
+                worker.save();
+            }
+
+        } catch (error) {
+            console.error('Error generating PDF:', error);
+            alert('❌ حدث خطأ أثناء إنشاء ملف الشهادة. يرجى المحاولة مرة أخرى.');
+        } finally {
+            setIsGeneratingPdf(false); 
+        }
+    };
 
     return (
         <div className="flex flex-col h-full space-y-6 pb-24 md:pb-8 animate-in fade-in duration-500 overflow-hidden">
@@ -222,9 +231,14 @@ const handleDownloadPDF = async () => {
                                     <h3 className="font-black text-xs md:text-sm text-slate-800 truncate mb-1">{topThree[1].name.split(' ')[0]}</h3>
                                     <span className="text-slate-500 font-bold text-[10px] bg-slate-100 px-2 py-0.5 rounded-lg">{topThree[1].monthlyPoints} pts</span>
                                 </div>
-                                <button onClick={() => setCertificateStudent(topThree[1])} className="text-[10px] bg-[#446A8D] text-white px-2 py-1 rounded-lg flex items-center gap-1 hover:bg-slate-700 transition-colors shadow-sm">
-                                    <Award size={12} /> شهادة
-                                </button>
+                                <div className="flex gap-1">
+                                    <button onClick={() => setCertificateStudent(topThree[1])} className="text-[10px] bg-[#446A8D] text-white px-2 py-1 rounded-lg flex items-center gap-1 hover:bg-slate-700 transition-colors shadow-sm">
+                                        <Award size={12} /> شهادة
+                                    </button>
+                                    <button onClick={() => handleDeductPoint(topThree[1])} className="text-[10px] bg-rose-100 text-rose-600 px-2 py-1 rounded-lg flex items-center gap-1 hover:bg-rose-200 transition-colors shadow-sm" title="خصم نقطة">
+                                        <MinusCircle size={12} />
+                                    </button>
+                                </div>
                                 <div className="h-20 w-16 bg-gradient-to-t from-slate-200 to-slate-50/0 rounded-t-lg mt-1 mx-auto opacity-50"></div>
                             </div>
                         )}
@@ -246,9 +260,14 @@ const handleDownloadPDF = async () => {
                                         <span className="text-amber-600 font-black text-xs">{topThree[0].monthlyPoints} pts</span>
                                     </div>
                                 </div>
-                                <button onClick={() => setCertificateStudent(topThree[0])} className="text-[10px] bg-amber-500 text-white px-3 py-1.5 rounded-lg flex items-center gap-1 hover:bg-amber-600 transition-colors shadow-md -translate-y-2">
-                                    <Award size={14} /> شهادة تميز
-                                </button>
+                                <div className="flex gap-1 -translate-y-2">
+                                    <button onClick={() => setCertificateStudent(topThree[0])} className="text-[10px] bg-amber-500 text-white px-3 py-1.5 rounded-lg flex items-center gap-1 hover:bg-amber-600 transition-colors shadow-md">
+                                        <Award size={14} /> شهادة تميز
+                                    </button>
+                                    <button onClick={() => handleDeductPoint(topThree[0])} className="text-[10px] bg-rose-100 text-rose-600 px-2 py-1.5 rounded-lg flex items-center gap-1 hover:bg-rose-200 transition-colors shadow-md" title="خصم نقطة">
+                                        <MinusCircle size={14} />
+                                    </button>
+                                </div>
                                 <div className="h-28 w-20 bg-gradient-to-t from-amber-100 to-amber-50/0 rounded-t-lg mt-1 mx-auto opacity-60"></div>
                             </div>
                         )}
@@ -266,9 +285,14 @@ const handleDownloadPDF = async () => {
                                     <h3 className="font-black text-xs md:text-sm text-slate-800 truncate mb-1">{topThree[2].name.split(' ')[0]}</h3>
                                     <span className="text-orange-600/70 font-bold text-[10px] bg-orange-50 px-2 py-0.5 rounded-lg">{topThree[2].monthlyPoints} pts</span>
                                 </div>
-                                <button onClick={() => setCertificateStudent(topThree[2])} className="text-[10px] bg-[#446A8D] text-white px-2 py-1 rounded-lg flex items-center gap-1 hover:bg-slate-700 transition-colors shadow-sm">
-                                    <Award size={12} /> شهادة
-                                </button>
+                                <div className="flex gap-1">
+                                    <button onClick={() => setCertificateStudent(topThree[2])} className="text-[10px] bg-[#446A8D] text-white px-2 py-1 rounded-lg flex items-center gap-1 hover:bg-slate-700 transition-colors shadow-sm">
+                                        <Award size={12} /> شهادة
+                                    </button>
+                                    <button onClick={() => handleDeductPoint(topThree[2])} className="text-[10px] bg-rose-100 text-rose-600 px-2 py-1 rounded-lg flex items-center gap-1 hover:bg-rose-200 transition-colors shadow-sm" title="خصم نقطة">
+                                        <MinusCircle size={12} />
+                                    </button>
+                                </div>
                                 <div className="h-14 w-16 bg-gradient-to-t from-orange-100 to-orange-50/0 rounded-t-lg mt-1 mx-auto opacity-50"></div>
                             </div>
                         )}
@@ -306,10 +330,15 @@ const handleDownloadPDF = async () => {
                                                 {student.monthlyPoints}
                                             </p>
                                         </div>
-                                        {/* زر شهادة مصغر للبقية */}
-                                        <button onClick={() => setCertificateStudent(student)} className="w-full py-1 bg-slate-100 text-slate-500 text-[9px] font-bold rounded-lg hover:bg-[#446A8D] hover:text-white transition-colors">
-                                            شهادة
-                                        </button>
+                                        {/* زر شهادة وخصم مصغر للبقية */}
+                                        <div className="flex gap-1 justify-center">
+                                            <button onClick={() => setCertificateStudent(student)} className="flex-1 py-1 bg-slate-100 text-slate-500 text-[9px] font-bold rounded-lg hover:bg-[#446A8D] hover:text-white transition-colors">
+                                                شهادة
+                                            </button>
+                                            <button onClick={() => handleDeductPoint(student)} className="px-2 py-1 bg-rose-50 text-rose-500 text-[9px] font-bold rounded-lg hover:bg-rose-100 transition-colors" title="خصم">
+                                                <MinusCircle size={10} />
+                                            </button>
+                                        </div>
                                     </div>
                                 </div>
                             ))}
@@ -428,7 +457,7 @@ const handleDownloadPDF = async () => {
                                     </>
                                 ) : (
                                     <>
-                                        <Download size={18} /> حفظ كـ PDF
+                                        <Download size={18} /> حفظ / مشاركة PDF
                                     </>
                                 )}
                             </button>
