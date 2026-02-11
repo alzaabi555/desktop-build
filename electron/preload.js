@@ -14,8 +14,7 @@ contextBridge.exposeInMainWorld('electron', {
   /**
    * يبدأ تسجيل Google عبر نافذة من main process.
    * لازم ترسل payload فيه:
-   *  - clientId:
-87037584903-lavg5se9f7mfkuvhnqbj53skmorord0u.apps.googleusercontent.com
+   *  - clientId: 87037584903-3uc4aeg3nc5lk3pu8crjbaad184bhjth.apps.googleusercontent.com
    *  - redirectUri: string  (مثال: rasedapp://oauth)
    *  - scopes: string[]     (مثال: ['openid','email','profile'])
    *  - state: string        (اختياري لكن يُفضل)

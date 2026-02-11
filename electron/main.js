@@ -1,13 +1,18 @@
+
 const { app, BrowserWindow, shell, ipcMain, dialog, clipboard } = require('electron');
 const path = require('path');
 const { autoUpdater } = require('electron-updater');
 const crypto = require('crypto');
 
 // ---------------------------------------------------------
-// 🚀 1. إعدادات الأداء والنظام
+// 🚀 1. إعدادات الأداء والنظام (High Performance Mode)
 // ---------------------------------------------------------
-app.disableHardwareAcceleration();
-app.commandLine.appendSwitch('js-flags', '--max-old-space-size=4096');
+// تفعيل تسريع العتاد (GPU Acceleration) وزيادة حدود الذاكرة
+app.commandLine.appendSwitch('js-flags', '--max-old-space-size=8192'); // زيادة الذاكرة إلى 8GB
+app.commandLine.appendSwitch('enable-gpu-rasterization'); // استخدام GPU للرسم
+app.commandLine.appendSwitch('enable-zero-copy'); // تسريع نقل البيانات
+app.commandLine.appendSwitch('ignore-gpu-blacklist'); // إجبار استخدام GPU حتى لو كان قديماً
+app.commandLine.appendSwitch('disable-site-isolation-trials'); // تقليل استهلاك الذاكرة للعمليات
 
 app.setPath('userData', path.join(app.getPath('appData'), 'RasedApp'));
 
@@ -17,9 +22,8 @@ if (!gotLock) {
 }
 
 // ---------------------------------------------------------
-// 🔴 التعديل الهام جداً: تغيير البروتوكول للمعرف المعكوس
+// 🔴 البروتوكول للمعرف المعكوس (Google Auth)
 // ---------------------------------------------------------
-// هذا الاسم الطويل هو الوحيد الذي تقبله جوجل عند استخدام iOS Client ID
 const PROTOCOL = 'com.googleusercontent.apps.87037584903-3uc4aeg3nc5lk3pu8crjbaad184bhjth';
 
 if (process.defaultApp) {
@@ -40,9 +44,9 @@ let mainWindow;
 
 function createWindow() {
   mainWindow = new BrowserWindow({
-    width: 1200,
+    width: 1280,
     height: 800,
-    minWidth: 800,
+    minWidth: 900,
     minHeight: 600,
     icon: path.join(__dirname, '../icon.png'),
     webPreferences: {
@@ -50,14 +54,18 @@ function createWindow() {
       contextIsolation: true,
       preload: path.join(__dirname, 'preload.js'),
       devTools: false,
-      sandbox: false 
-    }
+      sandbox: false,
+      backgroundThrottling: false, // ✅ يمنع تهنيج التطبيق في الخلفية
+      webSecurity: true,
+      zoomFactor: 1.0
+    },
+    backgroundColor: '#f3f4f6'
   });
+
+  mainWindow.webContents.session.clearCache();
 
   mainWindow.loadFile(path.join(__dirname, '../www/index.html'));
   
-  // mainWindow.webContents.openDevTools();
-
   mainWindow.setMenuBarVisibility(false);
 
   mainWindow.webContents.setWindowOpenHandler(({ url }) => {
@@ -67,6 +75,14 @@ function createWindow() {
       shell.openExternal(url).catch(console.error);
     }
     return { action: 'deny' };
+  });
+
+  mainWindow.webContents.on('will-navigate', (event, url) => {
+    const isLocal = url.startsWith('file://');
+    if (!isLocal) {
+        event.preventDefault();
+        shell.openExternal(url);
+    }
   });
 
   mainWindow.on('closed', () => {
@@ -80,11 +96,12 @@ function createWindow() {
 function handleDeepLink(url) {
   if (!mainWindow || !url) return;
 
+  if (mainWindow.isMinimized()) mainWindow.restore();
+  mainWindow.focus();
+
   mainWindow.webContents.send('deep-link', url);
 
   try {
-    // إصلاح بسيط: أحياناً الرابط يأتي في نهايته / أو #
-    // نقوم بتنظيفه لضمان قراءة البارامترات
     const cleanUrl = url.replace('#', '?'); 
     const urlObj = new URL(cleanUrl);
     
@@ -136,28 +153,23 @@ ipcMain.handle('auth:start-google', async (_event, payload) => {
 
   const authUrl = `https://accounts.google.com/o/oauth2/v2/auth?client_id=${clientId}&redirect_uri=${redirectUri}&response_type=code&scope=${scopeString}&state=${state}`;
 
-  // نسخ الرابط للحافظة
-  clipboard.writeText(authUrl);
+  if (mainWindow) mainWindow.minimize();
 
   try {
     await shell.openExternal(authUrl);
   } catch (err) {
     console.error('❌ فشل فتح المتصفح آلياً:', err);
+    if (mainWindow) mainWindow.restore();
   }
-
-  // رسالة تأكيد
-  dialog.showMessageBox(mainWindow, {
-    type: 'info',
-    title: 'تسجيل الدخول',
-    message: 'تم نسخ رابط الدخول!\n\nسيفتح المتصفح الآن. إذا لم يفتح، الصق الرابط يدوياً.',
-    buttons: ['حسناً']
-  });
 
   pendingAuth = {
     state,
     timeout: setTimeout(() => {
       pendingAuth = null;
-      if (mainWindow) mainWindow.webContents.send('google-auth-error', { error: 'timeout' });
+      if (mainWindow) {
+          mainWindow.webContents.send('google-auth-error', { error: 'timeout' });
+          if (mainWindow.isMinimized()) mainWindow.restore();
+      }
     }, 300000) 
   };
 
