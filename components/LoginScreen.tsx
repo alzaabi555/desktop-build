@@ -1,84 +1,56 @@
-
 import React, { useEffect, useRef, useState } from 'react';
 import { Loader2, User } from 'lucide-react';
 import BrandLogo from './BrandLogo';
-import { signInWithGoogle, auth } from '../services/firebase'; // 👈 تأكد من استيراد auth
-import { GoogleAuthProvider, signInWithCredential } from 'firebase/auth'; // 👈 استيراد دوال فايربيس
+import { signInWithGoogle, auth } from '../services/firebase';
+import { GoogleAuthProvider, signInWithCredential } from 'firebase/auth';
 import { Capacitor } from '@capacitor/core';
 
 interface LoginScreenProps {
   onLoginSuccess: (user: any | null) => void;
 }
 
+type ElectronAPI = {
+  startGoogleLogin?: (payload: { scopes?: string[]; state?: string }) => Promise<{ ok: boolean; state?: string; redirectUri?: string; error?: string }>;
+  exchangeGoogleCode?: (payload: { code: string }) => Promise<{ id_token: string; access_token?: string }>;
+  onGoogleAuthCode?: (cb: (data: { code: string; state?: string; url?: string; via?: string }) => void) => () => void;
+  onGoogleAuthError?: (cb: (data: { error: string; url?: string; via?: string }) => void) => () => void;
+};
+
 const LoginScreen: React.FC<LoginScreenProps> = ({ onLoginSuccess }) => {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
 
-  const isElectron = typeof window !== 'undefined' && !!(window as any)?.electron;
   const completedRef = useRef(false);
+  const isElectron = typeof window !== 'undefined' && !!(window as any)?.electron;
 
-  // دالة لتبديل الكود بالتوكن (خاصة بالويندوز)
-  const exchangeCodeForCredential = async (code: string) => {
-    try {
-      // 1. طلب تبديل الكود من جوجل
-      const params = new URLSearchParams();
-      params.append('code', code);
-      params.append('client_id', '87037584903-3uc4aeg3nc5lk3pu8crjbaad184bhjth.apps.googleusercontent.com');
-      params.append('redirect_uri', 'com.googleusercontent.apps.87037584903-3uc4aeg3nc5lk3pu8crjbaad184bhjth:/oauth');
-      params.append('grant_type', 'authorization_code');
-
-      const response = await fetch('https://oauth2.googleapis.com/token', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-        body: params
-      });
-
-      const data = await response.json();
-      
-      if (!response.ok) throw new Error(data.error_description || 'فشل تبديل الكود');
-
-      // 2. إنشاء اعتماد لفايربيس
-      // نستخدم id_token لأنه الأهم للمصادقة
-      const credential = GoogleAuthProvider.credential(data.id_token, data.access_token);
-
-      // 3. تسجيل الدخول الفعلي في فايربيس
-      return await signInWithCredential(auth, credential);
-
-    } catch (err) {
-      console.error('Exchange Error:', err);
-      throw err;
-    }
-  };
-
-  // ---------------------------------------------------------
-  // 🎧 الاستماع لنتائج Electron
-  // ---------------------------------------------------------
   useEffect(() => {
     if (!isElectron) return;
 
-    const api = (window as any)?.electron;
-    if (!api) return;
+    const api: ElectronAPI = (window as any).electron;
+    if (!api?.onGoogleAuthCode) return;
 
-    const unsubCode = api.onGoogleAuthCode?.(async (data: { code: string; state?: string }) => {
-        if (completedRef.current) return;
-        completedRef.current = true;
-        
-        try {
-          // 👇 هنا السحر: لا نكتفي بالكود، بل نسجل دخول في فايربيس
-          const userCredential = await exchangeCodeForCredential(data.code);
-          
-          setIsLoading(false);
-          // نرسل مستخدم فايربيس الحقيقي للواجهة
-          onLoginSuccess(userCredential.user);
-          
-        } catch (err) {
-          console.error(err);
-          setError('فشل الاتصال بقاعدة البيانات (Firebase Error).');
-          setIsLoading(false);
-        }
-      }) ?? (() => {});
+    const unsubCode = api.onGoogleAuthCode(async (data) => {
+      if (completedRef.current) return;
+      completedRef.current = true;
 
-    const unsubErr = api.onGoogleAuthError?.((data: { error: string }) => {
+      try {
+        if (!api.exchangeGoogleCode) throw new Error('exchangeGoogleCode غير متوفر');
+        const token = await api.exchangeGoogleCode({ code: data.code });
+        if (!token?.id_token) throw new Error('Missing id_token');
+
+        const credential = GoogleAuthProvider.credential(token.id_token);
+        const userCred = await signInWithCredential(auth, credential);
+
+        setIsLoading(false);
+        onLoginSuccess(userCred.user);
+      } catch (e: any) {
+        setIsLoading(false);
+        setError(e?.message || 'فشل تسجيل الدخول.');
+      }
+    });
+
+    const unsubErr =
+      api.onGoogleAuthError?.((data) => {
         if (completedRef.current) return;
         completedRef.current = true;
         setIsLoading(false);
@@ -86,14 +58,11 @@ const LoginScreen: React.FC<LoginScreenProps> = ({ onLoginSuccess }) => {
       }) ?? (() => {});
 
     return () => {
-      try { unsubCode(); } catch {}
-      try { unsubErr(); } catch {}
+      try { unsubCode?.(); } catch {}
+      try { unsubErr?.(); } catch {}
     };
   }, [isElectron, onLoginSuccess]);
 
-  // ---------------------------------------------------------
-  // 🚀 دالة الزر
-  // ---------------------------------------------------------
   const handleGoogleLogin = async () => {
     setIsLoading(true);
     setError('');
@@ -101,43 +70,30 @@ const LoginScreen: React.FC<LoginScreenProps> = ({ onLoginSuccess }) => {
 
     try {
       if (isElectron) {
-        const api = (window as any)?.electron;
+        const api: ElectronAPI = (window as any).electron;
         if (!api?.startGoogleLogin) throw new Error('Electron bridge غير جاهز');
 
-        await api.startGoogleLogin({
-          clientId: '87037584903-3uc4aeg3nc5lk3pu8crjbaad184bhjth.apps.googleusercontent.com',
-          redirectUri: 'com.googleusercontent.apps.87037584903-3uc4aeg3nc5lk3pu8crjbaad184bhjth:/oauth', 
+        const res = await api.startGoogleLogin({
           scopes: ['openid', 'email', 'profile'],
           state: String(Date.now()),
         });
-        return; 
+
+        if (!res?.ok) throw new Error(res?.error || 'فشل فتح صفحة تسجيل الدخول');
+        return; // انتظر code
       }
 
+      // (اختياري) مسار الموبايل / الويب كما كان عندك
       if (Capacitor.isNativePlatform()) {
-        const { GoogleAuth } = await import('@codetrix-studio/capacitor-google-auth');
-        await GoogleAuth.initialize({
-            clientId: '87037584903-lavg5se9f7mfkuvhnqbj53skmorord0u.apps.googleusercontent.com',
-            scopes: ['profile', 'email'],
-            grantOfflineAccess: true,
-        });
-        const googleUser = await GoogleAuth.signIn();
-        // للموبايل أيضاً نحتاج ربط مع فايربيس (لكن خطوة لاحقة، ركز في الويندوز الآن)
-        const credential = GoogleAuthProvider.credential(googleUser.authentication.idToken);
-        const userCredential = await signInWithCredential(auth, credential);
-        onLoginSuccess(userCredential.user);
-        
-        setIsLoading(false);
-        return;
+        // اتركه كما عندك أو عطّله مؤقتًا
+        throw new Error('مسار الموبايل غير مفعّل هنا');
       }
 
       const user = await signInWithGoogle();
       onLoginSuccess(user);
       setIsLoading(false);
-
-    } catch (err: any) {
-      console.error(err);
-      setError('فشل تسجيل الدخول. حاول مرة أخرى.');
+    } catch (e: any) {
       setIsLoading(false);
+      setError(e?.message || 'فشل تسجيل الدخول. حاول مرة أخرى.');
     }
   };
 
@@ -147,9 +103,9 @@ const LoginScreen: React.FC<LoginScreenProps> = ({ onLoginSuccess }) => {
     <div className="min-h-screen bg-slate-50 flex flex-col justify-center py-12 sm:px-6 lg:px-8">
       <div className="sm:mx-auto sm:w-full sm:max-w-md">
         <div className="flex justify-center mb-6">
-            <div className="w-20 h-20">
-                <BrandLogo className="w-full h-full" showText={false} />
-            </div>
+          <div className="w-20 h-20">
+            <BrandLogo className="w-full h-full" showText={false} />
+          </div>
         </div>
         <h2 className="mt-2 text-center text-3xl font-black tracking-tight text-slate-900">
           تسجيل الدخول
@@ -166,6 +122,7 @@ const LoginScreen: React.FC<LoginScreenProps> = ({ onLoginSuccess }) => {
               {error}
             </div>
           )}
+
           <div className="space-y-4">
             <button
               onClick={handleGoogleLogin}
@@ -183,6 +140,7 @@ const LoginScreen: React.FC<LoginScreenProps> = ({ onLoginSuccess }) => {
                 </>
               )}
             </button>
+
             <div className="relative">
               <div className="absolute inset-0 flex items-center">
                 <div className="w-full border-t border-gray-200" />
@@ -191,6 +149,7 @@ const LoginScreen: React.FC<LoginScreenProps> = ({ onLoginSuccess }) => {
                 <span className="px-2 bg-white text-gray-500">أو</span>
               </div>
             </div>
+
             <button
               onClick={handleGuestMode}
               disabled={isLoading}
