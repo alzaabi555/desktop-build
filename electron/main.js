@@ -28,11 +28,11 @@ autoUpdater.autoInstallOnAppQuit = true;
 // ------------------------------
 const GOOGLE_CLIENT_ID =
   process.env.GOOGLE_CLIENT_ID ||
-  'PUT_YOUR_DESKTOP_CLIENT_ID.apps.googleusercontent.com';
+  '87037584903-lavg5se9f7mfkuvhnqbj53skmorord0u.apps.googleusercontent.com';
 
 const GOOGLE_CLIENT_SECRET =
   process.env.GOOGLE_CLIENT_SECRET ||
-  'PUT_YOUR_DESKTOP_CLIENT_SECRET';
+  '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';
 
 let mainWindow = null;
 
