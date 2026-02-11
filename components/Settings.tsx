@@ -1,5 +1,6 @@
+
 import React, { useState, useEffect } from 'react';
-import { Save, AlertTriangle, FileJson, User, Smartphone, Info, Share2, Trash2, Cloud, UploadCloud, DownloadCloud, CheckCircle2, RefreshCw, LogOut } from 'lucide-react';
+import { Save, AlertTriangle, FileJson, User, Smartphone, Info, Share2, Trash2, Cloud, UploadCloud, DownloadCloud, CheckCircle2, RefreshCw, LogOut, Zap } from 'lucide-react';
 import { useApp } from '../context/AppContext';
 import { Filesystem, Directory, Encoding } from '@capacitor/filesystem';
 import { Share } from '@capacitor/share';
@@ -75,10 +76,9 @@ const SettingsPage = () => {
       finally { setIsLoading(false); setTimeout(() => setCloudMessage(''), 3000); }
   };
 
-  // ✅ دالة التصدير الجديدة (تم إضافتها هنا)
+  // ✅ دالة التصدير
   const handleExportBackup = () => {
     try {
-      // 1. تجميع البيانات
       const backupData = {
         teacherInfo,
         students,
@@ -88,11 +88,7 @@ const SettingsPage = () => {
         exportDate: new Date().toISOString(),
         appName: "RasedApp"
       };
-
-      // 2. تحويل البيانات لنص JSON
       const jsonString = JSON.stringify(backupData, null, 2);
-
-      // 3. إنشاء ملف وتنزيله
       const blob = new Blob([jsonString], { type: "application/json" });
       const url = URL.createObjectURL(blob);
       const link = document.createElement('a');
@@ -100,11 +96,8 @@ const SettingsPage = () => {
       link.download = `backup_rased_${new Date().toISOString().split('T')[0]}.json`;
       document.body.appendChild(link);
       link.click();
-      
-      // 4. تنظيف
       document.body.removeChild(link);
       URL.revokeObjectURL(url);
-      
       alert("✅ تم تصدير النسخة الاحتياطية بنجاح");
     } catch (error) {
       console.error("Export Error:", error);
@@ -112,7 +105,7 @@ const SettingsPage = () => {
     }
   };
 
-  // ✅ دالة الاستيراد (موجودة سابقاً ولكن تأكدنا من عملها مع التصدير الجديد)
+  // ✅ دالة الاستيراد
   const handleImportBackup = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
@@ -135,6 +128,35 @@ const SettingsPage = () => {
     };
     reader.readAsText(file);
     if(e.target) e.target.value = '';
+  };
+
+  // ✅ دالة تنظيف الكاش (إصلاح البطء)
+  const handleClearCache = async () => {
+      if (confirm('⚠️ هل تواجه بطء في التطبيق؟\n\nسيقوم هذا الإجراء بحذف جميع البيانات المحلية المؤقتة (Local Cache) وإعادة تشغيل التطبيق ليعمل بسرعة.\n\nتنبيه هام: سيؤدي هذا إلى مسح جميع البيانات المخزنة على هذا الجهاز فقط. تأكد من أنك قمت بعمل "رفع للسحابة" أو "تصدير ملف" لبياناتك الهامة قبل المتابعة.\n\nهل تريد المتابعة؟')) {
+          try {
+              // 1. مسح التخزين المحلي للمتصفح
+              localStorage.clear();
+
+              // 2. مسح ملف قاعدة البيانات المحلي (للموبايل)
+              if (Capacitor.isNativePlatform()) {
+                  try {
+                      await Filesystem.deleteFile({
+                          path: 'raseddatabasev2.json',
+                          directory: Directory.Data
+                      });
+                  } catch (e) {
+                      // تجاهل الخطأ إذا الملف غير موجود
+                  }
+              }
+
+              // 3. إعادة تحميل التطبيق
+              alert('تم التنظيف بنجاح! سيتم إعادة التشغيل الآن 🚀');
+              window.location.reload();
+          } catch (error) {
+              console.error(error);
+              alert('حدث خطأ أثناء التنظيف');
+          }
+      }
   };
 
   return (
@@ -204,12 +226,27 @@ const SettingsPage = () => {
               نقل البيانات يدوياً (JSON)
           </h2>
           <div className="grid grid-cols-2 gap-4">
-            {/* ✅ تم ربط دالة التصدير هنا */}
             <button onClick={handleExportBackup} className="py-4 bg-white text-emerald-700 border border-slate-200 rounded-2xl font-bold text-xs flex items-center justify-center gap-2 hover:bg-emerald-50 transition-colors shadow-sm">تصدير ملف</button>
-            {/* ✅ تم ربط دالة الاستيراد هنا */}
             <button onClick={() => fileInputRef.current?.click()} className="py-4 bg-white text-amber-700 border border-slate-200 rounded-2xl font-bold text-xs flex items-center justify-center gap-2 hover:bg-amber-50 transition-colors shadow-sm">استيراد ملف</button>
           </div>
           <input type="file" ref={fileInputRef} className="hidden" accept=".json" onChange={handleImportBackup} />
+        </div>
+
+        {/* ✅ 4. الصيانة والأداء (ميزة جديدة لحل مشكلة البطء) */}
+        <div className="bg-rose-50/30 rounded-[2.5rem] p-8 border border-rose-100">
+          <div className="flex items-center gap-4 mb-4">
+            <div className="w-12 h-12 rounded-2xl bg-rose-100 flex items-center justify-center text-rose-500 shadow-inner">
+                <Zap className="w-6 h-6" />
+            </div>
+            <div>
+              <h2 className="text-xl font-black text-slate-800">الصيانة والأداء</h2>
+              <p className="text-xs text-rose-400 font-bold">استخدم هذا الخيار إذا كان التطبيق بطيئاً</p>
+            </div>
+          </div>
+          <button onClick={handleClearCache} className="w-full py-4 bg-white border-2 border-rose-100 text-rose-500 rounded-2xl font-black text-sm hover:bg-rose-50 transition-all flex items-center justify-center gap-2 shadow-sm">
+            <Trash2 className="w-4 h-4" />
+            تنظيف الكاش (إعادة ضبط المصنع)
+          </button>
         </div>
 
       </div>

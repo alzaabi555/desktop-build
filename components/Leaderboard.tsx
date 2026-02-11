@@ -1,3 +1,4 @@
+
 import React, { useState, useMemo, useRef } from 'react';
 import { Student } from '../types';
 import { Trophy, Crown, Sparkles, Star, Search, Award, Download, X, Loader2, MinusCircle } from 'lucide-react'; // ✅ إضافة MinusCircle
@@ -360,75 +361,77 @@ const Leaderboard: React.FC<LeaderboardProps> = ({ students, classes, onUpdateSt
                             </button>
                         </div>
 
-                        <div className="p-8 overflow-y-auto bg-slate-100 flex justify-center">
-                            {/* عنصر الشهادة الذي سيتم تحويله لـ PDF */}
-                            <div ref={certificateRef} className="bg-white w-full max-w-lg aspect-[1.414/1] relative shadow-2xl p-8 text-center text-slate-900 certificate-container" style={{ backgroundImage: 'radial-gradient(circle at center, #fff 0%, #fdfdfd 100%)' }}>
+                        <div className="flex-1 overflow-auto bg-slate-100 flex justify-center p-4">
+                            {/* عنصر الشهادة الذي سيتم تحويله لـ PDF - تم تحديث الأبعاد لـ A4 Landscape */}
+                            <div ref={certificateRef} className="bg-white relative shadow-2xl text-center text-slate-900 certificate-container mx-auto" 
+                                style={{ width: '297mm', minHeight: '210mm', padding: '20mm', backgroundImage: 'radial-gradient(circle at center, #fff 0%, #fdfdfd 100%)' }}>
+                                
                                 {/* إطار زخرفي */}
-                                <div className="absolute inset-2 border-4 border-double border-[#446A8D] pointer-events-none"></div>
-                                <div className="absolute inset-4 border border-[#cba35c] pointer-events-none opacity-50"></div>
+                                <div className="absolute inset-4 border-4 border-double border-[#446A8D] pointer-events-none"></div>
+                                <div className="absolute inset-6 border border-[#cba35c] pointer-events-none opacity-50"></div>
 
                                 {/* الترويسة */}
-                                <div className="flex justify-between items-start mb-8 relative z-10 px-4">
-                                    <div className="text-right text-[10px] font-bold leading-relaxed text-slate-600">
+                                <div className="flex justify-between items-start mb-12 relative z-10">
+                                    <div className="text-right text-lg font-bold leading-relaxed text-slate-600">
                                         <p>سلطنة عمان</p>
                                         <p>وزارة التعليم</p>
                                         <p>{teacherInfo?.governorate || 'المديرية العامة...'}</p>
                                         <p>{teacherInfo?.school || 'المدرسة...'}</p>
                                     </div>
-                                    <div className="w-20 h-20 opacity-90 -mt-2">
+                                    <div className="w-32 h-32 opacity-90 -mt-4">
                                         {/* ✅ شعار الوزارة (مع Fallback) */}
                                         {teacherInfo?.ministryLogo ? (
                                             <img src={teacherInfo.ministryLogo} alt="الشعار" className="w-full h-full object-contain" crossOrigin="anonymous" />
                                         ) : (
                                             <div className="w-full h-full bg-slate-50 rounded-full flex items-center justify-center border border-slate-200">
-                                                <Crown className="w-8 h-8 text-amber-500 opacity-50" />
+                                                <Crown className="w-12 h-12 text-amber-500 opacity-50" />
                                             </div>
                                         )}
                                     </div>
-                                    <div className="text-left text-[10px] font-bold leading-relaxed text-slate-600">
+                                    <div className="text-left text-lg font-bold leading-relaxed text-slate-600">
                                         <p>التاريخ: {new Date().toLocaleDateString('ar-EG')}</p>
                                         <p>العام الدراسي: {new Date().getFullYear()}</p>
                                     </div>
                                 </div>
 
                                 {/* العنوان */}
-                                <div className="mb-8 relative z-10">
-                                    <h1 className="text-4xl font-black text-[#446A8D] mb-2" style={{ fontFamily: 'Times New Roman, serif' }}>شهادة تميز</h1>
-                                    <div className="h-1 w-24 bg-amber-400 mx-auto rounded-full"></div>
+                                <div className="mb-12 relative z-10">
+                                    <h1 className="text-6xl font-black text-[#446A8D] mb-4" style={{ fontFamily: 'Times New Roman, serif' }}>شهادة تميز</h1>
+                                    <div className="h-1.5 w-40 bg-amber-400 mx-auto rounded-full"></div>
                                 </div>
 
                                 {/* نص الشهادة */}
-                                <div className="mb-12 relative z-10 px-8">
-                                    <p className="text-base font-bold leading-loose text-slate-700 mb-4">
-                                        تُمنح للطالب / <span className="text-[#446A8D] text-xl border-b-2 border-dashed border-slate-300 px-4">{certificateStudent.name}</span>
+                                <div className="mb-16 relative z-10 px-12">
+                                    <p className="text-3xl font-bold leading-loose text-slate-700 mb-6">
+                                        تُمنح للطالب / <span className="text-[#446A8D] text-4xl border-b-4 border-dashed border-slate-300 px-6 pb-2 mx-2 inline-block font-black">{certificateStudent.name}</span>
                                     </p>
-                                    <p className="text-sm font-bold text-slate-600 mb-4">
-                                        المقيد بالصف: <span className="text-slate-900">{certificateStudent.classes[0]}</span>
+                                    <p className="text-2xl font-bold text-slate-600 mb-8">
+                                        المقيد بالصف: <span className="text-slate-900 font-black px-2">{certificateStudent.classes[0]}</span>
                                     </p>
-                                    <p className="text-sm font-medium leading-loose text-slate-600">
+                                    <p className="text-2xl font-medium leading-loose text-slate-600 max-w-4xl mx-auto">
                                         لحصوله على أعلى نقاط في تطبيق <span className="font-black text-[#446A8D]">راصد</span> خلال شهر <span className="font-bold text-amber-600">{monthName}</span>،
                                         وتقديراً لتفوقه وتميزه الدراسي والسلوكي.
                                     </p>
-                                    <p className="text-sm font-bold text-slate-600 mt-4">
+                                    <p className="text-2xl font-bold text-slate-600 mt-8">
                                         متمنين له مزيداً من التقدم والنجاح.
                                     </p>
                                 </div>
 
                                 {/* التوقيعات (مع التبديل والختم) */}
-                                <div className="flex justify-between items-end px-8 mt-auto relative z-10">
+                                <div className="flex justify-between items-end px-12 mt-auto relative z-10 pt-10">
                                     {/* ✅ اليمين: المعلم */}
                                     <div className="text-center w-1/3">
-                                        <p className="text-xs font-bold text-slate-500 mb-2">المعلم/ة</p>
-                                        <p className="text-sm font-black text-[#446A8D]">{teacherInfo?.name || '....................'}</p>
+                                        <p className="text-xl font-bold text-slate-500 mb-4">المعلم/ة</p>
+                                        <p className="text-2xl font-black text-[#446A8D]">{teacherInfo?.name || '....................'}</p>
                                     </div>
 
                                     {/* ✅ الوسط: ختم المدرسة */}
                                     <div className="text-center w-1/3 flex justify-center">
-                                        <div className="w-20 h-20 opacity-80 rotate-[-10deg]">
+                                        <div className="w-32 h-32 opacity-80 rotate-[-10deg]">
                                             {teacherInfo?.stamp ? (
                                                 <img src={teacherInfo.stamp} alt="الختم" className="w-full h-full object-contain" crossOrigin="anonymous" />
                                             ) : (
-                                                <div className="w-16 h-16 mb-2 mx-auto opacity-10">
+                                                <div className="w-24 h-24 mb-2 mx-auto opacity-10">
                                                     <Award className="w-full h-full text-[#446A8D]" />
                                                 </div>
                                             )}
@@ -437,8 +440,8 @@ const Leaderboard: React.FC<LeaderboardProps> = ({ students, classes, onUpdateSt
 
                                     {/* ✅ اليسار: مدير المدرسة */}
                                     <div className="text-center w-1/3">
-                                        <p className="text-xs font-bold text-slate-500 mb-2">مدير/ة المدرسة</p>
-                                        <p className="text-sm font-black text-[#446A8D]">....................</p>
+                                        <p className="text-xl font-bold text-slate-500 mb-4">مدير/ة المدرسة</p>
+                                        <p className="text-2xl font-black text-[#446A8D]">....................</p>
                                     </div>
                                 </div>
                             </div>
