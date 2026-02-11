@@ -50,15 +50,12 @@ function createWindow() {
     minHeight: 600,
     icon: path.join(__dirname, '../icon.png'),
     webPreferences: {
-      nodeIntegration: false,
-      contextIsolation: true,
-      preload: path.join(__dirname, 'preload.js'),
-      devTools: false,
-      sandbox: false,
-      backgroundThrottling: false, // ✅ يمنع تهنيج التطبيق في الخلفية
-      webSecurity: true,
-      zoomFactor: 1.0
-    },
+  nodeIntegration: false,
+  contextIsolation: true,
+  // استخدام path.resolve لضمان الوصول للملف في النسخة المجمعة
+  preload: path.resolve(__dirname, 'preload.js'), 
+  sandbox: false // 👈 هذا السطر هو الذي يفتح الأبواب المغلقة
+}
     backgroundColor: '#f3f4f6'
   });
 
@@ -145,50 +142,24 @@ let pendingAuth = null;
 
 ipcMain.handle('auth:start-google', async (_event, payload) => {
   const { clientId, redirectUri, scopes, state: userState } = payload;
-  
-  if (!clientId || !redirectUri) throw new Error('Missing params');
-
-  const state = userState || crypto.randomBytes(16).toString('hex');
-  const scopeString = Array.isArray(scopes) ? scopes.join(' ') : 'openid email profile';
-
-  // 1. بناء الرابط وتشفيره بأمان
-  const authUrlObj = new URL('https://accounts.google.com/o/oauth2/v2/auth');
-  authUrlObj.searchParams.append('client_id', clientId);
-  authUrlObj.searchParams.append('redirect_uri', redirectUri);
-  authUrlObj.searchParams.append('response_type', 'code');
-  authUrlObj.searchParams.append('scope', scopeString);
-  authUrlObj.searchParams.append('state', state);
-
-  const finalAuthUrl = authUrlObj.toString();
+  const authUrl = `https://accounts.google.com/o/oauth2/v2/auth?client_id=${clientId}&redirect_uri=${encodeURIComponent(redirectUri)}&response_type=code&scope=${encodeURIComponent(scopes.join(' '))}&state=${userState}`;
 
   try {
-    // 2. 🚀 السحر هنا: نفتح المتصفح أولاً قبل تصغير التطبيق!
-    await shell.openExternal(finalAuthUrl);
+    // حاول الفتح بالطريقة العادية
+    await shell.openExternal(authUrl);
+    
+    // إذا لم يفتح المتصفح في غضون ثانية، نستخدم "خطة الطوارئ" للويندوز
+    setTimeout(() => {
+        if (process.platform === 'win32') {
+            const { exec } = require('child_process');
+            exec(`start "" "${authUrl}"`);
+        }
+    }, 1000);
 
-    // 3. ننتظر نصف ثانية حتى يظهر المتصفح، ثم نصغر التطبيق
-    if (mainWindow) {
-        setTimeout(() => {
-            mainWindow.minimize();
-        }, 500); 
-    }
+    return { ok: true };
   } catch (err) {
-    console.error('❌ فشل فتح المتصفح:', err);
-    if (mainWindow && mainWindow.isMinimized()) mainWindow.restore();
-    throw err;
+    return { ok: false, error: err.message };
   }
-
-  pendingAuth = {
-    state,
-    timeout: setTimeout(() => {
-      pendingAuth = null;
-      if (mainWindow) {
-          mainWindow.webContents.send('google-auth-error', { error: 'timeout' });
-          if (mainWindow.isMinimized()) mainWindow.restore();
-      }
-    }, 300000) // مهلة 5 دقائق للتسجيل
-  };
-
-  return { ok: true, state };
 });
 
 ipcMain.handle('auth:cancel-google', async () => {
