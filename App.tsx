@@ -6,11 +6,7 @@ import {
   Settings as SettingsIcon, Info, FileText, BookOpen, Medal, Loader2
 } from 'lucide-react';
 
-// ✅ استيراد المصادقة من فايربيس
-import { auth } from './services/firebase'; 
-import { onAuthStateChanged } from 'firebase/auth';
-
-// ✅ استدعاء مكتبات الموبايل (للإصدار)
+// ✅ تم إزالة Firebase و Auth تماماً
 import { App as CapacitorApp } from '@capacitor/app';
 import { Capacitor } from '@capacitor/core';
 
@@ -26,10 +22,9 @@ import About from './components/About';
 import UserGuide from './components/UserGuide';
 import BrandLogo from './components/BrandLogo';
 import WelcomeScreen from './components/WelcomeScreen';
-import LoginScreen from './components/LoginScreen';
 import { useSchoolBell } from './hooks/useSchoolBell';
 
-// --- 3D ICONS COMPONENTS (SVG) ---
+// --- 3D ICONS COMPONENTS (يبقى كما هو للأناقة) ---
 const Dashboard3D = ({ active }: { active: boolean }) => (
   <svg viewBox="0 0 64 64" className={`w-full h-full transition-all duration-300 ${active ? 'filter drop-shadow-lg scale-110' : 'opacity-60 grayscale-[0.8] hover:grayscale-0 hover:opacity-100 hover:scale-105'}`} xmlns="http://www.w3.org/2000/svg">
     <defs><linearGradient id="dash_bg" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stopColor="#6366f1" /><stop offset="100%" stopColor="#4338ca" /></linearGradient></defs>
@@ -66,12 +61,11 @@ const Grades3D = ({ active }: { active: boolean }) => (
 );
 const More3D = ({ active }: { active: boolean }) => (
   <svg viewBox="0 0 64 64" className={`w-full h-full transition-all duration-300 ${active ? 'filter drop-shadow-lg scale-110' : 'opacity-60 grayscale-[0.8] hover:grayscale-0 hover:opacity-100 hover:scale-105'}`} xmlns="http://www.w3.org/2000/svg">
-    <defs><linearGradient id="grid_grad" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stopColor="#f472b6" /><stop offset="1" stopColor="#db2777" /></linearGradient></defs>
+    <defs><linearGradient id="grid_grad" x1="0%" y1="0%" x2="1" y2="1"><stop offset="0%" stopColor="#f472b6" /><stop offset="100%" stopColor="#db2777" /></linearGradient></defs>
     <rect x="14" y="14" width="16" height="16" rx="4" fill="url(#grid_grad)" /><rect x="34" y="14" width="16" height="16" rx="4" fill="url(#grid_grad)" /><rect x="14" y="34" width="16" height="16" rx="4" fill="url(#grid_grad)" /><rect x="34" y="34" width="16" height="16" rx="4" fill="url(#grid_grad)" />
   </svg>
 );
 
-// Main App Container
 const AppContent: React.FC = () => {
   const {
     isDataLoaded, students, setStudents, classes, setClasses,
@@ -81,8 +75,7 @@ const AppContent: React.FC = () => {
 
   const [activeTab, setActiveTab] = useState('dashboard');
   const [showMoreMenu, setShowMoreMenu] = useState(false);
-  const [authStatus, setAuthStatus] = useState<'checking' | 'logged_in' | 'logged_out'>('checking');
-  const [appVersion, setAppVersion] = useState('3.6.0');
+  const [appVersion, setAppVersion] = useState('3.8.6');
 
   useEffect(() => {
     const fetchVersion = async () => {
@@ -100,24 +93,6 @@ const AppContent: React.FC = () => {
     };
     fetchVersion();
   }, []);
-
-  useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, (firebaseUser) => {
-        const isGuest = localStorage.getItem('guest_mode') === 'true';
-        if (isGuest || firebaseUser) {
-            setAuthStatus('logged_in');
-        } else {
-            setAuthStatus('logged_out');
-        }
-    });
-    return () => unsubscribe();
-  }, []);
-
-  const handleLoginSuccess = (user: any | null) => {
-    if (user) { localStorage.setItem('guest_mode', 'false'); } 
-    else { localStorage.setItem('guest_mode', 'true'); }
-    setAuthStatus('logged_in');
-  };
 
   const [showWelcome, setShowWelcome] = useState<boolean>(() => !localStorage.getItem('rased_welcome_seen'));
   const [notificationsEnabled, setNotificationsEnabled] = useState<boolean>(() => localStorage.getItem('bell_enabled') === 'true');
@@ -137,17 +112,17 @@ const AppContent: React.FC = () => {
     setShowWelcome(false);
   };
 
-  if (!isDataLoaded || authStatus === 'checking') {
+  // ✅ التعديل الجذري: لا ننتظر AuthStatus، فقط ننتظر تحميل البيانات المحلية
+  if (!isDataLoaded) {
     return (
       <div className="flex flex-col h-full w-full items-center justify-center bg-gray-50 fixed inset-0 z-[99999]">
         <Loader2 className="w-12 h-12 text-indigo-500 animate-spin mb-4" />
-        <p className="text-slate-500 font-medium">جاري استعادة البيانات...</p>
+        <p className="text-slate-500 font-medium text-sm">جاري استعادة البيانات المحلية...</p>
       </div>
     );
   }
 
   if (showWelcome) return <WelcomeScreen onFinish={handleFinishWelcome} />;
-  if (authStatus === 'logged_out') return <LoginScreen onLoginSuccess={handleLoginSuccess} />;
 
   const handleNavigate = (tab: string) => {
     setActiveTab(tab);
@@ -206,6 +181,7 @@ const AppContent: React.FC = () => {
     { id: 'students', label: 'الطلاب', IconComponent: Students3D },
     { id: 'grades', label: 'الدرجات', IconComponent: Grades3D },
   ];
+  
   const desktopNavItems = [
     { id: 'dashboard', label: 'الرئيسية', icon: LayoutDashboard },
     { id: 'attendance', label: 'الحضور', icon: CalendarCheck },
@@ -217,22 +193,25 @@ const AppContent: React.FC = () => {
     { id: 'settings', label: 'الإعدادات', icon: SettingsIcon },
     { id: 'about', label: 'حول التطبيق', icon: Info },
   ];
+
   const isMoreActive = !mobileNavItems.some(item => item.id === activeTab);
 
   return (
     <div className="flex h-full bg-[#f3f4f6] font-sans overflow-hidden text-slate-900 relative">
-      <aside className="hidden md:flex w-72 flex-col bg-white border-l border-slate-200 z-50 shadow-sm transition-all h-full">
+      {/* Sidebar (Desktop) */}
+      <aside className="hidden md:flex w-72 flex-col bg-white border-l border-slate-200 z-50 shadow-sm h-full">
         <div className="p-8 flex items-center gap-4">
           <div className="w-12 h-12"><BrandLogo className="w-full h-full" showText={false} /></div>
           <div>
-            <h1 className="text-2xl font-black text-slate-900 tracking-tight leading-none">راصد</h1>
-            <span className="text-[10px] font-bold text-indigo-600 tracking-wider">نسخة المعلم</span>
+            <h1 className="text-2xl font-black text-slate-900 tracking-tight">راصد</h1>
+            <span className="text-[10px] font-bold text-indigo-600 tracking-wider">نسخة المعلم المستقلة</span>
           </div>
         </div>
+        
         <div className="px-6 mb-6">
           <div className="p-4 bg-slate-50 rounded-2xl flex items-center gap-3 border border-slate-100">
-            <div className="w-10 h-10 rounded-full bg-slate-200 flex items-center justify-center overflow-hidden border border-slate-300 shadow-sm shrink-0">
-              {teacherInfo.avatar ? <img src={teacherInfo.avatar} className="w-full h-full object-cover" /> : <span className="font-black text-slate-500 text-lg">{teacherInfo.name?.[0]}</span>}
+            <div className="w-10 h-10 rounded-full bg-slate-200 flex items-center justify-center overflow-hidden border border-slate-300 shrink-0">
+              {teacherInfo.avatar ? <img src={teacherInfo.avatar} className="w-full h-full object-cover" /> : <span className="font-black text-slate-500 text-lg">{teacherInfo.name?.[0] || 'م'}</span>}
             </div>
             <div className="overflow-hidden">
               <p className="text-xs font-bold text-slate-900 truncate">{teacherInfo.name || 'مرحباً بك'}</p>
@@ -240,12 +219,12 @@ const AppContent: React.FC = () => {
             </div>
           </div>
         </div>
+
         <nav className="flex-1 overflow-y-auto px-4 space-y-2 custom-scrollbar pb-4">
           {desktopNavItems.map(item => (
-            <button key={item.id} onClick={() => handleNavigate(item.id)} className={`w-full flex items-center gap-3 px-4 py-3.5 rounded-2xl transition-all duration-300 group ${activeTab === item.id ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-200 scale-[1.02]' : 'text-slate-500 hover:bg-slate-50 hover:text-slate-900 border border-transparent hover:border-slate-100'}`}>
-              <item.icon className={`w-5 h-5 ${activeTab === item.id ? 'text-white' : 'text-slate-400 group-hover:text-indigo-500'} transition-colors`} strokeWidth={2.5} />
+            <button key={item.id} onClick={() => handleNavigate(item.id)} className={`w-full flex items-center gap-3 px-4 py-3.5 rounded-2xl transition-all duration-300 group ${activeTab === item.id ? 'bg-indigo-600 text-white shadow-lg' : 'text-slate-500 hover:bg-slate-50 hover:text-slate-900'}`}>
+              <item.icon className={`w-5 h-5 ${activeTab === item.id ? 'text-white' : 'text-slate-400'}`} strokeWidth={2.5} />
               <span className="font-bold text-sm">{item.label}</span>
-              {activeTab === item.id && <div className="mr-auto w-1.5 h-1.5 rounded-full bg-white animate-pulse"></div>}
             </button>
           ))}
         </nav>
@@ -254,47 +233,44 @@ const AppContent: React.FC = () => {
         </div>
       </aside>
 
-      <main className="flex-1 flex flex-col h-full overflow-hidden relative bg-[#f3f4f6] z-0">
-        <div className="flex-1 overflow-y-auto overflow-x-hidden custom-scrollbar pb-32 md:pb-4 px-4 md:px-8 pt-safe overscroll-contain" id="main-scroll-container">
+      {/* Main Container */}
+      <main className="flex-1 flex flex-col h-full overflow-hidden relative bg-[#f3f4f6]">
+        <div className="flex-1 overflow-y-auto overflow-x-hidden custom-scrollbar pb-32 md:pb-4 px-4 md:px-8 pt-safe">
           <div className="max-w-5xl mx-auto w-full min-h-full">
             {renderContent()}
           </div>
         </div>
       </main>
 
-      <div className="md:hidden fixed bottom-0 left-0 right-0 z-[9999] h-[85px] bg-white/95 backdrop-blur-xl rounded-t-[2.5rem] shadow-[0_-10px_40px_rgba(0,0,0,0.08)] flex justify-around items-end pb-4 border-t border-slate-200/60 pb-safe safe-area-bottom transition-transform duration-300 translate-z-0 pointer-events-auto">
+      {/* Bottom Nav (Mobile) */}
+      <div className="md:hidden fixed bottom-0 left-0 right-0 z-[9999] h-[85px] bg-white/95 backdrop-blur-xl rounded-t-[2.5rem] shadow-[0_-10px_40px_rgba(0,0,0,0.08)] flex justify-around items-end pb-4 border-t border-slate-200/60 transition-transform duration-300">
         {mobileNavItems.map((item) => {
           const isActive = activeTab === item.id;
           return (
-            <button key={item.id} onClick={() => handleNavigate(item.id)} className="relative w-full h-full flex flex-col items-center justify-end group pb-1 touch-manipulation active:scale-90 transition-transform" style={{ WebkitTapHighlightColor: 'transparent' }}>
-              <div className={`absolute top-0 transition-all duration-500 cubic-bezier(0.34, 1.56, 0.64, 1) pointer-events-none ${isActive ? '-translate-y-7 scale-110' : 'translate-y-1 scale-90'}`}>
-                <div className={`w-11 h-11 ${isActive ? 'drop-shadow-2xl' : ''}`}><item.IconComponent active={isActive} /></div>
+            <button key={item.id} onClick={() => handleNavigate(item.id)} className="relative w-full h-full flex flex-col items-center justify-end pb-1 touch-manipulation active:scale-90 transition-transform">
+              <div className={`absolute top-0 transition-all duration-500 ${isActive ? '-translate-y-7 scale-110' : 'translate-y-1 scale-90'}`}>
+                <div className="w-11 h-11"><item.IconComponent active={isActive} /></div>
               </div>
-              <span className={`text-[10px] font-black transition-all duration-300 pointer-events-none ${isActive ? 'translate-y-0 text-indigo-600 opacity-100' : 'translate-y-4 text-gray-400 opacity-0'}`}>{item.label}</span>
-              {isActive && <div className="absolute bottom-1 w-1 h-1 bg-indigo-600 rounded-full"></div>}
+              <span className={`text-[10px] font-black transition-all ${isActive ? 'text-indigo-600' : 'text-gray-400 opacity-0'}`}>{item.label}</span>
             </button>
           );
         })}
-        <button onClick={() => setShowMoreMenu(true)} className="relative w-full h-full flex flex-col items-center justify-end group pb-1 touch-manipulation active:scale-90 transition-transform" style={{ WebkitTapHighlightColor: 'transparent' }}>
-          <div className={`absolute top-0 transition-all duration-500 cubic-bezier(0.34, 1.56, 0.64, 1) pointer-events-none ${isMoreActive ? '-translate-y-7 scale-110' : 'translate-y-1 scale-90'}`}>
-            <div className={`w-11 h-11 ${isMoreActive ? 'drop-shadow-2xl' : ''}`}><More3D active={isMoreActive} /></div>
+        <button onClick={() => setShowMoreMenu(true)} className="relative w-full h-full flex flex-col items-center justify-end pb-1 touch-manipulation active:scale-90 transition-transform">
+          <div className={`absolute top-0 transition-all duration-500 ${isMoreActive ? '-translate-y-7 scale-110' : 'translate-y-1 scale-90'}`}>
+            <div className="w-11 h-11"><More3D active={isMoreActive} /></div>
           </div>
-          <span className={`text-[10px] font-black transition-all duration-300 pointer-events-none ${isMoreActive ? 'translate-y-0 text-indigo-600 opacity-100' : 'translate-y-4 text-gray-400 opacity-0'}`}>المزيد</span>
-          {isMoreActive && <div className="absolute bottom-1 w-1 h-1 bg-indigo-600 rounded-full"></div>}
+          <span className={`text-[10px] font-black transition-all ${isMoreActive ? 'text-indigo-600' : 'text-gray-400 opacity-0'}`}>المزيد</span>
         </button>
       </div>
 
+      {/* More Menu Modal */}
       <Modal isOpen={showMoreMenu} onClose={() => setShowMoreMenu(false)} className="max-w-md rounded-[2rem] mb-28 md:hidden z-[10000]">
-        <div className="text-center mb-6">
-          <div className="w-12 h-1 bg-gray-300 rounded-full mx-auto mb-4"></div>
-          <h3 className="font-black text-slate-800 text-lg">القائمة الكاملة</h3>
-        </div>
-        <div className="grid grid-cols-3 gap-3">
-          <button onClick={() => handleNavigate('leaderboard')} className="p-4 bg-amber-50 rounded-2xl flex flex-col items-center justify-center gap-2 active:scale-95 transition-transform border border-amber-200 aspect-square shadow-sm"><Medal className="w-7 h-7 text-amber-600" /><span className="font-bold text-[10px] text-amber-800">فرسان الشهر</span></button>
-          <button onClick={() => handleNavigate('reports')} className="p-4 bg-indigo-50 rounded-2xl flex flex-col items-center justify-center gap-2 active:scale-95 transition-transform border border-indigo-200 aspect-square shadow-sm"><FileText className="w-7 h-7 text-indigo-600" /><span className="font-bold text-[10px] text-indigo-800">التقارير</span></button>
-          <button onClick={() => handleNavigate('settings')} className="p-4 bg-gray-100 rounded-2xl flex flex-col items-center justify-center gap-2 active:scale-95 transition-transform border border-gray-300 aspect-square shadow-sm"><SettingsIcon className="w-7 h-7 text-gray-600" /><span className="font-bold text-[10px] text-gray-800">الإعدادات</span></button>
-          <button onClick={() => handleNavigate('guide')} className="p-4 bg-cyan-50 rounded-2xl flex flex-col items-center justify-center gap-2 active:scale-95 transition-transform border border-cyan-200 aspect-square shadow-sm"><BookOpen className="w-7 h-7 text-cyan-600" /><span className="font-bold text-[10px] text-cyan-800">الدليل</span></button>
-          <button onClick={() => handleNavigate('about')} className="p-4 bg-purple-50 rounded-2xl flex flex-col items-center justify-center gap-2 active:scale-95 transition-transform border border-purple-200 aspect-square shadow-sm"><Info className="w-7 h-7 text-purple-600" /><span className="font-bold text-[10px] text-purple-800">حول التطبيق</span></button>
+        <div className="grid grid-cols-3 gap-3 p-4">
+          <button onClick={() => handleNavigate('leaderboard')} className="p-4 bg-amber-50 rounded-2xl flex flex-col items-center justify-center gap-2 active:scale-95 border border-amber-200 aspect-square"><Medal className="w-7 h-7 text-amber-600" /><span className="font-bold text-[10px]">فرسان الشهر</span></button>
+          <button onClick={() => handleNavigate('reports')} className="p-4 bg-indigo-50 rounded-2xl flex flex-col items-center justify-center gap-2 active:scale-95 border border-indigo-200 aspect-square"><FileText className="w-7 h-7 text-indigo-600" /><span className="font-bold text-[10px]">التقارير</span></button>
+          <button onClick={() => handleNavigate('settings')} className="p-4 bg-gray-100 rounded-2xl flex flex-col items-center justify-center gap-2 active:scale-95 border border-gray-300 aspect-square"><SettingsIcon className="w-7 h-7 text-gray-600" /><span className="font-bold text-[10px]">الإعدادات</span></button>
+          <button onClick={() => handleNavigate('guide')} className="p-4 bg-cyan-50 rounded-2xl flex flex-col items-center justify-center gap-2 active:scale-95 border border-cyan-200 aspect-square"><BookOpen className="w-7 h-7 text-cyan-600" /><span className="font-bold text-[10px]">الدليل</span></button>
+          <button onClick={() => handleNavigate('about')} className="p-4 bg-purple-50 rounded-2xl flex flex-col items-center justify-center gap-2 active:scale-95 border border-purple-200 aspect-square"><Info className="w-7 h-7 text-purple-600" /><span className="font-bold text-[10px]">حول التطبيق</span></button>
         </div>
       </Modal>
     </div>
