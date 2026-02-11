@@ -18,7 +18,7 @@
   },
   "dependencies": {
     "@capacitor/android": "^6.0.0",
-   "react-router-dom": "^6.22.0",
+    "react-router-dom": "^6.22.0",
     "@capacitor/app": "^6.0.0",
     "@capacitor/core": "^6.0.0",
     "@capacitor/filesystem": "^6.0.0",
@@ -70,7 +70,8 @@
     ],
     "win": {
       "target": "nsis",
-      "icon": "icon.png"
+      "icon": "icon.png",
+      "requestedExecutionLevel": "asInvoker"
     },
     "nsis": {
       "oneClick": false,
@@ -80,14 +81,11 @@
       "shortcutName": "راصد"
     },
     "protocols": [
-  {
-    "name": "Google Auth Protocol",
-    "schemes": [
-      "com.googleusercontent.apps.87037584903-3uc4aeg3nc5lk3pu8crjbaad184bhjth",
-      "rasedapp"
-    ]
-  }
-]
+      {
+        "name": "Google Auth Protocol",
+        "schemes": [
+          "com.googleusercontent.apps.87037584903-3uc4aeg3nc5lk3pu8crjbaad184bhjth",
+          "rasedapp"
         ]
       }
     ],
