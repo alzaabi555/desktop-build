@@ -151,13 +151,23 @@ ipcMain.handle('auth:start-google', async (_event, payload) => {
   const state = userState || crypto.randomBytes(16).toString('hex');
   const scopeString = Array.isArray(scopes) ? scopes.join(' ') : 'openid email profile';
 
-  const authUrl = `https://accounts.google.com/o/oauth2/v2/auth?client_id=${clientId}&redirect_uri=${redirectUri}&response_type=code&scope=${scopeString}&state=${state}`;
+  // ✅ استخدام كائن URL لتشفير الرابط والمسافات تلقائياً بشكل صحيح 100%
+  const authUrlObj = new URL('https://accounts.google.com/o/oauth2/v2/auth');
+  authUrlObj.searchParams.append('client_id', clientId);
+  authUrlObj.searchParams.append('redirect_uri', redirectUri);
+  authUrlObj.searchParams.append('response_type', 'code');
+  authUrlObj.searchParams.append('scope', scopeString); // سيحول المسافات إلى %20 تلقائياً
+  authUrlObj.searchParams.append('state', state);
+
+  const authUrl = authUrlObj.toString();
 
   if (mainWindow) mainWindow.minimize();
 
   try {
+    // الآن سيفتح كروم صفحة جوجل بكل سلاسة
     await shell.openExternal(authUrl);
   } catch (err) {
+// ...
     console.error('❌ فشل فتح المتصفح آلياً:', err);
     if (mainWindow) mainWindow.restore();
   }
