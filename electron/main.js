@@ -4,7 +4,7 @@ const { autoUpdater } = require('electron-updater');
 const crypto = require('crypto');
 
 // ---------------------------------------------------------
-// 🚀 1. إعدادات الأداء والنظام (High Performance Mode)
+// 1. Performance and System Settings (High Performance Mode)
 // ---------------------------------------------------------
 app.commandLine.appendSwitch('js-flags', '--max-old-space-size=8192');
 app.commandLine.appendSwitch('enable-gpu-rasterization');
@@ -19,7 +19,7 @@ if (!gotLock) {
   app.quit();
 }
 
-// 🔴 البروتوكول للمعرف المعكوس (Google Auth)
+// Protocol for reverse identifier (Google Auth)
 const PROTOCOL = 'com.googleusercontent.apps.87037584903-3uc4aeg3nc5lk3pu8crjbaad184bhjth';
 
 if (process.defaultApp) {
@@ -42,13 +42,12 @@ function createWindow() {
     minWidth: 900,
     minHeight: 600,
     icon: path.join(__dirname, '../icon.png'),
-    backgroundColor: '#f3f4f6', // ✅ تم تصحيح مكانها والفاصلة قبلها
+    backgroundColor: '#f3f4f6',
     webPreferences: {
       nodeIntegration: false,
       contextIsolation: true,
-      // استخدام path.resolve لضمان الوصول للملف في النسخة المجمعة
       preload: path.resolve(__dirname, 'preload.js'),
-      sandbox: false, // 👈 ضروري جداً لفتح المتصفح الخارجي
+      sandbox: false,
       backgroundThrottling: false,
       webSecurity: true
     }
@@ -58,7 +57,7 @@ function createWindow() {
   mainWindow.loadFile(path.join(__dirname, '../www/index.html'));
   mainWindow.setMenuBarVisibility(false);
 
-  // معالجة فتح الروابط الخارجية
+  // Handle external links
   mainWindow.webContents.setWindowOpenHandler(({ url }) => {
     shell.openExternal(url).catch(console.error);
     return { action: 'deny' };
@@ -70,7 +69,7 @@ function createWindow() {
 }
 
 // ---------------------------------------------------------
-// 🔗 2. معالجة الروابط العميقة (Deep Linking)
+// 2. Deep Linking Handler
 // ---------------------------------------------------------
 function handleDeepLink(url) {
   if (!mainWindow || !url) return;
@@ -101,7 +100,7 @@ app.on('second-instance', (_event, argv) => {
 });
 
 // ---------------------------------------------------------
-// 🔐 3. المصادقة (Google Auth) - الحل النووي
+// 3. Authentication (Google Auth)
 // ---------------------------------------------------------
 ipcMain.handle('get-app-version', () => app.getVersion());
 
@@ -113,10 +112,10 @@ ipcMain.handle('auth:start-google', async (_event, payload) => {
   const authUrl = `https://accounts.google.com/o/oauth2/v2/auth?client_id=${clientId}&redirect_uri=${encodeURIComponent(redirectUri)}&response_type=code&scope=${encodeURIComponent(scopeString)}&state=${state}`;
 
   try {
-    // الطريقة الأولى: الفتح عبر Shell
+    // Method 1: Open via Shell
     await shell.openExternal(authUrl);
     
-    // الطريقة الثانية (خطة الطوارئ للويندوز): الفتح عبر سطر الأوامر بعد ثانية
+    // Method 2 (Windows fallback): Open via command line after 1 second
     setTimeout(() => {
       if (process.platform === 'win32') {
         const { exec } = require('child_process');
@@ -124,7 +123,7 @@ ipcMain.handle('auth:start-google', async (_event, payload) => {
       }
     }, 1000);
 
-    // تصغير التطبيق لإعطاء المجال للمتصفح
+    // Minimize app to give browser space
     if (mainWindow) {
         setTimeout(() => mainWindow.minimize(), 1500);
     }
@@ -136,7 +135,7 @@ ipcMain.handle('auth:start-google', async (_event, payload) => {
 });
 
 // ---------------------------------------------------------
-// 🏁 4. بدء التشغيل
+// 4. App Startup
 // ---------------------------------------------------------
 app.whenReady().then(() => {
   createWindow();
