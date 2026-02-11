@@ -430,8 +430,8 @@ const StudentList: React.FC<StudentListProps> = ({
     };
 
     return (
-        {/* ✅ 3. التعديل السحري: إزالة animate-in fade-in لزيادة السرعة والنعومة */}
-        <div className="flex flex-col h-full overflow-hidden">
+    <div className="flex flex-col h-full overflow-hidden">
+        {/* التعديل السحري هنا */}
             
             {/* Header */}
             <header className="fixed md:sticky top-0 z-40 md:z-30 bg-[#446A8D] text-white shadow-lg px-4 pt-[env(safe-area-inset-top)] pb-6 transition-all duration-300 md:rounded-none md:shadow-md w-full md:w-auto left-0 right-0 md:left-auto md:right-auto">
