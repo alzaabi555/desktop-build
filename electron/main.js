@@ -1,52 +1,34 @@
 const { app, BrowserWindow, shell, ipcMain } = require('electron');
 const path = require('path');
-const crypto = require('crypto');
-const http = require('http');
-const { URL } = require('url');
 const { autoUpdater } = require('electron-updater');
 
-// ------------------------------
-// Performance flags (اختياري)
-// ------------------------------
-app.commandLine.appendSwitch('js-flags', '--max-old-space-size=8192');
-app.commandLine.appendSwitch('enable-gpu-rasterization');
-app.commandLine.appendSwitch('enable-zero-copy');
-app.commandLine.appendSwitch('ignore-gpu-blacklist');
-app.commandLine.appendSwitch('disable-site-isolation-trials');
+// ---------------------------------------------------------
+// 🚀 1. إعدادات الأداء القصوى (High Performance Mode)
+// ---------------------------------------------------------
+app.commandLine.appendSwitch('js-flags', '--max-old-space-size=8192'); // تخصيص ذاكرة حتى 8GB
+app.commandLine.appendSwitch('enable-gpu-rasterization'); // تسريع الرسم عبر كرت الشاشة
+app.commandLine.appendSwitch('enable-zero-copy'); // تسريع نقل البيانات بين العمليات
+app.commandLine.appendSwitch('ignore-gpu-blacklist'); // إجبار استخدام GPU
+app.commandLine.appendSwitch('disable-site-isolation-trials'); // تقليل استهلاك الذاكرة
 
+// تحديد مسار بيانات المستخدم لضمان بقاء النسخ الاحتياطية المحلية آمنة
 app.setPath('userData', path.join(app.getPath('appData'), 'RasedApp'));
 
-// Single instance
+// منع تشغيل أكثر من نسخة من التطبيق في نفس الوقت
 const gotLock = app.requestSingleInstanceLock();
 if (!gotLock) app.quit();
 
+// إعدادات التحديث التلقائي
 autoUpdater.autoDownload = true;
 autoUpdater.autoInstallOnAppQuit = true;
 
-// ------------------------------
-// Google OAuth Desktop settings
-// ------------------------------
-const GOOGLE_CLIENT_ID =
-  process.env.GOOGLE_CLIENT_ID ||
-  '87037584903-lavg5se9f7mfkuvhnqbj53skmorord0u.apps.googleusercontent.com';
-
-const GOOGLE_CLIENT_SECRET =
-  process.env.GOOGLE_CLIENT_SECRET ||
-  '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';
-
 let mainWindow = null;
 
-// ------------------------------
-// Helpers
-// ------------------------------
+// ---------------------------------------------------------
+// 🛠️ 2. الدوال المساعدة
+// ---------------------------------------------------------
 function isHttpUrl(url) {
   return typeof url === 'string' && (url.startsWith('http://') || url.startsWith('https://'));
-}
-
-function sendToRenderer(channel, payload) {
-  try {
-    if (mainWindow && mainWindow.webContents) mainWindow.webContents.send(channel, payload);
-  } catch {}
 }
 
 function createWindow() {
@@ -62,24 +44,26 @@ function createWindow() {
       contextIsolation: true,
       preload: path.resolve(__dirname, 'preload.js'),
       sandbox: false,
-      backgroundThrottling: false,
+      backgroundThrottling: false, // يمنع بطء التطبيق عند تصغيره
       webSecurity: true,
     },
   });
 
-  // لا تمسح Cache هنا (قد يسبب مشاكل تسجيل الدخول)
-  // mainWindow.webContents.session.clearCache();
-
+  // تحميل ملف الواجهة الرئيسي
   mainWindow.loadFile(path.join(__dirname, '../www/index.html'));
+  
+  // إخفاء شريط القوائم العلوي (Menu Bar)
   mainWindow.setMenuBarVisibility(false);
 
-  // أي نافذة جديدة => افتح خارجيًا
+  // 🌐 معالجة الروابط الخارجية (مثل فتح واتساب أو المتصفح)
   mainWindow.webContents.setWindowOpenHandler(({ url }) => {
-    if (isHttpUrl(url)) shell.openExternal(url).catch(() => {});
-    return { action: 'deny' };
+    if (isHttpUrl(url)) {
+      shell.openExternal(url).catch(() => {});
+    }
+    return { action: 'deny' }; // يمنع فتح نافذة داخل التطبيق ويفتحها في المتصفح الافتراضي
   });
 
-  // أي تنقّل خارجي داخل نفس النافذة => افتح خارجيًا
+  // منع التنقل داخل نافذة التطبيق لأي رابط خارجي
   mainWindow.webContents.on('will-navigate', (event, url) => {
     if (isHttpUrl(url)) {
       event.preventDefault();
@@ -90,147 +74,25 @@ function createWindow() {
   mainWindow.on('closed', () => (mainWindow = null));
 }
 
-// ------------------------------
-// Loopback OAuth (127.0.0.1)
-// ------------------------------
-let loopbackServer = null;
-let loopbackState = null;
-let loopbackRedirectUri = null;
-
-function startLoopbackServer() {
-  return new Promise((resolve, reject) => {
-    // نظّف أي سيرفر سابق
-    try {
-      if (loopbackServer) loopbackServer.close();
-    } catch {}
-
-    loopbackServer = http.createServer((req, res) => {
-      try {
-        const reqUrl = new URL(req.url, `http://127.0.0.1:${loopbackServer.address().port}`);
-        if (reqUrl.pathname !== '/oauth2/callback') {
-          res.writeHead(404);
-          res.end('Not found');
-          return;
-        }
-
-        const code = reqUrl.searchParams.get('code');
-        const state = reqUrl.searchParams.get('state');
-        const error = reqUrl.searchParams.get('error');
-
-        if (error) {
-          res.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8' });
-          res.end('<h3>Login failed</h3><p>You can close this window and return to the app.</p>');
-          sendToRenderer('google-auth-error', { error, url: reqUrl.toString(), via: 'loopback' });
-          return;
-        }
-
-        // أظهر صفحة نجاح للمستخدم
-        res.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8' });
-        res.end('<h3>Login completed</h3><p>You can close this window and return to the app.</p>');
-
-        // تحقق state
-        if (!code) {
-          sendToRenderer('google-auth-error', { error: 'Missing code', url: reqUrl.toString(), via: 'loopback' });
-          return;
-        }
-        if (loopbackState && state !== loopbackState) {
-          sendToRenderer('google-auth-error', { error: 'State mismatch', url: reqUrl.toString(), via: 'loopback' });
-          return;
-        }
-
-        // أرسل الكود للواجهة
-        sendToRenderer('google-auth-code', { code, state, url: reqUrl.toString(), via: 'loopback' });
-      } catch (e) {
-        sendToRenderer('google-auth-error', { error: String(e?.message || e), via: 'loopback' });
-      }
-    });
-
-    loopbackServer.on('error', reject);
-
-    // port=0 => اختيار بورت متاح تلقائيًا
-    loopbackServer.listen(0, '127.0.0.1', () => {
-      const port = loopbackServer.address().port;
-      loopbackRedirectUri = `http://127.0.0.1:${port}/oauth2/callback`;
-      resolve({ port, redirectUri: loopbackRedirectUri });
-    });
-  });
-}
-
-async function exchangeCodeForTokens(code) {
-  const params = new URLSearchParams();
-  params.append('code', code);
-  params.append('client_id', 
-87037584903-lavg5se9f7mfkuvhnqbj53skmorord0u.apps.googleusercontent.com
-);
-  params.append('client_secret', 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);
-  params.append('redirect_uri', loopbackRedirectUri);
-  params.append('grant_type', 'authorization_code');
-
-  const res = await fetch('https://oauth2.googleapis.com/token', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-    body: params,
-  });
-
-  const data = await res.json();
-  if (!res.ok) throw new Error(data?.error_description || data?.error || 'Token exchange failed');
-
-  return { id_token: data.id_token, access_token: data.access_token };
-}
-
-// ------------------------------
-// IPC
-// ------------------------------
+// ---------------------------------------------------------
+// 📡 3. نظام IPC (التواصل مع واجهة React)
+// ---------------------------------------------------------
+// إرسال نسخة التطبيق للواجهة عند الطلب
 ipcMain.handle('get-app-version', () => app.getVersion());
 
-ipcMain.handle('auth:start-google', async (_event, payload) => {
-  const scopes = Array.isArray(payload?.scopes) ? payload.scopes : ['openid', 'email', 'profile'];
-  const scopeString = scopes.join(' ');
-  loopbackState = payload?.state || crypto.randomBytes(16).toString('hex');
+// ---------------------------------------------------------
+// 🏁 4. دورة حياة التطبيق (Lifecycle)
+// ---------------------------------------------------------
+app.whenReady().then(() => {
+  createWindow();
 
-  try {
-    const { redirectUri } = await startLoopbackServer();
-
-    const authUrl =
-      `https://accounts.google.com/o/oauth2/v2/auth` +
-      `?client_id=${encodeURIComponent(GOOGLE_CLIENT_ID)}` +
-      `&redirect_uri=${encodeURIComponent(redirectUri)}` +
-      `&response_type=code` +
-      `&scope=${encodeURIComponent(scopeString)}` +
-      `&state=${encodeURIComponent(loopbackState)}` +
-      `&prompt=select_account`;
-
-    await shell.openExternal(authUrl);
-
-    return { ok: true, state: loopbackState, redirectUri };
-  } catch (e) {
-    return { ok: false, error: String(e?.message || e) };
+  // التحقق من التحديثات عند التشغيل في النسخة النهائية فقط
+  if (app.isPackaged) {
+    autoUpdater.checkForUpdatesAndNotify();
   }
 });
 
-ipcMain.handle('auth:exchange-code', async (_event, payload) => {
-  const code = payload?.code;
-  if (!code) throw new Error('Missing code');
-
-  const tokens = await exchangeCodeForTokens(code);
-
-  // اختياري: أغلق السيرفر بعد النجاح لتفريغ المنفذ
-  try {
-    if (loopbackServer) loopbackServer.close();
-  } catch {}
-  loopbackServer = null;
-
-  return tokens;
-});
-
-// ------------------------------
-// Startup
-// ------------------------------
-app.whenReady().then(() => {
-  createWindow();
-  if (app.isPackaged) autoUpdater.checkForUpdatesAndNotify();
-});
-
+// إعادة التركيز على النافذة عند محاولة تشغيل نسخة ثانية
 app.on('second-instance', () => {
   if (mainWindow) {
     if (mainWindow.isMinimized()) mainWindow.restore();
