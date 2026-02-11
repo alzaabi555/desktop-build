@@ -2,7 +2,7 @@
 const { contextBridge, shell, ipcRenderer } = require('electron');
 
 contextBridge.exposeInMainWorld('electron', {
-  // فتح روابط خارجية
+  startGoogleLogin: (payload) => ipcRenderer.invoke('auth:start-google', payload),
   openExternal: (url) => shell.openExternal(url),
 
   // نسخة التطبيق
