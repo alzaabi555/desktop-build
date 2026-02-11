@@ -80,10 +80,14 @@
       "shortcutName": "راصد"
     },
     "protocols": [
-      {
-        "name": "Rased App Protocol",
-        "schemes": [
-          "rasedapp"
+  {
+    "name": "Google Auth Protocol",
+    "schemes": [
+      "com.googleusercontent.apps.87037584903-3uc4aeg3nc5lk3pu8crjbaad184bhjth",
+      "rasedapp"
+    ]
+  }
+]
         ]
       }
     ],
