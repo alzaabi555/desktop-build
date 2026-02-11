@@ -151,25 +151,30 @@ ipcMain.handle('auth:start-google', async (_event, payload) => {
   const state = userState || crypto.randomBytes(16).toString('hex');
   const scopeString = Array.isArray(scopes) ? scopes.join(' ') : 'openid email profile';
 
-  // ✅ استخدام كائن URL لتشفير الرابط والمسافات تلقائياً بشكل صحيح 100%
+  // 1. بناء الرابط وتشفيره بأمان
   const authUrlObj = new URL('https://accounts.google.com/o/oauth2/v2/auth');
   authUrlObj.searchParams.append('client_id', clientId);
   authUrlObj.searchParams.append('redirect_uri', redirectUri);
   authUrlObj.searchParams.append('response_type', 'code');
-  authUrlObj.searchParams.append('scope', scopeString); // سيحول المسافات إلى %20 تلقائياً
+  authUrlObj.searchParams.append('scope', scopeString);
   authUrlObj.searchParams.append('state', state);
 
-  const authUrl = authUrlObj.toString();
-
-  if (mainWindow) mainWindow.minimize();
+  const finalAuthUrl = authUrlObj.toString();
 
   try {
-    // الآن سيفتح كروم صفحة جوجل بكل سلاسة
-    await shell.openExternal(authUrl);
+    // 2. 🚀 السحر هنا: نفتح المتصفح أولاً قبل تصغير التطبيق!
+    await shell.openExternal(finalAuthUrl);
+
+    // 3. ننتظر نصف ثانية حتى يظهر المتصفح، ثم نصغر التطبيق
+    if (mainWindow) {
+        setTimeout(() => {
+            mainWindow.minimize();
+        }, 500); 
+    }
   } catch (err) {
-// ...
-    console.error('❌ فشل فتح المتصفح آلياً:', err);
-    if (mainWindow) mainWindow.restore();
+    console.error('❌ فشل فتح المتصفح:', err);
+    if (mainWindow && mainWindow.isMinimized()) mainWindow.restore();
+    throw err;
   }
 
   pendingAuth = {
@@ -180,7 +185,7 @@ ipcMain.handle('auth:start-google', async (_event, payload) => {
           mainWindow.webContents.send('google-auth-error', { error: 'timeout' });
           if (mainWindow.isMinimized()) mainWindow.restore();
       }
-    }, 300000) 
+    }, 300000) // مهلة 5 دقائق للتسجيل
   };
 
   return { ok: true, state };
