@@ -1,4 +1,4 @@
-import React, { useState, useMemo, useRef } from 'react';
+import React, { useState, useMemo, useRef, useEffect } from 'react';
 import { Student } from '../types';
 import { Trophy, Crown, Sparkles, Star, Search, Award, Download, X, Loader2, MinusCircle, Medal } from 'lucide-react'; 
 import { useApp } from '../context/AppContext';
@@ -28,9 +28,16 @@ interface LeaderboardProps {
 
 const Leaderboard: React.FC<LeaderboardProps> = ({ students, classes, onUpdateStudent, teacherInfo }) => {
     const { currentSemester } = useApp();
-    const [selectedClass, setSelectedClass] = useState<string>('all');
+    
+    // ✅ استدعاء القيم المحفوظة في ذاكرة الجلسة
+    const [selectedClass, setSelectedClass] = useState<string>(() => sessionStorage.getItem('rased_class') || 'all');
     const [searchTerm, setSearchTerm] = useState('');
     
+    // ✅ حفظ القيم فور تغيرها لتتذكرها الصفحات الأخرى
+    useEffect(() => {
+        sessionStorage.setItem('rased_class', selectedClass);
+    }, [selectedClass]);
+
     // حالات الشهادة والتحميل
     const [certificateStudent, setCertificateStudent] = useState<Student | null>(null);
     const [isGeneratingPdf, setIsGeneratingPdf] = useState(false);
@@ -96,7 +103,6 @@ const Leaderboard: React.FC<LeaderboardProps> = ({ students, classes, onUpdateSt
         alert(`تم إضافة 3 نقاط للطالب ${student.name} 🌟`);
     };
 
-    // ✅ دالة الخصم لتصحيح الخطأ
     const handleDeductPoint = (student: Student) => {
         if (!onUpdateStudent) return;
         
@@ -106,14 +112,13 @@ const Leaderboard: React.FC<LeaderboardProps> = ({ students, classes, onUpdateSt
                 date: new Date().toISOString(),
                 type: 'positive' as const, 
                 description: 'تصحيح نقاط (خصم)',
-                points: -3, 
+                points: -1, 
                 semester: currentSemester
             };
             onUpdateStudent({ ...student, behaviors: [correctionBehavior, ...(student.behaviors || [])] });
         }
     };
 
-    // ✅ دالة الحفظ المعدلة لتعمل على الموبايل والويندوز
     const handleDownloadPDF = async () => {
         if (!certificateRef.current || !certificateStudent) return;
         
@@ -122,6 +127,7 @@ const Leaderboard: React.FC<LeaderboardProps> = ({ students, classes, onUpdateSt
         const element = certificateRef.current;
         const fileName = `Certificate_${certificateStudent.name.replace(/\s+/g, '_')}.pdf`;
 
+        // إعدادات تصدير PDF للحفاظ على صفحة واحدة
         const opt = {
             margin: 0, 
             filename: fileName,
@@ -154,17 +160,16 @@ const Leaderboard: React.FC<LeaderboardProps> = ({ students, classes, onUpdateSt
 
         } catch (error) {
             console.error('Error generating PDF:', error);
-            alert('❌ حدث خطأ أثناء إنشاء ملف الشهادة. يرجى المحاولة مرة أخرى.');
+            alert('❌ حدث خطأ أثناء إنشاء ملف الشهادة.');
         } finally {
             setIsGeneratingPdf(false); 
         }
     };
 
-    // ✅ متغير لغوي ذكي لتحديد جنس الطالب في الشهادة
     const isFemale = certificateStudent?.gender === 'female';
 
     return (
-        <div className="flex flex-col h-full space-y-6 pb-24 md:pb-8 animate-in fade-in duration-500 overflow-hidden">
+        <div className="flex flex-col h-full space-y-6 pb-24 md:pb-8 overflow-hidden">
             
             {/* Header */}
             <header className="fixed md:sticky top-0 z-40 md:z-30 bg-[#446A8D] text-white shadow-lg px-4 pt-[env(safe-area-inset-top)] pb-6 transition-all duration-300  md:rounded-none md:shadow-md w-full md:w-auto left-0 right-0 md:left-auto md:right-auto">
@@ -324,7 +329,6 @@ const Leaderboard: React.FC<LeaderboardProps> = ({ students, classes, onUpdateSt
                                                 {student.monthlyPoints}
                                             </p>
                                         </div>
-                                        {/* زر شهادة وخصم مصغر للبقية */}
                                         <div className="flex gap-1 justify-center">
                                             <button onClick={() => setCertificateStudent(student)} className="flex-1 py-1 bg-slate-100 text-slate-500 text-[9px] font-bold rounded-lg hover:bg-[#446A8D] hover:text-white transition-colors">
                                                 شهادة
@@ -341,7 +345,7 @@ const Leaderboard: React.FC<LeaderboardProps> = ({ students, classes, onUpdateSt
                 )}
             </div>
 
-            {/* ✅ نافذة الشهادة الفخمة والملكية (لغوياً ذكية) */}
+            {/* ✅ نافذة الشهادة الفخمة (تصميم الصفحة الواحدة المحكم) */}
             <Modal isOpen={!!certificateStudent} onClose={() => { if(!isGeneratingPdf) setCertificateStudent(null); }} className="max-w-4xl w-[95vw] rounded-xl p-0 overflow-hidden">
                 {certificateStudent && (
                     <div className="flex flex-col h-full bg-white max-h-[90vh]">
@@ -357,105 +361,105 @@ const Leaderboard: React.FC<LeaderboardProps> = ({ students, classes, onUpdateSt
                         {/* منطقة العرض للشهادة (Scrollable) */}
                         <div className="flex-1 overflow-auto bg-slate-800 flex justify-center p-4 md:p-8">
                             
-                            {/* ✅ الحاوية الرئيسية للشهادة (A4 Landscape) - إطار واحد فخم */}
-                            <div ref={certificateRef} className="bg-white shadow-2xl text-center text-slate-900 mx-auto relative flex flex-col" 
-                                 style={{ width: '297mm', minHeight: '210mm', backgroundColor: '#fdfbf7', backgroundImage: 'radial-gradient(circle at center, #ffffff 0%, #fdfbf7 100%)' }}>
+                            {/* ✅ الحاوية الرئيسية للشهادة: الارتفاع محدد بـ 210mm لمنع الانقسام */}
+                            <div ref={certificateRef} className="bg-white shadow-2xl text-center text-slate-900 mx-auto relative flex flex-col box-border overflow-hidden" 
+                                 style={{ width: '297mm', height: '210mm', backgroundColor: '#fdfbf7', backgroundImage: 'radial-gradient(circle at center, #ffffff 0%, #fdfbf7 100%)' }}>
                                 
                                 {/* ✅ الإطارات الملكية (Borders) */}
-                                <div className="absolute z-20 pointer-events-none" style={{ top: '15mm', bottom: '15mm', left: '15mm', right: '15mm', border: '6px solid #1a365d' }}></div>
-                                <div className="absolute z-20 pointer-events-none" style={{ top: '18mm', bottom: '18mm', left: '18mm', right: '18mm', border: '1.5px solid #d4af37' }}></div>
+                                <div className="absolute z-20 pointer-events-none" style={{ top: '12mm', bottom: '12mm', left: '12mm', right: '12mm', border: '5px solid #1a365d' }}></div>
+                                <div className="absolute z-20 pointer-events-none" style={{ top: '14mm', bottom: '14mm', left: '14mm', right: '14mm', border: '1px solid #d4af37' }}></div>
 
                                 {/* ✅ الزخارف الزاوية (Corner Accents) */}
-                                <div className="absolute w-12 h-12 border-t-4 border-r-4 border-[#d4af37] z-30" style={{ top: '12mm', right: '12mm' }}></div>
-                                <div className="absolute w-12 h-12 border-t-4 border-l-4 border-[#d4af37] z-30" style={{ top: '12mm', left: '12mm' }}></div>
-                                <div className="absolute w-12 h-12 border-b-4 border-r-4 border-[#d4af37] z-30" style={{ bottom: '12mm', right: '12mm' }}></div>
-                                <div className="absolute w-12 h-12 border-b-4 border-l-4 border-[#d4af37] z-30" style={{ bottom: '12mm', left: '12mm' }}></div>
+                                <div className="absolute w-10 h-10 border-t-4 border-r-4 border-[#d4af37] z-30" style={{ top: '10mm', right: '10mm' }}></div>
+                                <div className="absolute w-10 h-10 border-t-4 border-l-4 border-[#d4af37] z-30" style={{ top: '10mm', left: '10mm' }}></div>
+                                <div className="absolute w-10 h-10 border-b-4 border-r-4 border-[#d4af37] z-30" style={{ bottom: '10mm', right: '10mm' }}></div>
+                                <div className="absolute w-10 h-10 border-b-4 border-l-4 border-[#d4af37] z-30" style={{ bottom: '10mm', left: '10mm' }}></div>
 
                                 {/* ✅ العلامة المائية الشفافة في الخلفية */}
                                 <div className="absolute inset-0 flex items-center justify-center pointer-events-none z-0">
-                                    <Trophy className="w-[450px] h-[450px] text-[#d4af37] opacity-[0.04]" />
+                                    <Trophy className="w-[350px] h-[350px] text-[#d4af37] opacity-[0.04]" />
                                 </div>
 
-                                {/* ✅ المحتوى الداخلي للشهادة */}
-                                <div className="relative z-10 flex flex-col h-full" style={{ padding: '25mm' }}>
+                                {/* ✅ المحتوى الداخلي للشهادة (تقليل الهوامش لتناسب الصفحة الواحدة) */}
+                                <div className="relative z-10 flex flex-col h-full justify-between" style={{ padding: '20mm 25mm' }}>
                                     
                                     {/* الترويسة العلوية */}
-                                    <div className="flex justify-between items-start mb-4">
+                                    <div className="flex justify-between items-start">
                                         {/* اليمين: الوزارة */}
-                                        <div className="text-right text-base font-bold leading-relaxed text-[#1a365d]">
+                                        <div className="text-right text-sm font-bold leading-relaxed text-[#1a365d]">
                                             <p>سلطنة عمان</p>
-                                            <p>وزارة التعليم</p>
+                                            <p>وزارة التربية والتعليم</p>
                                             <p>{teacherInfo?.governorate || 'المديرية العامة...'}</p>
                                             <p>{teacherInfo?.school || 'المدرسة...'}</p>
                                         </div>
                                         
                                         {/* الوسط: شعار الوزارة أو التاج */}
-                                        <div className="w-28 h-28 opacity-90 -mt-2">
+                                        <div className="w-24 h-24 opacity-90">
                                             {teacherInfo?.ministryLogo ? (
                                                 <img src={teacherInfo.ministryLogo} alt="الشعار" className="w-full h-full object-contain" crossOrigin="anonymous" />
                                             ) : (
                                                 <div className="w-full h-full bg-white rounded-full flex items-center justify-center border-2 border-[#d4af37] shadow-sm">
-                                                    <Crown className="w-14 h-14 text-[#d4af37]" />
+                                                    <Crown className="w-12 h-12 text-[#d4af37]" />
                                                 </div>
                                             )}
                                         </div>
 
                                         {/* اليسار: التاريخ */}
-                                        <div className="text-left text-base font-bold leading-relaxed text-[#1a365d]">
+                                        <div className="text-left text-sm font-bold leading-relaxed text-[#1a365d]">
                                             <p>التاريخ: <span dir="ltr">{new Date().toLocaleDateString('ar-EG')}</span></p>
                                             <p>العام الدراسي: {new Date().getFullYear()}</p>
                                         </div>
                                     </div>
 
                                     {/* العنوان الرئيسي */}
-                                    <div className="text-center mt-2 mb-10 flex flex-col items-center">
-                                        <h1 className="text-6xl font-black text-[#1a365d] mb-4" style={{ fontFamily: 'Times New Roman, serif', textShadow: '1px 1px 2px rgba(0,0,0,0.1)' }}>
+                                    <div className="text-center flex flex-col items-center -mt-4">
+                                        <h1 className="text-5xl font-black text-[#1a365d] mb-2" style={{ fontFamily: 'Times New Roman, serif' }}>
                                             شهادة شكر وتقدير
                                         </h1>
-                                        <div className="flex items-center gap-4 w-1/2">
+                                        <div className="flex items-center gap-3 w-1/3">
                                             <div className="h-px bg-[#d4af37] flex-1"></div>
-                                            <Medal className="w-8 h-8 text-[#d4af37]" />
+                                            <Medal className="w-6 h-6 text-[#d4af37]" />
                                             <div className="h-px bg-[#d4af37] flex-1"></div>
                                         </div>
                                     </div>
 
-                                    {/* ✅ نص الشهادة الفخم والذكي لغوياً */}
-                                    <div className="flex-1 flex flex-col justify-center px-12 text-center mb-8">
-                                        <p className="text-3xl font-bold leading-loose text-slate-800 mb-8">
+                                    {/* ✅ نص الشهادة الفخم والذكي لغوياً (مع تصغير المسافات) */}
+                                    <div className="flex flex-col justify-center px-8 text-center -mt-2">
+                                        <p className="text-2xl font-bold leading-relaxed text-slate-800 mb-4">
                                             يُسعدنا بكل فخر واعتزاز أن نُتوِّج {isFemale ? 'الفارسة المتألقة' : 'الفارس المِقدام'}
                                         </p>
-                                        <p className="mb-10">
-                                            <span className="text-[#1a365d] text-5xl font-black border-b-2 border-[#d4af37] px-12 pb-3 mx-2 inline-block">
+                                        <p className="mb-4">
+                                            <span className="text-[#1a365d] text-4xl font-black border-b-2 border-[#d4af37] px-8 pb-2 mx-2 inline-block">
                                                 {certificateStudent.name}
                                             </span>
                                         </p>
-                                        <p className="text-2xl font-bold text-slate-700 mb-8">
-                                            {isFemale ? 'المقيدة' : 'المقيد'} بالصف: <span className="text-[#1a365d] font-black px-4">{certificateStudent.classes[0]}</span>
+                                        <p className="text-xl font-bold text-slate-700 mb-4">
+                                            {isFemale ? 'المقيدة' : 'المقيد'} بالصف: <span className="text-[#1a365d] font-black px-3">{certificateStudent.classes[0]}</span>
                                         </p>
-                                        <p className="text-2xl font-medium leading-loose text-slate-700 max-w-4xl mx-auto">
-                                            بوسام التميز والصدارة، تقديراً {isFemale ? 'لجهودها العظيمة واعتلائها صدارة فارسات' : 'لجهوده العظيمة واعتلائه صدارة فرسان'} شهر <span className="font-black text-[#d4af37] text-3xl mx-2">{monthName}</span> في تطبيق راصد، {isFemale ? 'وانضباطها المثالي الذي أضاء' : 'وانضباطه المثالي الذي أضاء'} سماء الفصل.
+                                        <p className="text-xl font-medium leading-relaxed text-slate-700 max-w-4xl mx-auto mb-4">
+                                            بوسام التميز والصدارة، تقديراً {isFemale ? 'لجهودها العظيمة واعتلائها صدارة فارسات' : 'لجهوده العظيمة واعتلائه صدارة فرسان'} شهر <span className="font-black text-[#d4af37] text-2xl mx-1">{monthName}</span> في تطبيق راصد، {isFemale ? 'وانضباطها المثالي الذي أضاء' : 'وانضباطه المثالي الذي أضاء'} سماء الفصل.
                                         </p>
-                                        <p className="text-2xl font-bold text-[#1a365d] mt-10" style={{ fontFamily: 'Times New Roman, serif' }}>
+                                        <p className="text-xl font-bold text-[#1a365d]" style={{ fontFamily: 'Times New Roman, serif' }}>
                                             متمنين {isFemale ? 'لها دوام التألق والنجاح في مسيرتها' : 'له دوام التألق والنجاح في مسيرته'} العلمية.
                                         </p>
                                     </div>
 
                                     {/* التوقيعات والأختام في الأسفل */}
-                                    <div className="flex justify-between items-end px-16 pt-8 mt-auto relative z-20">
+                                    <div className="flex justify-between items-end px-12 z-20">
                                         {/* اليمين: المعلم */}
                                         <div className="text-center w-1/3">
-                                            <p className="text-xl font-bold text-[#1a365d] mb-8">معلم/ة المادة</p>
-                                            <p className="text-2xl font-black text-slate-800 border-b border-dashed border-slate-400 inline-block px-10 pb-2" style={{ fontFamily: 'Times New Roman, serif' }}>{teacherInfo?.name || '....................'}</p>
+                                            <p className="text-lg font-bold text-[#1a365d] mb-4">معلم/ة المادة</p>
+                                            <p className="text-xl font-black text-slate-800 border-b border-dashed border-slate-400 inline-block px-8 pb-1" style={{ fontFamily: 'Times New Roman, serif' }}>{teacherInfo?.name || '....................'}</p>
                                         </div>
 
                                         {/* الوسط: الختم */}
                                         <div className="text-center w-1/3 flex justify-center">
-                                            <div className="w-32 h-32 opacity-80 rotate-[-10deg]">
+                                            <div className="w-24 h-24 opacity-80 rotate-[-10deg]">
                                                 {teacherInfo?.stamp ? (
                                                     <img src={teacherInfo.stamp} alt="الختم" className="w-full h-full object-contain" crossOrigin="anonymous" />
                                                 ) : (
-                                                    <div className="w-24 h-24 mb-2 mx-auto opacity-10 flex items-center justify-center">
-                                                        <span className="border-4 border-slate-800 rounded-full w-20 h-20 flex items-center justify-center text-sm font-bold rotate-12">ختم المدرسة</span>
+                                                    <div className="w-20 h-20 mb-1 mx-auto opacity-10 flex items-center justify-center">
+                                                        <span className="border-2 border-slate-800 rounded-full w-16 h-16 flex items-center justify-center text-xs font-bold rotate-12">ختم المدرسة</span>
                                                     </div>
                                                 )}
                                             </div>
@@ -463,8 +467,8 @@ const Leaderboard: React.FC<LeaderboardProps> = ({ students, classes, onUpdateSt
 
                                         {/* اليسار: المدير */}
                                         <div className="text-center w-1/3">
-                                            <p className="text-xl font-bold text-[#1a365d] mb-8">مدير/ة المدرسة</p>
-                                            <p className="text-2xl font-black text-slate-800 border-b border-dashed border-slate-400 inline-block px-10 pb-2" style={{ fontFamily: 'Times New Roman, serif' }}>....................</p>
+                                            <p className="text-lg font-bold text-[#1a365d] mb-4">مدير/ة المدرسة</p>
+                                            <p className="text-xl font-black text-slate-800 border-b border-dashed border-slate-400 inline-block px-8 pb-1" style={{ fontFamily: 'Times New Roman, serif' }}>....................</p>
                                         </div>
                                     </div>
 

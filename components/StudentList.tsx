@@ -74,8 +74,16 @@ const StudentList: React.FC<StudentListProps> = ({
 }) => {
     const { defaultStudentGender, setDefaultStudentGender, setStudents } = useApp();
     const [searchTerm, setSearchTerm] = useState('');
-    const [selectedGrade, setSelectedGrade] = useState<string>('all');
-    const [selectedClass, setSelectedClass] = useState<string>('all');
+    
+    // ✅ 1. التعديل السحري: استدعاء القيم المحفوظة في ذاكرة الجلسة
+    const [selectedGrade, setSelectedGrade] = useState<string>(() => sessionStorage.getItem('rased_grade') || 'all');
+    const [selectedClass, setSelectedClass] = useState<string>(() => sessionStorage.getItem('rased_class') || 'all');
+
+    // ✅ 2. التعديل السحري: حفظ القيم فور تغيرها لتتذكرها الصفحات الأخرى
+    useEffect(() => {
+        sessionStorage.setItem('rased_grade', selectedGrade);
+        sessionStorage.setItem('rased_class', selectedClass);
+    }, [selectedGrade, selectedClass]);
     
     const [showManualAddModal, setShowManualAddModal] = useState(false);
     const [showImportModal, setShowImportModal] = useState(false);
@@ -241,7 +249,7 @@ const StudentList: React.FC<StudentListProps> = ({
         }
     };
 
-    // ✅ دالة إرسال تقرير الواتساب (مدمج بها منطق الحضور والغياب الذكي للعمل على الويندوز)
+    // ✅ دالة إرسال تقرير الواتساب
     const handleSendWhatsAppReport = async (student: Student) => {
         if (!student.parentPhone) {
             alert('⚠️ عذراً، لا يوجد رقم هاتف مسجل لولي أمر هذا الطالب.\nيرجى تعديل بيانات الطالب وإضافة الرقم أولاً.');
@@ -334,21 +342,17 @@ const StudentList: React.FC<StudentListProps> = ({
         setSelectedStudentForBehavior(null);
     };
 
-    // ✅ دالة مكافأة الانضباط الجماعي (الميزة الجديدة)
     const handleQuietAndDiscipline = () => {
         if (!confirm('هل تريد إضافة نقطتين (هدوء وانضباط) لجميع الطلاب الحاضرين والمنضبطين في القائمة المعروضة؟')) return;
 
         const todayStr = new Date().toLocaleDateString('en-CA');
         const now = new Date();
 
-        // 1. تحديد الطلاب المستحقين من القائمة المعروضة حالياً
         const eligibleStudents = filteredStudents.filter(student => {
-            // أ. التحقق من الغياب
             const attendance = student.attendance.find(a => a.date === todayStr);
             const isAbsent = attendance?.status === 'absent' || attendance?.status === 'truant';
             if (isAbsent) return false;
 
-            // ب. التحقق من السلوك السلبي (اليوم)
             const hasNegativeToday = (student.behaviors || []).some(b => {
                 const bDate = new Date(b.date);
                 return b.type === 'negative' && 
@@ -366,9 +370,7 @@ const StudentList: React.FC<StudentListProps> = ({
             return;
         }
 
-        // 2. تحديث قائمة الطلاب
         const updatedStudents = students.map(student => {
-            // إذا كان الطالب ضمن المستحقين، نضيف له النقاط
             if (eligibleStudents.find(es => es.id === student.id)) {
                 const newBehavior = {
                     id: Math.random().toString(36).substr(2, 9),
@@ -428,7 +430,8 @@ const StudentList: React.FC<StudentListProps> = ({
     };
 
     return (
-        <div className="flex flex-col h-full overflow-hidden animate-in fade-in duration-500">
+        {/* ✅ 3. التعديل السحري: إزالة animate-in fade-in لزيادة السرعة والنعومة */}
+        <div className="flex flex-col h-full overflow-hidden">
             
             {/* Header */}
             <header className="fixed md:sticky top-0 z-40 md:z-30 bg-[#446A8D] text-white shadow-lg px-4 pt-[env(safe-area-inset-top)] pb-6 transition-all duration-300 md:rounded-none md:shadow-md w-full md:w-auto left-0 right-0 md:left-auto md:right-auto">
