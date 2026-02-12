@@ -347,7 +347,7 @@ const ClassReportsTemplate = ({ students, teacherInfo, semester, assessmentTools
                 return (
                     <div key={student.id} className="w-full min-h-[297mm] p-10 border-b border-gray-300 page-break-after-always relative bg-white" style={{ pageBreakAfter: 'always' }}>
                         <div className="flex justify-between items-start mb-8 border-b-2 border-slate-200 pb-4">
-                            <div className="text-right w-1/3 text-sm font-bold"><p>سلطنة عمان</p><p>وزارةالتعليم</p><p>مدرسة {teacherInfo?.school}</p></div>
+                            <div className="text-right w-1/3 text-sm font-bold"><p>سلطنة عمان</p><p>وزارة التعليم</p><p>مدرسة {teacherInfo?.school}</p></div>
                             <div className="text-center w-1/3">{teacherInfo?.ministryLogo && <img src={teacherInfo.ministryLogo} className="h-16 object-contain mx-auto" />}<h2 className="text-xl font-black underline mt-2 text-black">تقرير مستوى طالب</h2></div>
                             <div className="text-left w-1/3 text-sm font-bold"><p>العام: {teacherInfo?.academicYear}</p><p>الفصل: {semester === '1' ? 'الأول' : 'الثاني'}</p></div>
                         </div>
