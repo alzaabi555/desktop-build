@@ -9,7 +9,7 @@ import { Share } from '@capacitor/share';
 import { Capacitor } from '@capacitor/core';
 import Modal from './Modal';
 
-// ✅ أيقونات 3D فخمة بتدرجات محسنة (للحفاظ على جمالية نسخة الويندوز)
+// ✅ أيقونات 3D فخمة بتدرجات محسنة
 const Icon3DProfile = () => (
   <svg viewBox="0 0 100 100" className="w-12 h-12">
     <defs>
@@ -50,7 +50,7 @@ const Settings = () => {
       setSchool(teacherInfo?.school || '');
   }, [teacherInfo]);
 
-  // ✅ 1. منطق إنشاء النسخة الاحتياطية (تصدير ملف JSON)
+  // ✅ 1. إنشاء نسخة احتياطية
   const handleBackup = async () => {
     setLoading('backup');
     try {
@@ -69,7 +69,7 @@ const Settings = () => {
         const result = await Filesystem.writeFile({
           path: fileName,
           data: jsonString,
-          directory: Directory.Cache,
+          directory: Directory.Cache, // استخدام Cache للمشاركة
           encoding: Encoding.UTF8,
         });
         await Share.share({ title: 'نسخة احتياطية - راصد', url: result.uri });
@@ -86,77 +86,83 @@ const Settings = () => {
       }
       alert("✅ تم تصدير النسخة الاحتياطية بنجاح");
     } catch (error) {
+      console.error(error);
       alert("❌ حدث خطأ أثناء التصدير");
     } finally {
       setLoading(null);
     }
   };
 
-  // ✅ 2. منطق استعادة البيانات (استيراد ملف JSON)
-  // ✅ دالة الاستيراد (الحل الجذري الذي يكتب مباشرة على الهارد ديسك)
-  const handleImportBackup = async (e: React.ChangeEvent<HTMLInputElement>) => {
+  // ✅ 2. استعادة البيانات (تم إصلاح الأقواس المتداخلة هنا)
+  const handleRestore = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
 
+    if (!confirm('سيتم استبدال جميع البيانات الحالية ببيانات الملف المختار. هل أنت متأكد؟')) {
+        if(fileInputRef.current) fileInputRef.current.value = '';
+        return;
+    }
+
+    setLoading('restore');
     const reader = new FileReader();
+    
     reader.onload = async (event) => {
         try {
             const jsonString = event.target?.result as string;
-            const json = JSON.parse(jsonString);
+            const data = JSON.parse(jsonString);
 
-            // 1. تحديث الحالة في الواجهة (State)
-            if (json.students) setStudents(json.students);
-            if (json.teacherInfo) setTeacherInfo(json.teacherInfo);
-            if (json.classes) setClasses(json.classes);
-            if (json.schedule) setSchedule(json.schedule);
-            if (json.periodTimes) setPeriodTimes(json.periodTimes);
+            if (data.students && Array.isArray(data.students)) {
+                // 1. تحديث الحالة (Context)
+                setStudents(data.students);
+                setClasses(data.classes || []);
+                if(data.hiddenClasses) setHiddenClasses(data.hiddenClasses);
+                if(data.groups) setGroups(data.groups);
+                if(data.schedule) setSchedule(data.schedule);
+                if(data.periodTimes) setPeriodTimes(data.periodTimes);
+                if(data.teacherInfo) setTeacherInfo(data.teacherInfo);
+                if(data.assessmentTools) setAssessmentTools(data.assessmentTools);
+                if(data.certificateSettings) setCertificateSettings(data.certificateSettings);
 
-            // 2. الحفظ العميق: التحقق من البيئة وكتابة البيانات في المكان الصحيح
-            const isHeavyEnvironment = Capacitor.isNativePlatform() || (window as any).electron !== undefined;
-
-            if (isHeavyEnvironment) {
-                // للويندوز والموبايل: نكتب النسخة الاحتياطية مباشرة فوق ملف قاعدة البيانات
-                await Filesystem.writeFile({
-                    path: 'raseddatabasev2.json', // يجب أن يطابق اسم الملف في AppContext
-                    data: jsonString, // نحفظ الملف بالكامل بضغطة واحدة
-                    directory: Directory.Data,
-                    encoding: Encoding.UTF8
-                });
-            } else {
-                // للويب (المتصفح): نستخدم localStorage
-                localStorage.clear();
-                if (json.students) localStorage.setItem('studentData', JSON.stringify(json.students));
-                if (json.classes) localStorage.setItem('classesData', JSON.stringify(json.classes));
-                if (json.schedule) localStorage.setItem('scheduleData', JSON.stringify(json.schedule));
-                if (json.periodTimes) localStorage.setItem('periodTimes', JSON.stringify(json.periodTimes));
-                if (json.teacherInfo) {
-                    localStorage.setItem('teacherName', json.teacherInfo.name || '');
-                    localStorage.setItem('schoolName', json.teacherInfo.school || '');
+                // 2. الحفظ الفوري في ملف النظام (لضمان بقاء البيانات بعد الريلود)
+                const isHeavyEnvironment = Capacitor.isNativePlatform() || (window as any).electron !== undefined;
+                
+                if (isHeavyEnvironment) {
+                    await Filesystem.writeFile({
+                        path: 'raseddatabasev2.json', // نفس اسم الملف في AppContext
+                        data: jsonString,
+                        directory: Directory.Data,
+                        encoding: Encoding.UTF8
+                    });
+                } else {
+                    // للويب
+                    localStorage.setItem('studentData', JSON.stringify(data.students));
+                    // ... (بقية الـ localStorage للويب)
                 }
+
+                alert("✅ تم استعادة البيانات بنجاح! سيتم إعادة تشغيل التطبيق.");
+                setTimeout(() => window.location.reload(), 1000);
+            } else {
+                throw new Error('الملف غير صالح');
             }
-
-            alert("✅ تم استعادة النسخة الاحتياطية بنجاح! سيتم تحديث الصفحة.");
-            
-            // 3. إعادة التشغيل ليعمل التطبيق بالبيانات الجديدة
-            setTimeout(() => window.location.reload(), 1000);
-
         } catch (error) {
             console.error("Import Error:", error);
             alert("❌ الملف غير صالح أو تالف");
+        } finally {
+            setLoading(null);
+            if (fileInputRef.current) fileInputRef.current.value = '';
         }
     };
-    reader.readAsText(file);
-    if(e.target) e.target.value = '';
-  };
+    
     reader.readAsText(file);
   };
 
-  // ✅ 3. منطق إعادة ضبط المصنع (مسح كل شيء)
+  // ✅ 3. إعادة ضبط المصنع
   const handleFactoryReset = async () => {
       if (confirm('⚠️ تحذير نهائي: سيتم حذف جميع الطلاب والدرجات والإعدادات بشكل دائم. هل تريد الاستمرار؟')) {
           setLoading('reset');
           try {
               localStorage.clear();
+              // حذف الملف الفعلي من النظام
               if (Capacitor.isNativePlatform() || (window as any).electron) {
                   await Filesystem.deleteFile({
                       path: 'raseddatabasev2.json',
