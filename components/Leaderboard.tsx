@@ -1,6 +1,6 @@
 import React, { useState, useMemo, useRef, useEffect } from 'react';
 import { Student } from '../types';
-import { Trophy, Crown, Sparkles, Star, Search, Award, Download, X, Loader2, MinusCircle, Medal } from 'lucide-react'; 
+import { Trophy, Crown, Sparkles, Star, Search, Award, Download, X, Loader2, MinusCircle, Medal, Settings2 } from 'lucide-react'; 
 import { useApp } from '../context/AppContext';
 import { StudentAvatar } from './StudentAvatar';
 import Modal from './Modal';
@@ -22,16 +22,27 @@ interface LeaderboardProps {
         governorate: string; 
         ministryLogo?: string; 
         stamp?: string;
-        gender?: 'male' | 'female'; // ✅ أضفنا الجنس هنا
     }; 
 }
 
 const Leaderboard: React.FC<LeaderboardProps> = ({ students, classes, onUpdateStudent, teacherInfo }) => {
     const { currentSemester } = useApp();
     
-    // ✅ تحديد المسمى بناءً على جنس المعلم/المعلمة
-    const isTeacherFemale = teacherInfo?.gender === 'female';
-    const leaderTitle = isTeacherFemale ? 'فارسات' : 'فرسان';
+    // ✅ إعداد نوع المدرسة (ذكور / إناث / مختلطة) - يتم حفظه محلياً
+    const [schoolType, setSchoolType] = useState<'boys' | 'girls' | 'mixed'>(() => {
+        return (localStorage.getItem('rased_school_type') as any) || 'mixed';
+    });
+
+    useEffect(() => {
+        localStorage.setItem('rased_school_type', schoolType);
+    }, [schoolType]);
+
+    // ✅ دالة تحديد عنوان الصفحة بناءً على نوع المدرسة
+    const getPageTitle = () => {
+        if (schoolType === 'boys') return 'فرسان الشهر';
+        if (schoolType === 'girls') return 'فارسات الشهر';
+        return 'فرسان وفارسات الشهر';
+    };
 
     const [selectedClass, setSelectedClass] = useState<string>(() => sessionStorage.getItem('rased_class') || 'all');
     const [searchTerm, setSearchTerm] = useState('');
@@ -46,300 +57,214 @@ const Leaderboard: React.FC<LeaderboardProps> = ({ students, classes, onUpdateSt
     
     const today = new Date();
     const currentMonth = today.getMonth(); 
-    const currentYear = today.getFullYear();
     const months = ["يناير", "فبراير", "مارس", "أبريل", "مايو", "يونيو", "يوليو", "أغسطس", "سبتمبر", "أكتوبر", "نوفمبر", "ديسمبر"];
     const monthName = months[currentMonth];
 
     const rankedStudents = useMemo(() => {
         let filtered = students;
-        if (selectedClass !== 'all') {
-            filtered = students.filter(s => s.classes && s.classes.includes(selectedClass));
-        }
-        if (searchTerm.trim()) {
-            filtered = filtered.filter(s => s.name.toLowerCase().includes(searchTerm.toLowerCase()));
-        }
+        if (selectedClass !== 'all') filtered = students.filter(s => s.classes?.includes(selectedClass));
+        if (searchTerm.trim()) filtered = filtered.filter(s => s.name.toLowerCase().includes(searchTerm.toLowerCase()));
+        
         const withPoints = filtered.map(student => {
             const monthlyPoints = (student.behaviors || [])
                 .filter(b => {
-                    try {
-                        const d = new Date(b.date);
-                        return b.type === 'positive' && d.getMonth() === currentMonth && d.getFullYear() === currentYear;
-                    } catch (e) { return false; }
+                    const d = new Date(b.date);
+                    return b.type === 'positive' && d.getMonth() === currentMonth && d.getFullYear() === today.getFullYear();
                 })
                 .reduce((acc, b) => acc + b.points, 0);
             return { ...student, monthlyPoints };
         });
         return withPoints.sort((a, b) => b.monthlyPoints - a.monthlyPoints);
-    }, [students, selectedClass, searchTerm, currentMonth, currentYear]);
+    }, [students, selectedClass, searchTerm, currentMonth]);
 
     const topThree = rankedStudents.slice(0, 3);
     const restOfStudents = rankedStudents.slice(3);
 
     const handleAddPoints = (student: Student) => {
         if (!onUpdateStudent) return;
-        const audio = new Audio(positiveSound);
-        audio.volume = 0.5;
-        audio.play().catch(() => {});
+        new Audio(positiveSound).play().catch(() => {});
+        const isBoy = student.gender !== 'female';
         const newBehavior = {
             id: Math.random().toString(36).substr(2, 9),
             date: new Date().toISOString(),
             type: 'positive' as const,
-            description: `تميز في قائمة ال${leaderTitle}`,
+            description: `تميز في قائمة ال${isBoy ? 'فرسان' : 'فارسات'}`,
             points: 3,
             semester: currentSemester
         };
         onUpdateStudent({ ...student, behaviors: [newBehavior, ...(student.behaviors || [])] });
-        alert(`تم إضافة 3 نقاط ل${isTeacherFemale ? 'لطالبة' : 'لطالب'} ${student.name} 🌟`);
-    };
-
-    const handleDeductPoint = (student: Student) => {
-        if (!onUpdateStudent) return;
-        if(confirm(`هل تريد خصم نقطة من ${student.name}؟`)) {
-            const correctionBehavior = {
-                id: Math.random().toString(36).substr(2, 9),
-                date: new Date().toISOString(),
-                type: 'positive' as const, 
-                description: 'تصحيح نقاط (خصم)',
-                points: -1, 
-                semester: currentSemester
-            };
-            onUpdateStudent({ ...student, behaviors: [correctionBehavior, ...(student.behaviors || [])] });
-        }
     };
 
     const handleDownloadPDF = async () => {
         if (!certificateRef.current || !certificateStudent) return;
         setIsGeneratingPdf(true);
-        const element = certificateRef.current;
-        const fileName = `Certificate_${certificateStudent.name.replace(/\s+/g, '_')}.pdf`;
         const opt = {
-            margin: 0, 
-            filename: fileName,
+            margin: 0, filename: `Rased_Award_${certificateStudent.name}.pdf`,
             image: { type: 'jpeg', quality: 1.0 },
-            html2canvas: { scale: 2, useCORS: true, logging: false },
+            html2canvas: { scale: 2, useCORS: true },
             jsPDF: { unit: 'mm', format: 'a4', orientation: 'landscape' }
         };
         try {
-            const worker = html2pdf().set(opt).from(element).toPdf();
+            const worker = html2pdf().set(opt).from(certificateRef.current).toPdf();
             if (Capacitor.isNativePlatform()) {
                 const pdfBase64 = await worker.output('datauristring');
-                const base64Data = pdfBase64.split(',')[1]; 
                 const result = await Filesystem.writeFile({
-                    path: fileName, data: base64Data, directory: Directory.Cache
+                    path: `Award_${Date.now()}.pdf`, data: pdfBase64.split(',')[1], directory: Directory.Cache
                 });
                 await Share.share({ title: 'شهادة تميز', url: result.uri });
             } else { worker.save(); }
-        } catch (error) { alert('❌ حدث خطأ أثناء الحفظ.'); } 
-        finally { setIsGeneratingPdf(false); }
+        } catch (e) { alert('خطأ في الحفظ'); } finally { setIsGeneratingPdf(false); }
     };
 
-    const isStudentFemale = certificateStudent?.gender === 'female';
+    // ✅ منطق التذكير/التأنيث في الشهادة بناءً على صورة (جنس) الطالب
+    const isFemale = certificateStudent?.gender === 'female';
 
     return (
         <div className="flex flex-col h-full space-y-6 pb-24 md:pb-8 overflow-hidden">
-            <header className="fixed md:sticky top-0 z-40 md:z-30 bg-[#446A8D] text-white shadow-lg px-4 pt-[env(safe-area-inset-top)] pb-6 transition-all duration-300 w-full left-0 right-0">
-                <div className="flex flex-col items-center text-center">
-                    <div className="bg-white/10 p-3 rounded-2xl backdrop-blur-md border border-white/20 mb-3">
-                        <Crown className="w-8 h-8 text-amber-400 fill-amber-400 animate-bounce" />
-                    </div>
-                    <h1 className="text-2xl font-black tracking-wide mb-1">{leaderTitle} شهر {monthName}</h1>
-                    <p className="text-xs text-blue-200 font-bold opacity-80 mb-4">لوحة الشرف والمنافسة المتميزة</p>
-                    
-                    <div className="relative w-full max-w-sm mb-4">
-                        <Search className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-blue-300" />
-                        <input 
-                            type="text" placeholder="بحث عن اسم..." value={searchTerm}
-                            onChange={(e) => setSearchTerm(e.target.value)}
-                            className="w-full bg-white/10 border border-white/20 rounded-xl py-2.5 pr-10 pl-4 text-xs font-bold text-white placeholder:text-blue-300/70 outline-none"
-                        />
+            <header className="fixed md:sticky top-0 z-40 bg-[#446A8D] text-white shadow-lg px-4 pt-8 pb-6 transition-all w-full">
+                <div className="flex flex-col items-center text-center relative">
+                    {/* زر إعدادات نوع المدرسة */}
+                    <div className="absolute left-0 top-0 flex gap-2">
+                        <select 
+                            value={schoolType} 
+                            onChange={(e) => setSchoolType(e.target.value as any)}
+                            className="bg-white/10 border border-white/20 rounded-lg text-[10px] p-1 outline-none font-bold"
+                        >
+                            <option value="mixed" className="text-slate-800">مدرسة مختلطة</option>
+                            <option value="boys" className="text-slate-800">مدرسة ذكور</option>
+                            <option value="girls" className="text-slate-800">مدرسة إناث</option>
+                        </select>
                     </div>
 
-                    <div className="flex gap-2 overflow-x-auto pb-2 custom-scrollbar px-2 w-full justify-center">
-                        <button onClick={() => setSelectedClass('all')} className={`px-5 py-2.5 rounded-xl text-xs font-black transition-all border ${selectedClass === 'all' ? 'bg-white text-[#1e3a8a]' : 'bg-white/10 text-blue-100'}`}>الكل</button>
+                    <div className="bg-white/10 p-3 rounded-2xl border border-white/20 mb-3 shadow-inner">
+                        <Crown className="w-8 h-8 text-amber-400 fill-amber-400 animate-bounce" />
+                    </div>
+                    <h1 className="text-2xl font-black tracking-wide mb-1">{getPageTitle()}</h1>
+                    
+                    <div className="relative w-full max-w-sm my-4">
+                        <Search className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-blue-300" />
+                        <input type="text" placeholder="بحث..." value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} className="w-full bg-white/10 border border-white/20 rounded-xl py-2 pr-10 text-xs font-bold text-white outline-none" />
+                    </div>
+
+                    <div className="flex gap-2 overflow-x-auto pb-2 w-full justify-center">
+                        <button onClick={() => setSelectedClass('all')} className={`px-5 py-2 rounded-xl text-xs font-black border ${selectedClass === 'all' ? 'bg-white text-[#1e3a8a]' : 'bg-white/10 text-blue-100'}`}>الكل</button>
                         {classes.map(c => (
-                            <button key={c} onClick={() => setSelectedClass(c)} className={`px-5 py-2.5 rounded-xl text-xs font-black transition-all border ${selectedClass === c ? 'bg-white text-[#1e3a8a]' : 'bg-white/10 text-blue-100'}`}>{c}</button>
+                            <button key={c} onClick={() => setSelectedClass(c)} className={`px-5 py-2 rounded-xl text-xs font-black border ${selectedClass === c ? 'bg-white text-[#1e3a8a]' : 'bg-white/10 text-blue-100'}`}>{c}</button>
                         ))}
                     </div>
                 </div>
             </header>
 
-            <div className="flex-1 overflow-y-auto px-4 pb-20 custom-scrollbar pt-64 md:pt-2">
-                {/* Podium */}
-                {topThree.length > 0 ? (
-                    <div className="flex justify-center items-end gap-2 md:gap-6 py-2 min-h-[260px]">
-                        {/* 2nd Place */}
-                        {topThree[1] && (
-                            <div className="flex flex-col items-center">
-                                <div className="relative cursor-pointer" onClick={() => handleAddPoints(topThree[1])}>
-                                    <div className="w-20 h-20 md:w-24 md:h-24 rounded-full border-4 border-slate-300 shadow-xl overflow-hidden mb-2 relative bg-white">
-                                        <StudentAvatar gender={topThree[1].gender} className="w-full h-full" />
-                                        <div className="absolute -bottom-1 -right-1 bg-slate-300 text-white w-8 h-8 rounded-full flex items-center justify-center font-black">2</div>
+            <div className="flex-1 overflow-y-auto px-4 custom-scrollbar pt-64 md:pt-2">
+                {/* منصة التتويج */}
+                {topThree.length > 0 && (
+                    <div className="flex justify-center items-end gap-2 md:gap-6 py-4">
+                        {/* المراكز 2، 1، 3 مرتبة برمجياً */}
+                        {[topThree[1], topThree[0], topThree[2]].map((s, i) => s && (
+                            <div key={s.id} className={`flex flex-col items-center ${i === 1 ? 'z-10 -mb-4' : 'opacity-90'}`}>
+                                <div className="relative cursor-pointer" onClick={() => handleAddPoints(s)}>
+                                    {i === 1 && <Crown className="w-10 h-10 text-amber-400 fill-amber-400 absolute -top-8 left-1/2 -translate-x-1/2 animate-pulse" />}
+                                    <div className={`rounded-full border-4 shadow-xl overflow-hidden mb-2 bg-white transform transition-transform ${i === 1 ? 'w-24 h-24 md:w-32 md:h-32 border-amber-400 scale-110' : 'w-20 h-20 md:w-24 md:h-24 border-slate-300'}`}>
+                                        <StudentAvatar gender={s.gender} className="w-full h-full" />
                                     </div>
                                 </div>
-                                <div className="bg-white/80 backdrop-blur-sm px-3 py-2 rounded-2xl text-center border border-slate-200 w-24 md:w-32 shadow-sm mb-1">
-                                    <h3 className="font-black text-xs md:text-sm text-slate-800 truncate mb-1">{topThree[1].name.split(' ')[0]}</h3>
-                                    <span className="text-slate-500 font-bold text-[10px] bg-slate-100 px-2 py-0.5 rounded-lg">{topThree[1].monthlyPoints} pts</span>
+                                <div className="bg-white/90 backdrop-blur px-3 py-2 rounded-xl text-center border shadow-sm w-24 md:w-32">
+                                    <h3 className="font-black text-[10px] md:text-xs text-slate-800 truncate">{s.name.split(' ')[0]}</h3>
+                                    <span className="text-amber-600 font-bold text-[10px]">{s.monthlyPoints} نقطة</span>
                                 </div>
-                                <div className="flex gap-1">
-                                    <button onClick={() => setCertificateStudent(topThree[1])} className="text-[10px] bg-[#446A8D] text-white px-2 py-1 rounded-lg flex items-center gap-1 hover:bg-slate-700 shadow-sm"><Award size={12} /> شهادة</button>
-                                </div>
-                                <div className="h-20 w-16 bg-gradient-to-t from-slate-200 to-slate-50/0 rounded-t-lg mt-1 opacity-50"></div>
+                                <button onClick={() => setCertificateStudent(s)} className="mt-2 text-[10px] bg-slate-700 text-white px-3 py-1 rounded-lg flex items-center gap-1 shadow-md">
+                                    <Award size={12} /> شهادة
+                                </button>
                             </div>
-                        )}
-
-                        {/* 1st Place */}
-                        {topThree[0] && (
-                            <div className="flex flex-col items-center z-10 -mb-4">
-                                <div className="relative cursor-pointer" onClick={() => handleAddPoints(topThree[0])}>
-                                    <Crown className="w-10 h-10 text-amber-400 fill-amber-400 absolute -top-8 left-1/2 -translate-x-1/2 animate-pulse" />
-                                    <div className="w-24 h-24 md:w-32 md:h-32 rounded-full border-4 border-amber-400 shadow-2xl overflow-hidden mb-2 relative bg-white">
-                                        <StudentAvatar gender={topThree[0].gender} className="w-full h-full" />
-                                        <div className="absolute -bottom-1 -right-1 bg-amber-400 text-white w-10 h-10 rounded-full flex items-center justify-center font-black">1</div>
-                                    </div>
-                                </div>
-                                <div className="bg-gradient-to-b from-amber-50 to-white px-4 py-3 rounded-2xl text-center border border-amber-200 w-28 md:w-40 shadow-lg transform -translate-y-2 mb-1">
-                                    <h3 className="font-black text-sm md:text-base text-slate-900 truncate mb-1">{topThree[0].name.split(' ')[0]}</h3>
-                                    <span className="text-amber-600 font-black text-xs">{topThree[0].monthlyPoints} pts</span>
-                                </div>
-                                <div className="flex gap-1 -translate-y-2">
-                                    <button onClick={() => setCertificateStudent(topThree[0])} className="text-[10px] bg-amber-500 text-white px-3 py-1.5 rounded-lg flex items-center gap-1 hover:bg-amber-600 shadow-md"><Award size={14} /> شهادة تميز</button>
-                                </div>
-                                <div className="h-28 w-20 bg-gradient-to-t from-amber-100 to-amber-50/0 rounded-t-lg mt-1 opacity-60"></div>
-                            </div>
-                        )}
-
-                        {/* 3rd Place */}
-                        {topThree[2] && (
-                            <div className="flex flex-col items-center">
-                                <div className="relative cursor-pointer" onClick={() => handleAddPoints(topThree[2])}>
-                                    <div className="w-20 h-20 md:w-24 md:h-24 rounded-full border-4 border-orange-300 shadow-xl overflow-hidden mb-2 relative bg-white">
-                                        <StudentAvatar gender={topThree[2].gender} className="w-full h-full" />
-                                        <div className="absolute -bottom-1 -right-1 bg-orange-300 text-white w-8 h-8 rounded-full flex items-center justify-center font-black">3</div>
-                                    </div>
-                                </div>
-                                <div className="bg-white/80 backdrop-blur-sm px-3 py-2 rounded-2xl text-center border border-orange-200 w-24 md:w-32 shadow-sm mb-1">
-                                    <h3 className="font-black text-xs md:text-sm text-slate-800 truncate mb-1">{topThree[2].name.split(' ')[0]}</h3>
-                                    <span className="text-orange-600/70 font-bold text-[10px] bg-orange-50 px-2 py-0.5 rounded-lg">{topThree[2].monthlyPoints} pts</span>
-                                </div>
-                                <div className="flex gap-1">
-                                    <button onClick={() => setCertificateStudent(topThree[2])} className="text-[10px] bg-[#446A8D] text-white px-2 py-1 rounded-lg flex items-center gap-1 hover:bg-slate-700 shadow-sm"><Award size={12} /> شهادة</button>
-                                </div>
-                                <div className="h-14 w-16 bg-gradient-to-t from-orange-100 to-orange-50/0 rounded-t-lg mt-1 opacity-50"></div>
-                            </div>
-                        )}
-                    </div>
-                ) : (
-                    <div className="flex flex-col items-center justify-center py-20 opacity-50 text-center">
-                        <Trophy className="w-20 h-20 text-slate-300 mb-4" />
-                        <p className="font-bold text-slate-400">لا توجد نقاط مسجلة هذا الشهر</p>
+                        ))}
                     </div>
                 )}
 
-                {/* Grid for rest */}
-                {restOfStudents.length > 0 && (
-                    <div className="mt-4 px-2">
-                        <h3 className="font-black text-slate-700 mb-4 text-sm flex items-center gap-2">
-                            <Sparkles className="w-4 h-4 text-indigo-500" />
-                            باقي ال{leaderTitle}
-                        </h3>
-                        <div className="grid grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3 pb-8">
-                            {restOfStudents.map((student, index) => (
-                                <div key={student.id} className="bg-white rounded-2xl p-3 shadow-sm border border-slate-100 flex flex-col items-center text-center relative overflow-hidden active:scale-95 transition-all">
-                                    <div className="absolute top-2 right-2 bg-indigo-50 text-indigo-600 font-bold w-6 h-6 rounded-lg flex items-center justify-center text-[10px]">
-                                        {index + 4}
-                                    </div>
-                                    <div className="w-12 h-12 rounded-full border-2 border-white shadow-md overflow-hidden mb-2 mt-1 cursor-pointer" onClick={() => handleAddPoints(student)}>
-                                        <StudentAvatar gender={student.gender} className="w-full h-full" />
-                                    </div>
-                                    <h3 className="font-black text-slate-800 text-[10px] truncate w-full mb-1">{student.name.split(' ')[0]}</h3>
-                                    <span className="text-[9px] font-bold text-slate-400 block mb-2">{student.monthlyPoints} pts</span>
-                                    <button onClick={() => setCertificateStudent(student)} className="w-full py-1 bg-slate-100 text-slate-500 text-[9px] font-bold rounded-lg hover:bg-[#446A8D] hover:text-white transition-colors">شهادة</button>
-                                </div>
-                            ))}
+                {/* باقي الطلاب في الأسفل */}
+                <div className="grid grid-cols-3 md:grid-cols-5 gap-3 mt-8 pb-20">
+                    {restOfStudents.map((s, index) => (
+                        <div key={s.id} className="bg-white rounded-2xl p-3 shadow-sm border border-slate-100 flex flex-col items-center relative active:scale-95 transition-all">
+                            <div className="absolute top-1 right-1 bg-indigo-50 text-indigo-600 font-bold w-5 h-5 rounded flex items-center justify-center text-[9px]">{index + 4}</div>
+                            <div className="w-12 h-12 rounded-full border-2 border-white shadow-md overflow-hidden mb-2 cursor-pointer" onClick={() => handleAddPoints(s)}>
+                                <StudentAvatar gender={s.gender} className="w-full h-full" />
+                            </div>
+                            <h3 className="font-black text-slate-800 text-[9px] truncate w-full text-center">{s.name.split(' ')[0]}</h3>
+                            <button onClick={() => setCertificateStudent(s)} className="mt-2 w-full py-1 bg-slate-50 text-slate-500 text-[8px] font-bold rounded-md border border-slate-100">شهادة</button>
                         </div>
-                    </div>
-                )}
+                    ))}
+                </div>
             </div>
 
-            {/* Certificate Modal */}
-            <Modal isOpen={!!certificateStudent} onClose={() => { if(!isGeneratingPdf) setCertificateStudent(null); }} className="max-w-4xl w-[95vw] rounded-xl p-0 overflow-hidden">
+            {/* ✅ الشهادة الذكية التي تميز بين الجنسين تلقائياً */}
+            <Modal isOpen={!!certificateStudent} onClose={() => !isGeneratingPdf && setCertificateStudent(null)} className="max-w-4xl w-[95vw] p-0 overflow-hidden">
                 {certificateStudent && (
-                    <div className="flex flex-col h-full bg-white max-h-[90vh]">
-                        <div className="flex justify-between items-center p-4 bg-slate-50 border-b shrink-0">
-                            <h3 className="font-black text-lg text-slate-800 flex items-center gap-2">
-                                <Award className="w-5 h-5 text-amber-500" /> معاينة شهادة التميز
-                            </h3>
-                            <button onClick={() => setCertificateStudent(null)} disabled={isGeneratingPdf} className="p-2 hover:bg-rose-50 rounded-full"><X size={20} /></button>
+                    <div className="flex flex-col bg-white">
+                        <div className="flex justify-between items-center p-4 bg-slate-50 border-b">
+                            <h3 className="font-black text-slate-800">وسام التميز لعام {new Date().getFullYear()}</h3>
+                            <button onClick={() => setCertificateStudent(null)} className="p-2 text-slate-400"><X size={20} /></button>
                         </div>
 
-                        <div className="flex-1 overflow-auto bg-slate-800 flex justify-center p-4 md:p-8">
-                            <div ref={certificateRef} className="bg-white shadow-2xl text-center text-slate-900 mx-auto relative flex flex-col box-border overflow-hidden" 
-                                 style={{ width: '297mm', height: '210mm', backgroundColor: '#fdfbf7', backgroundImage: 'radial-gradient(circle at center, #ffffff 0%, #fdfbf7 100%)' }}>
+                        <div className="flex-1 overflow-auto bg-slate-700 p-4 flex justify-center">
+                            {/* تصميم الشهادة A4 */}
+                            <div ref={certificateRef} className="bg-white shadow-2xl text-center text-slate-900 relative flex flex-col overflow-hidden" 
+                                 style={{ width: '297mm', height: '210mm', padding: '20mm', backgroundColor: '#fdfbf7' }}>
                                 
-                                <div className="absolute z-20" style={{ top: '12mm', bottom: '12mm', left: '12mm', right: '12mm', border: '5px solid #1a365d' }}></div>
-                                <div className="absolute z-20" style={{ top: '14mm', bottom: '14mm', left: '14mm', right: '14mm', border: '1px solid #d4af37' }}></div>
+                                {/* الإطارات الملكية */}
+                                <div className="absolute inset-[10mm] border-[6px] border-[#1a365d] z-10 pointer-events-none"></div>
+                                <div className="absolute inset-[12mm] border-[1px] border-[#d4af37] z-10 pointer-events-none"></div>
 
-                                <div className="relative z-10 flex flex-col h-full justify-between" style={{ padding: '20mm 25mm' }}>
+                                <div className="relative z-20 flex flex-col h-full justify-between py-10 px-16">
                                     <div className="flex justify-between items-start">
                                         <div className="text-right text-sm font-bold text-[#1a365d]">
                                             <p>سلطنة عمان</p>
                                             <p>وزارة التربية والتعليم</p>
-                                            <p>{teacherInfo?.governorate || 'وزارة التربية...'}</p>
-                                            <p>{teacherInfo?.school || 'المدرسة...'}</p>
+                                            <p>{teacherInfo?.governorate || 'المديرية العامة للتربية'}</p>
+                                            <p>{teacherInfo?.school || 'المدرسة'}</p>
                                         </div>
                                         <div className="w-24 h-24">
-                                            {teacherInfo?.ministryLogo ? <img src={teacherInfo.ministryLogo} alt="الشعار" className="w-full h-full object-contain" /> : <div className="w-full h-full bg-white rounded-full flex items-center justify-center border-2 border-[#d4af37]"><Crown className="w-12 h-12 text-[#d4af37]" /></div>}
+                                            {teacherInfo?.ministryLogo ? <img src={teacherInfo.ministryLogo} className="w-full h-full object-contain" /> : <Trophy className="w-16 h-16 text-[#d4af37] mx-auto" />}
                                         </div>
                                         <div className="text-left text-sm font-bold text-[#1a365d]">
-                                            <p>التاريخ: <span dir="ltr">{new Date().toLocaleDateString('ar-EG')}</span></p>
-                                            <p>العام الدراسي: {new Date().getFullYear()}</p>
+                                            <p>التاريخ: {new Date().toLocaleDateString('ar-EG')}</p>
+                                            <p>المادة: {teacherInfo?.subject || '........'}</p>
                                         </div>
                                     </div>
 
-                                    <div className="text-center -mt-4">
-                                        <h1 className="text-5xl font-black text-[#1a365d] mb-2" style={{ fontFamily: 'Times New Roman, serif' }}>شهادة شكر وتقدير</h1>
-                                        <div className="flex items-center gap-3 w-1/3 mx-auto"><div className="h-px bg-[#d4af37] flex-1"></div><Medal className="w-6 h-6 text-[#d4af37]" /><div className="h-px bg-[#d4af37] flex-1"></div></div>
-                                    </div>
-
-                                    <div className="flex flex-col justify-center text-center -mt-2">
-                                        <p className="text-2xl font-bold text-slate-800 mb-4">
-                                            يُسعدنا بكل فخر أن نُتوِّج {isStudentFemale ? 'الفارسة المتألقة' : 'الفارس المِقدام'}
+                                    <div>
+                                        <h1 className="text-6xl font-black text-[#1a365d] mb-4">شهادة تميز</h1>
+                                        <p className="text-2xl font-bold text-slate-700">
+                                            يُسعدنا بكل فخر واعتزاز أن نُتوِّج {isFemale ? 'الفارسة' : 'الفارس'}
                                         </p>
-                                        <p className="mb-4">
-                                            <span className="text-[#1a365d] text-4xl font-black border-b-2 border-[#d4af37] px-8 pb-2 inline-block">
+                                        <div className="my-6">
+                                            <span className="text-[#1a365d] text-5xl font-black border-b-4 border-[#d4af37] px-10 pb-2 inline-block">
                                                 {certificateStudent.name}
                                             </span>
-                                        </p>
-                                        <p className="text-xl font-bold text-slate-700 mb-4">
-                                            المقيد{isStudentFemale ? 'ة' : ''} بالصف: <span className="text-[#1a365d] font-black">{certificateStudent.classes[0]}</span>
-                                        </p>
-                                        <p className="text-xl font-medium text-slate-700 max-w-4xl mx-auto mb-4">
-                                            بوسام التميز، تقديراً {isStudentFemale ? 'لجهودها العظيمة واعتلائها صدارة فارسات' : 'لجهوده العظيمة واعتلائه صدارة فرسان'} شهر <span className="font-black text-[#d4af37] text-2xl">{monthName}</span>، وانضباط{isStudentFemale ? 'ها' : 'ه'} الذي أضاء سماء الفصل.
+                                        </div>
+                                        <p className="text-xl font-bold text-slate-700 leading-relaxed max-w-3xl mx-auto">
+                                            المقيد{isFemale ? 'ة' : ''} بالصف {certificateStudent.classes[0]}، تقديراً {isFemale ? 'لجهودها العظيمة واعتلائها صدارة فارسات' : 'لجهوده العظيمة واعتلائه صدارة فرسان'} شهر {monthName}، متمنين {isFemale ? 'لها' : 'له'} دوام التألق والنجاح.
                                         </p>
                                     </div>
 
-                                    <div className="flex justify-between items-end px-12 z-20">
+                                    <div className="flex justify-between items-end">
                                         <div className="text-center w-1/3">
-                                            <p className="text-lg font-bold text-[#1a365d] mb-4">معلم/ة المادة</p>
-                                            <p className="text-xl font-black text-slate-800 border-b border-dashed border-slate-400 inline-block px-8 pb-1">{teacherInfo?.name || '....................'}</p>
+                                            <p className="font-bold text-[#1a365d] mb-6">معلم/ة المادة</p>
+                                            <p className="font-black text-lg">{teacherInfo?.name || '............'}</p>
                                         </div>
-                                        <div className="text-center w-1/3 flex justify-center">
-                                            <div className="w-24 h-24 opacity-80 rotate-[-10deg]">
-                                                {teacherInfo?.stamp && <img src={teacherInfo.stamp} alt="الختم" className="w-full h-full object-contain" />}
-                                            </div>
+                                        <div className="w-32 h-32 flex items-center justify-center">
+                                            {teacherInfo?.stamp && <img src={teacherInfo.stamp} className="w-full h-full object-contain opacity-80" />}
                                         </div>
                                         <div className="text-center w-1/3">
-                                            <p className="text-lg font-bold text-[#1a365d] mb-4">مدير/ة المدرسة</p>
-                                            <p className="text-xl font-black text-slate-800 border-b border-dashed border-slate-400 inline-block px-8 pb-1">....................</p>
+                                            <p className="font-bold text-[#1a365d] mb-6">مدير/ة المدرسة</p>
+                                            <p className="font-black text-lg">....................</p>
                                         </div>
                                     </div>
                                 </div>
                             </div>
                         </div>
 
-                        <div className="p-4 border-t flex gap-3 bg-white shrink-0">
-                            <button onClick={handleDownloadPDF} disabled={isGeneratingPdf} className="flex-1 py-4 bg-[#d4af37] text-[#1a365d] rounded-xl font-black text-lg shadow-lg flex items-center justify-center gap-2">
-                                {isGeneratingPdf ? <><Loader2 size={24} className="animate-spin" /> جاري التجهيز...</> : <><Download size={24} /> حفظ الشهادة (A4 PDF)</>}
+                        <div className="p-4 border-t flex gap-3">
+                            <button onClick={handleDownloadPDF} disabled={isGeneratingPdf} className="flex-1 py-4 bg-[#d4af37] text-[#1a365d] rounded-xl font-black text-lg shadow-lg flex items-center justify-center gap-2 transition-all active:scale-95">
+                                {isGeneratingPdf ? <Loader2 size={24} className="animate-spin" /> : <><Download size={24} /> حفظ الشهادة للطباعة</>}
                             </button>
                         </div>
                     </div>
