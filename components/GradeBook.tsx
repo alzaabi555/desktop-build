@@ -7,7 +7,7 @@ import {
 } from 'lucide-react';
 import Modal from './Modal';
 import { useApp } from '../context/AppContext';
-import { Filesystem, Directory } from '@capacitor/filesystem';
+import { Filesystem, Directory, Encoding } from '@capacitor/filesystem';
 import { Share } from '@capacitor/share';
 import { Capacitor } from '@capacitor/core';
 import * as XLSX from 'xlsx';
@@ -67,8 +67,6 @@ const GradeBook: React.FC<GradeBookProps> = ({
   const [showToolsManager, setShowToolsManager] = useState(false);
   const [isAddingTool, setIsAddingTool] = useState(false);
   const [newToolName, setNewToolName] = useState('');
-  const [editingToolId, setEditingToolId] = useState<string | null>(null);
-  const [editToolName, setEditToolName] = useState('');
   const [showDistModal, setShowDistModal] = useState(false);
   
   // بيانات توزيع الدرجات المؤقتة
@@ -85,6 +83,18 @@ const GradeBook: React.FC<GradeBookProps> = ({
       setActiveToolId(tools[0].id);
     }
   }, [tools, activeToolId]);
+
+  // --- دوال مساعدة للاستيراد والتصدير ---
+  const cleanText = (text: string) => text ? String(text).trim() : '';
+  const normalizeText = (text: string) => text ? String(text).trim().toLowerCase().replace(/[أإآ]/g, 'ا').replace(/ة/g, 'ه').replace(/ى/g, 'ي').replace(/[ـ]/g, '') : '';
+  
+  const extractNumericScore = (val: any): number | null => {
+    if (val === undefined || val === null || val === '') return null;
+    const strVal = String(val).trim();
+    const cleanNum = strVal.replace(/[^0-9.]/g, '');
+    const num = Number(cleanNum);
+    return isNaN(num) || cleanNum === '' ? null : num;
+  };
 
   // دالة استخراج التقدير
   const getGradeSymbol = (score: number) => {
@@ -136,6 +146,131 @@ const GradeBook: React.FC<GradeBookProps> = ({
       return matchesClass && matchesGrade;
     });
   }, [students, selectedClass, selectedGrade]);
+
+  // ✅ دالة الاستيراد من Excel (تمت استعادتها وإصلاحها)
+  const handleImportExcel = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setIsImporting(true);
+    
+    try {
+      const data = await file.arrayBuffer();
+      const workbook = XLSX.read(data, { type: 'array' });
+      const firstSheet = workbook.Sheets[workbook.SheetNames[0]];
+      const jsonData = XLSX.utils.sheet_to_json(firstSheet, { defval: '' }) as any[];
+      
+      if (jsonData.length === 0) throw new Error('الملف فارغ');
+
+      const headers = Object.keys(jsonData[0]);
+      const nameKeywords = ['الاسم', 'اسم الطالب', 'name', 'student'];
+      const nameKey = headers.find(h => nameKeywords.some(kw => normalizeText(h).includes(normalizeText(kw)))) || headers[0];
+
+      // 🔥 الفلتر الذكي: طرد الأعمدة الفارغة وأعمدة المجموع
+      const potentialTools = headers.filter(h => {
+        const lowerH = normalizeText(h);
+        if (h === nameKey) return false;
+        if (lowerH.startsWith('__empty')) return false; // طرد الأعمدة الفارغة المخفية
+        if (!cleanText(h)) return false; 
+        const excludedPartial = ['مجموع', 'total', 'تقدير', 'نتيجة', 'rank', 'م'];
+        if (excludedPartial.some(ex => lowerH.includes(ex))) return false;
+        return true;
+      });
+
+      let updatedTools = [...tools];
+      potentialTools.forEach(h => {
+        const cleanH = cleanText(h);
+        if (cleanH && !updatedTools.some(t => t.name === cleanH)) {
+          updatedTools.push({ id: Math.random().toString(36).substr(2, 9), name: cleanH, maxScore: 0 });
+        }
+      });
+      setAssessmentTools(updatedTools);
+
+      let updatedCount = 0;
+      setStudents(prev => prev.map(s => {
+          const row = jsonData.find((r: any) => normalizeText(String(r[nameKey] || '').trim()) === normalizeText(s.name));
+          if (!row) return s;
+          
+          updatedCount++;
+          let newGrades = [...(s.grades || [])];
+          
+          potentialTools.forEach(headerStr => {
+            const val = extractNumericScore(row[headerStr]);
+            if (val !== null) {
+              const toolName = cleanText(headerStr);
+              // إزالة الدرجة القديمة لنفس الأداة في نفس الفصل
+              newGrades = newGrades.filter(g => !(g.category.trim() === toolName.trim() && (g.semester || '1') === currentSemester));
+              // إضافة الدرجة الجديدة
+              newGrades.unshift({
+                id: Math.random().toString(36).substr(2, 9),
+                subject: teacherInfo?.subject || 'عام',
+                category: toolName, 
+                score: val, 
+                maxScore: 0, 
+                date: new Date().toISOString(), 
+                semester: currentSemester
+              });
+            }
+          });
+          return { ...s, grades: newGrades };
+        })
+      );
+      
+      alert(`تم استيراد الدرجات لـ ${updatedCount} طالب بنجاح ✅`);
+      setShowMenu(false);
+    } catch (error: any) { 
+      alert('خطأ في الاستيراد: ' + error.message); 
+    } finally { 
+      setIsImporting(false); 
+      if (e.target) e.target.value = ''; 
+    }
+  };
+
+  // ✅ دالة تصدير التقرير (تمت استعادتها)
+  const handleExportExcel = async () => {
+    if (filteredStudents.length === 0) return alert('لا يوجد طلاب لتصدير درجاتهم');
+    setIsExporting(true);
+    
+    try {
+      const data = filteredStudents.map(student => {
+        const row: any = { 'الاسم': student.name, 'الصف': student.classes[0] || '' };
+        const semGrades = getSemesterGrades(student, currentSemester);
+        let total = 0;
+        
+        tools.forEach(tool => {
+          const g = semGrades.find(grade => grade.category.trim() === tool.name.trim());
+          row[tool.name] = g ? g.score : '';
+          total += g ? Number(g.score) : 0;
+        });
+        
+        row['المجموع'] = total;
+        row['التقدير'] = getGradeSymbol(total);
+        return row;
+      });
+
+      const wb = XLSX.utils.book_new();
+      const ws = XLSX.utils.json_to_sheet(data);
+      XLSX.utils.book_append_sheet(wb, ws, "الدرجات");
+      
+      const fileName = `Grades_Report_${currentSemester}_${new Date().toLocaleDateString('en-GB').replace(/\//g, '-')}.xlsx`;
+      
+      if (Capacitor.isNativePlatform()) {
+        const wbout = XLSX.write(wb, { bookType: 'xlsx', type: 'base64' });
+        const result = await Filesystem.writeFile({ 
+            path: fileName, 
+            data: wbout, 
+            directory: Directory.Cache 
+        });
+        await Share.share({ title: 'تقرير الدرجات', url: result.uri });
+      } else { 
+        XLSX.writeFile(wb, fileName); 
+      }
+      setShowMenu(false);
+    } catch (e) {
+        alert('حدث خطأ أثناء التصدير');
+    } finally { 
+        setIsExporting(false); 
+    }
+  };
 
   // دالة الرصد اليدوي
   const handleGradeChange = (studentId: string, value: string) => {
@@ -241,6 +376,7 @@ const GradeBook: React.FC<GradeBookProps> = ({
           ...s,
           grades: (s.grades || []).filter(g => (g.semester || '1') !== currentSemester)
       })));
+      setShowMenu(false);
     }
   };
 
@@ -269,6 +405,7 @@ const GradeBook: React.FC<GradeBookProps> = ({
                 <div className="fixed inset-0 z-40" onClick={() => setShowMenu(false)}></div>
                 <div className="absolute left-0 top-full mt-2 w-64 bg-white rounded-2xl shadow-2xl border border-slate-100 overflow-hidden z-50 animate-in zoom-in-95 origin-top-left">
                   <div className="p-1">
+                    {/* زر توزيع الدرجات */}
                     <button onClick={() => { setShowDistModal(true); setShowMenu(false); }} className="flex items-center gap-3 px-4 py-3 hover:bg-slate-50 transition-colors w-full text-right border-b border-slate-50">
                       <PieChart className="w-4 h-4 text-indigo-600" />
                       <div className="flex flex-col items-start text-xs font-bold text-slate-800">
@@ -276,7 +413,22 @@ const GradeBook: React.FC<GradeBookProps> = ({
                         <span className="text-[9px] text-slate-400">تحديد الدرجة النهائية والوزن</span>
                       </div>
                     </button>
-                    <button onClick={handleClearGrades} className="flex items-center gap-3 px-4 py-3 hover:bg-red-50 transition-colors w-full text-right text-red-600">
+
+                    {/* زر استيراد Excel */}
+                    <button onClick={() => fileInputRef.current?.click()} className="flex items-center gap-3 px-4 py-3 hover:bg-slate-50 transition-colors w-full text-right">
+                      {isImporting ? <Loader2 className="w-4 h-4 text-emerald-600 animate-spin" /> : <FileUp className="w-4 h-4 text-emerald-600" />}
+                      <span className="text-xs font-bold text-slate-700">استيراد من Excel</span>
+                    </button>
+                    <input type="file" ref={fileInputRef} onChange={handleImportExcel} accept=".xlsx, .xls" className="hidden" />
+
+                    {/* زر تصدير التقرير */}
+                    <button onClick={handleExportExcel} disabled={isExporting} className="flex items-center gap-3 px-4 py-3 hover:bg-slate-50 transition-colors w-full text-right">
+                      {isExporting ? <Loader2 className="w-4 h-4 text-blue-600 animate-spin" /> : <FileDown className="w-4 h-4 text-blue-600" />}
+                      <span className="text-xs font-bold text-slate-700">تصدير التقرير</span>
+                    </button>
+
+                    {/* زر تصفير الدرجات */}
+                    <button onClick={handleClearGrades} className="flex items-center gap-3 px-4 py-3 hover:bg-red-50 transition-colors w-full text-right text-red-600 border-t border-slate-50">
                       <Trash2 className="w-4 h-4" />
                       <span className="text-xs font-bold">تصفير درجات الفصل</span>
                     </button>
