@@ -1,6 +1,6 @@
 import React, { useState, useMemo, useRef, useEffect } from 'react';
 import { Student } from '../types';
-import { Trophy, Crown, Sparkles, Star, Search, Award, Download, X, Loader2, MinusCircle, Medal, Settings2 } from 'lucide-react'; 
+import { Trophy, Crown, Sparkles, Star, Search, Award, Download, X, Loader2, MinusCircle, Medal } from 'lucide-react'; 
 import { useApp } from '../context/AppContext';
 import { StudentAvatar } from './StudentAvatar';
 import Modal from './Modal';
@@ -28,7 +28,13 @@ interface LeaderboardProps {
 const Leaderboard: React.FC<LeaderboardProps> = ({ students, classes, onUpdateStudent, teacherInfo }) => {
     const { currentSemester } = useApp();
     
-    // ✅ إعداد نوع المدرسة (ذكور / إناث / مختلطة) - يتم حفظه محلياً
+    // إعداد التواريخ واسم الشهر
+    const today = new Date();
+    const currentMonth = today.getMonth(); 
+    const months = ["يناير", "فبراير", "مارس", "أبريل", "مايو", "يونيو", "يوليو", "أغسطس", "سبتمبر", "أكتوبر", "نوفمبر", "ديسمبر"];
+    const monthName = months[currentMonth];
+
+    // ✅ إعداد نوع المدرسة (ذكور / إناث / مختلطة)
     const [schoolType, setSchoolType] = useState<'boys' | 'girls' | 'mixed'>(() => {
         return (localStorage.getItem('rased_school_type') as any) || 'mixed';
     });
@@ -37,11 +43,11 @@ const Leaderboard: React.FC<LeaderboardProps> = ({ students, classes, onUpdateSt
         localStorage.setItem('rased_school_type', schoolType);
     }, [schoolType]);
 
-    // ✅ دالة تحديد عنوان الصفحة بناءً على نوع المدرسة
+    // ✅ دالة العنوان (تم التعديل لإضافة اسم الشهر)
     const getPageTitle = () => {
-        if (schoolType === 'boys') return 'فرسان الشهر';
-        if (schoolType === 'girls') return 'فارسات الشهر';
-        return 'فرسان وفارسات الشهر';
+        if (schoolType === 'boys') return `فرسان شهر ${monthName}`;
+        if (schoolType === 'girls') return `فارسات شهر ${monthName}`;
+        return `فرسان وفارسات شهر ${monthName}`;
     };
 
     const [selectedClass, setSelectedClass] = useState<string>(() => sessionStorage.getItem('rased_class') || 'all');
@@ -55,11 +61,6 @@ const Leaderboard: React.FC<LeaderboardProps> = ({ students, classes, onUpdateSt
     const [isGeneratingPdf, setIsGeneratingPdf] = useState(false);
     const certificateRef = useRef<HTMLDivElement>(null);
     
-    const today = new Date();
-    const currentMonth = today.getMonth(); 
-    const months = ["يناير", "فبراير", "مارس", "أبريل", "مايو", "يونيو", "يوليو", "أغسطس", "سبتمبر", "أكتوبر", "نوفمبر", "ديسمبر"];
-    const monthName = months[currentMonth];
-
     const rankedStudents = useMemo(() => {
         let filtered = students;
         if (selectedClass !== 'all') filtered = students.filter(s => s.classes?.includes(selectedClass));
@@ -80,6 +81,7 @@ const Leaderboard: React.FC<LeaderboardProps> = ({ students, classes, onUpdateSt
     const topThree = rankedStudents.slice(0, 3);
     const restOfStudents = rankedStudents.slice(3);
 
+    // إضافة نقاط
     const handleAddPoints = (student: Student) => {
         if (!onUpdateStudent) return;
         new Audio(positiveSound).play().catch(() => {});
@@ -93,6 +95,22 @@ const Leaderboard: React.FC<LeaderboardProps> = ({ students, classes, onUpdateSt
             semester: currentSemester
         };
         onUpdateStudent({ ...student, behaviors: [newBehavior, ...(student.behaviors || [])] });
+    };
+
+    // ✅ دالة خصم النقاط (تمت استعادتها)
+    const handleDeductPoint = (student: Student) => {
+        if (!onUpdateStudent) return;
+        if (confirm(`هل تريد خصم نقطة واحدة من الطالب/ة ${student.name}؟ (تصحيح)`)) {
+            const correctionBehavior = {
+                id: Math.random().toString(36).substr(2, 9),
+                date: new Date().toISOString(),
+                type: 'positive' as const, 
+                description: 'تصحيح نقاط (خصم)',
+                points: -3, 
+                semester: currentSemester
+            };
+            onUpdateStudent({ ...student, behaviors: [correctionBehavior, ...(student.behaviors || [])] });
+        }
     };
 
     const handleDownloadPDF = async () => {
@@ -116,7 +134,6 @@ const Leaderboard: React.FC<LeaderboardProps> = ({ students, classes, onUpdateSt
         } catch (e) { alert('خطأ في الحفظ'); } finally { setIsGeneratingPdf(false); }
     };
 
-    // ✅ منطق التذكير/التأنيث في الشهادة بناءً على صورة (جنس) الطالب
     const isFemale = certificateStudent?.gender === 'female';
 
     return (
@@ -128,7 +145,7 @@ const Leaderboard: React.FC<LeaderboardProps> = ({ students, classes, onUpdateSt
                         <select 
                             value={schoolType} 
                             onChange={(e) => setSchoolType(e.target.value as any)}
-                            className="bg-white/10 border border-white/20 rounded-lg text-[10px] p-1 outline-none font-bold"
+                            className="bg-white/10 border border-white/20 rounded-lg text-[10px] p-1 outline-none font-bold cursor-pointer hover:bg-white/20"
                         >
                             <option value="mixed" className="text-slate-800">مدرسة مختلطة</option>
                             <option value="boys" className="text-slate-800">مدرسة ذكور</option>
@@ -139,6 +156,7 @@ const Leaderboard: React.FC<LeaderboardProps> = ({ students, classes, onUpdateSt
                     <div className="bg-white/10 p-3 rounded-2xl border border-white/20 mb-3 shadow-inner">
                         <Crown className="w-8 h-8 text-amber-400 fill-amber-400 animate-bounce" />
                     </div>
+                    {/* ✅ العنوان الآن يتضمن اسم الشهر */}
                     <h1 className="text-2xl font-black tracking-wide mb-1">{getPageTitle()}</h1>
                     
                     <div className="relative w-full max-w-sm my-4">
@@ -159,7 +177,6 @@ const Leaderboard: React.FC<LeaderboardProps> = ({ students, classes, onUpdateSt
                 {/* منصة التتويج */}
                 {topThree.length > 0 && (
                     <div className="flex justify-center items-end gap-2 md:gap-6 py-4">
-                        {/* المراكز 2، 1، 3 مرتبة برمجياً */}
                         {[topThree[1], topThree[0], topThree[2]].map((s, i) => s && (
                             <div key={s.id} className={`flex flex-col items-center ${i === 1 ? 'z-10 -mb-4' : 'opacity-90'}`}>
                                 <div className="relative cursor-pointer" onClick={() => handleAddPoints(s)}>
@@ -172,15 +189,21 @@ const Leaderboard: React.FC<LeaderboardProps> = ({ students, classes, onUpdateSt
                                     <h3 className="font-black text-[10px] md:text-xs text-slate-800 truncate">{s.name.split(' ')[0]}</h3>
                                     <span className="text-amber-600 font-bold text-[10px]">{s.monthlyPoints} نقطة</span>
                                 </div>
-                                <button onClick={() => setCertificateStudent(s)} className="mt-2 text-[10px] bg-slate-700 text-white px-3 py-1 rounded-lg flex items-center gap-1 shadow-md">
-                                    <Award size={12} /> شهادة
-                                </button>
+                                {/* ✅ أزرار الشهادة والخصم */}
+                                <div className="flex gap-1 mt-2">
+                                    <button onClick={() => setCertificateStudent(s)} className="text-[10px] bg-slate-700 text-white px-2 py-1 rounded-lg flex items-center gap-1 shadow-md hover:bg-slate-800">
+                                        <Award size={12} /> شهادة
+                                    </button>
+                                    <button onClick={() => handleDeductPoint(s)} className="text-[10px] bg-rose-100 text-rose-500 px-2 py-1 rounded-lg shadow-sm hover:bg-rose-200" title="خصم نقطة">
+                                        <MinusCircle size={12} />
+                                    </button>
+                                </div>
                             </div>
                         ))}
                     </div>
                 )}
 
-                {/* باقي الطلاب في الأسفل */}
+                {/* باقي الطلاب */}
                 <div className="grid grid-cols-3 md:grid-cols-5 gap-3 mt-8 pb-20">
                     {restOfStudents.map((s, index) => (
                         <div key={s.id} className="bg-white rounded-2xl p-3 shadow-sm border border-slate-100 flex flex-col items-center relative active:scale-95 transition-all">
@@ -189,13 +212,17 @@ const Leaderboard: React.FC<LeaderboardProps> = ({ students, classes, onUpdateSt
                                 <StudentAvatar gender={s.gender} className="w-full h-full" />
                             </div>
                             <h3 className="font-black text-slate-800 text-[9px] truncate w-full text-center">{s.name.split(' ')[0]}</h3>
-                            <button onClick={() => setCertificateStudent(s)} className="mt-2 w-full py-1 bg-slate-50 text-slate-500 text-[8px] font-bold rounded-md border border-slate-100">شهادة</button>
+                            <div className="flex gap-1 w-full mt-2">
+                                <button onClick={() => setCertificateStudent(s)} className="flex-1 py-1 bg-slate-50 text-slate-500 text-[8px] font-bold rounded-md border border-slate-100">شهادة</button>
+                                {/* ✅ زر الخصم لباقي القائمة */}
+                                <button onClick={() => handleDeductPoint(s)} className="px-2 py-1 bg-rose-50 text-rose-500 text-[8px] font-bold rounded-md border border-rose-100"><MinusCircle size={10} /></button>
+                            </div>
                         </div>
                     ))}
                 </div>
             </div>
 
-            {/* ✅ الشهادة الذكية التي تميز بين الجنسين تلقائياً */}
+            {/* الشهادة */}
             <Modal isOpen={!!certificateStudent} onClose={() => !isGeneratingPdf && setCertificateStudent(null)} className="max-w-4xl w-[95vw] p-0 overflow-hidden">
                 {certificateStudent && (
                     <div className="flex flex-col bg-white">
@@ -205,11 +232,9 @@ const Leaderboard: React.FC<LeaderboardProps> = ({ students, classes, onUpdateSt
                         </div>
 
                         <div className="flex-1 overflow-auto bg-slate-700 p-4 flex justify-center">
-                            {/* تصميم الشهادة A4 */}
                             <div ref={certificateRef} className="bg-white shadow-2xl text-center text-slate-900 relative flex flex-col overflow-hidden" 
                                  style={{ width: '297mm', height: '210mm', padding: '20mm', backgroundColor: '#fdfbf7' }}>
                                 
-                                {/* الإطارات الملكية */}
                                 <div className="absolute inset-[10mm] border-[6px] border-[#1a365d] z-10 pointer-events-none"></div>
                                 <div className="absolute inset-[12mm] border-[1px] border-[#d4af37] z-10 pointer-events-none"></div>
 
@@ -217,8 +242,8 @@ const Leaderboard: React.FC<LeaderboardProps> = ({ students, classes, onUpdateSt
                                     <div className="flex justify-between items-start">
                                         <div className="text-right text-sm font-bold text-[#1a365d]">
                                             <p>سلطنة عمان</p>
-                                            <p>وزارة التربية والتعليم</p>
-                                            <p>{teacherInfo?.governorate || 'المديرية العامة للتربية'}</p>
+                                            <p>وزارة التعليم</p>
+                                            <p>{teacherInfo?.governorate || 'المديرية العامة للتعليم'}</p>
                                             <p>{teacherInfo?.school || 'المدرسة'}</p>
                                         </div>
                                         <div className="w-24 h-24">
