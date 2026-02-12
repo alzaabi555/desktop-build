@@ -1,35 +1,33 @@
-const { app, BrowserWindow, shell, ipcMain } = require('electron');
+const { app, BrowserWindow, shell, ipcMain, dialog } = require('electron');
 const path = require('path');
 const { autoUpdater } = require('electron-updater');
 
 // ---------------------------------------------------------
-// 🚀 1. إعدادات الأداء القصوى (High Performance Mode)
+// 🚀 1. إعدادات الأداء والنظام (High Performance Mode)
 // ---------------------------------------------------------
-app.commandLine.appendSwitch('js-flags', '--max-old-space-size=8192'); // تخصيص ذاكرة حتى 8GB
-app.commandLine.appendSwitch('enable-gpu-rasterization'); // تسريع الرسم عبر كرت الشاشة
-app.commandLine.appendSwitch('enable-zero-copy'); // تسريع نقل البيانات بين العمليات
-app.commandLine.appendSwitch('ignore-gpu-blacklist'); // إجبار استخدام GPU
-app.commandLine.appendSwitch('disable-site-isolation-trials'); // تقليل استهلاك الذاكرة
+// تفعيل تسريع العتاد (GPU Acceleration) وزيادة حدود الذاكرة
+app.commandLine.appendSwitch('js-flags', '--max-old-space-size=8192'); // زيادة الذاكرة إلى 8GB
+app.commandLine.appendSwitch('enable-gpu-rasterization'); // استخدام GPU للرسم
+app.commandLine.appendSwitch('enable-zero-copy'); // تسريع نقل البيانات
+app.commandLine.appendSwitch('ignore-gpu-blacklist'); // إجبار استخدام GPU حتى لو كان قديماً
+app.commandLine.appendSwitch('disable-site-isolation-trials'); // تقليل استهلاك الذاكرة للعمليات
 
-// تحديد مسار بيانات المستخدم لضمان بقاء النسخ الاحتياطية المحلية آمنة
+// تحديد مسار البيانات لضمان عدم ضياعها عند التحديث
 app.setPath('userData', path.join(app.getPath('appData'), 'RasedApp'));
 
-// منع تشغيل أكثر من نسخة من التطبيق في نفس الوقت
+// منع فتح أكثر من نسخة للتطبيق
 const gotLock = app.requestSingleInstanceLock();
-if (!gotLock) app.quit();
+if (!gotLock) {
+  app.quit();
+}
 
-// إعدادات التحديث التلقائي
+// ---------------------------------------------------------
+// 🔄 2. إعدادات التحديث التلقائي
+// ---------------------------------------------------------
 autoUpdater.autoDownload = true;
 autoUpdater.autoInstallOnAppQuit = true;
 
-let mainWindow = null;
-
-// ---------------------------------------------------------
-// 🛠️ 2. الدوال المساعدة
-// ---------------------------------------------------------
-function isHttpUrl(url) {
-  return typeof url === 'string' && (url.startsWith('http://') || url.startsWith('https://'));
-}
+let mainWindow;
 
 function createWindow() {
   mainWindow = new BrowserWindow({
@@ -38,66 +36,99 @@ function createWindow() {
     minWidth: 900,
     minHeight: 600,
     icon: path.join(__dirname, '../icon.png'),
-    backgroundColor: '#f3f4f6',
+    backgroundColor: '#f3f4f6', // لون الخلفية لمنع الوميض الأبيض
     webPreferences: {
       nodeIntegration: false,
       contextIsolation: true,
+      // استخدام path.resolve لضمان الوصول للملف في النسخة المجمعة
       preload: path.resolve(__dirname, 'preload.js'),
-      sandbox: false,
-      backgroundThrottling: false, // يمنع بطء التطبيق عند تصغيره
+      sandbox: false, // لضمان عمل الروابط الخارجية وأدوات النظام
+      backgroundThrottling: false, // يمنع تهنيج التطبيق عند التصغير
       webSecurity: true,
-    },
+      zoomFactor: 1.0
+    }
   });
 
-  // تحميل ملف الواجهة الرئيسي
+  // مسح الكاش لضمان تحميل أحدث نسخة من الواجهة
+  mainWindow.webContents.session.clearCache();
+
   mainWindow.loadFile(path.join(__dirname, '../www/index.html'));
   
-  // إخفاء شريط القوائم العلوي (Menu Bar)
   mainWindow.setMenuBarVisibility(false);
 
-  // 🌐 معالجة الروابط الخارجية (مثل فتح واتساب أو المتصفح)
+  // 🌐 معالجة الروابط الخارجية (واتساب، متصفح، إلخ)
   mainWindow.webContents.setWindowOpenHandler(({ url }) => {
-    if (isHttpUrl(url)) {
-      shell.openExternal(url).catch(() => {});
+    const allowed = ['https:', 'http:', 'mailto:', 'tel:', 'sms:', 'whatsapp:'];
+    const u = new URL(url);
+    if (allowed.includes(u.protocol)) {
+      shell.openExternal(url).catch(console.error);
     }
-    return { action: 'deny' }; // يمنع فتح نافذة داخل التطبيق ويفتحها في المتصفح الافتراضي
+    return { action: 'deny' };
   });
 
-  // منع التنقل داخل نافذة التطبيق لأي رابط خارجي
+  // منع التنقل داخل النافذة لأي رابط خارجي
   mainWindow.webContents.on('will-navigate', (event, url) => {
-    if (isHttpUrl(url)) {
-      event.preventDefault();
-      shell.openExternal(url).catch(() => {});
+    const isLocal = url.startsWith('file://');
+    if (!isLocal) {
+        event.preventDefault();
+        shell.openExternal(url);
     }
   });
 
-  mainWindow.on('closed', () => (mainWindow = null));
+  mainWindow.on('closed', () => {
+    mainWindow = null;
+  });
 }
 
 // ---------------------------------------------------------
-// 📡 3. نظام IPC (التواصل مع واجهة React)
+// 📡 3. قنوات الاتصال (IPC)
 // ---------------------------------------------------------
-// إرسال نسخة التطبيق للواجهة عند الطلب
+// إرجاع رقم الإصدار للواجهة
 ipcMain.handle('get-app-version', () => app.getVersion());
 
 // ---------------------------------------------------------
-// 🏁 4. دورة حياة التطبيق (Lifecycle)
+// 🏁 4. دورة حياة التطبيق
 // ---------------------------------------------------------
 app.whenReady().then(() => {
   createWindow();
 
-  // التحقق من التحديثات عند التشغيل في النسخة النهائية فقط
   if (app.isPackaged) {
     autoUpdater.checkForUpdatesAndNotify();
   }
+
+  app.on('activate', () => {
+    if (BrowserWindow.getAllWindows().length === 0) createWindow();
+  });
 });
 
-// إعادة التركيز على النافذة عند محاولة تشغيل نسخة ثانية
+// التعامل مع محاولة فتح نسخة ثانية (التركيز على النافذة الحالية)
 app.on('second-instance', () => {
   if (mainWindow) {
     if (mainWindow.isMinimized()) mainWindow.restore();
     mainWindow.focus();
   }
+});
+
+// مستمعي التحديث التلقائي
+autoUpdater.on('update-available', () => {
+  dialog.showMessageBox({ 
+    type: 'info', 
+    title: 'تحديث جديد', 
+    message: 'يوجد تحديث جديد، يتم تحميله الآن في الخلفية...', 
+    buttons: ['حسناً'] 
+  });
+});
+
+autoUpdater.on('update-downloaded', () => {
+  dialog.showMessageBox({ 
+    type: 'question', 
+    buttons: ['تثبيت الآن', 'لاحقاً'], 
+    title: 'اكتمل التحميل', 
+    message: 'تم تحميل التحديث. هل تريد إعادة التشغيل للتثبيت الآن؟' 
+  })
+  .then(({ response }) => { 
+    if (response === 0) autoUpdater.quitAndInstall(); 
+  });
 });
 
 app.on('window-all-closed', () => {
