@@ -3,7 +3,7 @@ import { Student, GradeRecord, AssessmentTool } from '../types';
 import { 
   Plus, X, Trash2, Settings, Check, Loader2, Edit2, 
   FileSpreadsheet, FileUp, Wand2, BarChart3, SlidersHorizontal, 
-  FileDown, PieChart, AlertTriangle 
+  FileDown, PieChart, AlertTriangle, Download 
 } from 'lucide-react';
 import Modal from './Modal';
 import { useApp } from '../context/AppContext';
@@ -67,6 +67,8 @@ const GradeBook: React.FC<GradeBookProps> = ({
   const [showToolsManager, setShowToolsManager] = useState(false);
   const [isAddingTool, setIsAddingTool] = useState(false);
   const [newToolName, setNewToolName] = useState('');
+  const [editingToolId, setEditingToolId] = useState<string | null>(null);
+  const [editToolName, setEditToolName] = useState('');
   const [showDistModal, setShowDistModal] = useState(false);
   
   // بيانات توزيع الدرجات المؤقتة
@@ -147,7 +149,39 @@ const GradeBook: React.FC<GradeBookProps> = ({
     });
   }, [students, selectedClass, selectedGrade]);
 
-  // ✅ دالة الاستيراد من Excel (تمت استعادتها وإصلاحها)
+  // ✅ ميزة جديدة: تحميل قالب إكسل جاهز
+  const handleDownloadTemplate = async () => {
+    try {
+      // 1. تجهيز الأعمدة بناءً على الأدوات الحالية
+      const headers = ['الاسم', 'الصف', ...tools.map(t => t.name)];
+      
+      // 2. إضافة صف مثال توضيحي
+      const sampleRow: any = { 'الاسم': 'مثال: محمد علي', 'الصف': '1/5' };
+      tools.forEach(t => sampleRow[t.name] = '10');
+      
+      const wb = XLSX.utils.book_new();
+      const ws = XLSX.utils.json_to_sheet([sampleRow], { header: headers });
+      
+      // تحسين عرض الأعمدة
+      ws['!cols'] = [{ wch: 25 }, { wch: 10 }, ...tools.map(() => ({ wch: 15 }))];
+
+      XLSX.utils.book_append_sheet(wb, ws, "قالب_الرصد");
+      const fileName = `Rased_Template.xlsx`;
+
+      if (Capacitor.isNativePlatform()) {
+        const wbout = XLSX.write(wb, { bookType: 'xlsx', type: 'base64' });
+        const result = await Filesystem.writeFile({ path: fileName, data: wbout, directory: Directory.Cache });
+        await Share.share({ title: 'قالب رصد الدرجات', url: result.uri });
+      } else {
+        XLSX.writeFile(wb, fileName);
+      }
+      setShowMenu(false);
+    } catch (e) {
+      alert('حدث خطأ أثناء تحميل القالب');
+    }
+  };
+
+  // ✅ دالة الاستيراد من Excel
   const handleImportExcel = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
@@ -165,11 +199,10 @@ const GradeBook: React.FC<GradeBookProps> = ({
       const nameKeywords = ['الاسم', 'اسم الطالب', 'name', 'student'];
       const nameKey = headers.find(h => nameKeywords.some(kw => normalizeText(h).includes(normalizeText(kw)))) || headers[0];
 
-      // 🔥 الفلتر الذكي: طرد الأعمدة الفارغة وأعمدة المجموع
       const potentialTools = headers.filter(h => {
         const lowerH = normalizeText(h);
         if (h === nameKey) return false;
-        if (lowerH.startsWith('__empty')) return false; // طرد الأعمدة الفارغة المخفية
+        if (lowerH.startsWith('__empty')) return false; 
         if (!cleanText(h)) return false; 
         const excludedPartial = ['مجموع', 'total', 'تقدير', 'نتيجة', 'rank', 'م'];
         if (excludedPartial.some(ex => lowerH.includes(ex))) return false;
@@ -197,9 +230,7 @@ const GradeBook: React.FC<GradeBookProps> = ({
             const val = extractNumericScore(row[headerStr]);
             if (val !== null) {
               const toolName = cleanText(headerStr);
-              // إزالة الدرجة القديمة لنفس الأداة في نفس الفصل
               newGrades = newGrades.filter(g => !(g.category.trim() === toolName.trim() && (g.semester || '1') === currentSemester));
-              // إضافة الدرجة الجديدة
               newGrades.unshift({
                 id: Math.random().toString(36).substr(2, 9),
                 subject: teacherInfo?.subject || 'عام',
@@ -225,7 +256,7 @@ const GradeBook: React.FC<GradeBookProps> = ({
     }
   };
 
-  // ✅ دالة تصدير التقرير (تمت استعادتها)
+  // ✅ دالة تصدير التقرير
   const handleExportExcel = async () => {
     if (filteredStudents.length === 0) return alert('لا يوجد طلاب لتصدير درجاتهم');
     setIsExporting(true);
@@ -412,6 +443,12 @@ const GradeBook: React.FC<GradeBookProps> = ({
                         <span>إعدادات توزيع الدرجات</span>
                         <span className="text-[9px] text-slate-400">تحديد الدرجة النهائية والوزن</span>
                       </div>
+                    </button>
+
+                    {/* ✅ زر تحميل القالب (الجديد) */}
+                    <button onClick={handleDownloadTemplate} className="flex items-center gap-3 px-4 py-3 hover:bg-slate-50 transition-colors w-full text-right border-b border-slate-50">
+                      <FileSpreadsheet className="w-4 h-4 text-amber-600" />
+                      <span className="text-xs font-bold text-slate-700">تحميل قالب إكسل فارغ</span>
                     </button>
 
                     {/* زر استيراد Excel */}
