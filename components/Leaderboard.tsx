@@ -136,6 +136,15 @@ const Leaderboard: React.FC<LeaderboardProps> = ({ students, classes, onUpdateSt
 
     const isFemale = certificateStudent?.gender === 'female';
 
+    // ✅ دالة جديدة لاستخراج الاسم الأول واللقب
+    const getShortName = (fullName: string) => {
+        if (!fullName) return '';
+        const nameParts = fullName.trim().split(' ');
+        if (nameParts.length === 1) return nameParts[0];
+        // نأخذ الاسم الأول + الاسم الأخير
+        return `${nameParts[0]} ${nameParts[nameParts.length - 1]}`;
+    };
+
     return (
         <div className="flex flex-col h-full space-y-6 pb-24 md:pb-8 overflow-hidden">
             <header className="fixed md:sticky top-0 z-40 bg-[#446A8D] text-white shadow-lg px-4 pt-8 pb-6 transition-all w-full">
@@ -185,9 +194,10 @@ const Leaderboard: React.FC<LeaderboardProps> = ({ students, classes, onUpdateSt
                                         <StudentAvatar gender={s.gender} className="w-full h-full" />
                                     </div>
                                 </div>
-                                <div className="bg-white/90 backdrop-blur px-3 py-2 rounded-xl text-center border shadow-sm w-24 md:w-32">
-                                    <h3 className="font-black text-[10px] md:text-xs text-slate-800 truncate">{s.name.split(' ')[0]}</h3>
-                                    <span className="text-amber-600 font-bold text-[10px]">{s.monthlyPoints} نقطة</span>
+                                {/* ✅ تعديل خط منصة التتويج والاسم المزدوج */}
+                                <div className="bg-white/90 backdrop-blur px-3 py-2 rounded-xl text-center border shadow-sm w-28 md:w-36">
+                                    <h3 className="font-black text-xs md:text-sm text-slate-800 truncate" title={s.name}>{getShortName(s.name)}</h3>
+                                    <span className="text-amber-600 font-bold text-xs">{s.monthlyPoints} نقطة</span>
                                 </div>
                                 {/* ✅ أزرار الشهادة والخصم */}
                                 <div className="flex gap-1 mt-2">
@@ -211,11 +221,14 @@ const Leaderboard: React.FC<LeaderboardProps> = ({ students, classes, onUpdateSt
                             <div className="w-12 h-12 rounded-full border-2 border-white shadow-md overflow-hidden mb-2 cursor-pointer" onClick={() => handleAddPoints(s)}>
                                 <StudentAvatar gender={s.gender} className="w-full h-full" />
                             </div>
-                            <h3 className="font-black text-slate-800 text-[9px] truncate w-full text-center">{s.name.split(' ')[0]}</h3>
+                            {/* ✅ تعديل خط القائمة العادية والاسم المزدوج */}
+                            <h3 className="font-black text-slate-800 text-[11px] truncate w-full text-center" title={s.name}>{getShortName(s.name)}</h3>
+                            <span className="text-amber-600 font-bold text-[10px] mt-0.5">{s.monthlyPoints} نقطة</span>
+                            
                             <div className="flex gap-1 w-full mt-2">
-                                <button onClick={() => setCertificateStudent(s)} className="flex-1 py-1 bg-slate-50 text-slate-500 text-[8px] font-bold rounded-md border border-slate-100">شهادة</button>
+                                <button onClick={() => setCertificateStudent(s)} className="flex-1 py-1 bg-slate-50 text-slate-500 text-[10px] font-bold rounded-md border border-slate-100">شهادة</button>
                                 {/* ✅ زر الخصم لباقي القائمة */}
-                                <button onClick={() => handleDeductPoint(s)} className="px-2 py-1 bg-rose-50 text-rose-500 text-[8px] font-bold rounded-md border border-rose-100"><MinusCircle size={10} /></button>
+                                <button onClick={() => handleDeductPoint(s)} className="px-2 py-1 bg-rose-50 text-rose-500 text-[10px] font-bold rounded-md border border-rose-100"><MinusCircle size={12} /></button>
                             </div>
                         </div>
                     ))}
