@@ -173,10 +173,11 @@ const Leaderboard: React.FC<LeaderboardProps> = ({ students, classes, onUpdateSt
                         <input type="text" placeholder="بحث..." value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} className="w-full bg-white/10 border border-white/20 rounded-xl py-2 pr-10 text-xs font-bold text-white outline-none" />
                     </div>
 
-                    <div className="flex gap-2 overflow-x-auto pb-2 w-full justify-center">
-                        <button onClick={() => setSelectedClass('all')} className={`px-5 py-2 rounded-xl text-xs font-black border ${selectedClass === 'all' ? 'bg-white text-[#1e3a8a]' : 'bg-white/10 text-blue-100'}`}>الكل</button>
+                    {/* ✅ التعديل هنا: تمت إزالة justify-center وإضافة no-scrollbar و shrink-0 */}
+                    <div className="flex gap-2 overflow-x-auto no-scrollbar pb-2 w-full justify-start md:justify-center">
+                        <button onClick={() => setSelectedClass('all')} className={`shrink-0 whitespace-nowrap px-5 py-2 rounded-xl text-xs font-black border ${selectedClass === 'all' ? 'bg-white text-[#1e3a8a]' : 'bg-white/10 text-blue-100'}`}>الكل</button>
                         {classes.map(c => (
-                            <button key={c} onClick={() => setSelectedClass(c)} className={`px-5 py-2 rounded-xl text-xs font-black border ${selectedClass === c ? 'bg-white text-[#1e3a8a]' : 'bg-white/10 text-blue-100'}`}>{c}</button>
+                            <button key={c} onClick={() => setSelectedClass(c)} className={`shrink-0 whitespace-nowrap px-5 py-2 rounded-xl text-xs font-black border ${selectedClass === c ? 'bg-white text-[#1e3a8a]' : 'bg-white/10 text-blue-100'}`}>{c}</button>
                         ))}
                     </div>
                 </div>
