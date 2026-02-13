@@ -4,7 +4,8 @@ import {
   Bell, Clock, Settings, Edit3,
   School, Download, Loader2, 
   PlayCircle, AlarmClock, ChevronLeft, User, Check, Camera,
-  X, Calendar, BellOff, Save, CalendarDays, CheckCircle2
+  X, Calendar, BellOff, Save, CalendarDays, CheckCircle2,
+  AlertTriangle
 } from 'lucide-react';
 import Modal from './Modal';
 import { useApp } from '../context/AppContext';
@@ -87,6 +88,9 @@ const Dashboard: React.FC<DashboardProps> = ({
     const [tempPeriodTimes, setTempPeriodTimes] = useState<PeriodTime[]>([]);
     const [tempSchedule, setTempSchedule] = useState<ScheduleDay[]>([]);
 
+    // حالة شريط التنبيه (لإمكانية إغلاقه)
+    const [showAlertBar, setShowAlertBar] = useState(true);
+
     useEffect(() => {
         if(showEditModal) {
             setEditName(teacherInfo.name || '');
@@ -119,7 +123,7 @@ const Dashboard: React.FC<DashboardProps> = ({
         return null;
     };
 
-    // ✅ دالة أيقونات المواد (كما هي)
+    // ✅ دالة أيقونات المواد
     const getSubjectIcon = (subjectName: string) => {
         if (!subjectName) return null;
         const name = subjectName.trim().toLowerCase();
@@ -138,7 +142,7 @@ const Dashboard: React.FC<DashboardProps> = ({
         return <span className="text-xl opacity-50">📚</span>;
     };
 
-    // ✅ دالة حفظ البيانات (كما هي)
+    // ✅ دالة حفظ البيانات
     const handleSaveInfo = () => {
         const updatedInfo = {
             name: editName.trim(),
@@ -286,18 +290,19 @@ const Dashboard: React.FC<DashboardProps> = ({
     const todaySchedule = schedule ? schedule[dayIndex] : { dayName: 'اليوم', periods: [] };
     const isToday = todayRaw === dayIndex;
 
-    // --- 🚀 إضافة: خطة التقويم المستمر (الجديدة) ---
+    // --- خطة التقويم المستمر ---
     const assessmentPlan = [
         { monthIndex: 2, monthName: 'مارس', tasks: ['العرض الشفوي (بدء)', 'التقرير (بدء)', 'السؤال القصير 1', 'الاختبار القصير 1'] },
         { monthIndex: 3, monthName: 'أبريل', tasks: ['استكمال العرض الشفوي', 'استكمال التقرير', 'السؤال القصير 2'] },
         { monthIndex: 4, monthName: 'مايو', tasks: ['تسليم العرض الشفوي', 'تسليم التقرير', 'الاختبار القصير 2'] }
     ];
     const currentMonthIndex = new Date().getMonth();
+    const currentTasks = assessmentPlan.find(p => p.monthIndex === currentMonthIndex)?.tasks || [];
 
     return (
-        <div className="space-y-6 pb-20 animate-in fade-in duration-500">
+        <div className="space-y-6 pb-28 animate-in fade-in duration-500 relative min-h-screen">
             
-            {/* ✅ 1. الهيدر الكبير (كما هو) */}
+            {/* 1️⃣ الهيدر الكبير */}
             <header className="bg-[#446A8D] text-white pt-10 pb-8 px-4 md:pt-16 md:pb-12 md:px-6 shadow-xl relative z-20 -mx-4 -mt-4">
                 <div className="flex justify-between items-center mb-2">
                     <div className="flex items-center gap-3 md:gap-5">
@@ -368,41 +373,8 @@ const Dashboard: React.FC<DashboardProps> = ({
                 </div>
             </header>
 
-            {/* ✅ 2. قسم خطة التقويم المستمر (المضاف حديثاً) */}
-            <div className="px-4">
-                <div className="bg-white rounded-[1.5rem] p-5 shadow-sm border border-slate-100">
-                    <div className="flex items-center gap-3 mb-4">
-                        <div className="p-2 bg-amber-50 text-amber-500 rounded-xl"><CalendarDays size={18}/></div>
-                        <h2 className="text-base font-black text-slate-800">خطة التقويم المستمر</h2>
-                    </div>
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-                        {assessmentPlan.map((plan) => {
-                            const isCurrent = currentMonthIndex === plan.monthIndex;
-                            const isPast = currentMonthIndex > plan.monthIndex;
-                            return (
-                                <div key={plan.monthIndex} className={`p-4 rounded-2xl border transition-all ${isCurrent ? 'bg-indigo-50/50 border-indigo-200 shadow-sm' : isPast ? 'bg-gray-50 border-gray-100 opacity-60' : 'bg-white border-slate-100'}`}>
-                                    <div className="flex justify-between items-center mb-2">
-                                        <span className={`text-xs font-black ${isCurrent ? 'text-indigo-700' : 'text-slate-600'}`}>شهر {plan.monthName}</span>
-                                        {isCurrent && <span className="bg-indigo-600 text-white text-[8px] font-bold px-2 py-0.5 rounded-lg animate-pulse">الحالي</span>}
-                                        {isPast && <CheckCircle2 className="w-3.5 h-3.5 text-emerald-500" />}
-                                    </div>
-                                    <ul className="space-y-1.5">
-                                        {plan.tasks.map((task, idx) => (
-                                            <li key={idx} className="flex items-start gap-2 text-[10px] font-bold text-slate-500">
-                                                <div className={`w-1 h-1 rounded-full mt-1.5 shrink-0 ${isCurrent ? 'bg-indigo-400' : 'bg-slate-300'}`}></div>
-                                                <span className={isPast ? 'line-through' : ''}>{task}</span>
-                                            </li>
-                                        ))}
-                                    </ul>
-                                </div>
-                            );
-                        })}
-                    </div>
-                </div>
-            </div>
-
-            {/* ✅ 3. الجدول (كما هو) */}
-            <div className="px-4">
+            {/* 2️⃣ الجدول (في مكانه كما طلبت) */}
+            <div className="px-4 mt-6">
                 <div className="flex justify-between items-center mb-4">
                     <h2 className="text-lg font-black text-slate-800 flex items-center gap-2">
                         جدول اليوم <span className="text-xs text-slate-400 font-bold bg-slate-100 px-2 py-1 rounded-lg">{todaySchedule.dayName}</span>
@@ -453,6 +425,57 @@ const Dashboard: React.FC<DashboardProps> = ({
                     )}
                 </div>
             </div>
+
+            {/* 3️⃣ خطة التقويم المستمر (تأتي بعد الجدول) */}
+            <div className="px-4 mt-6">
+                <div className="bg-white rounded-[1.5rem] p-5 shadow-sm border border-slate-100">
+                    <div className="flex items-center gap-3 mb-4">
+                        <div className="p-2 bg-amber-50 text-amber-500 rounded-xl"><CalendarDays size={18}/></div>
+                        <h2 className="text-base font-black text-slate-800">خطة التقويم المستمر</h2>
+                    </div>
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                        {assessmentPlan.map((plan) => {
+                            const isCurrent = currentMonthIndex === plan.monthIndex;
+                            const isPast = currentMonthIndex > plan.monthIndex;
+                            return (
+                                <div key={plan.monthIndex} className={`p-4 rounded-2xl border transition-all ${isCurrent ? 'bg-indigo-50/50 border-indigo-200 shadow-sm' : isPast ? 'bg-gray-50 border-gray-100 opacity-60' : 'bg-white border-slate-100'}`}>
+                                    <div className="flex justify-between items-center mb-2">
+                                        <span className={`text-xs font-black ${isCurrent ? 'text-indigo-700' : 'text-slate-600'}`}>شهر {plan.monthName}</span>
+                                        {isCurrent && <span className="bg-indigo-600 text-white text-[8px] font-bold px-2 py-0.5 rounded-lg animate-pulse">الحالي</span>}
+                                        {isPast && <CheckCircle2 className="w-3.5 h-3.5 text-emerald-500" />}
+                                    </div>
+                                    <ul className="space-y-1.5">
+                                        {plan.tasks.map((task, idx) => (
+                                            <li key={idx} className="flex items-start gap-2 text-[10px] font-bold text-slate-500">
+                                                <div className={`w-1 h-1 rounded-full mt-1.5 shrink-0 ${isCurrent ? 'bg-indigo-400' : 'bg-slate-300'}`}></div>
+                                                <span className={isPast ? 'line-through' : ''}>{task}</span>
+                                            </li>
+                                        ))}
+                                    </ul>
+                                </div>
+                            );
+                        })}
+                    </div>
+                </div>
+            </div>
+
+            {/* 4️⃣ شريط التنبيه السفلي (الجديد كلياً) */}
+            {showAlertBar && currentTasks.length > 0 && (
+                <div className="fixed bottom-[80px] left-4 right-4 bg-indigo-900/95 backdrop-blur-md text-white p-4 rounded-2xl shadow-2xl z-30 flex items-start gap-3 animate-in slide-in-from-bottom-10 duration-500 border border-indigo-800">
+                    <div className="p-2 bg-indigo-700 rounded-xl shrink-0 animate-pulse">
+                        <AlertTriangle size={20} className="text-amber-400" />
+                    </div>
+                    <div className="flex-1">
+                        <h4 className="font-black text-sm mb-1 text-amber-300">تذكير بمهام شهر {assessmentPlan.find(p=>p.monthIndex === currentMonthIndex)?.monthName}</h4>
+                        <p className="text-[10px] opacity-90 leading-relaxed font-bold">
+                            عليك تنفيذ: {currentTasks.slice(0, 2).join('، ')} {currentTasks.length > 2 && '...'}
+                        </p>
+                    </div>
+                    <button onClick={() => setShowAlertBar(false)} className="p-1 bg-white/10 rounded-full hover:bg-white/20 transition-colors">
+                        <X size={14} />
+                    </button>
+                </div>
+            )}
 
             {/* Modal: Edit Identity (كما هو) */}
             <Modal isOpen={showEditModal} onClose={() => setShowEditModal(false)} className="max-w-md rounded-[2rem]">
