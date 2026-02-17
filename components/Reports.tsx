@@ -223,7 +223,6 @@ const getGradingSettings = () => {
 };
 
 // --- نافذة المعاينة (Print Preview Modal) ---
-// ✅ إصلاح: Overlay كامل الشاشة + header sticky داخل scroll container فقط، وإزالة origin-top لتفادي تمدد/انقسام الورقة
 const PrintPreviewModal: React.FC<{
   isOpen: boolean;
   onClose: () => void;
@@ -322,7 +321,7 @@ const PrintPreviewModal: React.FC<{
 };
 
 // =================================================================================
-// ✅ القوالب (TEMPLATES) - موجودة بالكامل لمنع الشاشة البيضاء
+// ✅ القوالب (TEMPLATES)
 // =================================================================================
 
 const GradesTemplate = ({ students, tools, teacherInfo, semester, gradeClass }: any) => {
@@ -507,7 +506,7 @@ const CertificatesTemplate = ({ students, settings, teacherInfo }: any) => {
                     color: '#047857',
                     marginBottom: '40px',
                     fontFamily: 'Tajawal',
-                    letterSpacing: '0px' // ✅ إصلاح العربية (منع تجزئة/تفكك الحروف في PDF)
+                    letterSpacing: '0px'
                   }}
                 >
                   {title}
@@ -566,7 +565,7 @@ const SummonTemplate = ({ student, teacherInfo, data }: any) => {
         <h3 className="font-bold text-lg">مدرسة {teacherInfo?.school || '................'}</h3>
       </div>
 
-      <div className="bg-gray-50 border border-gray-300 p-6 rounded-2xl mb-10 flex justify-between items-center shadow-sm">
+      <div className="bg-gray-50 border border-black p-6 rounded-2xl mb-10 flex justify-between items-center shadow-sm">
         <div>
           <p className="text-gray-500 text-sm font-bold mb-1">إلى الفاضل ولي أمر الطالب:</p>
           <h2 className="text-2xl font-black text-slate-900">{student.name}</h2>
@@ -620,14 +619,13 @@ const SummonTemplate = ({ student, teacherInfo, data }: any) => {
   );
 };
 
-// ✅ تم إصلاح هذا القالب لمنع الشاشة البيضاء (Null Safety)
+// ✅ تم تعديل هذا القالب (ClassReportsTemplate) لتغيير عرض السلوكيات + توضيح الألوان للطباعة
 const ClassReportsTemplate = ({ students, teacherInfo, semester, assessmentTools }: any) => {
   const settings = getGradingSettings();
   const finalExamName = settings.finalExamName?.trim() || 'الامتحان النهائي';
 
   if (!students || students.length === 0) return <div className="text-black text-center p-10">لا توجد بيانات طلاب لعرضها</div>;
 
-  // Safety check for tools
   const safeTools = Array.isArray(assessmentTools) ? assessmentTools : [];
   const continuousTools = safeTools.filter((t: any) => t.name.trim() !== finalExamName);
   const finalTool = safeTools.find((t: any) => t.name.trim() === finalExamName);
@@ -638,8 +636,11 @@ const ClassReportsTemplate = ({ students, teacherInfo, semester, assessmentTools
         const behaviors = (student.behaviors || []).filter((b: any) => !b.semester || b.semester === (semester || '1'));
         const grades = (student.grades || []).filter((g: any) => !g.semester || g.semester === (semester || '1'));
 
-        let continuousSum = 0;
+        // فصل السلوكيات
+        const posBehaviors = behaviors.filter((b: any) => b.type === 'positive');
+        const negBehaviors = behaviors.filter((b: any) => b.type === 'negative');
 
+        let continuousSum = 0;
         continuousTools.forEach((tool: any) => {
           const g = grades.find((r: any) => r.category.trim() === tool.name.trim());
           if (g) continuousSum += (Number(g.score) || 0);
@@ -654,12 +655,14 @@ const ClassReportsTemplate = ({ students, teacherInfo, semester, assessmentTools
         const totalScore = continuousSum + finalScore;
         const absenceCount = (student.attendance || []).filter((a: any) => a.status === 'absent').length;
         const truantCount = (student.attendance || []).filter((a: any) => a.status === 'truant').length;
-        const totalPositive = behaviors.filter((b: any) => b.type === 'positive').reduce((acc: number, b: any) => acc + b.points, 0);
-        const totalNegative = behaviors.filter((b: any) => b.type === 'negative').reduce((acc: number, b: any) => acc + Math.abs(b.points), 0);
+        const totalPositive = posBehaviors.reduce((acc: number, b: any) => acc + b.points, 0);
+        const totalNegative = negBehaviors.reduce((acc: number, b: any) => acc + Math.abs(b.points), 0);
 
         return (
-          <div key={student.id} className="w-full min-h-[297mm] p-10 border-b border-gray-300 page-break-after-always relative bg-white" style={{ pageBreakAfter: 'always' }}>
-            <div className="flex justify-between items-start mb-8 border-b-2 border-slate-200 pb-4">
+          <div key={student.id} className="w-full min-h-[297mm] p-10 border-b border-black page-break-after-always relative bg-white" style={{ pageBreakAfter: 'always' }}>
+            
+            {/* Header */}
+            <div className="flex justify-between items-start mb-8 border-b-2 border-black pb-4">
               <div className="text-right w-1/3 text-sm font-bold">
                 <p>سلطنة عمان</p>
                 <p>وزارة التعليم</p>
@@ -677,19 +680,21 @@ const ClassReportsTemplate = ({ students, teacherInfo, semester, assessmentTools
               </div>
             </div>
 
-            <div className="bg-slate-50 p-6 rounded-2xl border border-slate-200 mb-8 flex justify-between items-center text-black">
+            {/* Student Info Box */}
+            <div className="bg-slate-50 p-6 rounded-2xl border-2 border-black mb-8 flex justify-between items-center text-black">
               <div>
                 <h3 className="text-2xl font-black mb-1">{student.name}</h3>
-                <p className="text-base text-slate-600 font-bold">الصف: {student.classes[0]}</p>
+                <p className="text-base text-black font-bold">الصف: {student.classes[0]}</p>
               </div>
               <div className="flex gap-4 text-xs font-bold">
-                <span className="bg-emerald-100 text-emerald-800 px-3 py-1 rounded">إيجابي: {totalPositive}</span>
-                <span className="bg-rose-100 text-rose-800 px-3 py-1 rounded">سلبي: {totalNegative}</span>
+                <span className="bg-emerald-100 border border-black text-emerald-900 px-3 py-1 rounded">إيجابي: {totalPositive}</span>
+                <span className="bg-rose-100 border border-black text-rose-900 px-3 py-1 rounded">سلبي: {totalNegative}</span>
               </div>
             </div>
 
             <h3 className="font-bold text-lg mb-3 border-b-2 border-black inline-block">التحصيل الدراسي</h3>
 
+            {/* Grades Table (Borders are already black) */}
             <table className="w-full border-collapse border border-black text-sm mb-8">
               <thead>
                 <tr className="bg-gray-100">
@@ -698,7 +703,6 @@ const ClassReportsTemplate = ({ students, teacherInfo, semester, assessmentTools
                   <th className="border border-black p-3 text-center w-24">الدرجة</th>
                 </tr>
               </thead>
-
               <tbody>
                 {continuousTools.map((t: any) => {
                   const g = grades.find((r: any) => r.category.trim() === t.name.trim());
@@ -710,7 +714,6 @@ const ClassReportsTemplate = ({ students, teacherInfo, semester, assessmentTools
                     </tr>
                   );
                 })}
-
                 {finalTool && (() => {
                   const g = grades.find((r: any) => r.category.trim() === finalTool.name.trim());
                   return (
@@ -721,7 +724,6 @@ const ClassReportsTemplate = ({ students, teacherInfo, semester, assessmentTools
                     </tr>
                   );
                 })()}
-
                 <tr className="bg-slate-200 font-bold">
                   <td colSpan={2} className="border border-black p-3 text-right text-base">المجموع الكلي</td>
                   <td className="border border-black p-3 text-center text-lg font-black">{totalScore}</td>
@@ -729,21 +731,66 @@ const ClassReportsTemplate = ({ students, teacherInfo, semester, assessmentTools
               </tbody>
             </table>
 
-            <div className="flex gap-6 mb-12">
-              <div className="flex-1 border-2 border-slate-200 p-4 rounded-xl text-center">
-                <p className="text-sm font-bold text-slate-500 mb-1">أيام الغياب</p>
+            {/* Attendance Summary */}
+            <div className="flex gap-6 mb-8">
+              <div className="flex-1 border-2 border-black p-4 rounded-xl text-center">
+                <p className="text-sm font-bold text-black mb-1">أيام الغياب</p>
                 <p className="text-3xl font-black text-rose-600">{absenceCount}</p>
               </div>
-              <div className="flex-1 border-2 border-slate-200 p-4 rounded-xl text-center">
-                <p className="text-sm font-bold text-slate-500 mb-1">مرات التسرب</p>
+              <div className="flex-1 border-2 border-black p-4 rounded-xl text-center">
+                <p className="text-sm font-bold text-black mb-1">مرات التسرب</p>
                 <p className="text-3xl font-black text-purple-600">{truantCount}</p>
               </div>
             </div>
 
+            {/* ✅ قسم السلوك والملاحظات (التعديل الجديد: عمودين) */}
+            <div className="mb-12">
+                <h3 className="font-bold text-lg mb-3 border-b-2 border-black inline-block">سجل السلوك والمواظبة</h3>
+                <div className="flex gap-4 items-start">
+                    
+                    {/* العمود الأيمن: السلوكيات الإيجابية */}
+                    <div className="flex-1 border-2 border-black rounded-xl overflow-hidden min-h-[150px]">
+                        <div className="bg-green-100 p-2 text-center font-bold border-b-2 border-black text-green-900 text-sm">
+                            سلوكيات إيجابية ({posBehaviors.length})
+                        </div>
+                        <div className="p-2 space-y-2">
+                            {posBehaviors.length > 0 ? posBehaviors.map((b: any, idx: number) => (
+                                <div key={idx} className="flex justify-between items-center border-b border-black/50 pb-1 last:border-0 text-sm">
+                                    <span className="font-bold text-black">{b.name}</span>
+                                    <div className="text-left text-[10px] font-bold text-black flex flex-col items-end">
+                                        <span>{b.date}</span>
+                                        {b.session && <span>حصة: {b.session}</span>}
+                                    </div>
+                                </div>
+                            )) : <div className="text-center text-xs text-gray-500 py-4">- لا يوجد -</div>}
+                        </div>
+                    </div>
+
+                    {/* العمود الأيسر: السلوكيات السلبية */}
+                    <div className="flex-1 border-2 border-black rounded-xl overflow-hidden min-h-[150px]">
+                        <div className="bg-red-100 p-2 text-center font-bold border-b-2 border-black text-red-900 text-sm">
+                            سلوكيات سلبية ({negBehaviors.length})
+                        </div>
+                        <div className="p-2 space-y-2">
+                            {negBehaviors.length > 0 ? negBehaviors.map((b: any, idx: number) => (
+                                <div key={idx} className="flex justify-between items-center border-b border-black/50 pb-1 last:border-0 text-sm">
+                                    <span className="font-bold text-black">{b.name}</span>
+                                    <div className="text-left text-[10px] font-bold text-black flex flex-col items-end">
+                                        <span>{b.date}</span>
+                                        {b.session && <span>حصة: {b.session}</span>}
+                                    </div>
+                                </div>
+                            )) : <div className="text-center text-xs text-gray-500 py-4">- لا يوجد -</div>}
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+
             <div className="flex justify-between items-end px-12 mt-auto">
               <div className="text-center">
-                <p className="font-bold text-base mb-8">معلم المادة</p>
-                <p className="text-2xl font-bold">{teacherInfo?.name}</p>
+                <p className="font-bold text-base mb-8 text-black">معلم المادة</p>
+                <p className="text-2xl font-bold text-black">{teacherInfo?.name}</p>
               </div>
 
               <div className="text-center">
@@ -751,8 +798,8 @@ const ClassReportsTemplate = ({ students, teacherInfo, semester, assessmentTools
               </div>
 
               <div className="text-center">
-                <p className="font-bold text-base mb-8">مدير المدرسة</p>
-                <p className="font-bold text-lg">........................</p>
+                <p className="font-bold text-base mb-8 text-black">مدير المدرسة</p>
+                <p className="font-bold text-lg text-black">........................</p>
               </div>
             </div>
           </div>
