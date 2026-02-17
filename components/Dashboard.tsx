@@ -56,7 +56,9 @@ const Dashboard: React.FC<DashboardProps> = ({
 }) => {
     if (!teacherInfo) return <div className="flex items-center justify-center h-screen">جاري التحميل...</div>;
 
-    const { classes } = useApp();
+    // ✅ التعديل هنا: استدعاء setSelectedClass لتحديد الصف تلقائياً
+    const { classes, setSelectedClass } = useApp();
+    
     const fileInputRef = useRef<HTMLInputElement>(null);
     const stampInputRef = useRef<HTMLInputElement>(null); 
     const ministryLogoInputRef = useRef<HTMLInputElement>(null); 
@@ -408,7 +410,14 @@ const Dashboard: React.FC<DashboardProps> = ({
                                     </div>
                                 </div>
                                 {isActive ? (
-                                    <button onClick={() => onNavigate('attendance')} className="bg-white text-[#446A8D] px-3 py-2 rounded-lg font-bold text-xs shadow-lg flex items-center gap-1 active:scale-95">
+                                    <button 
+                                        onClick={() => {
+                                            // ✅ التعديل هنا: تحديد الصف قبل الانتقال
+                                            if (setSelectedClass) setSelectedClass(subject);
+                                            onNavigate('attendance');
+                                        }} 
+                                        className="bg-white text-[#446A8D] px-3 py-2 rounded-lg font-bold text-xs shadow-lg flex items-center gap-1 active:scale-95"
+                                    >
                                         تحضير <ChevronLeft size={14} />
                                     </button>
                                 ) : (
