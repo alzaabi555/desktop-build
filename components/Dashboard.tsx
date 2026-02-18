@@ -576,7 +576,7 @@ const Dashboard: React.FC<DashboardProps> = ({
                         </div>
                         <div className="p-8 text-center space-y-4">
                             <h2 className="text-2xl font-black text-slate-800">
-                                {occasionGreeting === 'ramadan' && 'مبارك عليكم الشهر 🌙'}
+                                {occasionGreeting === 'ramadan' && 'مبارك عليكم الشهر الفضيل 🌙'}
                                 {occasionGreeting === 'eid' && 'عيدكم مبارك 🎉'}
                                 {occasionGreeting === 'teacher' && 'يوم معلم سعيد 👨‍🏫'}
                             </h2>
@@ -585,7 +585,7 @@ const Dashboard: React.FC<DashboardProps> = ({
                                 {occasionGreeting === 'eid' && 'كل عام وأنتم بخير، أعاده الله علينا وعليكم باليمن والبركات.'}
                                 {occasionGreeting === 'teacher' && 'شكراً لك يا صانع الأجيال، جهودك عظيمة وأثرك لا يُنسى. كل عام وأنت منارة للعلم.'}
                             </p>
-                            <button onClick={() => setOccasionGreeting(null)} className={`w-full py-3.5 rounded-xl font-black text-white text-sm shadow-lg transition-transform active:scale-95 mt-4 ${occasionGreeting === 'ramadan' ? 'bg-[#1e1b4b] hover:bg-[#312e81]' : occasionGreeting === 'eid' ? 'bg-[#701a75] hover:bg-[#86198f]' : 'bg-[#1e3a8a] hover:bg-[#1e40af]'}`}>شكراً لكم ❤️</button>
+                            <button onClick={() => setOccasionGreeting(null)} className={`w-full py-3.5 rounded-xl font-black text-white text-sm shadow-lg transition-transform active:scale-95 mt-4 ${occasionGreeting === 'ramadan' ? 'bg-[#1e1b4b] hover:bg-[#312e81]' : occasionGreeting === 'eid' ? 'bg-[#701a75] hover:bg-[#86198f]' : 'bg-[#1e3a8a] hover:bg-[#1e40af]'}`}>رمضان كريم🌙</button>
                         </div>
                     </div>
                 </div>
