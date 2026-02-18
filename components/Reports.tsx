@@ -756,9 +756,9 @@ const ClassReportsTemplate = ({ students, teacherInfo, semester, assessmentTools
                         <div className="p-2 space-y-2">
                             {posBehaviors.length > 0 ? posBehaviors.map((b: any, idx: number) => (
                                 <div key={idx} className="flex justify-between items-center border-b border-black/50 pb-1 last:border-0 text-sm">
-                                    <span className="font-bold text-black">{b.name}</span>
+                                    <span className="font-bold text-black">{b.description}</span>
                                     <div className="text-left text-[10px] font-bold text-black flex flex-col items-end">
-                                        <span>{b.date}</span>
+                                        <span>{new Date(b.date).toLocaleDateString('en-GB')}</span>
                                         {b.session && <span>حصة: {b.session}</span>}
                                     </div>
                                 </div>
@@ -774,9 +774,9 @@ const ClassReportsTemplate = ({ students, teacherInfo, semester, assessmentTools
                         <div className="p-2 space-y-2">
                             {negBehaviors.length > 0 ? negBehaviors.map((b: any, idx: number) => (
                                 <div key={idx} className="flex justify-between items-center border-b border-black/50 pb-1 last:border-0 text-sm">
-                                    <span className="font-bold text-black">{b.name}</span>
+                                    <span className="font-bold text-black">{b.description}</span>
                                     <div className="text-left text-[10px] font-bold text-black flex flex-col items-end">
-                                        <span>{b.date}</span>
+                                        <span>{new Date(b.date).toLocaleDateString('en-GB')}</span>
                                         {b.session && <span>حصة: {b.session}</span>}
                                     </div>
                                 </div>
