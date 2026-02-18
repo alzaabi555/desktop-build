@@ -4,7 +4,7 @@ import {
     Search, ThumbsUp, ThumbsDown, Edit2, Trash2, LayoutGrid, UserPlus, 
     FileSpreadsheet, MoreVertical, Settings, Users, AlertCircle, X, 
     Dices, Timer, Play, Pause, RotateCcw, CheckCircle2, MessageCircle, Plus,
-    Sparkles, Phone, Send, Star // ✅ أضفنا أيقونة النجمة للنقاط
+    Sparkles, Phone, Send, Star // ✅ أيقونة النجمة للنقاط
 } from 'lucide-react';
 import Modal from './Modal';
 import ExcelImport from './ExcelImport';
@@ -103,7 +103,6 @@ const StudentList: React.FC<StudentListProps> = ({
     const [showPositiveModal, setShowPositiveModal] = useState(false);
     const [selectedStudentForBehavior, setSelectedStudentForBehavior] = useState<Student | null>(null);
 
-    // حالة جديدة للإدخال اليدوي للسلوكيات
     const [customPositiveReason, setCustomPositiveReason] = useState('');
     const [customNegativeReason, setCustomNegativeReason] = useState('');
 
@@ -248,31 +247,27 @@ const StudentList: React.FC<StudentListProps> = ({
         }
     };
 
-    // ✅ دالة إرسال التقرير الذكي (الأخضر - درجات وتميز)
+    // دالة إرسال التقرير الذكي
     const handleSendSmartReport = (student: Student) => {
         if (!student.parentPhone) {
             alert('⚠️ عذراً، لا يوجد رقم هاتف مسجل لولي الأمر.');
             return;
         }
 
-        // 1. حساب المجموع
         const currentGrades = (student.grades || []).filter(g => (g.semester || '1') === currentSemester);
         const totalScore = currentGrades.reduce((acc, curr) => acc + (curr.score || 0), 0);
 
-        // 2. أفضل سلوك
         const positiveBehaviors = (student.behaviors || []).filter(b => b.type === 'positive');
         const topBehavior = positiveBehaviors.length > 0 
             ? positiveBehaviors[0].description 
             : (student.gender === 'female' ? 'انضباطها وتميزها العام' : 'انضباطه وتميزه العام');
 
-        // 3. الصيغة (مذكر/مؤنث)
         const isFemale = student.gender === 'female';
         const childTitle = isFemale ? 'ابنتكم الطالبة' : 'ابنكم الطالب';
         const scoreText = isFemale ? 'حصلت على مجموع' : 'حصل على مجموع';
         const behaviorText = isFemale ? 'وتميزت في' : 'وتميز في';
         const teacherTitle = teacherInfo?.gender === 'female' ? 'المعلمة' : 'المعلم';
 
-        // 4. الرسالة
         const message = `السلام عليكم ورحمة الله، ولي أمر ${childTitle} (${student.name}) المحترم.
 
 يسرنا إعلامكم بأن ${childTitle} ${scoreText} (${totalScore}) درجة في مادة ${teacherInfo?.subject || '...'}، ${behaviorText}: "${topBehavior}".
@@ -280,7 +275,6 @@ const StudentList: React.FC<StudentListProps> = ({
 شاكرين لكم حسن متابعتكم.
 إدارة تطبيق راصد - ${teacherTitle}: ${teacherInfo?.name || ''}`;
 
-        // 5. الإرسال (بنفس منطق الويندوز/الموبايل القوي)
         const msg = encodeURIComponent(message);
         let cleanPhone = student.parentPhone.replace(/[^0-9]/g, '');
         if (cleanPhone.startsWith('00')) cleanPhone = cleanPhone.substring(2);
@@ -295,7 +289,7 @@ const StudentList: React.FC<StudentListProps> = ({
         }
     };
 
-    // ✅ دالة إرسال تقرير السلوك السلبي (الأحمر - إنذار)
+    // دالة إرسال تقرير السلوك السلبي
     const handleSendNegativeReport = async (student: Student) => {
         if (!student.parentPhone) {
             alert('⚠️ عذراً، لا يوجد رقم هاتف مسجل لولي الأمر.');
@@ -462,17 +456,21 @@ const StudentList: React.FC<StudentListProps> = ({
         }
     };
 
-    // ✅ دالة حساب النقاط الشاملة (تشمل السلوكيات + نقاط الفرسان التشجيعية)
+    // ✅ دالة حساب النقاط الشاملة (للتطابق التام مع صفحة الفرسان)
     const calculateTotalPoints = (student: Student) => {
-        // 1. حساب نقاط السلوك والمواظبة (المسجلة في هذا الفصل)
-        const semBehaviors = (student.behaviors || []).filter(b => !b.semester || b.semester === currentSemester);
-        const behaviorPoints = semBehaviors.reduce((sum, b) => sum + (b.points || 0), 0);
+        const today = new Date();
+        const currentMonth = today.getMonth();
+        const currentYear = today.getFullYear();
 
-        // 2. سحب النقاط التشجيعية المضافة من صفحة الفرسان (إن وجدت)
-        const extraPoints = student.points || 0; 
+        // 1. حساب السلوكيات الإيجابية فقط (مثل الفرسان) وفي الشهر الحالي فقط
+        const monthlyPositivePoints = (student.behaviors || [])
+            .filter(b => {
+                const d = new Date(b.date);
+                return b.type === 'positive' && d.getMonth() === currentMonth && d.getFullYear() === currentYear;
+            })
+            .reduce((acc, b) => acc + b.points, 0);
 
-        // 3. المجموع الكلي
-        return behaviorPoints + extraPoints;
+        return monthlyPositivePoints;
     };
 
     return (
@@ -573,7 +571,7 @@ const StudentList: React.FC<StudentListProps> = ({
             <div className="flex-1 overflow-y-auto px-2 pb-20 custom-scrollbar pt-64 md:pt-2">
                 <div className="grid grid-cols-2 lg:grid-cols-3 gap-3">
                     {filteredStudents.length > 0 ? filteredStudents.map(student => {
-                        const totalPoints = calculateTotalPoints(student); // ✅ حساب النقاط لكل طالب
+                        const totalPoints = calculateTotalPoints(student); // ✅ حساب النقاط لكل طالب بناء على الشهر
                         return (
                         <div key={student.id} className="bg-white rounded-[1.5rem] border border-slate-100 shadow-sm flex flex-col items-center overflow-hidden hover:shadow-md transition-all">
                             <div className="p-4 flex flex-col items-center w-full relative">
@@ -585,8 +583,8 @@ const StudentList: React.FC<StudentListProps> = ({
                                         className="w-16 h-16"
                                     />
                                     {totalPoints !== 0 && (
-                                        <div className={`absolute -top-2 -right-2 flex items-center justify-center gap-0.5 px-2 py-0.5 rounded-full text-[10px] font-black shadow-sm border-2 border-white ${totalPoints > 0 ? 'bg-amber-100 text-amber-600' : 'bg-rose-100 text-rose-600'}`}>
-                                            <Star size={10} className={totalPoints > 0 ? 'fill-amber-500' : 'fill-rose-500'} />
+                                        <div className="absolute -top-2 -right-2 flex items-center justify-center gap-0.5 px-2 py-0.5 rounded-full text-[10px] font-black shadow-sm border-2 border-white bg-amber-100 text-amber-600">
+                                            <Star size={10} className="fill-amber-500" />
                                             {totalPoints}
                                         </div>
                                     )}
@@ -610,12 +608,12 @@ const StudentList: React.FC<StudentListProps> = ({
                                     <ThumbsDown className="w-4 h-4 text-rose-500 group-hover:scale-110 transition-transform" />
                                 </button>
 
-                                {/* زر الواتساب الذكي (أخضر - للدرجات) */}
+                                {/* زر الواتساب الذكي */}
                                 <button onClick={() => handleSendSmartReport(student)} className="flex-1 py-3 flex flex-col items-center justify-center hover:bg-emerald-50 active:bg-emerald-100 transition-colors group" title="تقرير الدرجات والتميز">
                                     <MessageCircle className="w-4 h-4 text-emerald-600 group-hover:scale-110 transition-transform" />
                                 </button>
 
-                                {/* زر الواتساب الإنذاري (أحمر/برتقالي - للسلوك) */}
+                                {/* زر الواتساب الإنذاري */}
                                 <button onClick={() => handleSendNegativeReport(student)} className="flex-1 py-3 flex flex-col items-center justify-center hover:bg-amber-50 active:bg-amber-100 transition-colors group" title="تقرير سلوكي (إنذار)">
                                     <Send className="w-4 h-4 text-amber-500 group-hover:scale-110 transition-transform" />
                                 </button>
@@ -635,7 +633,7 @@ const StudentList: React.FC<StudentListProps> = ({
                 </div>
             </div>
 
-            {/* Modals (كما هي) */}
+            {/* Modals */}
             <Modal isOpen={showManualAddModal} onClose={() => setShowManualAddModal(false)} className="max-w-md rounded-[2rem]">
                  <div className="text-center">
                     <div className="w-16 h-16 bg-indigo-50 rounded-full flex items-center justify-center mx-auto mb-4 text-indigo-500">
@@ -740,7 +738,6 @@ const StudentList: React.FC<StudentListProps> = ({
                         ))}
                     </div>
 
-                    {/* إضافة الإدخال اليدوي للسلوك الإيجابي */}
                     <div className="pt-3 border-t border-slate-100">
                         <p className="text-[10px] font-bold text-slate-400 mb-2 text-right">أو أضف سلوكاً مخصصاً:</p>
                         <div className="flex gap-2">
@@ -790,7 +787,6 @@ const StudentList: React.FC<StudentListProps> = ({
                         ))}
                     </div>
 
-                    {/* إضافة الإدخال اليدوي للسلوك السلبي */}
                     <div className="pt-3 border-t border-slate-100">
                         <p className="text-[10px] font-bold text-slate-400 mb-2 text-right">أو أضف ملاحظة مخصصة:</p>
                         <div className="flex gap-2">
