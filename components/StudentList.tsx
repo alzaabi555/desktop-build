@@ -4,7 +4,7 @@ import {
     Search, ThumbsUp, ThumbsDown, Edit2, Trash2, LayoutGrid, UserPlus, 
     FileSpreadsheet, MoreVertical, Settings, Users, AlertCircle, X, 
     Dices, Timer, Play, Pause, RotateCcw, CheckCircle2, MessageCircle, Plus,
-    Sparkles, Phone, Send 
+    Sparkles, Phone, Send, Star // ✅ أضفنا أيقونة النجمة للنقاط
 } from 'lucide-react';
 import Modal from './Modal';
 import ExcelImport from './ExcelImport';
@@ -295,7 +295,7 @@ const StudentList: React.FC<StudentListProps> = ({
         }
     };
 
-    // ✅ دالة إرسال تقرير السلوك السلبي (الأحمر - إنذار) - (موجودة سابقاً وتم الحفاظ عليها)
+    // ✅ دالة إرسال تقرير السلوك السلبي (الأحمر - إنذار)
     const handleSendNegativeReport = async (student: Student) => {
         if (!student.parentPhone) {
             alert('⚠️ عذراً، لا يوجد رقم هاتف مسجل لولي الأمر.');
@@ -462,9 +462,15 @@ const StudentList: React.FC<StudentListProps> = ({
         }
     };
 
+    // ✅ دالة جديدة لحساب إجمالي نقاط الطالب (تُستخدم في العرض)
+    const calculateTotalPoints = (student: Student) => {
+        const semBehaviors = (student.behaviors || []).filter(b => !b.semester || b.semester === currentSemester);
+        return semBehaviors.reduce((sum, b) => sum + (b.points || 0), 0);
+    };
+
     return (
     <div className="flex flex-col h-full overflow-hidden">
-        {/* Header (Same as before) */}
+        {/* Header */}
             <header className="fixed md:sticky top-0 z-40 md:z-30 bg-[#446A8D] text-white shadow-lg px-4 pt-[env(safe-area-inset-top)] pb-6 transition-all duration-300 md:rounded-none md:shadow-md w-full md:w-auto left-0 right-0 md:left-auto md:right-auto">
                 <div className="flex justify-between items-center mb-6">
                     <div className="flex items-center gap-3">
@@ -559,13 +565,26 @@ const StudentList: React.FC<StudentListProps> = ({
             {/* List */}
             <div className="flex-1 overflow-y-auto px-2 pb-20 custom-scrollbar pt-64 md:pt-2">
                 <div className="grid grid-cols-2 lg:grid-cols-3 gap-3">
-                    {filteredStudents.length > 0 ? filteredStudents.map(student => (
+                    {filteredStudents.length > 0 ? filteredStudents.map(student => {
+                        const totalPoints = calculateTotalPoints(student); // ✅ حساب النقاط لكل طالب
+                        return (
                         <div key={student.id} className="bg-white rounded-[1.5rem] border border-slate-100 shadow-sm flex flex-col items-center overflow-hidden hover:shadow-md transition-all">
                             <div className="p-4 flex flex-col items-center w-full relative">
-                                <StudentAvatar 
-                                    gender={student.gender}
-                                    className="w-16 h-16 mb-3"
-                                />
+                                
+                                {/* ✅ إضافة شارة النقاط فوق الصورة */}
+                                <div className="relative mb-3">
+                                    <StudentAvatar 
+                                        gender={student.gender}
+                                        className="w-16 h-16"
+                                    />
+                                    {totalPoints !== 0 && (
+                                        <div className={`absolute -top-2 -right-2 flex items-center justify-center gap-0.5 px-2 py-0.5 rounded-full text-[10px] font-black shadow-sm border-2 border-white ${totalPoints > 0 ? 'bg-amber-100 text-amber-600' : 'bg-rose-100 text-rose-600'}`}>
+                                            <Star size={10} className={totalPoints > 0 ? 'fill-amber-500' : 'fill-rose-500'} />
+                                            {totalPoints}
+                                        </div>
+                                    )}
+                                </div>
+
                                 <h3 className="font-black text-slate-800 text-sm text-center line-clamp-1 w-full">{student.name}</h3>
                                 <div className="flex gap-1 mt-1">
                                     <span className="text-[10px] text-slate-500 bg-slate-100 px-2 py-0.5 rounded-full font-bold">{student.classes && student.classes.length > 0 ? student.classes[0] : 'غير محدد'}</span>
@@ -574,7 +593,7 @@ const StudentList: React.FC<StudentListProps> = ({
 
                             <div className="w-full h-px bg-slate-100"></div>
 
-                            {/* أزرار الإجراءات (5 أزرار الآن) */}
+                            {/* أزرار الإجراءات */}
                             <div className="flex w-full divide-x divide-x-reverse divide-slate-100">
                                 <button onClick={() => handleBehavior(student, 'positive')} className="flex-1 py-3 flex flex-col items-center justify-center hover:bg-emerald-50 active:bg-emerald-100 transition-colors group" title="تعزيز إيجابي">
                                     <ThumbsUp className="w-4 h-4 text-emerald-500 group-hover:scale-110 transition-transform" />
@@ -599,7 +618,7 @@ const StudentList: React.FC<StudentListProps> = ({
                                 </button>
                             </div>
                         </div>
-                    )) : (
+                    )}) : (
                         <div className="flex flex-col items-center justify-center py-20 opacity-50 col-span-full text-center">
                             <UserPlus className="w-16 h-16 text-gray-300 mb-4" />
                             <p className="text-sm font-bold text-gray-400">لا يوجد طلاب مطابقين للبحث</p>
@@ -609,7 +628,7 @@ const StudentList: React.FC<StudentListProps> = ({
                 </div>
             </div>
 
-            {/* Modals (نفس المودالات السابقة) */}
+            {/* Modals (كما هي) */}
             <Modal isOpen={showManualAddModal} onClose={() => setShowManualAddModal(false)} className="max-w-md rounded-[2rem]">
                  <div className="text-center">
                     <div className="w-16 h-16 bg-indigo-50 rounded-full flex items-center justify-center mx-auto mb-4 text-indigo-500">
