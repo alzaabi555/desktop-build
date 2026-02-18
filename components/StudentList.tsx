@@ -462,10 +462,17 @@ const StudentList: React.FC<StudentListProps> = ({
         }
     };
 
-    // ✅ دالة جديدة لحساب إجمالي نقاط الطالب (تُستخدم في العرض)
+    // ✅ دالة حساب النقاط الشاملة (تشمل السلوكيات + نقاط الفرسان التشجيعية)
     const calculateTotalPoints = (student: Student) => {
+        // 1. حساب نقاط السلوك والمواظبة (المسجلة في هذا الفصل)
         const semBehaviors = (student.behaviors || []).filter(b => !b.semester || b.semester === currentSemester);
-        return semBehaviors.reduce((sum, b) => sum + (b.points || 0), 0);
+        const behaviorPoints = semBehaviors.reduce((sum, b) => sum + (b.points || 0), 0);
+
+        // 2. سحب النقاط التشجيعية المضافة من صفحة الفرسان (إن وجدت)
+        const extraPoints = student.points || 0; 
+
+        // 3. المجموع الكلي
+        return behaviorPoints + extraPoints;
     };
 
     return (
