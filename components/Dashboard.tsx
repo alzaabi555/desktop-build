@@ -5,7 +5,7 @@ import {
   School, Download, Loader2, 
   PlayCircle, AlarmClock, ChevronLeft, User, Check, Camera,
   X, Calendar, BellOff, Save, CalendarDays, CheckCircle2,
-  AlertTriangle, Moon, PartyPopper, BookHeart, Plus, Trash2, RefreshCcw // ✅ أضفنا أيقونات التعديل
+  AlertTriangle, Moon, PartyPopper, BookHeart, Plus, Trash2, RefreshCcw
 } from 'lucide-react';
 import Modal from './Modal';
 import { useApp } from '../context/AppContext';
@@ -98,26 +98,41 @@ const Dashboard: React.FC<DashboardProps> = ({
     const [tempSchedule, setTempSchedule] = useState<ScheduleDay[]>([]);
 
     const [showAlertBar, setShowAlertBar] = useState(true);
+    
+    // ✅ الحالات الخاصة بالرسائل والإشعارات
     const [occasionGreeting, setOccasionGreeting] = useState<'ramadan' | 'eid' | 'teacher' | null>(null);
+    const [cloudMessage, setCloudMessage] = useState<any>(null); // رسالة السحابة
 
-    // ✅ حالة جديدة لخطة التقويم المستمر (ديناميكية)
-    const [assessmentPlan, setAssessmentPlan] = useState<AssessmentMonth[]>(() => {
-        const saved = localStorage.getItem('rased_assessment_plan');
-        if (saved) return JSON.parse(saved);
-        // القيمة الافتراضية
-        return [
-            { id: 'm1', monthIndex: 2, monthName: 'مارس', tasks: ['العرض الشفوي (بدء)', 'التقرير (بدء)', 'السؤال القصير 1', 'الاختبار القصير 1'] },
-            { id: 'm2', monthIndex: 3, monthName: 'أبريل', tasks: ['استكمال العرض الشفوي', 'استكمال التقرير', 'السؤال القصير 2'] },
-            { id: 'm3', monthIndex: 4, monthName: 'مايو', tasks: ['تسليم العرض الشفوي', 'تسليم التقرير', 'الاختبار القصير 2'] }
-        ];
-    });
-
-    // ✅ حالة لنافذة تعديل الخطة
-    const [showPlanSettingsModal, setShowPlanSettingsModal] = useState(false);
-    const [tempPlan, setTempPlan] = useState<AssessmentMonth[]>([]);
-
+    // ✅ دالة فحص المناسبات والرسائل السحابية (النظام المتكامل)
     useEffect(() => {
-        const checkOccasion = () => {
+        const checkAnnouncements = async () => {
+            try {
+                // 1. فحص السحابة أولاً (الأولوية للرسائل السحابية)
+                // 🔴 ضع الرابط الفعلي لملف الـ JSON الخاص بك هنا (تأكد أنه Raw URL)
+                const CLOUD_JSON_URL = "https://raw.githubusercontent.com/YOUR_USERNAME/YOUR_REPO/main/message.json";
+                
+                // نضيف الوقت الحالي لمنع الكاش (Cache) في المتصفح
+                const response = await fetch(CLOUD_JSON_URL + "?t=" + new Date().getTime());
+                
+                if (response.ok) {
+                    const data = await response.json();
+                    // تأكد أن الرسالة مفعلة ولها ID
+                    if (data && data.active && data.id) {
+                        const cloudStorageKey = `rased_cloud_msg_${data.id}`;
+                        const hasSeenCloud = localStorage.getItem(cloudStorageKey);
+                        
+                        if (!hasSeenCloud) {
+                            setCloudMessage(data);
+                            return; // 🛑 توقف هنا: وجدنا رسالة سحابية، لن نعرض رسائل المناسبات اليوم (منع التصادم)
+                        }
+                    }
+                }
+            } catch (error) {
+                console.error("Cloud fetch error:", error);
+                // صمت: في حال عدم وجود إنترنت، البرنامج سيكمل للخطوة 2 مباشرة (الرسائل المحلية)
+            }
+
+            // 2. إذا لم نعرض رسالة سحابية، نفحص المناسبات المحلية المجدولة
             const today = new Date();
             const todayString = today.toISOString().split('T')[0];
             const storageKey = `rased_greeting_${todayString}`;
@@ -125,6 +140,7 @@ const Dashboard: React.FC<DashboardProps> = ({
 
             if (hasSeen) return;
 
+            // يوم المعلم العماني
             if (today.getMonth() === 1 && today.getDate() === 24) {
                 setOccasionGreeting('teacher');
                 localStorage.setItem(storageKey, 'true');
@@ -137,11 +153,13 @@ const Dashboard: React.FC<DashboardProps> = ({
                 const hMonth = parseInt(parts.find(p => p.type === 'month')?.value || '0');
                 const hDay = parseInt(parts.find(p => p.type === 'day')?.value || '0');
 
+                // رمضان
                 if (hMonth === 9 && hDay <= 3) {
                     setOccasionGreeting('ramadan');
                     localStorage.setItem(storageKey, 'true');
                     return;
                 }
+                // عيد الفطر
                 if (hMonth === 10 && hDay <= 3) {
                     setOccasionGreeting('eid');
                     localStorage.setItem(storageKey, 'true');
@@ -149,7 +167,8 @@ const Dashboard: React.FC<DashboardProps> = ({
                 }
             } catch (e) { console.error("Hijri Date Error", e); }
         };
-        const timer = setTimeout(checkOccasion, 1500);
+
+        const timer = setTimeout(checkAnnouncements, 1500);
         return () => clearTimeout(timer);
     }, []);
 
@@ -505,7 +524,7 @@ const Dashboard: React.FC<DashboardProps> = ({
                 </div>
             </div>
 
-            {/* 3️⃣ خطة التقويم المستمر (المعدلة والديناميكية) */}
+            {/* 3️⃣ خطة التقويم المستمر */}
             <div className="px-4 mt-6">
                 <div className="bg-white rounded-[1.5rem] p-5 shadow-sm border border-slate-100">
                     <div className="flex justify-between items-center mb-4">
@@ -513,7 +532,6 @@ const Dashboard: React.FC<DashboardProps> = ({
                             <div className="p-2 bg-amber-50 text-amber-500 rounded-xl"><CalendarDays size={18}/></div>
                             <h2 className="text-base font-black text-slate-800">خطة التقويم المستمر</h2>
                         </div>
-                        {/* ✅ زر إعدادات الخطة الجديد */}
                         <button onClick={() => setShowPlanSettingsModal(true)} className="p-2 bg-slate-50 rounded-xl text-slate-500 hover:bg-slate-100 transition-colors">
                             <Settings size={18} />
                         </button>
@@ -562,8 +580,37 @@ const Dashboard: React.FC<DashboardProps> = ({
                 </div>
             )}
 
-            {/* 5️⃣ مودال المناسبات */}
-            {occasionGreeting && (
+            {/* ✅ 5️⃣ مودال الرسائل السحابية (الجديد كلياً) - الأولوية القصوى */}
+            {cloudMessage && (
+                <div className="fixed inset-0 z-[99999] flex items-center justify-center bg-black/60 backdrop-blur-sm animate-in fade-in duration-500 px-4">
+                    <div className="bg-white w-full max-w-sm rounded-[2.5rem] overflow-hidden shadow-2xl relative animate-in zoom-in-95 duration-300">
+                        <div className={`h-40 relative flex items-center justify-center ${cloudMessage.type === 'alert' ? 'bg-rose-600' : 'bg-indigo-600'}`}>
+                            <div className="absolute inset-0 opacity-20 bg-[url('https://www.transparenttextures.com/patterns/arabesque.png')]"></div>
+                            <div className="relative z-10 p-6 bg-white/10 backdrop-blur-md rounded-full border border-white/20 shadow-lg animate-bounce">
+                                {cloudMessage.type === 'alert' ? <AlertTriangle size={48} className="text-white" /> : <Bell size={48} className="text-white" />}
+                            </div>
+                        </div>
+                        <div className="p-8 text-center space-y-4">
+                            <h2 className="text-2xl font-black text-slate-800">{cloudMessage.title}</h2>
+                            <p className="text-sm font-bold text-slate-500 leading-relaxed whitespace-pre-line">
+                                {cloudMessage.body}
+                            </p>
+                            <button 
+                                onClick={() => {
+                                    localStorage.setItem(`rased_cloud_msg_${cloudMessage.id}`, 'true');
+                                    setCloudMessage(null);
+                                }} 
+                                className={`w-full py-3.5 rounded-xl font-black text-white text-sm shadow-lg transition-transform active:scale-95 mt-4 ${cloudMessage.type === 'alert' ? 'bg-rose-600 hover:bg-rose-700' : 'bg-indigo-600 hover:bg-indigo-700'}`}
+                            >
+                                حسناً، فهمت
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {/* 6️⃣ مودال المناسبات المحلية (في حال عدم وجود رسالة سحابية) */}
+            {occasionGreeting && !cloudMessage && (
                 <div className="fixed inset-0 z-[99999] flex items-center justify-center bg-black/60 backdrop-blur-sm animate-in fade-in duration-500 px-4">
                     <div className="bg-white w-full max-w-sm rounded-[2.5rem] overflow-hidden shadow-2xl relative animate-in zoom-in-95 duration-300">
                         <div className={`h-40 relative flex items-center justify-center ${occasionGreeting === 'ramadan' ? 'bg-[#1e1b4b]' : occasionGreeting === 'eid' ? 'bg-[#701a75]' : 'bg-[#1e3a8a]'}`}>
@@ -585,13 +632,13 @@ const Dashboard: React.FC<DashboardProps> = ({
                                 {occasionGreeting === 'eid' && 'كل عام وأنتم بخير، أعاده الله علينا وعليكم باليمن والبركات.'}
                                 {occasionGreeting === 'teacher' && 'شكراً لك يا صانع الأجيال، جهودك عظيمة وأثرك لا يُنسى. كل عام وأنت منارة للعلم.'}
                             </p>
-                            <button onClick={() => setOccasionGreeting(null)} className={`w-full py-3.5 rounded-xl font-black text-white text-sm shadow-lg transition-transform active:scale-95 mt-4 ${occasionGreeting === 'ramadan' ? 'bg-[#1e1b4b] hover:bg-[#312e81]' : occasionGreeting === 'eid' ? 'bg-[#701a75] hover:bg-[#86198f]' : 'bg-[#1e3a8a] hover:bg-[#1e40af]'}`}>رمضان كريم🌙</button>
+                            <button onClick={() => setOccasionGreeting(null)} className={`w-full py-3.5 rounded-xl font-black text-white text-sm shadow-lg transition-transform active:scale-95 mt-4 ${occasionGreeting === 'ramadan' ? 'bg-[#1e1b4b] hover:bg-[#312e81]' : occasionGreeting === 'eid' ? 'bg-[#701a75] hover:bg-[#86198f]' : 'bg-[#1e3a8a] hover:bg-[#1e40af]'}`}>شكراً لكم ❤️</button>
                         </div>
                     </div>
                 </div>
             )}
 
-            {/* ✅ 6️⃣ مودال تعديل خطة التقويم (الجديد) */}
+            {/* Modal: تعديل خطة التقويم */}
             <Modal isOpen={showPlanSettingsModal} onClose={() => setShowPlanSettingsModal(false)} className="max-w-md rounded-[2rem] h-[80vh]">
                 <div className="flex flex-col h-full">
                     <div className="flex justify-between items-center mb-4 pb-2 border-b border-slate-50">
@@ -694,7 +741,7 @@ const Dashboard: React.FC<DashboardProps> = ({
                 </div>
             </Modal>
 
-            {/* Modal: Edit Identity (كما هو) */}
+            {/* Modal: Edit Identity */}
             <Modal isOpen={showEditModal} onClose={() => setShowEditModal(false)} className="max-w-md rounded-[2rem]">
                 <div className="text-center">
                     <h3 className="font-black text-lg mb-4 text-slate-800">الهوية الرسمية</h3>
@@ -739,7 +786,7 @@ const Dashboard: React.FC<DashboardProps> = ({
                 </div>
             </Modal>
 
-            {/* Modal: Schedule & Timing (كما هو) */}
+            {/* Modal: Schedule & Timing */}
             <Modal isOpen={showScheduleModal} onClose={() => setShowScheduleModal(false)} className="max-w-md rounded-[2rem] h-[80vh]">
                 <div className="flex flex-col h-full">
                     <div className="flex justify-between items-center mb-4 pb-2 border-b border-slate-50">
