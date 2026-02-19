@@ -3,7 +3,8 @@ import { AppProvider, useApp } from './context/AppContext';
 import { ThemeProvider } from './context/ThemeContext';
 import {
   LayoutDashboard, Users, CalendarCheck, BarChart3,
-  Settings as SettingsIcon, Info, FileText, BookOpen, Medal, Loader2
+  Settings as SettingsIcon, Info, FileText, BookOpen, Medal, Loader2,
+  Moon, Star // ✅ أضفنا أيقونات الهلال والنجمة للزينة الرمضانية
 } from 'lucide-react';
 
 // ✅ تم إزالة Firebase و Auth تماماً
@@ -76,6 +77,9 @@ const AppContent: React.FC = () => {
   const [activeTab, setActiveTab] = useState('dashboard');
   const [showMoreMenu, setShowMoreMenu] = useState(false);
   const [appVersion, setAppVersion] = useState('3.8.6');
+  
+  // ✅ المستشعر الذكي لشهر رمضان
+  const [isRamadan, setIsRamadan] = useState(false);
 
   useEffect(() => {
     const fetchVersion = async () => {
@@ -92,6 +96,19 @@ const AppContent: React.FC = () => {
       }
     };
     fetchVersion();
+
+    // ✅ تشغيل الرادار الهجري للزينة الذكية
+    try {
+        const today = new Date();
+        const hijriFormatter = new Intl.DateTimeFormat('en-TN-u-ca-islamic', { month: 'numeric' });
+        const parts = hijriFormatter.formatToParts(today);
+        const hMonth = parseInt(parts.find(p => p.type === 'month')?.value || '0');
+        if (hMonth === 9) { // 9 هو شهر رمضان
+            setIsRamadan(true);
+        }
+    } catch(e) {
+        console.error("Hijri Date Error", e);
+    }
   }, []);
 
   const [showWelcome, setShowWelcome] = useState<boolean>(() => !localStorage.getItem('rased_welcome_seen'));
@@ -197,10 +214,10 @@ const AppContent: React.FC = () => {
   const isMoreActive = !mobileNavItems.some(item => item.id === activeTab);
 
   return (
-    <div className="flex h-full bg-[#f3f4f6] font-sans overflow-hidden text-slate-900 relative">
+    <div className={`flex h-full font-sans overflow-hidden text-slate-900 relative transition-colors duration-1000 ${isRamadan ? 'bg-[#fdfbf7]' : 'bg-[#f3f4f6]'}`}>
       {/* Sidebar (Desktop) */}
-      <aside className="hidden md:flex w-72 flex-col bg-white border-l border-slate-200 z-50 shadow-sm h-full">
-        <div className="p-8 flex items-center gap-4">
+      <aside className="hidden md:flex w-72 flex-col bg-white border-l border-slate-200 z-50 shadow-sm h-full relative">
+        <div className="p-8 flex items-center gap-4 relative z-10">
           <div className="w-12 h-12"><BrandLogo className="w-full h-full" showText={false} /></div>
           <div>
             <h1 className="text-2xl font-black text-slate-900 tracking-tight">راصد</h1>
@@ -208,8 +225,8 @@ const AppContent: React.FC = () => {
           </div>
         </div>
         
-        <div className="px-6 mb-6">
-          <div className="p-4 bg-slate-50 rounded-2xl flex items-center gap-3 border border-slate-100">
+        <div className="px-6 mb-6 relative z-10">
+          <div className={`p-4 rounded-2xl flex items-center gap-3 border transition-colors ${isRamadan ? 'bg-amber-50/50 border-amber-100' : 'bg-slate-50 border-slate-100'}`}>
             <div className="w-10 h-10 rounded-full bg-slate-200 flex items-center justify-center overflow-hidden border border-slate-300 shrink-0">
               {teacherInfo.avatar ? <img src={teacherInfo.avatar} className="w-full h-full object-cover" /> : <span className="font-black text-slate-500 text-lg">{teacherInfo.name?.[0] || 'م'}</span>}
             </div>
@@ -220,22 +237,44 @@ const AppContent: React.FC = () => {
           </div>
         </div>
 
-        <nav className="flex-1 overflow-y-auto px-4 space-y-2 custom-scrollbar pb-4">
+        <nav className="flex-1 overflow-y-auto px-4 space-y-2 custom-scrollbar pb-4 relative z-10">
           {desktopNavItems.map(item => (
-            <button key={item.id} onClick={() => handleNavigate(item.id)} className={`w-full flex items-center gap-3 px-4 py-3.5 rounded-2xl transition-all duration-300 group ${activeTab === item.id ? 'bg-indigo-600 text-white shadow-lg' : 'text-slate-500 hover:bg-slate-50 hover:text-slate-900'}`}>
+            <button key={item.id} onClick={() => handleNavigate(item.id)} className={`w-full flex items-center gap-3 px-4 py-3.5 rounded-2xl transition-all duration-300 group ${activeTab === item.id ? (isRamadan ? 'bg-amber-600 text-white shadow-lg' : 'bg-indigo-600 text-white shadow-lg') : 'text-slate-500 hover:bg-slate-50 hover:text-slate-900'}`}>
               <item.icon className={`w-5 h-5 ${activeTab === item.id ? 'text-white' : 'text-slate-400'}`} strokeWidth={2.5} />
               <span className="font-bold text-sm">{item.label}</span>
             </button>
           ))}
         </nav>
-        <div className="p-6 text-center border-t border-slate-200">
+        <div className="p-6 text-center border-t border-slate-200 relative z-10">
           <p className="text-[10px] font-bold text-gray-400">الإصدار {appVersion}</p>
         </div>
       </aside>
 
       {/* Main Container */}
-      <main className="flex-1 flex flex-col h-full overflow-hidden relative bg-[#f3f4f6]">
-        <div className="flex-1 overflow-y-auto overflow-x-hidden custom-scrollbar pb-32 md:pb-4 px-4 md:px-8 pt-safe">
+      <main className={`flex-1 flex flex-col h-full overflow-hidden relative transition-colors duration-1000 ${isRamadan ? 'bg-transparent' : 'bg-[#f3f4f6]'}`}>
+        
+        {/* ✅ الزينة الرمضانية الذكية (الخلفية) */}
+        {isRamadan && (
+          <div className="absolute inset-0 z-0 pointer-events-none overflow-hidden select-none">
+            {/* الخلفية المذهبة المتدرجة */}
+            <div className="absolute inset-0 bg-gradient-to-br from-[#fffbeb] via-[#fef3c7] to-[#fde68a] opacity-40"></div>
+            
+            {/* الزخرفة الإسلامية (نمط متكرر) */}
+            <div className="absolute inset-0 opacity-[0.03]" style={{ backgroundImage: `url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M30 0l15 15-15 15L15 15zM15 30l15 15-15 15L0 45zM45 30l15 15-15 15-15-15z' fill='%2392400e' fill-opacity='1' fill-rule='evenodd'/%3E%3C/svg%3E")` }}></div>
+            
+            {/* هلال ووهج روحاني في الزاوية */}
+            <div className="absolute top-0 right-0 w-96 h-96 bg-amber-200/40 rounded-full blur-3xl -translate-y-1/2 translate-x-1/3"></div>
+            <div className="absolute top-10 right-10 opacity-20 hidden md:block">
+              <Moon size={140} className="text-amber-500 fill-amber-500/20 drop-shadow-2xl" />
+              <Star size={40} className="text-amber-400 fill-amber-400 absolute top-4 left-6 animate-pulse drop-shadow-lg" />
+            </div>
+
+            {/* وهج سفلي */}
+            <div className="absolute bottom-0 left-0 w-96 h-96 bg-amber-300/20 rounded-full blur-3xl translate-y-1/3 -translate-x-1/3"></div>
+          </div>
+        )}
+
+        <div className="flex-1 overflow-y-auto overflow-x-hidden custom-scrollbar pb-32 md:pb-4 px-4 md:px-8 pt-safe relative z-10">
           <div className="max-w-5xl mx-auto w-full min-h-full">
             {renderContent()}
           </div>
@@ -251,7 +290,7 @@ const AppContent: React.FC = () => {
               <div className={`absolute top-0 transition-all duration-500 ${isActive ? '-translate-y-7 scale-110' : 'translate-y-1 scale-90'}`}>
                 <div className="w-11 h-11"><item.IconComponent active={isActive} /></div>
               </div>
-              <span className={`text-[10px] font-black transition-all ${isActive ? 'text-indigo-600' : 'text-gray-400 opacity-0'}`}>{item.label}</span>
+              <span className={`text-[10px] font-black transition-all ${isActive ? (isRamadan ? 'text-amber-600' : 'text-indigo-600') : 'text-gray-400 opacity-0'}`}>{item.label}</span>
             </button>
           );
         })}
@@ -259,7 +298,7 @@ const AppContent: React.FC = () => {
           <div className={`absolute top-0 transition-all duration-500 ${isMoreActive ? '-translate-y-7 scale-110' : 'translate-y-1 scale-90'}`}>
             <div className="w-11 h-11"><More3D active={isMoreActive} /></div>
           </div>
-          <span className={`text-[10px] font-black transition-all ${isMoreActive ? 'text-indigo-600' : 'text-gray-400 opacity-0'}`}>المزيد</span>
+          <span className={`text-[10px] font-black transition-all ${isMoreActive ? (isRamadan ? 'text-amber-600' : 'text-indigo-600') : 'text-gray-400 opacity-0'}`}>المزيد</span>
         </button>
       </div>
 
