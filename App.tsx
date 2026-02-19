@@ -24,82 +24,46 @@ import BrandLogo from './components/BrandLogo';
 import WelcomeScreen from './components/WelcomeScreen';
 import { useSchoolBell } from './hooks/useSchoolBell';
 
-// أيقونات زخرفية بسيطة لرمضان (يمكن وضعها داخل المكون نفسه أو خارجه)
-const LanternIcon = () => (
-  <svg className="absolute top-4 left-4 w-16 h-16 opacity-10 text-amber-600" viewBox="0 0 100 100">
-    <rect x="30" y="40" width="40" height="40" rx="10" fill="currentColor" />
-    <rect x="40" y="20" width="20" height="20" rx="5" fill="currentColor" />
-    <circle cx="50" cy="70" r="5" fill="currentColor" />
+const Dashboard3D = ({ active }: { active: boolean }) => (
+  <svg viewBox="0 0 64 64" className={`w-full h-full transition-all duration-300 ${active ? 'filter drop-shadow-lg scale-110' : 'opacity-60 grayscale-[0.8] hover:grayscale-0 hover:opacity-100 hover:scale-105'}`} xmlns="http://www.w3.org/2000/svg">
+    <defs><linearGradient id="dash_bg" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stopColor="#6366f1" /><stop offset="100%" stopColor="#4338ca" /></linearGradient></defs>
+    <rect x="10" y="10" width="20" height="20" rx="6" fill="url(#dash_bg)" />
+    <rect x="34" y="10" width="20" height="20" rx="6" fill="#a5b4fc" />
+    <rect x="10" y="34" width="20" height="20" rx="6" fill="#c7d2fe" />
+    <rect x="34" y="34" width="20" height="20" rx="6" fill="url(#dash_bg)" />
   </svg>
 );
-
-// الأيقونات ثلاثية الأبعاد المعدلة لدعم الثيم الرمضاني
-const Dashboard3D = ({ active, isRamadan }: { active: boolean; isRamadan: boolean }) => {
-  const primaryColor = isRamadan ? '#fbbf24' : '#6366f1';
-  const secondaryColor = isRamadan ? '#d97706' : '#4338ca';
-  return (
-    <svg viewBox="0 0 64 64" className={`w-full h-full transition-all duration-300 ${active ? 'filter drop-shadow-lg scale-110' : 'opacity-60 grayscale-[0.8] hover:grayscale-0 hover:opacity-100 hover:scale-105'}`} xmlns="http://www.w3.org/2000/svg">
-      <defs><linearGradient id="dash_bg" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stopColor={primaryColor} /><stop offset="100%" stopColor={secondaryColor} /></linearGradient></defs>
-      <rect x="10" y="10" width="20" height="20" rx="6" fill="url(#dash_bg)" />
-      <rect x="34" y="10" width="20" height="20" rx="6" fill="#a5b4fc" />
-      <rect x="10" y="34" width="20" height="20" rx="6" fill="#c7d2fe" />
-      <rect x="34" y="34" width="20" height="20" rx="6" fill="url(#dash_bg)" />
-    </svg>
-  );
-};
-
-const Attendance3D = ({ active, isRamadan }: { active: boolean; isRamadan: boolean }) => {
-  const primaryColor = isRamadan ? '#fbbf24' : '#f87171';
-  const secondaryColor = isRamadan ? '#d97706' : '#dc2626';
-  return (
-    <svg viewBox="0 0 64 64" className={`w-full h-full transition-all duration-300 ${active ? 'filter drop-shadow-lg scale-110' : 'opacity-60 grayscale-[0.8] hover:grayscale-0 hover:opacity-100 hover:scale-105'}`} xmlns="http://www.w3.org/2000/svg">
-      <defs><linearGradient id="cal_bg" x1="0%" y1="0%" x2="0%" y2="100%"><stop offset="0%" stopColor={primaryColor} /><stop offset="100%" stopColor={secondaryColor} /></linearGradient></defs>
-      <rect x="12" y="14" width="40" height="40" rx="8" fill="white" stroke="#e5e7eb" strokeWidth="2" />
-      <path d="M12 24 L52 24 L52 18 Q52 14 48 14 L16 14 Q12 14 12 18 Z" fill="url(#cal_bg)" />
-      <circle cx="20" cy="12" r="3" fill="#991b1b" /><circle cx="44" cy="12" r="3" fill="#991b1b" />
-      <path d="M22 38 L30 46 L44 30" fill="none" stroke={isRamadan ? '#b45309' : '#10b981'} strokeWidth="5" strokeLinecap="round" strokeLinejoin="round" />
-    </svg>
-  );
-};
-
-const Students3D = ({ active, isRamadan }: { active: boolean; isRamadan: boolean }) => {
-  const primaryColor = isRamadan ? '#fbbf24' : '#3b82f6';
-  const secondaryColor = isRamadan ? '#d97706' : '#1d4ed8';
-  return (
-    <svg viewBox="0 0 64 64" className={`w-full h-full transition-all duration-300 ${active ? 'filter drop-shadow-lg scale-110' : 'opacity-60 grayscale-[0.8] hover:grayscale-0 hover:opacity-100 hover:scale-105'}`} xmlns="http://www.w3.org/2000/svg">
-      <defs><linearGradient id="user_grad" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stopColor={primaryColor} /><stop offset="100%" stopColor={secondaryColor} /></linearGradient></defs>
-      <circle cx="32" cy="24" r="12" fill="url(#user_grad)" /><path d="M14 54 C14 40 50 40 50 54 L50 58 L14 58 Z" fill="url(#user_grad)" />
-    </svg>
-  );
-};
-
-const Grades3D = ({ active, isRamadan }: { active: boolean; isRamadan: boolean }) => {
-  // في حالة رمضان نغير ألوان الأعمدة إلى درجات ذهبية
-  const bar1 = isRamadan ? ['#fbbf24', '#d97706'] : ['#fbbf24', '#d97706']; // لم نغيرها لأنها أصلًا ذهبية
-  const bar2 = isRamadan ? ['#fcd34d', '#b45309'] : ['#34d399', '#059669'];
-  const bar3 = isRamadan ? ['#fde68a', '#92400e'] : ['#818cf8', '#4f46e5'];
-  return (
-    <svg viewBox="0 0 64 64" className={`w-full h-full transition-all duration-300 ${active ? 'filter drop-shadow-lg scale-110' : 'opacity-60 grayscale-[0.8] hover:grayscale-0 hover:opacity-100 hover:scale-105'}`} xmlns="http://www.w3.org/2000/svg">
-      <defs>
-        <linearGradient id="bar1" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stopColor={bar1[0]} /><stop offset="1" stopColor={bar1[1]} /></linearGradient>
-        <linearGradient id="bar2" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stopColor={bar2[0]} /><stop offset="1" stopColor={bar2[1]} /></linearGradient>
-        <linearGradient id="bar3" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stopColor={bar3[0]} /><stop offset="1" stopColor={bar3[1]} /></linearGradient>
-      </defs>
-      <rect x="12" y="34" width="10" height="20" rx="2" fill="url(#bar1)" /><rect x="27" y="24" width="10" height="30" rx="2" fill="url(#bar2)" /><rect x="42" y="14" width="10" height="40" rx="2" fill="url(#bar3)" />
-    </svg>
-  );
-};
-
-const More3D = ({ active, isRamadan }: { active: boolean; isRamadan: boolean }) => {
-  const primaryColor = isRamadan ? '#fbbf24' : '#f472b6';
-  const secondaryColor = isRamadan ? '#d97706' : '#db2777';
-  return (
-    <svg viewBox="0 0 64 64" className={`w-full h-full transition-all duration-300 ${active ? 'filter drop-shadow-lg scale-110' : 'opacity-60 grayscale-[0.8] hover:grayscale-0 hover:opacity-100 hover:scale-105'}`} xmlns="http://www.w3.org/2000/svg">
-      <defs><linearGradient id="grid_grad" x1="0%" y1="0%" x2="1" y2="1"><stop offset="0%" stopColor={primaryColor} /><stop offset="100%" stopColor={secondaryColor} /></linearGradient></defs>
-      <rect x="14" y="14" width="16" height="16" rx="4" fill="url(#grid_grad)" /><rect x="34" y="14" width="16" height="16" rx="4" fill="url(#grid_grad)" /><rect x="14" y="34" width="16" height="16" rx="4" fill="url(#grid_grad)" /><rect x="34" y="34" width="16" height="16" rx="4" fill="url(#grid_grad)" />
-    </svg>
-  );
-};
+const Attendance3D = ({ active }: { active: boolean }) => (
+  <svg viewBox="0 0 64 64" className={`w-full h-full transition-all duration-300 ${active ? 'filter drop-shadow-lg scale-110' : 'opacity-60 grayscale-[0.8] hover:grayscale-0 hover:opacity-100 hover:scale-105'}`} xmlns="http://www.w3.org/2000/svg">
+    <defs><linearGradient id="cal_bg" x1="0%" y1="0%" x2="0%" y2="100%"><stop offset="0%" stopColor="#f87171" /><stop offset="100%" stopColor="#dc2626" /></linearGradient></defs>
+    <rect x="12" y="14" width="40" height="40" rx="8" fill="white" stroke="#e5e7eb" strokeWidth="2" />
+    <path d="M12 24 L52 24 L52 18 Q52 14 48 14 L16 14 Q12 14 12 18 Z" fill="url(#cal_bg)" />
+    <circle cx="20" cy="12" r="3" fill="#991b1b" /><circle cx="44" cy="12" r="3" fill="#991b1b" />
+    <path d="M22 38 L30 46 L44 30" fill="none" stroke="#10b981" strokeWidth="5" strokeLinecap="round" strokeLinejoin="round" />
+  </svg>
+);
+const Students3D = ({ active }: { active: boolean }) => (
+  <svg viewBox="0 0 64 64" className={`w-full h-full transition-all duration-300 ${active ? 'filter drop-shadow-lg scale-110' : 'opacity-60 grayscale-[0.8] hover:grayscale-0 hover:opacity-100 hover:scale-105'}`} xmlns="http://www.w3.org/2000/svg">
+    <defs><linearGradient id="user_grad" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stopColor="#3b82f6" /><stop offset="100%" stopColor="#1d4ed8" /></linearGradient></defs>
+    <circle cx="32" cy="24" r="12" fill="url(#user_grad)" /><path d="M14 54 C14 40 50 40 50 54 L50 58 L14 58 Z" fill="url(#user_grad)" />
+  </svg>
+);
+const Grades3D = ({ active }: { active: boolean }) => (
+  <svg viewBox="0 0 64 64" className={`w-full h-full transition-all duration-300 ${active ? 'filter drop-shadow-lg scale-110' : 'opacity-60 grayscale-[0.8] hover:grayscale-0 hover:opacity-100 hover:scale-105'}`} xmlns="http://www.w3.org/2000/svg">
+    <defs>
+      <linearGradient id="bar1" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stopColor="#fbbf24" /><stop offset="1" stopColor="#d97706" /></linearGradient>
+      <linearGradient id="bar2" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stopColor="#34d399" /><stop offset="1" stopColor="#059669" /></linearGradient>
+      <linearGradient id="bar3" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stopColor="#818cf8" /><stop offset="1" stopColor="#4f46e5" /></linearGradient>
+    </defs>
+    <rect x="12" y="34" width="10" height="20" rx="2" fill="url(#bar1)" /><rect x="27" y="24" width="10" height="30" rx="2" fill="url(#bar2)" /><rect x="42" y="14" width="10" height="40" rx="2" fill="url(#bar3)" />
+  </svg>
+);
+const More3D = ({ active }: { active: boolean }) => (
+  <svg viewBox="0 0 64 64" className={`w-full h-full transition-all duration-300 ${active ? 'filter drop-shadow-lg scale-110' : 'opacity-60 grayscale-[0.8] hover:grayscale-0 hover:opacity-100 hover:scale-105'}`} xmlns="http://www.w3.org/2000/svg">
+    <defs><linearGradient id="grid_grad" x1="0%" y1="0%" x2="1" y2="1"><stop offset="0%" stopColor="#f472b6" /><stop offset="100%" stopColor="#db2777" /></linearGradient></defs>
+    <rect x="14" y="14" width="16" height="16" rx="4" fill="url(#grid_grad)" /><rect x="34" y="14" width="16" height="16" rx="4" fill="url(#grid_grad)" /><rect x="14" y="34" width="16" height="16" rx="4" fill="url(#grid_grad)" /><rect x="34" y="34" width="16" height="16" rx="4" fill="url(#grid_grad)" />
+  </svg>
+);
 
 const AppContent: React.FC = () => {
   const {
@@ -247,25 +211,6 @@ const AppContent: React.FC = () => {
 
   return (
     <div className={`flex h-full font-sans overflow-hidden text-slate-900 relative transition-colors duration-1000 ${isRamadan ? 'bg-[#fcfbf8]' : 'bg-[#f3f4f6]'}`}>
-      
-      {/* الزخارف الرمضانية (تضاف فقط إذا كان رمضان) */}
-      {isRamadan && (
-        <>
-          {/* خلفية زخرفية خفيفة جداً (pattern) */}
-          <div className="fixed inset-0 pointer-events-none z-0 opacity-[0.02]" style={{ backgroundImage: `url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M30 5 L55 30 L30 55 L5 30 Z' fill='%23b45309' fill-opacity='0.1' /%3E%3C/svg%3E")`, backgroundSize: '60px 60px' }} />
-          
-          {/* فانوس صغير في أحد الأركان */}
-          <div className="fixed bottom-4 left-4 z-0 opacity-[0.07] rotate-12">
-            <LanternIcon />
-          </div>
-          
-          {/* هلال كبير في الخلفية (موجود مسبقاً) */}
-          <div className="absolute -bottom-32 -left-32 opacity-[0.03]">
-            <Moon size={600} className="text-amber-700 fill-amber-700 transform -rotate-12" />
-          </div>
-        </>
-      )}
-
       {/* Sidebar (Desktop) */}
       <aside className="hidden md:flex w-72 flex-col bg-white border-l border-slate-200 z-50 shadow-sm h-full relative">
         <div className="p-8 flex items-center gap-4 relative z-10">
@@ -290,11 +235,7 @@ const AppContent: React.FC = () => {
 
         <nav className="flex-1 overflow-y-auto px-4 space-y-2 custom-scrollbar pb-4 relative z-10">
           {desktopNavItems.map(item => (
-            <button key={item.id} onClick={() => handleNavigate(item.id)} 
-              className={`w-full flex items-center gap-3 px-4 py-3.5 rounded-2xl transition-all duration-300 group 
-                ${activeTab === item.id 
-                  ? (isRamadan ? 'bg-gradient-to-l from-amber-600 to-amber-700 text-white shadow-lg shadow-amber-200' : 'bg-indigo-600 text-white shadow-lg') 
-                  : 'text-slate-500 hover:bg-slate-50 hover:text-slate-900'}`}>
+            <button key={item.id} onClick={() => handleNavigate(item.id)} className={`w-full flex items-center gap-3 px-4 py-3.5 rounded-2xl transition-all duration-300 group ${activeTab === item.id ? (isRamadan ? 'bg-[#c28e21] text-white shadow-lg' : 'bg-indigo-600 text-white shadow-lg') : 'text-slate-500 hover:bg-slate-50 hover:text-slate-900'}`}>
               <item.icon className={`w-5 h-5 ${activeTab === item.id ? 'text-white' : 'text-slate-400'}`} strokeWidth={2.5} />
               <span className="font-bold text-sm">{item.label}</span>
             </button>
@@ -308,8 +249,18 @@ const AppContent: React.FC = () => {
       {/* Main Container */}
       <main className={`flex-1 flex flex-col h-full overflow-hidden relative transition-colors duration-1000 ${isRamadan ? 'bg-transparent' : 'bg-[#f3f4f6]'}`}>
         
-        {/* تصميم رمضاني كلاسيكي وراقي (علامة مائية خفيفة جداً) - تم نقله للأعلى لكن نتركه هنا أيضاً إذا أردت، لكن الأفضل توحيده في الأعلى. سأبقي المحتوى الأصلي وأضيف الزخارف في الأعلى كما فعلنا */}
-        {/* لقد أضفنا الزخارف في أعلى الـ return، لذلك يمكن إزالة هذا القسم المكرر. سأحتفظ بالتعليق فقط. */}
+        {/* تصميم رمضاني كلاسيكي وراقي (علامة مائية خفيفة جداً) */}
+        {isRamadan && (
+          <div className="absolute inset-0 z-0 pointer-events-none overflow-hidden select-none">
+            {/* خلفية بيضاء دافئة جداً وراقية */}
+            <div className="absolute inset-0 bg-[#fcfbf8]"></div>
+            
+            {/* هلال عملاق كعلامة مائية في أسفل اليسار (لا يزعج المربعات) */}
+            <div className="absolute -bottom-32 -left-32 opacity-[0.03]">
+              <Moon size={600} className="text-amber-700 fill-amber-700 transform -rotate-12" />
+            </div>
+          </div>
+        )}
 
         <div className="flex-1 overflow-y-auto overflow-x-hidden custom-scrollbar pb-32 md:pb-4 px-4 md:px-8 pt-safe relative z-10">
           <div className="max-w-5xl mx-auto w-full min-h-full">
@@ -322,25 +273,20 @@ const AppContent: React.FC = () => {
       <div className="md:hidden fixed bottom-0 left-0 right-0 z-[9999] h-[85px] bg-white/95 backdrop-blur-xl rounded-t-[2.5rem] shadow-[0_-10px_40px_rgba(0,0,0,0.08)] flex justify-around items-end pb-4 border-t border-slate-200/60 transition-transform duration-300">
         {mobileNavItems.map((item) => {
           const isActive = activeTab === item.id;
-          const IconComponent = item.IconComponent;
           return (
             <button key={item.id} onClick={() => handleNavigate(item.id)} className="relative w-full h-full flex flex-col items-center justify-end pb-1 touch-manipulation active:scale-90 transition-transform">
               <div className={`absolute top-0 transition-all duration-500 ${isActive ? '-translate-y-7 scale-110' : 'translate-y-1 scale-90'}`}>
-                <div className="w-11 h-11">
-                  <IconComponent active={isActive} isRamadan={isRamadan} />
-                </div>
+                <div className="w-11 h-11"><item.IconComponent active={isActive} /></div>
               </div>
-              <span className={`text-[10px] font-black transition-all ${isActive ? (isRamadan ? 'text-amber-700' : 'text-indigo-600') : 'text-gray-400 opacity-0'}`}>{item.label}</span>
+              <span className={`text-[10px] font-black transition-all ${isActive ? (isRamadan ? 'text-[#c28e21]' : 'text-indigo-600') : 'text-gray-400 opacity-0'}`}>{item.label}</span>
             </button>
           );
         })}
         <button onClick={() => setShowMoreMenu(true)} className="relative w-full h-full flex flex-col items-center justify-end pb-1 touch-manipulation active:scale-90 transition-transform">
           <div className={`absolute top-0 transition-all duration-500 ${isMoreActive ? '-translate-y-7 scale-110' : 'translate-y-1 scale-90'}`}>
-            <div className="w-11 h-11">
-              <More3D active={isMoreActive} isRamadan={isRamadan} />
-            </div>
+            <div className="w-11 h-11"><More3D active={isMoreActive} /></div>
           </div>
-          <span className={`text-[10px] font-black transition-all ${isMoreActive ? (isRamadan ? 'text-amber-700' : 'text-indigo-600') : 'text-gray-400 opacity-0'}`}>المزيد</span>
+          <span className={`text-[10px] font-black transition-all ${isMoreActive ? (isRamadan ? 'text-[#c28e21]' : 'text-indigo-600') : 'text-gray-400 opacity-0'}`}>المزيد</span>
         </button>
       </div>
 
