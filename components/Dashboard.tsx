@@ -109,7 +109,7 @@ const Dashboard: React.FC<DashboardProps> = ({
             try {
                 // 1. فحص السحابة أولاً (الأولوية للرسائل السحابية)
                 // 🔴 ضع الرابط الفعلي لملف الـ JSON الخاص بك هنا (تأكد أنه Raw URL)
-                const CLOUD_JSON_URL = "https://raw.githubusercontent.com/YOUR_USERNAME/YOUR_REPO/main/message.json";
+                const CLOUD_JSON_URL = "https://raw.githubusercontent.com/alzaabi555/desktop-build/refs/heads/main/message.json";
                 
                 // نضيف الوقت الحالي لمنع الكاش (Cache) في المتصفح
                 const response = await fetch(CLOUD_JSON_URL + "?t=" + new Date().getTime());
