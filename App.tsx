@@ -4,10 +4,9 @@ import { ThemeProvider } from './context/ThemeContext';
 import {
   LayoutDashboard, Users, CalendarCheck, BarChart3,
   Settings as SettingsIcon, Info, FileText, BookOpen, Medal, Loader2,
-  Moon, Star // ✅ أضفنا أيقونات الهلال والنجمة للزينة الرمضانية
+  Moon, Star
 } from 'lucide-react';
 
-// ✅ تم إزالة Firebase و Auth تماماً
 import { App as CapacitorApp } from '@capacitor/app';
 import { Capacitor } from '@capacitor/core';
 
@@ -25,7 +24,6 @@ import BrandLogo from './components/BrandLogo';
 import WelcomeScreen from './components/WelcomeScreen';
 import { useSchoolBell } from './hooks/useSchoolBell';
 
-// --- 3D ICONS COMPONENTS (يبقى كما هو للأناقة) ---
 const Dashboard3D = ({ active }: { active: boolean }) => (
   <svg viewBox="0 0 64 64" className={`w-full h-full transition-all duration-300 ${active ? 'filter drop-shadow-lg scale-110' : 'opacity-60 grayscale-[0.8] hover:grayscale-0 hover:opacity-100 hover:scale-105'}`} xmlns="http://www.w3.org/2000/svg">
     <defs><linearGradient id="dash_bg" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stopColor="#6366f1" /><stop offset="100%" stopColor="#4338ca" /></linearGradient></defs>
@@ -78,7 +76,7 @@ const AppContent: React.FC = () => {
   const [showMoreMenu, setShowMoreMenu] = useState(false);
   const [appVersion, setAppVersion] = useState('3.8.6');
   
-  // ✅ المستشعر الذكي لشهر رمضان
+  // المستشعر الذكي لشهر رمضان (تم وضعه بشكل آمن جداً)
   const [isRamadan, setIsRamadan] = useState(false);
 
   useEffect(() => {
@@ -97,17 +95,17 @@ const AppContent: React.FC = () => {
     };
     fetchVersion();
 
-    // ✅ تشغيل الرادار الهجري للزينة الذكية
+    // تشغيل الرادار الهجري بأسلوب آمن
     try {
         const today = new Date();
         const hijriFormatter = new Intl.DateTimeFormat('en-TN-u-ca-islamic', { month: 'numeric' });
         const parts = hijriFormatter.formatToParts(today);
         const hMonth = parseInt(parts.find(p => p.type === 'month')?.value || '0');
-        if (hMonth === 9) { // 9 هو شهر رمضان
+        if (hMonth === 9) {
             setIsRamadan(true);
         }
     } catch(e) {
-        console.error("Hijri Date Error", e);
+        console.error("Hijri Date parsing skipped.");
     }
   }, []);
 
@@ -129,7 +127,6 @@ const AppContent: React.FC = () => {
     setShowWelcome(false);
   };
 
-  // ✅ التعديل الجذري: لا ننتظر AuthStatus، فقط ننتظر تحميل البيانات المحلية
   if (!isDataLoaded) {
     return (
       <div className="flex flex-col h-full w-full items-center justify-center bg-gray-50 fixed inset-0 z-[99999]">
@@ -228,11 +225,11 @@ const AppContent: React.FC = () => {
         <div className="px-6 mb-6 relative z-10">
           <div className={`p-4 rounded-2xl flex items-center gap-3 border transition-colors ${isRamadan ? 'bg-amber-50/50 border-amber-100' : 'bg-slate-50 border-slate-100'}`}>
             <div className="w-10 h-10 rounded-full bg-slate-200 flex items-center justify-center overflow-hidden border border-slate-300 shrink-0">
-              {teacherInfo.avatar ? <img src={teacherInfo.avatar} className="w-full h-full object-cover" /> : <span className="font-black text-slate-500 text-lg">{teacherInfo.name?.[0] || 'م'}</span>}
+              {teacherInfo?.avatar ? <img src={teacherInfo.avatar} className="w-full h-full object-cover" /> : <span className="font-black text-slate-500 text-lg">{teacherInfo?.name?.[0] || 'م'}</span>}
             </div>
             <div className="overflow-hidden">
-              <p className="text-xs font-bold text-slate-900 truncate">{teacherInfo.name || 'مرحباً بك'}</p>
-              <p className="text-[10px] text-gray-500 truncate">{teacherInfo.school || 'المدرسة'}</p>
+              <p className="text-xs font-bold text-slate-900 truncate">{teacherInfo?.name || 'مرحباً بك'}</p>
+              <p className="text-[10px] text-gray-500 truncate">{teacherInfo?.school || 'المدرسة'}</p>
             </div>
           </div>
         </div>
@@ -253,24 +250,16 @@ const AppContent: React.FC = () => {
       {/* Main Container */}
       <main className={`flex-1 flex flex-col h-full overflow-hidden relative transition-colors duration-1000 ${isRamadan ? 'bg-transparent' : 'bg-[#f3f4f6]'}`}>
         
-        {/* ✅ الزينة الرمضانية الذكية (الخلفية) */}
+        {/* تصميم رمضاني آمن جداً بدون تعقيد */}
         {isRamadan && (
           <div className="absolute inset-0 z-0 pointer-events-none overflow-hidden select-none">
-            {/* الخلفية المذهبة المتدرجة */}
-            <div className="absolute inset-0 bg-gradient-to-br from-[#fffbeb] via-[#fef3c7] to-[#fde68a] opacity-40"></div>
-            
-            {/* الزخرفة الإسلامية (نمط متكرر) */}
-            <div className="absolute inset-0 opacity-[0.03]" style={{ backgroundImage: `url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M30 0l15 15-15 15L15 15zM15 30l15 15-15 15L0 45zM45 30l15 15-15 15-15-15z' fill='%2392400e' fill-opacity='1' fill-rule='evenodd'/%3E%3C/svg%3E")` }}></div>
-            
-            {/* هلال ووهج روحاني في الزاوية */}
-            <div className="absolute top-0 right-0 w-96 h-96 bg-amber-200/40 rounded-full blur-3xl -translate-y-1/2 translate-x-1/3"></div>
+            <div className="absolute inset-0 bg-gradient-to-br from-[#fffbeb] via-[#fef3c7] to-[#fde68a] opacity-30"></div>
+            <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-amber-200/40 rounded-full blur-3xl -translate-y-1/2 translate-x-1/3"></div>
             <div className="absolute top-10 right-10 opacity-20 hidden md:block">
               <Moon size={140} className="text-amber-500 fill-amber-500/20 drop-shadow-2xl" />
               <Star size={40} className="text-amber-400 fill-amber-400 absolute top-4 left-6 animate-pulse drop-shadow-lg" />
             </div>
-
-            {/* وهج سفلي */}
-            <div className="absolute bottom-0 left-0 w-96 h-96 bg-amber-300/20 rounded-full blur-3xl translate-y-1/3 -translate-x-1/3"></div>
+            <div className="absolute bottom-0 left-0 w-[400px] h-[400px] bg-amber-300/20 rounded-full blur-3xl translate-y-1/3 -translate-x-1/3"></div>
           </div>
         )}
 
