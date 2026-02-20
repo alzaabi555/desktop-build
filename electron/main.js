@@ -30,13 +30,24 @@ autoUpdater.autoInstallOnAppQuit = true;
 let mainWindow;
 
 function createWindow() {
-  mainWindow = new BrowserWindow({
+ mainWindow = new BrowserWindow({
     width: 1280,
     height: 800,
     minWidth: 900,
     minHeight: 600,
     icon: path.join(__dirname, '../icon.png'),
-    backgroundColor: '#f3f4f6', // لون الخلفية لمنع الوميض الأبيض
+    
+    // 🌙 1. تغيير لون الخلفية المبدئي للون سماء الليل لمنع الوميض الأبيض عند التشغيل
+    backgroundColor: '#0f172a', 
+
+    // 🌟 2. السحر هنا: دمج شريط الويندوز مع التطبيق
+    titleBarStyle: 'hidden', // يُخفي الشريط الكلاسيكي القديم
+    titleBarOverlay: {
+      color: '#0f172a',       // لون خلفية أزرار الويندوز (كحلي ليلي)
+      symbolColor: '#ffffff', // لون الأيقونات (X، المربع، الناقص) أبيض ساطع
+      height: 35              // ارتفاع الشريط ليكون أنيقاً
+    },
+
     webPreferences: {
       nodeIntegration: false,
       contextIsolation: true,
