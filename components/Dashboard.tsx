@@ -400,14 +400,14 @@ const Dashboard: React.FC<DashboardProps> = ({
 
     return (
         <div className="space-y-6 pb-28 animate-in fade-in duration-500 relative min-h-screen">
-           {/* 🌙 الهيدر */}
+            {/* 🌙 الهيدر */}
             <header 
                 className={`pt-10 pb-8 px-4 md:pt-16 md:pb-12 md:px-6 md:pl-40 shadow-xl relative z-20 -mx-4 -mt-4 transition-all duration-500 ${isRamadan ? 'bg-white/5 backdrop-blur-3xl border-b border-white/10 text-white' : 'bg-[#446A8D] text-white'}`}
                 style={{ WebkitAppRegion: 'drag' } as any}
             >
                 <div className="flex justify-between items-center mb-2">
                     
-                    {/* منطقة الصورة والاسم (استثناء من السحب لتتمكن من ضغط زر التعديل) */}
+                    {/* منطقة الصورة والاسم (محمية من السحب لتتمكن من ضغط زر التعديل) */}
                     <div className="flex items-center gap-3 md:gap-5" style={{ WebkitAppRegion: 'no-drag' } as any}>
                         <div className="relative group">
                             <div className="w-14 h-14 md:w-20 md:h-20 rounded-2xl bg-white/10 backdrop-blur-md border border-white/20 flex items-center justify-center overflow-hidden shadow-inner transition-transform hover:scale-105">
@@ -415,10 +415,6 @@ const Dashboard: React.FC<DashboardProps> = ({
                                     <img src={teacherInfo.avatar} className="w-full h-full object-cover" alt="Teacher" onError={(e) => e.currentTarget.style.display='none'} />
                                 ) : <DefaultAvatarSVG gender={teacherInfo?.gender || 'male'} />}
                             </div>
-                            <button onClick={() => setShowEditModal(true)} className={`absolute -bottom-2 -right-2 p-1.5 md:p-2 rounded-full shadow-lg border-2 hover:scale-110 transition-transform ${isRamadan ? 'bg-indigo-900 text-white border-indigo-500' : 'bg-white text-[#446A8D] border-[#446A8D]'}`} title="تعديل البيانات">
-                                <Edit3 size={12} className="md:w-3.5 md:h-3.5" strokeWidth={3} />
-                            </button>
-                        </div>
                             <button onClick={() => setShowEditModal(true)} className={`absolute -bottom-2 -right-2 p-1.5 md:p-2 rounded-full shadow-lg border-2 hover:scale-110 transition-transform ${isRamadan ? 'bg-indigo-900 text-white border-indigo-500' : 'bg-white text-[#446A8D] border-[#446A8D]'}`} title="تعديل البيانات">
                                 <Edit3 size={12} className="md:w-3.5 md:h-3.5" strokeWidth={3} />
                             </button>
@@ -437,6 +433,7 @@ const Dashboard: React.FC<DashboardProps> = ({
                         </div>
                     </div>
                     
+                    {/* منطقة الإعدادات (محمية من السحب) */}
                     <div className="flex gap-2 md:gap-3" style={{ WebkitAppRegion: 'no-drag' } as any}>
                         <div className="relative">
                             <button onClick={() => setShowSettingsDropdown(!showSettingsDropdown)} className={`w-10 h-10 md:w-12 md:h-12 bg-white/10 hover:bg-white/20 backdrop-blur-md border border-white/10 rounded-2xl flex items-center justify-center transition-all ${showSettingsDropdown ? (isRamadan ? 'bg-amber-500/30 text-white' : 'bg-white text-[#446A8D]') : ''}`}>
