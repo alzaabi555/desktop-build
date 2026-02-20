@@ -321,7 +321,7 @@ const PrintPreviewModal: React.FC<{
 };
 
 // =================================================================================
-// ✅ القوالب (TEMPLATES)
+// ✅ القوالب (TEMPLATES) - لا مساس بها أبداً لضمان الطباعة
 // =================================================================================
 
 const GradesTemplate = ({ students, tools, teacherInfo, semester, gradeClass }: any) => {
@@ -619,7 +619,6 @@ const SummonTemplate = ({ student, teacherInfo, data }: any) => {
   );
 };
 
-// ✅ تم تعديل هذا القالب (ClassReportsTemplate) لتغيير عرض السلوكيات + توضيح الألوان للطباعة
 const ClassReportsTemplate = ({ students, teacherInfo, semester, assessmentTools }: any) => {
   const settings = getGradingSettings();
   const finalExamName = settings.finalExamName?.trim() || 'الامتحان النهائي';
@@ -636,7 +635,6 @@ const ClassReportsTemplate = ({ students, teacherInfo, semester, assessmentTools
         const behaviors = (student.behaviors || []).filter((b: any) => !b.semester || b.semester === (semester || '1'));
         const grades = (student.grades || []).filter((g: any) => !g.semester || g.semester === (semester || '1'));
 
-        // فصل السلوكيات
         const posBehaviors = behaviors.filter((b: any) => b.type === 'positive');
         const negBehaviors = behaviors.filter((b: any) => b.type === 'negative');
 
@@ -694,7 +692,6 @@ const ClassReportsTemplate = ({ students, teacherInfo, semester, assessmentTools
 
             <h3 className="font-bold text-lg mb-3 border-b-2 border-black inline-block">التحصيل الدراسي</h3>
 
-            {/* Grades Table (Borders are already black) */}
             <table className="w-full border-collapse border border-black text-sm mb-8">
               <thead>
                 <tr className="bg-gray-100">
@@ -743,12 +740,11 @@ const ClassReportsTemplate = ({ students, teacherInfo, semester, assessmentTools
               </div>
             </div>
 
-            {/* ✅ قسم السلوك والملاحظات (التعديل الجديد: عمودين) */}
+            {/* Behavior Section */}
             <div className="mb-12">
                 <h3 className="font-bold text-lg mb-3 border-b-2 border-black inline-block">سجل السلوك والمواظبة</h3>
                 <div className="flex gap-4 items-start">
                     
-                    {/* العمود الأيمن: السلوكيات الإيجابية */}
                     <div className="flex-1 border-2 border-black rounded-xl overflow-hidden min-h-[150px]">
                         <div className="bg-green-100 p-2 text-center font-bold border-b-2 border-black text-green-900 text-sm">
                             سلوكيات إيجابية ({posBehaviors.length})
@@ -766,7 +762,6 @@ const ClassReportsTemplate = ({ students, teacherInfo, semester, assessmentTools
                         </div>
                     </div>
 
-                    {/* العمود الأيسر: السلوكيات السلبية */}
                     <div className="flex-1 border-2 border-black rounded-xl overflow-hidden min-h-[150px]">
                         <div className="bg-red-100 p-2 text-center font-bold border-b-2 border-black text-red-900 text-sm">
                             سلوكيات سلبية ({negBehaviors.length})
@@ -792,11 +787,9 @@ const ClassReportsTemplate = ({ students, teacherInfo, semester, assessmentTools
                 <p className="font-bold text-base mb-8 text-black">معلم المادة</p>
                 <p className="text-2xl font-bold text-black">{teacherInfo?.name}</p>
               </div>
-
               <div className="text-center">
                 {teacherInfo?.stamp && <img src={teacherInfo.stamp} className="w-24 opacity-80" style={{ backgroundColor: 'transparent' }} />}
               </div>
-
               <div className="text-center">
                 <p className="font-bold text-base mb-8 text-black">مدير المدرسة</p>
                 <p className="font-bold text-lg text-black">........................</p>
@@ -848,6 +841,23 @@ const Reports: React.FC<ReportsProps> = ({ initialTab }) => {
   const [previewData, setPreviewData] = useState<{ isOpen: boolean; title: string; content: React.ReactNode; landscape?: boolean }>({
     isOpen: false, title: '', content: null
   });
+
+  // 🌙 المستشعر الرمضاني لواجهة التقارير
+  const [isRamadan, setIsRamadan] = useState(false);
+
+  useEffect(() => {
+      try {
+          const todayDate = new Date();
+          const hijriFormatter = new Intl.DateTimeFormat('en-TN-u-ca-islamic', { month: 'numeric' });
+          const parts = hijriFormatter.formatToParts(todayDate);
+          const hMonth = parseInt(parts.find(p => p.type === 'month')?.value || '0');
+          if (hMonth === 9) {
+              setIsRamadan(true);
+          }
+      } catch(e) {
+          console.error("Hijri Date parsing skipped.");
+      }
+  }, []);
 
   const availableGrades = useMemo(() => {
     const grades = new Set<string>();
@@ -982,7 +992,7 @@ const Reports: React.FC<ReportsProps> = ({ initialTab }) => {
   ];
 
   return (
-    <div className="flex flex-col h-full bg-[#f8fafc] text-slate-800 relative font-sans animate-in fade-in duration-500">
+    <div className={`flex flex-col h-full relative font-sans transition-colors duration-500 ${isRamadan ? 'text-white' : 'bg-[#f8fafc] text-slate-800'}`}>
       <PrintPreviewModal
         isOpen={previewData.isOpen}
         onClose={() => setPreviewData({ ...previewData, isOpen: false })}
@@ -991,15 +1001,15 @@ const Reports: React.FC<ReportsProps> = ({ initialTab }) => {
         landscape={previewData.landscape}
       />
 
-      {/* ================= HEADER (Sticky Fix: No Overlay) ================= */}
-      <div className="fixed md:sticky top-0 z-40 md:z-30 bg-[#446A8D] text-white shadow-lg px-4 pt-[env(safe-area-inset-top)] pb-6 transition-all duration-300 rounded-b-[2.5rem] md:rounded-none md:shadow-md w-full md:w-auto left-0 right-0 md:left-auto md:right-auto">
+      {/* ================= HEADER ================= */}
+      <div className={`fixed md:sticky top-0 z-40 md:z-30 shadow-lg px-4 pt-[env(safe-area-inset-top)] pb-6 transition-all duration-500 rounded-b-[2.5rem] md:rounded-none md:shadow-md w-full md:w-auto left-0 right-0 md:left-auto md:right-auto ${isRamadan ? 'bg-white/5 backdrop-blur-3xl border-b border-white/10 text-white' : 'bg-[#446A8D] text-white'}`}>
         <div className="flex items-center gap-3 mb-6 mt-4 px-2">
-          <div className="p-2.5 bg-white/10 backdrop-blur-md rounded-xl border border-white/20">
+          <div className={`p-2.5 rounded-xl border ${isRamadan ? 'bg-white/10 backdrop-blur-md border-white/20' : 'bg-white/10 backdrop-blur-md border-white/20'}`}>
             <Icon3DReportCenter className="w-6 h-6" />
           </div>
           <div>
             <h1 className="text-xl font-black tracking-wide">مركز التقارير</h1>
-            <p className="text-[10px] text-blue-200 font-bold opacity-80">طباعة الكشوفات والشهادات</p>
+            <p className={`text-[10px] font-bold opacity-80 ${isRamadan ? 'text-indigo-200' : 'text-blue-200'}`}>طباعة الكشوفات والشهادات</p>
           </div>
         </div>
 
@@ -1010,9 +1020,9 @@ const Reports: React.FC<ReportsProps> = ({ initialTab }) => {
               <button
                 key={tab.id}
                 onClick={() => setActiveTab(tab.id as any)}
-                className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs font-bold whitespace-nowrap transition-all active:scale-95 ${isActive ? 'bg-white text-[#1e3a8a] shadow-lg' : 'bg-white/10 text-blue-100 hover:bg-white/20'}`}
+                className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs font-bold whitespace-nowrap transition-all active:scale-95 ${isActive ? (isRamadan ? 'bg-indigo-500/30 border border-indigo-400/50 text-white shadow-md' : 'bg-white text-[#1e3a8a] shadow-lg') : 'bg-white/10 text-blue-100 hover:bg-white/20'}`}
               >
-                <tab.icon className={`w-4 h-4 ${isActive ? 'text-[#1e3a8a]' : 'text-blue-200'}`} />
+                <tab.icon className={`w-4 h-4 ${isActive ? (isRamadan ? 'opacity-100' : 'text-[#1e3a8a]') : 'text-blue-200 opacity-80'}`} />
                 {tab.label}
               </button>
             );
@@ -1021,15 +1031,16 @@ const Reports: React.FC<ReportsProps> = ({ initialTab }) => {
       </div>
 
       {/* ================= CONTENT AREA ================= */}
-      <div className="flex-1 h-full overflow-y-auto custom-scrollbar px-4 pt-4 pb-24">
+      <div className="flex-1 h-full overflow-y-auto custom-scrollbar px-4 pt-4 pb-24 relative z-10">
         <div className="w-full h-[190px] shrink-0 block md:hidden"></div>
 
-        <div className="bg-white rounded-[2rem] p-6 shadow-sm border border-slate-100 min-h-[400px] animate-in slide-in-from-bottom-4 duration-300">
+        <div className={`rounded-[2rem] p-6 shadow-sm border min-h-[400px] transition-colors ${isRamadan ? 'bg-white/5 backdrop-blur-2xl border-white/10' : 'bg-white border-slate-100'}`}>
+          
           {activeTab === 'student_report' && (
             <div className="space-y-6">
-              <div className="flex items-center gap-3 border-b border-slate-50 pb-4 mb-2">
-                <div className="p-2 bg-indigo-50 rounded-xl text-indigo-600"><Icon3DStudent className="w-5 h-5" /></div>
-                <h3 className="font-black text-lg text-slate-800">تقرير الطالب الشامل</h3>
+              <div className={`flex items-center gap-3 border-b pb-4 mb-2 ${isRamadan ? 'border-white/10' : 'border-slate-50'}`}>
+                <div className={`p-2 rounded-xl ${isRamadan ? 'bg-indigo-500/20 text-indigo-300' : 'bg-indigo-50 text-indigo-600'}`}><Icon3DStudent className="w-5 h-5" /></div>
+                <h3 className={`font-black text-lg ${isRamadan ? 'text-white' : 'text-slate-800'}`}>تقرير الطالب الشامل</h3>
               </div>
 
               <div className="space-y-4">
@@ -1038,7 +1049,7 @@ const Reports: React.FC<ReportsProps> = ({ initialTab }) => {
                     <button
                       key={g}
                       onClick={() => setStGrade(g)}
-                      className={`px-4 py-2 text-xs font-bold rounded-xl border transition-all ${stGrade === g ? 'bg-indigo-600 text-white border-transparent' : 'bg-slate-50 text-slate-600 border-slate-200'}`}
+                      className={`px-4 py-2 text-xs font-bold rounded-xl border transition-all ${stGrade === g ? (isRamadan ? 'bg-indigo-500/40 text-indigo-200 border-indigo-400/50' : 'bg-indigo-600 text-white border-transparent') : (isRamadan ? 'bg-white/5 text-slate-300 border-white/10 hover:bg-white/10' : 'bg-slate-50 text-slate-600 border-slate-200')}`}
                     >
                       صف {g}
                     </button>
@@ -1046,13 +1057,13 @@ const Reports: React.FC<ReportsProps> = ({ initialTab }) => {
                 </div>
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <select value={stClass} onChange={(e) => setStClass(e.target.value)} className="w-full p-4 bg-slate-50 border border-slate-200 rounded-2xl font-bold text-slate-700 outline-none focus:border-indigo-500 transition-colors text-sm">
-                    {getClassesForGrade(stGrade).map(c => <option key={c} value={c}>{c}</option>)}
+                  <select value={stClass} onChange={(e) => setStClass(e.target.value)} className={`w-full p-4 border rounded-2xl font-bold outline-none transition-colors text-sm ${isRamadan ? 'bg-[#0f172a]/50 border-white/20 text-white focus:border-indigo-400' : 'bg-slate-50 border-slate-200 text-slate-700 focus:border-indigo-500'}`}>
+                    {getClassesForGrade(stGrade).map(c => <option key={c} value={c} className={isRamadan ? 'bg-slate-900 text-white' : ''}>{c}</option>)}
                   </select>
 
-                  <select value={selectedStudentId} onChange={(e) => setSelectedStudentId(e.target.value)} className="w-full p-4 bg-slate-50 border border-slate-200 rounded-2xl font-bold text-slate-700 outline-none focus:border-indigo-500 transition-colors text-sm">
-                    <option value="">اختر طالباً...</option>
-                    {filteredStudentsForStudentTab.map(s => <option key={s.id} value={s.id}>{s.name}</option>)}
+                  <select value={selectedStudentId} onChange={(e) => setSelectedStudentId(e.target.value)} className={`w-full p-4 border rounded-2xl font-bold outline-none transition-colors text-sm ${isRamadan ? 'bg-[#0f172a]/50 border-white/20 text-white focus:border-indigo-400' : 'bg-slate-50 border-slate-200 text-slate-700 focus:border-indigo-500'}`}>
+                    <option value="" className={isRamadan ? 'text-slate-500 bg-slate-900' : ''}>اختر طالباً...</option>
+                    {filteredStudentsForStudentTab.map(s => <option key={s.id} value={s.id} className={isRamadan ? 'bg-slate-900 text-white' : ''}>{s.name}</option>)}
                   </select>
                 </div>
               </div>
@@ -1061,7 +1072,7 @@ const Reports: React.FC<ReportsProps> = ({ initialTab }) => {
                 <button
                   onClick={openClassReportsPreview}
                   disabled={!stClass || filteredStudentsForStudentTab.length === 0}
-                  className="bg-slate-800 disabled:opacity-50 text-white px-5 py-3.5 rounded-xl font-black text-xs shadow-lg hover:bg-slate-700 flex items-center gap-2 active:scale-95 transition-all flex-1 justify-center"
+                  className={`px-5 py-3.5 rounded-xl font-black text-xs shadow-lg flex items-center gap-2 active:scale-95 transition-all flex-1 justify-center disabled:opacity-50 ${isRamadan ? 'bg-white/10 text-white hover:bg-white/20 border border-white/20' : 'bg-slate-800 text-white hover:bg-slate-700'}`}
                 >
                   <Icon3DLayers className="w-4 h-4" /> طباعة الفصل كاملاً
                 </button>
@@ -1074,7 +1085,7 @@ const Reports: React.FC<ReportsProps> = ({ initialTab }) => {
                     }
                   }}
                   disabled={!selectedStudentId}
-                  className="bg-indigo-600 disabled:opacity-50 text-white px-6 py-3.5 rounded-xl font-black text-xs shadow-lg hover:bg-indigo-700 flex items-center gap-2 active:scale-95 transition-all flex-1 justify-center"
+                  className={`disabled:opacity-50 px-6 py-3.5 rounded-xl font-black text-xs shadow-lg flex items-center gap-2 active:scale-95 transition-all flex-1 justify-center ${isRamadan ? 'bg-indigo-600 text-white hover:bg-indigo-500' : 'bg-indigo-600 text-white hover:bg-indigo-700'}`}
                 >
                   <Icon3DDocument className="w-4 h-4" /> معاينة فردية
                 </button>
@@ -1084,9 +1095,9 @@ const Reports: React.FC<ReportsProps> = ({ initialTab }) => {
 
           {activeTab === 'grades_record' && (
             <div className="space-y-6">
-              <div className="flex items-center gap-3 border-b border-slate-50 pb-4 mb-2">
-                <div className="p-2 bg-amber-50 rounded-xl text-amber-600"><Icon3DGrades className="w-5 h-5" /></div>
-                <h3 className="font-black text-lg text-slate-800">سجل الدرجات</h3>
+              <div className={`flex items-center gap-3 border-b pb-4 mb-2 ${isRamadan ? 'border-white/10' : 'border-slate-50'}`}>
+                <div className={`p-2 rounded-xl ${isRamadan ? 'bg-amber-500/20 text-amber-400' : 'bg-amber-50 text-amber-600'}`}><Icon3DGrades className="w-5 h-5" /></div>
+                <h3 className={`font-black text-lg ${isRamadan ? 'text-white' : 'text-slate-800'}`}>سجل الدرجات</h3>
               </div>
 
               <div className="space-y-4">
@@ -1095,21 +1106,21 @@ const Reports: React.FC<ReportsProps> = ({ initialTab }) => {
                     <button
                       key={g}
                       onClick={() => { setGradesGrade(g); setGradesClass('all'); }}
-                      className={`px-4 py-2 text-xs font-bold rounded-xl border transition-all ${gradesGrade === g ? 'bg-amber-600 text-white border-transparent' : 'bg-slate-50 text-slate-600 border-slate-200'}`}
+                      className={`px-4 py-2 text-xs font-bold rounded-xl border transition-all ${gradesGrade === g ? (isRamadan ? 'bg-amber-500/40 text-amber-200 border-amber-400/50' : 'bg-amber-600 text-white border-transparent') : (isRamadan ? 'bg-white/5 text-slate-300 border-white/10 hover:bg-white/10' : 'bg-slate-50 text-slate-600 border-slate-200')}`}
                     >
                       صف {g}
                     </button>
                   ))}
                 </div>
 
-                <select value={gradesClass} onChange={(e) => setGradesClass(e.target.value)} className="w-full p-4 bg-slate-50 border border-slate-200 rounded-2xl font-bold text-slate-700 outline-none focus:border-amber-500 transition-colors text-sm">
-                  <option value="all">الكل</option>
-                  {getClassesForGrade(gradesGrade).map(c => <option key={c} value={c}>{c}</option>)}
+                <select value={gradesClass} onChange={(e) => setGradesClass(e.target.value)} className={`w-full p-4 border rounded-2xl font-bold outline-none transition-colors text-sm ${isRamadan ? 'bg-[#0f172a]/50 border-white/20 text-white focus:border-amber-400' : 'bg-slate-50 border-slate-200 text-slate-700 focus:border-amber-500'}`}>
+                  <option value="all" className={isRamadan ? 'bg-slate-900 text-white' : ''}>الكل</option>
+                  {getClassesForGrade(gradesGrade).map(c => <option key={c} value={c} className={isRamadan ? 'bg-slate-900 text-white' : ''}>{c}</option>)}
                 </select>
               </div>
 
               <div className="flex justify-end pt-4">
-                <button onClick={openGradesPreview} className="w-full bg-amber-500 text-white px-6 py-4 rounded-xl font-black text-xs flex items-center justify-center gap-2 shadow-lg hover:bg-amber-600 active:scale-95 transition-all">
+                <button onClick={openGradesPreview} className={`w-full text-white px-6 py-4 rounded-xl font-black text-xs flex items-center justify-center gap-2 shadow-lg active:scale-95 transition-all ${isRamadan ? 'bg-amber-600 hover:bg-amber-500' : 'bg-amber-500 hover:bg-amber-600'}`}>
                   <Icon3DPrint className="w-5 h-5" /> معاينة وطباعة السجل
                 </button>
               </div>
@@ -1118,12 +1129,12 @@ const Reports: React.FC<ReportsProps> = ({ initialTab }) => {
 
           {activeTab === 'certificates' && (
             <div className="space-y-6">
-              <div className="flex justify-between items-center pb-4 border-b border-slate-50 mb-2">
+              <div className={`flex justify-between items-center pb-4 border-b mb-2 ${isRamadan ? 'border-white/10' : 'border-slate-50'}`}>
                 <div className="flex items-center gap-3">
-                  <div className="p-2 bg-emerald-50 rounded-xl text-emerald-600"><Icon3DCertificate className="w-5 h-5" /></div>
-                  <h3 className="font-black text-lg text-slate-800">شهادات التقدير</h3>
+                  <div className={`p-2 rounded-xl ${isRamadan ? 'bg-emerald-500/20 text-emerald-400' : 'bg-emerald-50 text-emerald-600'}`}><Icon3DCertificate className="w-5 h-5" /></div>
+                  <h3 className={`font-black text-lg ${isRamadan ? 'text-white' : 'text-slate-800'}`}>شهادات التقدير</h3>
                 </div>
-                <button onClick={() => setShowCertSettingsModal(true)} className="p-2 bg-slate-50 rounded-xl text-slate-500 hover:bg-slate-100 transition-colors">
+                <button onClick={() => setShowCertSettingsModal(true)} className={`p-2 rounded-xl transition-colors ${isRamadan ? 'bg-white/10 text-slate-300 hover:bg-white/20' : 'bg-slate-50 text-slate-500 hover:bg-slate-100'}`}>
                   <Icon3DSettings className="w-5 h-5" />
                 </button>
               </div>
@@ -1134,22 +1145,23 @@ const Reports: React.FC<ReportsProps> = ({ initialTab }) => {
                     <button
                       key={g}
                       onClick={() => setCertGrade(g)}
-                      className={`px-4 py-2 text-xs font-bold rounded-xl border transition-all ${certGrade === g ? 'bg-emerald-600 text-white border-transparent' : 'bg-slate-50 text-slate-600 border-slate-200'}`}
+                      className={`px-4 py-2 text-xs font-bold rounded-xl border transition-all ${certGrade === g ? (isRamadan ? 'bg-emerald-500/40 text-emerald-200 border-emerald-400/50' : 'bg-emerald-600 text-white border-transparent') : (isRamadan ? 'bg-white/5 text-slate-300 border-white/10 hover:bg-white/10' : 'bg-slate-50 text-slate-600 border-slate-200')}`}
                     >
                       صف {g}
                     </button>
                   ))}
                 </div>
 
-                <select value={certClass} onChange={(e) => { setCertClass(e.target.value); setSelectedCertStudents([]); }} className="w-full p-4 bg-slate-50 border border-slate-200 rounded-2xl font-bold text-slate-700 outline-none focus:border-emerald-500 transition-colors text-sm">
-                  {getClassesForGrade(certGrade).map(c => <option key={c} value={c}>{c}</option>)}
+                <select value={certClass} onChange={(e) => { setCertClass(e.target.value); setSelectedCertStudents([]); }} className={`w-full p-4 border rounded-2xl font-bold outline-none transition-colors text-sm ${isRamadan ? 'bg-[#0f172a]/50 border-white/20 text-white focus:border-emerald-400' : 'bg-slate-50 border-slate-200 text-slate-700 focus:border-emerald-500'}`}>
+                  <option value="" disabled className={isRamadan ? 'text-slate-500 bg-slate-900' : ''}>اختر الفصل</option>
+                  {getClassesForGrade(certGrade).map(c => <option key={c} value={c} className={isRamadan ? 'bg-slate-900 text-white' : ''}>{c}</option>)}
                 </select>
               </div>
 
               <div className="space-y-2">
                 <div className="flex justify-between px-2">
-                  <label className="text-xs font-bold text-slate-500">الطلاب ({selectedCertStudents.length})</label>
-                  <button onClick={selectAllCertStudents} className="text-xs font-bold text-emerald-600 hover:text-emerald-700 transition-colors">تحديد الكل</button>
+                  <label className={`text-xs font-bold ${isRamadan ? 'text-slate-400' : 'text-slate-500'}`}>الطلاب ({selectedCertStudents.length})</label>
+                  <button onClick={selectAllCertStudents} className={`text-xs font-bold transition-colors ${isRamadan ? 'text-emerald-400 hover:text-emerald-300' : 'text-emerald-600 hover:text-emerald-700'}`}>تحديد الكل</button>
                 </div>
 
                 <div className="grid grid-cols-2 gap-2 max-h-52 overflow-y-auto p-1 custom-scrollbar">
@@ -1157,7 +1169,7 @@ const Reports: React.FC<ReportsProps> = ({ initialTab }) => {
                     <button
                       key={s.id}
                       onClick={() => toggleCertStudent(s.id)}
-                      className={`p-3 rounded-xl border text-xs font-bold flex justify-between transition-all ${selectedCertStudents.includes(s.id) ? 'bg-emerald-600 text-white border-emerald-600 shadow-md' : 'bg-white border-slate-200 text-slate-600 hover:bg-slate-50'}`}
+                      className={`p-3 rounded-xl border text-xs font-bold flex justify-between transition-all ${selectedCertStudents.includes(s.id) ? (isRamadan ? 'bg-emerald-600 text-white border-emerald-500 shadow-md' : 'bg-emerald-600 text-white border-emerald-600 shadow-md') : (isRamadan ? 'bg-[#0f172a]/50 border-white/10 text-slate-300 hover:bg-white/10' : 'bg-white border-slate-200 text-slate-600 hover:bg-slate-50')}`}
                     >
                       {s.name} {selectedCertStudents.includes(s.id) && <Check size={14} />}
                     </button>
@@ -1169,7 +1181,7 @@ const Reports: React.FC<ReportsProps> = ({ initialTab }) => {
                 <button
                   onClick={openCertificatesPreview}
                   disabled={selectedCertStudents.length === 0}
-                  className="w-full bg-emerald-600 disabled:opacity-50 text-white px-6 py-4 rounded-xl font-black text-xs flex items-center justify-center gap-2 shadow-lg hover:bg-emerald-700 active:scale-95 transition-all"
+                  className={`w-full disabled:opacity-50 text-white px-6 py-4 rounded-xl font-black text-xs flex items-center justify-center gap-2 shadow-lg active:scale-95 transition-all ${isRamadan ? 'bg-emerald-600 hover:bg-emerald-500' : 'bg-emerald-600 hover:bg-emerald-700'}`}
                 >
                   <Icon3DPrint className="w-5 h-5" /> معاينة وطباعة الشهادات
                 </button>
@@ -1179,19 +1191,20 @@ const Reports: React.FC<ReportsProps> = ({ initialTab }) => {
 
           {activeTab === 'summon' && (
             <div className="space-y-6">
-              <div className="flex items-center gap-3 border-b border-slate-50 pb-4 mb-2">
-                <div className="p-2 bg-rose-50 rounded-xl text-rose-600"><Icon3DSummon className="w-5 h-5" /></div>
-                <h3 className="font-black text-lg text-slate-800">استدعاء ولي أمر</h3>
+              <div className={`flex items-center gap-3 border-b pb-4 mb-2 ${isRamadan ? 'border-white/10' : 'border-slate-50'}`}>
+                <div className={`p-2 rounded-xl ${isRamadan ? 'bg-rose-500/20 text-rose-400' : 'bg-rose-50 text-rose-600'}`}><Icon3DSummon className="w-5 h-5" /></div>
+                <h3 className={`font-black text-lg ${isRamadan ? 'text-white' : 'text-slate-800'}`}>استدعاء ولي أمر</h3>
               </div>
 
               <div className="grid grid-cols-2 gap-4">
-                <select value={summonClass} onChange={(e) => setSummonClass(e.target.value)} className="p-4 bg-slate-50 border border-slate-200 rounded-2xl font-bold text-slate-700 outline-none focus:border-rose-500 transition-colors text-sm">
-                  {getClassesForGrade(summonGrade).map(c => <option key={c} value={c}>{c}</option>)}
+                <select value={summonClass} onChange={(e) => setSummonClass(e.target.value)} className={`p-4 border rounded-2xl font-bold outline-none transition-colors text-sm ${isRamadan ? 'bg-[#0f172a]/50 border-white/20 text-white focus:border-rose-400' : 'bg-slate-50 border-slate-200 text-slate-700 focus:border-rose-500'}`}>
+                  <option value="" disabled className={isRamadan ? 'text-slate-500 bg-slate-900' : ''}>اختر الفصل</option>
+                  {getClassesForGrade(summonGrade).map(c => <option key={c} value={c} className={isRamadan ? 'bg-slate-900 text-white' : ''}>{c}</option>)}
                 </select>
 
-                <select value={summonStudentId} onChange={(e) => setSummonStudentId(e.target.value)} className="p-4 bg-slate-50 border border-slate-200 rounded-2xl font-bold text-slate-700 outline-none focus:border-rose-500 transition-colors text-sm">
-                  <option value="">الطالب...</option>
-                  {availableStudentsForSummon.map(s => <option key={s.id} value={s.id}>{s.name}</option>)}
+                <select value={summonStudentId} onChange={(e) => setSummonStudentId(e.target.value)} className={`p-4 border rounded-2xl font-bold outline-none transition-colors text-sm ${isRamadan ? 'bg-[#0f172a]/50 border-white/20 text-white focus:border-rose-400' : 'bg-slate-50 border-slate-200 text-slate-700 focus:border-rose-500'}`}>
+                  <option value="" className={isRamadan ? 'text-slate-500 bg-slate-900' : ''}>الطالب...</option>
+                  {availableStudentsForSummon.map(s => <option key={s.id} value={s.id} className={isRamadan ? 'bg-slate-900 text-white' : ''}>{s.name}</option>)}
                 </select>
               </div>
 
@@ -1207,7 +1220,7 @@ const Reports: React.FC<ReportsProps> = ({ initialTab }) => {
                     <button
                       key={r.id}
                       onClick={() => setSummonData({ ...summonData, reasonType: r.id })}
-                      className={`px-4 py-2 rounded-xl text-xs font-bold border transition-all ${summonData.reasonType === r.id ? 'bg-rose-600 text-white border-rose-600 shadow-md' : 'bg-slate-50 text-slate-600 border-slate-200 hover:bg-slate-100'}`}
+                      className={`px-4 py-2 rounded-xl text-xs font-bold border transition-all ${summonData.reasonType === r.id ? (isRamadan ? 'bg-rose-600 text-white border-rose-500 shadow-md' : 'bg-rose-600 text-white border-rose-600 shadow-md') : (isRamadan ? 'bg-[#0f172a]/50 text-slate-300 border-white/20 hover:bg-white/10' : 'bg-slate-50 text-slate-600 border-slate-200 hover:bg-slate-100')}`}
                     >
                       {r.label}
                     </button>
@@ -1219,7 +1232,7 @@ const Reports: React.FC<ReportsProps> = ({ initialTab }) => {
                     value={summonData.customReason}
                     onChange={(e) => setSummonData({ ...summonData, customReason: e.target.value })}
                     placeholder="اكتب سبب الاستدعاء هنا..."
-                    className="w-full p-4 bg-slate-50 border border-slate-300 rounded-2xl font-bold text-slate-800 mt-2 h-20 resize-none outline-none focus:border-rose-500 transition-colors text-sm"
+                    className={`w-full p-4 border rounded-2xl font-bold mt-2 h-20 resize-none outline-none transition-colors text-sm ${isRamadan ? 'bg-[#0f172a]/50 border-white/20 text-white focus:border-rose-400 placeholder:text-slate-600' : 'bg-slate-50 border-slate-300 text-slate-800 focus:border-rose-500'}`}
                   />
                 )}
               </div>
@@ -1229,7 +1242,7 @@ const Reports: React.FC<ReportsProps> = ({ initialTab }) => {
                   <button
                     key={p}
                     onClick={() => toggleProcedure(p)}
-                    className={`p-2 rounded-lg text-[10px] font-bold border transition-all ${takenProcedures.includes(p) ? 'bg-indigo-100 border-indigo-500 text-indigo-700' : 'bg-white border-slate-200 text-slate-500 hover:bg-slate-50'}`}
+                    className={`p-2 rounded-lg text-[10px] font-bold border transition-all ${takenProcedures.includes(p) ? (isRamadan ? 'bg-indigo-500/30 border-indigo-400 text-indigo-200' : 'bg-indigo-100 border-indigo-500 text-indigo-700') : (isRamadan ? 'bg-white/5 border-white/10 text-slate-400 hover:bg-white/10' : 'bg-white border-slate-200 text-slate-500 hover:bg-slate-50')}`}
                   >
                     {p}
                   </button>
@@ -1238,18 +1251,18 @@ const Reports: React.FC<ReportsProps> = ({ initialTab }) => {
 
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <div className="space-y-1">
-                  <label className="text-[10px] font-bold text-slate-500">تاريخ الإصدار</label>
-                  <input type="date" value={summonData.issueDate} onChange={(e) => setSummonData({ ...summonData, issueDate: e.target.value })} className="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl text-xs font-bold outline-none focus:border-rose-500" />
+                  <label className={`text-[10px] font-bold ${isRamadan ? 'text-slate-400' : 'text-slate-500'}`}>تاريخ الإصدار</label>
+                  <input type="date" value={summonData.issueDate} onChange={(e) => setSummonData({ ...summonData, issueDate: e.target.value })} className={`w-full p-3 border rounded-xl text-xs font-bold outline-none ${isRamadan ? 'bg-[#0f172a]/50 border-white/20 text-white focus:border-rose-400' : 'bg-slate-50 border-slate-200 focus:border-rose-500'}`} />
                 </div>
 
                 <div className="space-y-1">
-                  <label className="text-[10px] font-bold text-slate-500">تاريخ الحضور</label>
-                  <input type="date" value={summonData.date} onChange={(e) => setSummonData({ ...summonData, date: e.target.value })} className="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl text-xs font-bold outline-none focus:border-rose-500" />
+                  <label className={`text-[10px] font-bold ${isRamadan ? 'text-slate-400' : 'text-slate-500'}`}>تاريخ الحضور</label>
+                  <input type="date" value={summonData.date} onChange={(e) => setSummonData({ ...summonData, date: e.target.value })} className={`w-full p-3 border rounded-xl text-xs font-bold outline-none ${isRamadan ? 'bg-[#0f172a]/50 border-white/20 text-white focus:border-rose-400' : 'bg-slate-50 border-slate-200 focus:border-rose-500'}`} />
                 </div>
 
                 <div className="space-y-1">
-                  <label className="text-[10px] font-bold text-slate-500">الوقت</label>
-                  <input type="time" value={summonData.time} onChange={(e) => setSummonData({ ...summonData, time: e.target.value })} className="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl text-xs font-bold outline-none focus:border-rose-500" />
+                  <label className={`text-[10px] font-bold ${isRamadan ? 'text-slate-400' : 'text-slate-500'}`}>الوقت</label>
+                  <input type="time" value={summonData.time} onChange={(e) => setSummonData({ ...summonData, time: e.target.value })} className={`w-full p-3 border rounded-xl text-xs font-bold outline-none ${isRamadan ? 'bg-[#0f172a]/50 border-white/20 text-white focus:border-rose-400' : 'bg-slate-50 border-slate-200 focus:border-rose-500'}`} />
                 </div>
               </div>
 
@@ -1257,7 +1270,7 @@ const Reports: React.FC<ReportsProps> = ({ initialTab }) => {
                 <button
                   onClick={openSummonPreview}
                   disabled={!summonStudentId}
-                  className="w-full bg-rose-600 disabled:opacity-50 text-white px-6 py-4 rounded-xl font-black text-xs flex items-center justify-center gap-2 shadow-lg hover:bg-rose-700 active:scale-95 transition-all"
+                  className={`w-full disabled:opacity-50 text-white px-6 py-4 rounded-xl font-black text-xs flex items-center justify-center gap-2 shadow-lg active:scale-95 transition-all ${isRamadan ? 'bg-rose-600 hover:bg-rose-500' : 'bg-rose-600 hover:bg-rose-700'}`}
                 >
                   <Icon3DEye className="w-5 h-5" /> معاينة الخطاب
                 </button>
@@ -1267,13 +1280,13 @@ const Reports: React.FC<ReportsProps> = ({ initialTab }) => {
         </div>
       </div>
 
-      <Modal isOpen={showCertSettingsModal} onClose={() => setShowCertSettingsModal(false)} className="max-w-md rounded-[2rem]">
-        <div className="text-center p-4">
-          <h3 className="font-black text-lg mb-4 text-slate-800">إعدادات الشهادة</h3>
+      <Modal isOpen={showCertSettingsModal} onClose={() => setShowCertSettingsModal(false)} className={`max-w-md rounded-[2rem] ${isRamadan ? 'bg-transparent' : ''}`}>
+        <div className={`text-center p-6 rounded-[2rem] border transition-colors ${isRamadan ? 'bg-[#0f172a]/95 backdrop-blur-2xl border-white/10 text-white shadow-[0_0_40px_rgba(0,0,0,0.5)]' : 'bg-white border-transparent text-slate-800'}`}>
+          <h3 className="font-black text-lg mb-4">إعدادات الشهادة</h3>
           <div className="space-y-3">
-            <input type="text" value={tempCertSettings.title} onChange={(e) => setTempCertSettings({ ...tempCertSettings, title: e.target.value })} className="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl font-bold text-slate-800 outline-none focus:border-indigo-500 transition-colors" placeholder="عنوان الشهادة" />
-            <textarea value={tempCertSettings.bodyText} onChange={(e) => setTempCertSettings({ ...tempCertSettings, bodyText: e.target.value })} className="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl font-bold text-slate-800 h-24 outline-none focus:border-indigo-500 transition-colors resize-none" placeholder="نص الشهادة" />
-            <button onClick={() => { setCertificateSettings(tempCertSettings); setShowCertSettingsModal(false); }} className="w-full py-3 bg-indigo-600 text-white rounded-xl font-black shadow-lg hover:bg-indigo-700 active:scale-95 transition-all">حفظ</button>
+            <input type="text" value={tempCertSettings.title} onChange={(e) => setTempCertSettings({ ...tempCertSettings, title: e.target.value })} className={`w-full p-3 border rounded-xl font-bold outline-none transition-colors ${isRamadan ? 'bg-[#1e1b4b]/50 border-indigo-500/30 text-white focus:border-indigo-400' : 'bg-slate-50 border-slate-200 text-slate-800 focus:border-indigo-500'}`} placeholder="عنوان الشهادة" />
+            <textarea value={tempCertSettings.bodyText} onChange={(e) => setTempCertSettings({ ...tempCertSettings, bodyText: e.target.value })} className={`w-full p-3 border rounded-xl font-bold h-24 outline-none transition-colors resize-none ${isRamadan ? 'bg-[#1e1b4b]/50 border-indigo-500/30 text-white focus:border-indigo-400' : 'bg-slate-50 border-slate-200 text-slate-800 focus:border-indigo-500'}`} placeholder="نص الشهادة" />
+            <button onClick={() => { setCertificateSettings(tempCertSettings); setShowCertSettingsModal(false); }} className={`w-full py-3 rounded-xl font-black shadow-lg active:scale-95 transition-all ${isRamadan ? 'bg-indigo-600 hover:bg-indigo-500 text-white' : 'bg-indigo-600 hover:bg-indigo-700 text-white'}`}>حفظ</button>
           </div>
         </div>
       </Modal>
