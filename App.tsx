@@ -8,7 +8,7 @@ import {
 
 import { App as CapacitorApp } from '@capacitor/app';
 import { Capacitor } from '@capacitor/core';
-
+import RamadanTheme from './components/RamadanTheme';
 import Dashboard from './components/Dashboard';
 import StudentList from './components/StudentList';
 import AttendanceTracker from './components/AttendanceTracker';
@@ -231,8 +231,12 @@ const AppContent: React.FC = () => {
         </div>
       </aside>
 
-      {/* Main Container */}
+    {/* Main Container */}
       <main className="flex-1 flex flex-col h-full overflow-hidden relative bg-[#f3f4f6]">
+        
+        {/* 🌙 استدعاء الثيم الرمضاني الخارجي هنا */}
+        <RamadanTheme />
+
         <div className="flex-1 overflow-y-auto overflow-x-hidden custom-scrollbar pb-32 md:pb-4 px-4 md:px-8 pt-safe relative z-10">
           <div className="max-w-5xl mx-auto w-full min-h-full">
             {renderContent()}
