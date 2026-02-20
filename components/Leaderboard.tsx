@@ -157,10 +157,15 @@ const Leaderboard: React.FC<LeaderboardProps> = ({ students, classes, onUpdateSt
 
     return (
         <div className={`flex flex-col h-full space-y-6 pb-24 md:pb-8 overflow-hidden relative ${isRamadan ? 'text-white' : 'text-slate-800'}`}>
-            <header className={`fixed md:sticky top-0 z-40 shadow-lg px-4 pt-8 pb-6 transition-all duration-500 w-full ${isRamadan ? 'bg-white/5 backdrop-blur-3xl border-b border-white/10 text-white' : 'bg-[#446A8D] text-white'}`}>
+            
+            {/* 🌙 الهيدر السحري مع خاصية السحب والحماية */}
+            <header 
+                className={`fixed md:sticky top-0 z-40 shadow-lg px-4 md:pl-40 pt-8 pb-6 transition-all duration-500 w-full ${isRamadan ? 'bg-white/5 backdrop-blur-3xl border-b border-white/10 text-white' : 'bg-[#446A8D] text-white'}`}
+                style={{ WebkitAppRegion: 'drag' } as any}
+            >
                 <div className="flex flex-col items-center text-center relative">
-                    {/* زر إعدادات نوع المدرسة */}
-                    <div className="absolute left-0 top-0 flex gap-2">
+                    {/* زر إعدادات نوع المدرسة (محمي من السحب) */}
+                    <div className="absolute left-0 top-0 flex gap-2" style={{ WebkitAppRegion: 'no-drag' } as any}>
                         <select 
                             value={schoolType} 
                             onChange={(e) => setSchoolType(e.target.value as any)}
@@ -178,13 +183,14 @@ const Leaderboard: React.FC<LeaderboardProps> = ({ students, classes, onUpdateSt
                     {/* ✅ العنوان الآن يتضمن اسم الشهر */}
                     <h1 className="text-2xl font-black tracking-wide mb-1">{getPageTitle()}</h1>
                     
-                    <div className="relative w-full max-w-sm my-4">
+                    {/* حقل البحث (محمي من السحب) */}
+                    <div className="relative w-full max-w-sm my-4" style={{ WebkitAppRegion: 'no-drag' } as any}>
                         <Search className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-blue-300" />
                         <input type="text" placeholder="بحث..." value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} className="w-full bg-white/10 border border-white/20 rounded-xl py-2 pr-10 text-xs font-bold text-white outline-none focus:bg-white/20 transition-all" />
                     </div>
 
-                    {/* ✅ التعديل هنا: تمت إزالة justify-center وإضافة no-scrollbar و shrink-0 */}
-                    <div className="flex gap-2 overflow-x-auto no-scrollbar pb-2 w-full justify-start md:justify-center">
+                    {/* فلاتر الفصول (محمية من السحب) */}
+                    <div className="flex gap-2 overflow-x-auto no-scrollbar pb-2 w-full justify-start md:justify-center" style={{ WebkitAppRegion: 'no-drag' } as any}>
                         <button onClick={() => setSelectedClass('all')} className={`shrink-0 whitespace-nowrap px-5 py-2 rounded-xl text-xs font-black border transition-all ${selectedClass === 'all' ? (isRamadan ? 'bg-amber-500/20 text-amber-300 border-amber-500/50 shadow-md' : 'bg-white text-[#1e3a8a]') : 'bg-white/10 text-blue-100'}`}>الكل</button>
                         {classes.map(c => (
                             <button key={c} onClick={() => setSelectedClass(c)} className={`shrink-0 whitespace-nowrap px-5 py-2 rounded-xl text-xs font-black border transition-all ${selectedClass === c ? (isRamadan ? 'bg-amber-500/20 text-amber-300 border-amber-500/50 shadow-md' : 'bg-white text-[#1e3a8a]') : 'bg-white/10 text-blue-100'}`}>{c}</button>
