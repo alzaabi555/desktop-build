@@ -314,23 +314,33 @@ const AttendanceTracker: React.FC<AttendanceTrackerProps> = ({ students, classes
                                         <span className={`text-[10px] px-2 py-0.5 rounded-full mt-1 font-bold ${isRamadan ? 'bg-white/10 text-indigo-200' : 'bg-slate-100 text-slate-400'}`}>{student.classes[0]}</span>
                                     </div>
 
+                                    {/* ✅ تم التعديل هنا: ترتيب الأزرار (حضور، غياب، تأخر، تسرب) */}
                                     <div className={`flex w-full border-t divide-x divide-x-reverse ${isRamadan ? 'border-white/10 divide-white/10' : 'border-slate-100 divide-slate-100'}`}>
-                                        <button onClick={() => toggleAttendance(student.id, 'absent')} className={`flex-1 py-3 flex flex-col items-center justify-center gap-1 transition-colors ${status === 'absent' ? (isRamadan ? 'bg-red-500/20 text-red-400' : 'bg-red-50 text-red-600') : (isRamadan ? 'text-slate-400 hover:bg-white/5' : 'text-slate-400 hover:bg-slate-50')}`}>
-                                            <div className={`w-6 h-6 rounded-full flex items-center justify-center transition-colors ${status === 'absent' ? 'bg-red-500 text-white' : (isRamadan ? 'bg-white/10 text-white/40' : 'bg-slate-200 text-white')}`}>✕</div>
-                                            <span className="text-[10px] font-bold">غياب</span>
-                                        </button>
-                                        <button onClick={() => toggleAttendance(student.id, 'truant')} className={`flex-1 py-3 flex flex-col items-center justify-center gap-1 transition-colors ${status === 'truant' ? (isRamadan ? 'bg-purple-500/20 text-purple-400' : 'bg-purple-50 text-purple-600') : (isRamadan ? 'text-slate-400 hover:bg-white/5' : 'text-slate-400 hover:bg-slate-50')}`}>
-                                            <DoorOpen className={`w-4 h-4 transition-colors ${status === 'truant' ? (isRamadan ? 'text-purple-400' : 'text-purple-600') : (isRamadan ? 'text-white/40' : 'text-slate-400')}`} />
-                                            <span className="text-[10px] font-bold">تسرب</span>
-                                        </button>
-                                        <button onClick={() => toggleAttendance(student.id, 'late')} className={`flex-1 py-3 flex flex-col items-center justify-center gap-1 transition-colors ${status === 'late' ? (isRamadan ? 'bg-amber-500/20 text-amber-400' : 'bg-amber-50 text-amber-600') : (isRamadan ? 'text-slate-400 hover:bg-white/5' : 'text-slate-400 hover:bg-slate-50')}`}>
-                                            <div className={`text-xs opacity-80 ${status === 'late' ? '' : 'grayscale'}`}>⏰</div>
-                                            <span className="text-[10px] font-bold">تأخر</span>
-                                        </button>
+                                        
+                                        {/* 1. حضور */}
                                         <button onClick={() => toggleAttendance(student.id, 'present')} className={`flex-1 py-3 flex flex-col items-center justify-center gap-1 transition-colors ${status === 'present' ? (isRamadan ? 'bg-emerald-500/20 text-emerald-400' : 'bg-emerald-50 text-emerald-600') : (isRamadan ? 'text-slate-400 hover:bg-white/5' : 'text-slate-400 hover:bg-slate-50')}`}>
                                             <div className={`w-6 h-6 rounded-full flex items-center justify-center transition-colors ${status === 'present' ? 'bg-emerald-500 text-white' : (isRamadan ? 'bg-white/10 text-white/40' : 'bg-slate-200 text-white')}`}>✓</div>
                                             <span className="text-[10px] font-bold">حضور</span>
                                         </button>
+
+                                        {/* 2. غياب */}
+                                        <button onClick={() => toggleAttendance(student.id, 'absent')} className={`flex-1 py-3 flex flex-col items-center justify-center gap-1 transition-colors ${status === 'absent' ? (isRamadan ? 'bg-red-500/20 text-red-400' : 'bg-red-50 text-red-600') : (isRamadan ? 'text-slate-400 hover:bg-white/5' : 'text-slate-400 hover:bg-slate-50')}`}>
+                                            <div className={`w-6 h-6 rounded-full flex items-center justify-center transition-colors ${status === 'absent' ? 'bg-red-500 text-white' : (isRamadan ? 'bg-white/10 text-white/40' : 'bg-slate-200 text-white')}`}>✕</div>
+                                            <span className="text-[10px] font-bold">غياب</span>
+                                        </button>
+
+                                        {/* 3. تأخر */}
+                                        <button onClick={() => toggleAttendance(student.id, 'late')} className={`flex-1 py-3 flex flex-col items-center justify-center gap-1 transition-colors ${status === 'late' ? (isRamadan ? 'bg-amber-500/20 text-amber-400' : 'bg-amber-50 text-amber-600') : (isRamadan ? 'text-slate-400 hover:bg-white/5' : 'text-slate-400 hover:bg-slate-50')}`}>
+                                            <div className={`text-xs opacity-80 ${status === 'late' ? '' : 'grayscale'}`}>⏰</div>
+                                            <span className="text-[10px] font-bold">تأخر</span>
+                                        </button>
+
+                                        {/* 4. تسرب */}
+                                        <button onClick={() => toggleAttendance(student.id, 'truant')} className={`flex-1 py-3 flex flex-col items-center justify-center gap-1 transition-colors ${status === 'truant' ? (isRamadan ? 'bg-purple-500/20 text-purple-400' : 'bg-purple-50 text-purple-600') : (isRamadan ? 'text-slate-400 hover:bg-white/5' : 'text-slate-400 hover:bg-slate-50')}`}>
+                                            <DoorOpen className={`w-4 h-4 transition-colors ${status === 'truant' ? (isRamadan ? 'text-purple-400' : 'text-purple-600') : (isRamadan ? 'text-white/40' : 'text-slate-400')}`} />
+                                            <span className="text-[10px] font-bold">تسرب</span>
+                                        </button>
+
                                     </div>
                                 </div>
                             );
