@@ -43,19 +43,13 @@ const HangingLantern = ({
       xmlns="http://www.w3.org/2000/svg" 
       className="drop-shadow-[0_15px_25px_rgba(251,191,36,0.5)]"
     >
-       {/* الحلقة العلوية */}
        <circle cx="30" cy="5" r="4" stroke="#fbbf24" strokeWidth="2"/>
-       {/* قبة الفانوس */}
        <path d="M20 15 L40 15 L45 30 L15 30 Z" fill="#b45309"/>
        <path d="M25 15 L35 15 L38 30 L22 30 Z" fill="#f59e0b"/>
-       {/* الزجاج المضيء (جسم الفانوس) */}
        <path d="M15 30 L45 30 L50 70 L10 70 Z" fill="#fef3c7" fillOpacity="0.15" stroke="#fbbf24" strokeWidth="2"/>
-       {/* الشمعة / الضوء الداخلي المتوهج */}
        <circle cx="30" cy="55" r="8" fill="#fde047" className="animate-pulse" filter="blur(3px)"/>
        <circle cx="30" cy="55" r="3" fill="#ffffff" className="animate-pulse" />
-       {/* خطوط الحماية المعدنية */}
        <path d="M30 30 L30 70 M13 50 L47 50" stroke="#fbbf24" strokeWidth="1.5" strokeOpacity="0.7"/>
-       {/* القاعدة */}
        <path d="M15 70 L45 70 L40 80 L20 80 Z" fill="#b45309"/>
        <path d="M25 80 L35 80 L35 88 L25 88 Z" fill="#fbbf24"/>
     </svg>
@@ -69,7 +63,6 @@ const RamadanTheme: React.FC = () => {
   useEffect(() => {
     try {
       const today = new Date();
-      // المستشعر الهجري لمعرفة شهر رمضان (شهر 9)
       const hijriFormatter = new Intl.DateTimeFormat('en-TN-u-ca-islamic', { month: 'numeric' });
       const parts = hijriFormatter.formatToParts(today);
       const hMonth = parseInt(parts.find(p => p.type === 'month')?.value || '0');
@@ -82,11 +75,29 @@ const RamadanTheme: React.FC = () => {
     }
   }, []);
 
+  // ✅ تأثير سحري: تغيير لون شريط هاتف المستخدم (أو المتصفح) من الأبيض إلى الكحلي الليلي
+  useEffect(() => {
+    if (isRamadan) {
+      let metaThemeColor = document.querySelector("meta[name=theme-color]");
+      if (!metaThemeColor) {
+        metaThemeColor = document.createElement("meta");
+        metaThemeColor.setAttribute("name", "theme-color");
+        document.head.appendChild(metaThemeColor);
+      }
+      metaThemeColor.setAttribute("content", "#0f172a"); // لون سماء الليل
+      
+      // صبغ خلفية الـ body لتجنب أي بياض يظهر عند التمرير السريع
+      document.body.style.backgroundColor = "#0f172a";
+    } else {
+      document.body.style.backgroundColor = "#f3f4f6"; // العودة للون الفضي في الأيام العادية
+    }
+  }, [isRamadan]);
+
   if (!isRamadan) return null;
 
   return (
     <>
-      {/* 🔮 أكواد الأنيميشن الحية */}
+      {/* 🔮 أكواد الأنيميشن الحية + 🌟 ستايل أشرطة التمرير الزجاجية الذهبية */}
       <style>
         {`
           @keyframes swing {
@@ -97,6 +108,35 @@ const RamadanTheme: React.FC = () => {
             0% { transform: translateY(0px) rotate(-12deg); }
             50% { transform: translateY(-15px) rotate(-8deg); }
             100% { transform: translateY(0px) rotate(-12deg); }
+          }
+
+          /* سحر شريط التمرير (Scrollbar) العام */
+          ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+          }
+          ::-webkit-scrollbar-track {
+            background: transparent !important;
+          }
+          ::-webkit-scrollbar-thumb {
+            background: rgba(251, 191, 36, 0.25) !important; /* ذهبي شفاف */
+            border-radius: 10px;
+            border: 2px solid transparent;
+            background-clip: padding-box;
+          }
+          ::-webkit-scrollbar-thumb:hover {
+            background: rgba(251, 191, 36, 0.8) !important; /* ذهبي متوهج عند اللمس */
+          }
+
+          /* سحر شريط التمرير المخصص (Custom Scrollbar) في التطبيق */
+          .custom-scrollbar::-webkit-scrollbar-track {
+            background: transparent !important;
+          }
+          .custom-scrollbar::-webkit-scrollbar-thumb {
+            background: rgba(251, 191, 36, 0.3) !important; 
+          }
+          .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+            background: rgba(251, 191, 36, 0.9) !important;
           }
         `}
       </style>
