@@ -584,10 +584,10 @@ const StudentList: React.FC<StudentListProps> = ({
                                         className={`w-16 h-16 ${isRamadan ? 'opacity-90' : ''}`}
                                     />
                                     {totalPoints !== 0 && (
-                                        <div className={`absolute -top-2 -right-2 flex items-center justify-center gap-0.5 px-2 py-0.5 rounded-full text-[10px] font-black shadow-sm border-2 ${isRamadan ? 'border-amber-500/30 bg-amber-500/20 text-amber-300' : 'border-white bg-amber-100 text-amber-600'}`}>
-                                            <Star size={10} className={isRamadan ? "fill-amber-400 text-amber-400" : "fill-amber-500 text-amber-500"} />
-                                            {totalPoints}
-                                        </div>
+                                       <div className={`absolute -top-3 -right-5 z-10 flex items-center justify-center gap-0.5 px-2 py-0.5 rounded-full text-[10px] font-black shadow-sm border-2 ${isRamadan ? 'border-amber-500/30 bg-amber-500/20 text-amber-300' : 'border-white bg-amber-100 text-amber-600'}`}>
+    <Star size={10} className={isRamadan ? "fill-amber-400 text-amber-400" : "fill-amber-500 text-amber-500"} />
+    {totalPoints}
+</div>
                                     )}
                                 </div>
 
