@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Moon, Star } from 'lucide-react';
 
 // =========================================================================
-// 🏮 مكون الفانوس الآمن (تمت برمجته برمجياً لتجنب الشاشة البيضاء)
+// 🏮 مكون الفانوس الآمن 
 // =========================================================================
 const HangingLantern = ({ 
   stringLength, 
@@ -18,7 +18,7 @@ const HangingLantern = ({
   position: string 
 }) => (
   <div
-    className={`absolute top-0 ${position} flex flex-col items-center pointer-events-none z-0`}
+    className={`absolute top-0 ${position} flex flex-col items-center pointer-events-none`}
     style={{
       animation: `swing ${duration}s ease-in-out infinite alternate`,
       animationDelay: `${delay}s`,
@@ -30,7 +30,7 @@ const HangingLantern = ({
       style={{ 
         width: '2px', 
         height: `${stringLength}px`, 
-        background: 'linear-gradient(to bottom, rgba(251,191,36,0.2), rgba(251,191,36,0.8))' 
+        background: 'linear-gradient(to bottom, rgba(251,191,36,0.2), rgba(251,191,36,0.9))' 
       }}
     ></div>
     
@@ -41,7 +41,7 @@ const HangingLantern = ({
       viewBox="0 0 60 95" 
       fill="none" 
       xmlns="http://www.w3.org/2000/svg" 
-      className="drop-shadow-[0_10px_20px_rgba(251,191,36,0.4)]"
+      className="drop-shadow-[0_15px_25px_rgba(251,191,36,0.5)]"
     >
        {/* الحلقة العلوية */}
        <circle cx="30" cy="5" r="4" stroke="#fbbf24" strokeWidth="2"/>
@@ -85,9 +85,8 @@ const RamadanTheme: React.FC = () => {
   if (!isRamadan) return null;
 
   return (
-    <div className="absolute inset-0 z-0 pointer-events-none overflow-hidden select-none">
-      
-      {/* 🔮 إضافة ستايل الأنيميشن الفيزيائي للتأرجح (مدمج وآمن) */}
+    <>
+      {/* 🔮 أكواد الأنيميشن الحية */}
       <style>
         {`
           @keyframes swing {
@@ -102,62 +101,55 @@ const RamadanTheme: React.FC = () => {
         `}
       </style>
 
-      {/* 1. السماء الليلية العميقة */}
-      <div className="absolute inset-0 bg-gradient-to-br from-[#0f172a] via-[#1e1b4b] to-[#020617]"></div>
-      
-      {/* 2. وهج سحري في الزوايا العلوية والسفلية */}
-      <div className="absolute top-0 right-0 w-[600px] h-[600px] bg-amber-500/10 rounded-full blur-[120px] -translate-y-1/2 translate-x-1/3"></div>
-      <div className="absolute bottom-0 left-0 w-[500px] h-[500px] bg-indigo-500/10 rounded-full blur-[100px] translate-y-1/3 -translate-x-1/3"></div>
+      {/* ===================================================== */}
+      {/* 🌌 الطبقة الخلفية (z-0) - السماء والنجوم فقط */}
+      {/* ===================================================== */}
+      <div className="absolute inset-0 z-0 pointer-events-none overflow-hidden select-none">
+        
+        {/* السماء الليلية والتوهج */}
+        <div className="absolute inset-0 bg-gradient-to-br from-[#0f172a] via-[#1e1b4b] to-[#020617]"></div>
+        <div className="absolute top-0 right-0 w-[600px] h-[600px] bg-amber-500/10 rounded-full blur-[120px] -translate-y-1/2 translate-x-1/3"></div>
+        <div className="absolute bottom-0 left-0 w-[500px] h-[500px] bg-indigo-500/10 rounded-full blur-[100px] translate-y-1/3 -translate-x-1/3"></div>
 
-      {/* ======================================= */}
-      {/* 🌙 الهلال الذهبي العملاق المتوهج والعائم */}
-      {/* ======================================= */}
-      <div 
-        className="absolute top-16 right-8 md:top-12 md:right-16 opacity-80"
-        style={{ animation: 'floatCrescent 8s ease-in-out infinite' }}
-      >
-        <Moon 
-            size={180} 
-            className="text-amber-300 fill-amber-300 drop-shadow-[0_0_40px_rgba(252,211,77,0.7)]" 
-        />
-        {/* نجمة صغيرة تتدلى من الهلال */}
-        <div className="absolute top-1/2 left-1/4 animate-pulse">
-            <Star size={24} className="text-amber-100 fill-amber-200 drop-shadow-[0_0_15px_rgba(251,191,36,0.8)]" />
+        {/* النجوم المتلألئة (بقيت في الخلف لتعطي إحساساً بالعمق) */}
+        <div className="absolute top-32 left-1/4 animate-[pulse_4s_ease-in-out_infinite]"><Star size={20} className="text-amber-200 fill-amber-200 opacity-60" /></div>
+        <div className="absolute top-60 right-1/4 animate-[pulse_3s_ease-in-out_infinite]" style={{ animationDelay: '1s' }}><Star size={14} className="text-amber-100 fill-amber-100 opacity-40" /></div>
+        <div className="absolute bottom-1/3 left-12 animate-[pulse_5s_ease-in-out_infinite]" style={{ animationDelay: '0.5s' }}><Star size={28} className="text-amber-300 fill-amber-300 opacity-30" /></div>
+        <div className="absolute top-1/2 right-20 animate-[pulse_6s_ease-in-out_infinite]" style={{ animationDelay: '1.5s' }}><Star size={18} className="text-indigo-200 fill-indigo-200 opacity-50" /></div>
+      </div>
+
+      {/* ===================================================== */}
+      {/* 🏮 الطبقة الأمامية (z-100) - الهلال والفوانيس المتدلية */}
+      {/* ===================================================== */}
+      <div className="absolute inset-0 z-[100] pointer-events-none overflow-hidden select-none">
+        
+        {/* ======================================= */}
+        {/* 🌙 الهلال العملاق العائم (تم نقله للأمام) */}
+        {/* ======================================= */}
+        <div className="absolute top-16 right-8 md:top-12 md:right-16 opacity-80" style={{ animation: 'floatCrescent 8s ease-in-out infinite' }}>
+          <Moon size={180} className="text-amber-300 fill-amber-300 drop-shadow-[0_0_40px_rgba(252,211,77,0.7)]" />
+          <div className="absolute top-1/2 left-1/4 animate-pulse">
+              <Star size={24} className="text-amber-100 fill-amber-200 drop-shadow-[0_0_15px_rgba(251,191,36,0.8)]" />
+          </div>
         </div>
-      </div>
 
-      {/* ======================================= */}
-      {/* 🏮 الفوانيس المتدلية من الأعلى (متفاوتة الأطوال) */}
-      {/* ======================================= */}
-      
-      {/* فانوس يسار الشاشة (طويل) */}
-      <HangingLantern stringLength={120} size={50} duration={3} delay={0} position="left-[10%] md:left-[15%]" />
-      
-      {/* فانوس وسط-يسار (قصير) */}
-      <HangingLantern stringLength={60} size={35} duration={2.5} delay={0.5} position="left-[35%] md:left-[30%]" />
-      
-      {/* فانوس وسط-يمين (متوسط) - يختفي في الجوال لتجنب الزحمة */}
-      <div className="hidden md:block">
-        <HangingLantern stringLength={90} size={40} duration={3.5} delay={1} position="right-[35%]" />
-      </div>
+        {/* ======================================= */}
+        {/* 🏮 الفوانيس المتدلية من الأعلى */}
+        {/* ======================================= */}
+        
+        {/* فانوس يسار الشاشة (طويل) */}
+        <HangingLantern stringLength={140} size={50} duration={3} delay={0} position="left-[10%] md:left-[15%]" />
+        
+        {/* فانوس وسط-يسار (قصير) */}
+        <HangingLantern stringLength={70} size={35} duration={2.5} delay={0.5} position="left-[35%] md:left-[30%]" />
+        
+        {/* فانوس وسط-يمين (متوسط) - يختفي في الجوال لتجنب الزحمة */}
+        <div className="hidden md:block">
+          <HangingLantern stringLength={100} size={40} duration={3.5} delay={1} position="right-[35%]" />
+        </div>
 
-      {/* ======================================= */}
-      {/* ✨ نجوم تتلألأ في السماء */}
-      {/* ======================================= */}
-      <div className="absolute top-32 left-1/4 animate-[pulse_4s_ease-in-out_infinite]">
-        <Star size={20} className="text-amber-200 fill-amber-200 opacity-60" />
       </div>
-      <div className="absolute top-60 right-1/4 animate-[pulse_3s_ease-in-out_infinite]" style={{ animationDelay: '1s' }}>
-        <Star size={14} className="text-amber-100 fill-amber-100 opacity-40" />
-      </div>
-      <div className="absolute bottom-1/3 left-12 animate-[pulse_5s_ease-in-out_infinite]" style={{ animationDelay: '0.5s' }}>
-        <Star size={28} className="text-amber-300 fill-amber-300 opacity-30" />
-      </div>
-      <div className="absolute top-1/2 right-20 animate-[pulse_6s_ease-in-out_infinite]" style={{ animationDelay: '1.5s' }}>
-        <Star size={18} className="text-indigo-200 fill-indigo-200 opacity-50" />
-      </div>
-
-    </div>
+    </>
   );
 };
 
