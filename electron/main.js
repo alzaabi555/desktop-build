@@ -3,6 +3,18 @@ const path = require('path');
 const { autoUpdater } = require('electron-updater');
 
 // ---------------------------------------------------------
+// 🌙 دالة استشعار رمضان الذكية الخاصة بـ Electron
+// ---------------------------------------------------------
+function isRamadan() {
+  try {
+      const parts = new Intl.DateTimeFormat('en-TN-u-ca-islamic', { month: 'numeric' }).formatToParts(new Date());
+      return parseInt(parts.find(p => p.type === 'month')?.value || '0') === 9;
+  } catch(e) {
+      return false;
+  }
+}
+
+// ---------------------------------------------------------
 // 🚀 1. إعدادات الأداء والنظام (High Performance Mode)
 // ---------------------------------------------------------
 // تفعيل تسريع العتاد (GPU Acceleration) وزيادة حدود الذاكرة
@@ -30,22 +42,27 @@ autoUpdater.autoInstallOnAppQuit = true;
 let mainWindow;
 
 function createWindow() {
- mainWindow = new BrowserWindow({
+  // فحص حالة رمضان لتحديد الألوان قبل بناء النافذة
+  const ramadanActive = isRamadan();
+  const themeBgColor = ramadanActive ? '#0f172a' : '#f3f4f6'; // كحلي في رمضان، فضي في الأيام العادية
+  const themeSymbolColor = ramadanActive ? '#ffffff' : '#446A8D'; // أيقونات بيضاء في رمضان، زرقاء في الأيام العادية
+
+  mainWindow = new BrowserWindow({
     width: 1280,
     height: 800,
     minWidth: 900,
     minHeight: 600,
     icon: path.join(__dirname, '../icon.png'),
     
-    // 🌙 1. تغيير لون الخلفية المبدئي للون سماء الليل لمنع الوميض الأبيض عند التشغيل
-    backgroundColor: '#0f172a', 
+    // 🎨 منع الوميض الأبيض واستخدام اللون المناسب للفترة
+    backgroundColor: themeBgColor, 
 
-    // 🌟 2. السحر هنا: دمج شريط الويندوز مع التطبيق
-    titleBarStyle: 'hidden', // يُخفي الشريط الكلاسيكي القديم
+    // 🌟 دمج شريط الويندوز مع التطبيق بذكاء
+    titleBarStyle: 'hidden', 
     titleBarOverlay: {
-      color: '#0f172a',       // لون خلفية أزرار الويندوز (كحلي ليلي)
-      symbolColor: '#ffffff', // لون الأيقونات (X، المربع، الناقص) أبيض ساطع
-      height: 35              // ارتفاع الشريط ليكون أنيقاً
+      color: themeBgColor,        // اللون يتغير تلقائياً حسب الشهر
+      symbolColor: themeSymbolColor, // أيقونات ويندوز تتغير تلقائياً
+      height: 35
     },
 
     webPreferences: {
