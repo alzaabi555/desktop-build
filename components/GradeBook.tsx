@@ -419,20 +419,29 @@ const GradeBook: React.FC<GradeBookProps> = ({
   return (
     <div className={`flex flex-col h-full overflow-hidden relative ${isRamadan ? 'text-white' : 'text-slate-800'}`}>
       
-      {/* Header */}
-      <header className={`fixed md:sticky top-0 z-40 md:z-30 shadow-lg px-4 pt-[env(safe-area-inset-top)] pb-6 transition-all duration-500 md:rounded-none md:shadow-md w-full md:w-auto left-0 right-0 md:left-auto md:right-auto ${isRamadan ? 'bg-white/5 backdrop-blur-3xl border-b border-white/10 text-white' : 'bg-[#446A8D] text-white'}`}>
+      {/* ================= FIXED HEADER ================= */}
+      {/* 🌙 الهيدر السحري مع الحماية والسحب */}
+      <header 
+          className={`fixed md:sticky top-0 z-40 md:z-30 shadow-lg px-4 pt-[env(safe-area-inset-top)] pb-6 md:pl-40 transition-all duration-500 md:rounded-none md:shadow-md w-full md:w-auto left-0 right-0 md:left-auto md:right-auto ${isRamadan ? 'bg-white/5 backdrop-blur-3xl border-b border-white/10 text-white' : 'bg-[#446A8D] text-white'}`}
+          style={{ WebkitAppRegion: 'drag' } as any}
+      >
         <div className="flex justify-between items-center mb-6">
           <div className="flex items-center gap-3">
             <div className="bg-white/10 p-2 rounded-xl backdrop-blur-md border border-white/20">
               <BarChart3 className="w-5 h-5 text-white" />
             </div>
-            <h1 className="text-2xl font-black tracking-wide">سجل الدرجات</h1>
-            <button onClick={() => setShowToolsManager(true)} className="p-2 bg-white/10 hover:bg-white/20 rounded-full transition-colors active:scale-95 border border-white/10" title="إدارة الأدوات">
+            <h1 className="text-xl md:text-2xl font-black tracking-wide">سجل الدرجات</h1>
+            <button 
+                onClick={() => setShowToolsManager(true)} 
+                className="p-2 bg-white/10 hover:bg-white/20 rounded-full transition-colors active:scale-95 border border-white/10" 
+                title="إدارة الأدوات"
+                style={{ WebkitAppRegion: 'no-drag' } as any}
+            >
               <Settings className="w-4 h-4 text-white" />
             </button>
           </div>
           
-          <div className="relative">
+          <div className="relative" style={{ WebkitAppRegion: 'no-drag' } as any}>
             <button onClick={() => setShowMenu(!showMenu)} className={`bg:white/10 p-2.5 rounded-xl backdrop-blur-md border border-white/20 active:scale-95 transition-all ${showMenu ? (isRamadan ? 'bg-white/20 text-white' : 'bg-white text-[#1e3a8a]') : 'bg-white/10 text-white'}`}>
               <SlidersHorizontal className="w-5 h-5" />
             </button>
@@ -481,7 +490,7 @@ const GradeBook: React.FC<GradeBookProps> = ({
           </div>
         </div>
 
-        <div className="space-y-4">
+        <div className="space-y-4" style={{ WebkitAppRegion: 'no-drag' } as any}>
           <div className="flex gap-2 overflow-x-auto no-scrollbar pb-1">
             <button onClick={() => { setSelectedGrade('all'); setSelectedClass('all'); }} className={`px-4 py-2 text-[10px] font-bold whitespace-nowrap transition-all rounded-xl border ${selectedGrade === 'all' ? (isRamadan ? 'bg-amber-500/20 text-amber-300 border-amber-500/50 shadow-md' : 'bg-white text-[#1e3a8a] shadow-md border-white') : 'bg-white/10 text-blue-100 border-white/20'}`}>كل المراحل</button>
             {availableGrades.map(g => (
