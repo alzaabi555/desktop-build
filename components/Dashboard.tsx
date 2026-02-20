@@ -98,7 +98,7 @@ const Dashboard: React.FC<DashboardProps> = ({
     const [occasionGreeting, setOccasionGreeting] = useState<'ramadan' | 'eid' | 'teacher' | null>(null);
     const [cloudMessage, setCloudMessage] = useState<any>(null);
 
-    // 🌙 المستشعر الرمضاني للداشبورد لتغيير البطاقات
+    // 🌙 المستشعر الرمضاني للداشبورد لتغيير البطاقات والنوافذ المنبثقة
     const [isRamadan, setIsRamadan] = useState(false);
 
     const [assessmentPlan, setAssessmentPlan] = useState<AssessmentMonth[]>(() => {
@@ -407,7 +407,7 @@ const Dashboard: React.FC<DashboardProps> = ({
     return (
         <div className="space-y-6 pb-28 animate-in fade-in duration-500 relative min-h-screen">
             
-            {/* 🌙 الهيدر (تحول من الأزرق الصلب إلى زجاجي داكن في رمضان) */}
+            {/* 🌙 الهيدر */}
             <header className={`pt-10 pb-8 px-4 md:pt-16 md:pb-12 md:px-6 shadow-xl relative z-20 -mx-4 -mt-4 transition-all duration-500 ${isRamadan ? 'bg-white/5 backdrop-blur-3xl border-b border-white/10 text-white' : 'bg-[#446A8D] text-white'}`}>
                 <div className="flex justify-between items-center mb-2">
                     <div className="flex items-center gap-3 md:gap-5">
@@ -495,7 +495,7 @@ const Dashboard: React.FC<DashboardProps> = ({
                         const isActive = isToday && checkActivePeriod(time.startTime, time.endTime);
                         const displaySubject = teacherInfo?.subject && teacherInfo.subject.trim().length > 0 ? teacherInfo.subject : subject;
 
-                        // 🌙 تحديد ألوان البطاقات حسب النمط
+                        // 🌙 تحديد ألوان البطاقات
                         const activeClass = isRamadan 
                             ? 'bg-amber-600 text-white border-amber-500 shadow-lg shadow-amber-900/50 scale-105 z-10' 
                             : 'bg-[#446A8D] text-white border-[#446A8D] shadow-xl shadow-blue-200 scale-105 z-10';
@@ -588,34 +588,36 @@ const Dashboard: React.FC<DashboardProps> = ({
                 </div>
             </div>
 
+            {/* ✅ تحديث التنبيه السفلي ليتوافق مع الزجاج الليلي */}
             {showAlertBar && currentTasks.length > 0 && (
-                <div className="fixed bottom-[80px] left-4 right-4 bg-indigo-900/95 backdrop-blur-md text-white p-4 rounded-2xl shadow-2xl z-30 flex items-start gap-3 animate-in slide-in-from-bottom-10 duration-500 border border-indigo-800">
-                    <div className="p-2 bg-indigo-700 rounded-xl shrink-0 animate-pulse">
+                <div className={`fixed bottom-[80px] left-4 right-4 backdrop-blur-xl p-4 rounded-2xl shadow-2xl z-30 flex items-start gap-3 animate-in slide-in-from-bottom-10 duration-500 border ${isRamadan ? 'bg-[#0f172a]/95 border-white/10 shadow-[0_0_40px_rgba(0,0,0,0.5)] text-white' : 'bg-indigo-900/95 border-indigo-800 text-white'}`}>
+                    <div className={`p-2 rounded-xl shrink-0 animate-pulse ${isRamadan ? 'bg-amber-500/20' : 'bg-indigo-700'}`}>
                         <AlertTriangle size={20} className="text-amber-400" />
                     </div>
                     <div className="flex-1">
                         <h4 className="font-black text-sm mb-1 text-amber-300">تذكير بمهام شهر {assessmentPlan.find(p=>p.monthIndex === currentMonthIndex)?.monthName}</h4>
-                        <p className="text-[10px] opacity-90 leading-relaxed font-bold">
+                        <p className={`text-[10px] leading-relaxed font-bold ${isRamadan ? 'text-indigo-200' : 'opacity-90'}`}>
                             عليك تنفيذ: {currentTasks.slice(0, 2).join('، ')} {currentTasks.length > 2 && '...'}
                         </p>
                     </div>
-                    <button onClick={() => setShowAlertBar(false)} className="p-1 bg-white/10 rounded-full hover:bg-white/20 transition-colors">
+                    <button onClick={() => setShowAlertBar(false)} className={`p-1 rounded-full transition-colors ${isRamadan ? 'bg-white/5 hover:bg-white/10 text-white/50' : 'bg-white/10 hover:bg-white/20'}`}>
                         <X size={14} />
                     </button>
                 </div>
             )}
 
+            {/* ✅ تحديث الرسالة السحابية لرمضان */}
             {cloudMessage && (
                 <div className="fixed inset-0 z-[99999] flex items-center justify-center bg-black/60 backdrop-blur-sm animate-in fade-in duration-500 px-4">
-                    <div className="bg-white w-full max-w-sm rounded-[2.5rem] overflow-hidden shadow-2xl relative animate-in zoom-in-95 duration-300">
-                        <div className={`h-40 relative flex items-center justify-center ${cloudMessage.type === 'alert' ? 'bg-rose-600' : 'bg-indigo-600'}`}>
-                            <div className="relative z-10 p-6 bg-white/10 backdrop-blur-md rounded-full border border-white/20 shadow-lg animate-bounce">
-                                {cloudMessage.type === 'alert' ? <AlertTriangle size={48} className="text-white" /> : <Bell size={48} className="text-white" />}
+                    <div className={`w-full max-w-sm rounded-[2.5rem] overflow-hidden shadow-2xl relative animate-in zoom-in-95 duration-300 border ${isRamadan ? 'bg-[#0f172a]/95 backdrop-blur-2xl border-white/10 text-white' : 'bg-white border-transparent text-slate-800'}`}>
+                        <div className={`h-40 relative flex items-center justify-center ${cloudMessage.type === 'alert' ? (isRamadan ? 'bg-rose-900/50' : 'bg-rose-600') : (isRamadan ? 'bg-indigo-900/50' : 'bg-indigo-600')}`}>
+                            <div className={`relative z-10 p-6 backdrop-blur-md rounded-full border shadow-lg animate-bounce ${isRamadan ? 'bg-white/5 border-white/10' : 'bg-white/10 border-white/20'}`}>
+                                {cloudMessage.type === 'alert' ? <AlertTriangle size={48} className={isRamadan ? 'text-rose-400' : 'text-white'} /> : <Bell size={48} className={isRamadan ? 'text-indigo-300' : 'text-white'} />}
                             </div>
                         </div>
                         <div className="p-8 text-center space-y-4">
-                            <h2 className="text-2xl font-black text-slate-800">{cloudMessage.title}</h2>
-                            <p className="text-sm font-bold text-slate-500 leading-relaxed whitespace-pre-line">
+                            <h2 className={`text-2xl font-black ${isRamadan ? 'text-white' : 'text-slate-800'}`}>{cloudMessage.title}</h2>
+                            <p className={`text-sm font-bold leading-relaxed whitespace-pre-line ${isRamadan ? 'text-indigo-200/80' : 'text-slate-500'}`}>
                                 {cloudMessage.body}
                             </p>
                             <button 
@@ -623,7 +625,7 @@ const Dashboard: React.FC<DashboardProps> = ({
                                     localStorage.setItem(`rased_cloud_msg_${cloudMessage.id}`, 'true');
                                     setCloudMessage(null);
                                 }} 
-                                className={`w-full py-3.5 rounded-xl font-black text-white text-sm shadow-lg transition-transform active:scale-95 mt-4 ${cloudMessage.type === 'alert' ? 'bg-rose-600 hover:bg-rose-700' : 'bg-indigo-600 hover:bg-indigo-700'}`}
+                                className={`w-full py-3.5 rounded-xl font-black text-white text-sm shadow-lg transition-transform active:scale-95 mt-4 ${cloudMessage.type === 'alert' ? (isRamadan ? 'bg-rose-600 hover:bg-rose-500' : 'bg-rose-600 hover:bg-rose-700') : (isRamadan ? 'bg-indigo-600 hover:bg-indigo-500' : 'bg-indigo-600 hover:bg-indigo-700')}`}
                             >
                                 حسناً، فهمت
                             </button>
@@ -632,37 +634,38 @@ const Dashboard: React.FC<DashboardProps> = ({
                 </div>
             )}
 
+            {/* ✅ تحديث رسالة المناسبات لرمضان */}
             {occasionGreeting && !cloudMessage && (
                 <div className="fixed inset-0 z-[99999] flex items-center justify-center bg-black/60 backdrop-blur-sm animate-in fade-in duration-500 px-4">
-                    <div className="bg-white w-full max-w-sm rounded-[2.5rem] overflow-hidden shadow-2xl relative animate-in zoom-in-95 duration-300">
-                        <div className={`h-40 relative flex items-center justify-center ${occasionGreeting === 'ramadan' ? 'bg-[#1e1b4b]' : occasionGreeting === 'eid' ? 'bg-[#701a75]' : 'bg-[#1e3a8a]'}`}>
-                            <div className="relative z-10 p-6 bg-white/10 backdrop-blur-md rounded-full border border-white/20 shadow-lg animate-bounce">
+                    <div className={`w-full max-w-sm rounded-[2.5rem] overflow-hidden shadow-2xl relative animate-in zoom-in-95 duration-300 border ${isRamadan ? 'bg-[#0f172a]/95 backdrop-blur-2xl border-white/10 text-white' : 'bg-white border-transparent text-slate-800'}`}>
+                        <div className={`h-40 relative flex items-center justify-center ${occasionGreeting === 'ramadan' ? (isRamadan ? 'bg-[#1e1b4b]/80' : 'bg-[#1e1b4b]') : occasionGreeting === 'eid' ? (isRamadan ? 'bg-[#701a75]/80' : 'bg-[#701a75]') : (isRamadan ? 'bg-[#1e3a8a]/80' : 'bg-[#1e3a8a]')}`}>
+                            <div className={`relative z-10 p-6 backdrop-blur-md rounded-full border shadow-lg animate-bounce ${isRamadan ? 'bg-white/5 border-white/10' : 'bg-white/10 border-white/20'}`}>
                                 {occasionGreeting === 'ramadan' && <Moon size={48} className="text-amber-300 fill-amber-300" />}
                                 {occasionGreeting === 'eid' && <Award size={48} className="text-pink-300" />}
                                 {occasionGreeting === 'teacher' && <Heart size={48} className="text-blue-200" />}
                             </div>
                         </div>
                         <div className="p-8 text-center space-y-4">
-                            <h2 className="text-2xl font-black text-slate-800">
+                            <h2 className={`text-2xl font-black ${isRamadan ? 'text-white' : 'text-slate-800'}`}>
                                 {occasionGreeting === 'ramadan' && 'مبارك عليكم الشهر الفضيل 🌙'}
                                 {occasionGreeting === 'eid' && 'عيدكم مبارك 🎉'}
                                 {occasionGreeting === 'teacher' && 'يوم معلم سعيد 👨‍🏫'}
                             </h2>
-                            <p className="text-sm font-bold text-slate-500 leading-relaxed">
+                            <p className={`text-sm font-bold leading-relaxed ${isRamadan ? 'text-indigo-200/80' : 'text-slate-500'}`}>
                                 {occasionGreeting === 'ramadan' && 'نسأل الله أن يعيننا وإياكم على صيامه وقيامه، وأن يتقبل منا ومنكم صالح الأعمال.'}
                                 {occasionGreeting === 'eid' && 'كل عام وأنتم بخير، أعاده الله علينا وعليكم باليمن والبركات.'}
                                 {occasionGreeting === 'teacher' && 'شكراً لك يا صانع الأجيال، جهودك عظيمة وأثرك لا يُنسى. كل عام وأنت منارة للعلم.'}
                             </p>
-                            <button onClick={() => setOccasionGreeting(null)} className={`w-full py-3.5 rounded-xl font-black text-white text-sm shadow-lg transition-transform active:scale-95 mt-4 ${occasionGreeting === 'ramadan' ? 'bg-[#1e1b4b] hover:bg-[#312e81]' : occasionGreeting === 'eid' ? 'bg-[#701a75] hover:bg-[#86198f]' : 'bg-[#1e3a8a] hover:bg-[#1e40af]'}`}>شكراً لكم ❤️</button>
+                            <button onClick={() => setOccasionGreeting(null)} className={`w-full py-3.5 rounded-xl font-black text-white text-sm shadow-lg transition-transform active:scale-95 mt-4 ${occasionGreeting === 'ramadan' ? 'bg-amber-600 hover:bg-amber-500' : occasionGreeting === 'eid' ? 'bg-[#701a75] hover:bg-[#86198f]' : 'bg-[#1e3a8a] hover:bg-[#1e40af]'}`}>شكراً لكم ❤️</button>
                         </div>
                     </div>
                 </div>
             )}
 
-            <Modal isOpen={showPlanSettingsModal} onClose={() => setShowPlanSettingsModal(false)} className="max-w-md rounded-[2rem] h-[80vh]">
-                <div className="flex flex-col h-full">
-                    <div className="flex justify-between items-center mb-4 pb-2 border-b border-slate-50">
-                        <h3 className="font-black text-lg text-slate-800">تخصيص خطة التقويم</h3>
+            <Modal isOpen={showPlanSettingsModal} onClose={() => setShowPlanSettingsModal(false)} className={`max-w-md rounded-[2rem] h-[80vh] ${isRamadan ? 'bg-transparent' : ''}`}>
+                <div className={`flex flex-col h-full p-2 rounded-[2rem] border ${isRamadan ? 'bg-[#0f172a]/95 backdrop-blur-2xl border-white/10 text-white shadow-[0_0_40px_rgba(0,0,0,0.5)]' : 'bg-white border-transparent text-slate-800'}`}>
+                    <div className={`flex justify-between items-center mb-4 pb-2 border-b ${isRamadan ? 'border-white/10' : 'border-slate-50'}`}>
+                        <h3 className="font-black text-lg">تخصيص خطة التقويم</h3>
                         <div className="flex gap-2">
                             <button 
                                 onClick={() => {
@@ -674,14 +677,14 @@ const Dashboard: React.FC<DashboardProps> = ({
                                         ]);
                                     }
                                 }}
-                                className="p-2 bg-slate-100 rounded-lg text-slate-500 hover:text-slate-800"
+                                className={`p-2 rounded-lg transition-colors ${isRamadan ? 'bg-white/10 text-slate-300 hover:bg-white/20' : 'bg-slate-100 text-slate-500 hover:text-slate-800'}`}
                                 title="استعادة الافتراضي"
                             >
                                 <RefreshCcw size={16} />
                             </button>
                             <button 
                                 onClick={() => setTempPlan([...tempPlan, { id: `new_${Date.now()}`, monthIndex: new Date().getMonth(), monthName: 'شهر جديد', tasks: [] }])}
-                                className="flex items-center gap-1 bg-indigo-50 text-indigo-600 px-3 py-1.5 rounded-lg text-[10px] font-bold hover:bg-indigo-100"
+                                className={`flex items-center gap-1 px-3 py-1.5 rounded-lg text-[10px] font-bold transition-colors ${isRamadan ? 'bg-indigo-500/30 text-indigo-300 hover:bg-indigo-500/50' : 'bg-indigo-50 text-indigo-600 hover:bg-indigo-100'}`}
                             >
                                 <Plus size={14}/> إضافة شهر
                             </button>
@@ -690,7 +693,7 @@ const Dashboard: React.FC<DashboardProps> = ({
 
                     <div className="flex-1 overflow-y-auto custom-scrollbar space-y-4 p-1">
                         {tempPlan.map((month, idx) => (
-                            <div key={month.id} className="bg-slate-50 rounded-xl p-3 border border-slate-100">
+                            <div key={month.id} className={`rounded-xl p-3 border ${isRamadan ? 'bg-white/5 border-white/10' : 'bg-slate-50 border-slate-100'}`}>
                                 <div className="flex gap-2 mb-3">
                                     <select 
                                         value={month.monthIndex} 
@@ -700,9 +703,9 @@ const Dashboard: React.FC<DashboardProps> = ({
                                             n[idx].monthName = monthNames[parseInt(e.target.value)];
                                             setTempPlan(n);
                                         }}
-                                        className="bg-white border border-slate-200 rounded-lg text-xs font-bold p-2 outline-none flex-1"
+                                        className={`rounded-lg text-xs font-bold p-2 outline-none flex-1 border transition-colors ${isRamadan ? 'bg-[#1e1b4b]/50 border-indigo-500/30 text-white' : 'bg-white border-slate-200 text-slate-800'}`}
                                     >
-                                        {monthNames.map((m, i) => <option key={i} value={i}>{m}</option>)}
+                                        {monthNames.map((m, i) => <option key={i} value={i} className={isRamadan ? 'bg-slate-900 text-white' : ''}>{m}</option>)}
                                     </select>
                                     <button 
                                         onClick={() => {
@@ -710,7 +713,7 @@ const Dashboard: React.FC<DashboardProps> = ({
                                                 setTempPlan(tempPlan.filter((_, i) => i !== idx));
                                             }
                                         }}
-                                        className="p-2 bg-rose-100 text-rose-500 rounded-lg"
+                                        className={`p-2 rounded-lg transition-colors ${isRamadan ? 'bg-rose-500/20 text-rose-400' : 'bg-rose-100 text-rose-500'}`}
                                     >
                                         <Trash2 size={16} />
                                     </button>
@@ -726,7 +729,7 @@ const Dashboard: React.FC<DashboardProps> = ({
                                                     n[idx].tasks[tIdx] = e.target.value;
                                                     setTempPlan(n);
                                                 }}
-                                                className="flex-1 bg-white border border-slate-200 rounded-lg px-3 py-2 text-xs font-bold outline-none focus:border-indigo-500"
+                                                className={`flex-1 border rounded-lg px-3 py-2 text-xs font-bold outline-none transition-colors ${isRamadan ? 'bg-[#1e1b4b]/50 border-indigo-500/30 text-white focus:border-indigo-400' : 'bg-white border-slate-200 text-slate-800 focus:border-indigo-500'}`}
                                             />
                                             <button 
                                                 onClick={() => {
@@ -734,7 +737,7 @@ const Dashboard: React.FC<DashboardProps> = ({
                                                     n[idx].tasks = n[idx].tasks.filter((_, ti) => ti !== tIdx);
                                                     setTempPlan(n);
                                                 }}
-                                                className="text-rose-400 hover:text-rose-600"
+                                                className={`transition-colors ${isRamadan ? 'text-rose-400 hover:text-rose-300' : 'text-rose-400 hover:text-rose-600'}`}
                                             >
                                                 <X size={14} />
                                             </button>
@@ -746,7 +749,7 @@ const Dashboard: React.FC<DashboardProps> = ({
                                             n[idx].tasks.push('مهمة جديدة');
                                             setTempPlan(n);
                                         }}
-                                        className="w-full py-2 bg-white border border-dashed border-slate-300 text-slate-400 rounded-lg text-xs font-bold hover:bg-slate-50 hover:text-indigo-500"
+                                        className={`w-full py-2 border border-dashed rounded-lg text-xs font-bold transition-colors ${isRamadan ? 'bg-transparent border-white/20 text-slate-400 hover:bg-white/5 hover:text-white' : 'bg-white border-slate-300 text-slate-400 hover:bg-slate-50 hover:text-indigo-500'}`}
                                     >
                                         + إضافة مهمة
                                     </button>
@@ -755,20 +758,20 @@ const Dashboard: React.FC<DashboardProps> = ({
                         ))}
                     </div>
 
-                    <div className="pt-4 mt-auto border-t border-slate-100">
-                        <button onClick={handleSavePlanSettings} className="w-full py-3 bg-slate-900 text-white rounded-xl font-bold text-xs shadow-lg hover:bg-slate-800 flex items-center justify-center gap-2"><Save size={16} /> حفظ التغييرات</button>
+                    <div className={`pt-4 mt-auto border-t ${isRamadan ? 'border-white/10' : 'border-slate-100'}`}>
+                        <button onClick={handleSavePlanSettings} className={`w-full py-3 text-white rounded-xl font-bold text-xs shadow-lg flex items-center justify-center gap-2 active:scale-95 transition-all ${isRamadan ? 'bg-indigo-600 hover:bg-indigo-500' : 'bg-slate-900 hover:bg-slate-800'}`}><Save size={16} /> حفظ التغييرات</button>
                     </div>
                 </div>
             </Modal>
 
-            <Modal isOpen={showEditModal} onClose={() => setShowEditModal(false)} className="max-w-md rounded-[2rem]">
-                <div className="text-center">
-                    <h3 className="font-black text-lg mb-4 text-slate-800">الهوية الرسمية</h3>
+            <Modal isOpen={showEditModal} onClose={() => setShowEditModal(false)} className={`max-w-md rounded-[2rem] ${isRamadan ? 'bg-transparent' : ''}`}>
+                <div className={`text-center p-4 rounded-[2rem] border transition-colors ${isRamadan ? 'bg-[#0f172a]/95 backdrop-blur-2xl border-white/10 text-white shadow-[0_0_40px_rgba(0,0,0,0.5)]' : 'bg-white border-transparent text-slate-800'}`}>
+                    <h3 className="font-black text-lg mb-4">الهوية الرسمية</h3>
                     <div className="w-24 h-24 mx-auto mb-4 relative group">
                         {editAvatar ? (
-                            <img src={editAvatar} className="w-full h-full rounded-2xl object-cover border-4 border-slate-50 shadow-md" alt="Profile" onError={(e) => { e.currentTarget.style.display='none'; }}/>
+                            <img src={editAvatar} className={`w-full h-full rounded-2xl object-cover border-4 shadow-md ${isRamadan ? 'border-white/10' : 'border-slate-50'}`} alt="Profile" onError={(e) => { e.currentTarget.style.display='none'; }}/>
                         ) : (
-                            <div className="w-full h-full rounded-2xl border-4 border-slate-50 bg-indigo-50 flex items-center justify-center"><DefaultAvatarSVG gender={editGender}/></div>
+                            <div className={`w-full h-full rounded-2xl border-4 flex items-center justify-center ${isRamadan ? 'bg-indigo-900/50 border-white/10' : 'bg-indigo-50 border-slate-50'}`}><DefaultAvatarSVG gender={editGender}/></div>
                         )}
                         <button onClick={() => setEditAvatar(undefined)} className="absolute -bottom-2 -right-2 bg-rose-500 text-white p-1.5 rounded-full shadow-lg border-2 border-white hover:bg-rose-600 transition-colors">
                             <X size={14}/>
@@ -777,58 +780,58 @@ const Dashboard: React.FC<DashboardProps> = ({
 
                     <div className="space-y-3 text-right">
                         <div className="grid grid-cols-2 gap-3">
-                            <input value={editName} onChange={e => setEditName(e.target.value)} placeholder="الاسم" className="p-3 bg-slate-50 border border-slate-200 rounded-xl text-xs font-bold w-full outline-none focus:border-indigo-500" />
-                            <input value={editSchool} onChange={e => setEditSchool(e.target.value)} placeholder="المدرسة" className="p-3 bg-slate-50 border border-slate-200 rounded-xl text-xs font-bold w-full outline-none focus:border-indigo-500" />
+                            <input value={editName} onChange={e => setEditName(e.target.value)} placeholder="الاسم" className={`p-3 border rounded-xl text-xs font-bold w-full outline-none transition-colors ${isRamadan ? 'bg-[#1e1b4b]/50 border-indigo-500/30 focus:border-indigo-400 text-white' : 'bg-slate-50 border-slate-200 focus:border-indigo-500 text-slate-800'}`} />
+                            <input value={editSchool} onChange={e => setEditSchool(e.target.value)} placeholder="المدرسة" className={`p-3 border rounded-xl text-xs font-bold w-full outline-none transition-colors ${isRamadan ? 'bg-[#1e1b4b]/50 border-indigo-500/30 focus:border-indigo-400 text-white' : 'bg-slate-50 border-slate-200 focus:border-indigo-500 text-slate-800'}`} />
                         </div>
-                        <input value={editSubject} onChange={e => setEditSubject(e.target.value)} placeholder="المادة (مثال: رياضيات)" className="p-3 bg-slate-50 border border-slate-200 rounded-xl text-xs font-bold w-full outline-none focus:border-indigo-500" />
+                        <input value={editSubject} onChange={e => setEditSubject(e.target.value)} placeholder="المادة (مثال: رياضيات)" className={`p-3 border rounded-xl text-xs font-bold w-full outline-none transition-colors ${isRamadan ? 'bg-[#1e1b4b]/50 border-indigo-500/30 focus:border-indigo-400 text-white' : 'bg-slate-50 border-slate-200 focus:border-indigo-500 text-slate-800'}`} />
                         <div className="grid grid-cols-2 gap-3">
-                            <input value={editGovernorate} onChange={e => setEditGovernorate(e.target.value)} placeholder="المحافظة" className="p-3 bg-slate-50 border border-slate-200 rounded-xl text-xs font-bold w-full outline-none focus:border-indigo-500" />
-                            <input value={editAcademicYear} onChange={e => setEditAcademicYear(e.target.value)} placeholder="العام الدراسي" className="p-3 bg-slate-50 border border-slate-200 rounded-xl text-xs font-bold w-full outline-none focus:border-indigo-500" />
+                            <input value={editGovernorate} onChange={e => setEditGovernorate(e.target.value)} placeholder="المحافظة" className={`p-3 border rounded-xl text-xs font-bold w-full outline-none transition-colors ${isRamadan ? 'bg-[#1e1b4b]/50 border-indigo-500/30 focus:border-indigo-400 text-white' : 'bg-slate-50 border-slate-200 focus:border-indigo-500 text-slate-800'}`} />
+                            <input value={editAcademicYear} onChange={e => setEditAcademicYear(e.target.value)} placeholder="العام الدراسي" className={`p-3 border rounded-xl text-xs font-bold w-full outline-none transition-colors ${isRamadan ? 'bg-[#1e1b4b]/50 border-indigo-500/30 focus:border-indigo-400 text-white' : 'bg-slate-50 border-slate-200 focus:border-indigo-500 text-slate-800'}`} />
                         </div>
 
-                        <div className="bg-slate-50 p-1 rounded-xl flex gap-1">
-                            <button onClick={() => setEditSemester('1')} className={`flex-1 py-2 rounded-lg text-xs font-bold transition-all ${editSemester === '1' ? 'bg-white shadow text-indigo-600' : 'text-slate-400'}`}>فصل 1</button>
-                            <button onClick={() => setEditSemester('2')} className={`flex-1 py-2 rounded-lg text-xs font-bold transition-all ${editSemester === '2' ? 'bg-white shadow text-indigo-600' : 'text-slate-400'}`}>فصل 2</button>
+                        <div className={`p-1 rounded-xl flex gap-1 ${isRamadan ? 'bg-white/5' : 'bg-slate-50'}`}>
+                            <button onClick={() => setEditSemester('1')} className={`flex-1 py-2 rounded-lg text-xs font-bold transition-all ${editSemester === '1' ? (isRamadan ? 'bg-indigo-600 text-white shadow' : 'bg-white shadow text-indigo-600') : (isRamadan ? 'text-slate-400' : 'text-slate-400')}`}>فصل 1</button>
+                            <button onClick={() => setEditSemester('2')} className={`flex-1 py-2 rounded-lg text-xs font-bold transition-all ${editSemester === '2' ? (isRamadan ? 'bg-indigo-600 text-white shadow' : 'bg-white shadow text-indigo-600') : (isRamadan ? 'text-slate-400' : 'text-slate-400')}`}>فصل 2</button>
                         </div>
 
                         <div className="flex gap-2 pt-2">
-                            <button onClick={() => fileInputRef.current?.click()} className="flex-1 py-3 bg-indigo-50 text-indigo-600 rounded-xl text-[10px] font-bold flex flex-col items-center gap-1 border border-indigo-100 hover:bg-indigo-100"><Camera size={16}/> صورتك</button>
-                            <button onClick={() => stampInputRef.current?.click()} className="flex-1 py-3 bg-blue-50 text-blue-600 rounded-xl text-[10px] font-bold flex flex-col items-center gap-1 border border-blue-100 hover:bg-blue-100"><Check size={16}/> الختم</button>
-                            <button onClick={() => ministryLogoInputRef.current?.click()} className="flex-1 py-3 bg-amber-50 text-amber-600 rounded-xl text-[10px] font-bold flex flex-col items-center gap-1 border border-amber-100 hover:bg-amber-100"><School size={16}/> الشعار</button>
+                            <button onClick={() => fileInputRef.current?.click()} className={`flex-1 py-3 rounded-xl text-[10px] font-bold flex flex-col items-center gap-1 border transition-colors ${isRamadan ? 'bg-indigo-900/30 text-indigo-300 border-indigo-500/30 hover:bg-indigo-900/50' : 'bg-indigo-50 text-indigo-600 border-indigo-100 hover:bg-indigo-100'}`}><Camera size={16}/> صورتك</button>
+                            <button onClick={() => stampInputRef.current?.click()} className={`flex-1 py-3 rounded-xl text-[10px] font-bold flex flex-col items-center gap-1 border transition-colors ${isRamadan ? 'bg-blue-900/30 text-blue-300 border-blue-500/30 hover:bg-blue-900/50' : 'bg-blue-50 text-blue-600 border-blue-100 hover:bg-blue-100'}`}><Check size={16}/> الختم</button>
+                            <button onClick={() => ministryLogoInputRef.current?.click()} className={`flex-1 py-3 rounded-xl text-[10px] font-bold flex flex-col items-center gap-1 border transition-colors ${isRamadan ? 'bg-amber-900/30 text-amber-300 border-amber-500/30 hover:bg-amber-900/50' : 'bg-amber-50 text-amber-600 border-amber-100 hover:bg-amber-100'}`}><School size={16}/> الشعار</button>
                         </div>
                         <input type="file" ref={fileInputRef} onChange={(e) => handleFileUpload(e, setEditAvatar)} className="hidden" accept="image/*"/>
                         <input type="file" ref={stampInputRef} onChange={(e) => handleFileUpload(e, setEditStamp)} className="hidden" accept="image/*"/>
                         <input type="file" ref={ministryLogoInputRef} onChange={(e) => handleFileUpload(e, setEditMinistryLogo)} className="hidden" accept="image/*"/>
 
-                        <button onClick={handleSaveInfo} className="w-full py-3 bg-slate-900 text-white rounded-xl font-bold text-xs mt-2 shadow-lg">حفظ التغييرات</button>
+                        <button onClick={handleSaveInfo} className={`w-full py-3 text-white rounded-xl font-bold text-xs mt-2 shadow-lg active:scale-95 transition-all ${isRamadan ? 'bg-indigo-600 hover:bg-indigo-500' : 'bg-slate-900 hover:bg-slate-800'}`}>حفظ التغييرات</button>
                     </div>
                 </div>
             </Modal>
 
-            <Modal isOpen={showScheduleModal} onClose={() => setShowScheduleModal(false)} className="max-w-md rounded-[2rem] h-[80vh]">
-                <div className="flex flex-col h-full">
-                    <div className="flex justify-between items-center mb-4 pb-2 border-b border-slate-50">
-                        <h3 className="font-black text-lg text-slate-800">إدارة الجدول</h3>
-                        <button onClick={() => modalScheduleFileInputRef.current?.click()} className="flex items-center gap-1 bg-emerald-50 text-emerald-600 px-3 py-1.5 rounded-lg text-[10px] font-bold hover:bg-emerald-100 transition-colors">
+            <Modal isOpen={showScheduleModal} onClose={() => setShowScheduleModal(false)} className={`max-w-md rounded-[2rem] h-[80vh] ${isRamadan ? 'bg-transparent' : ''}`}>
+                <div className={`flex flex-col h-full p-2 rounded-[2rem] border transition-colors ${isRamadan ? 'bg-[#0f172a]/95 backdrop-blur-2xl border-white/10 text-white shadow-[0_0_40px_rgba(0,0,0,0.5)]' : 'bg-white border-transparent text-slate-800'}`}>
+                    <div className={`flex justify-between items-center mb-4 pb-2 border-b ${isRamadan ? 'border-white/10' : 'border-slate-50'}`}>
+                        <h3 className="font-black text-lg">إدارة الجدول</h3>
+                        <button onClick={() => modalScheduleFileInputRef.current?.click()} className={`flex items-center gap-1 px-3 py-1.5 rounded-lg text-[10px] font-bold transition-colors ${isRamadan ? 'bg-emerald-500/20 text-emerald-400 hover:bg-emerald-500/30' : 'bg-emerald-50 text-emerald-600 hover:bg-emerald-100'}`}>
                             <Download size={14}/> {isImportingPeriods ? '...' : 'استيراد Excel'}
                         </button>
                         <input type="file" ref={modalScheduleFileInputRef} onChange={handleImportPeriodTimes} accept=".xlsx,.xls" className="hidden" />
                     </div>
 
-                    <div className="flex bg-slate-100 p-1 rounded-xl mb-4 shrink-0">
-                        <button onClick={() => setScheduleTab('timing')} className={`flex-1 py-2 rounded-lg text-xs font-bold transition-all ${scheduleTab === 'timing' ? 'bg-white shadow text-slate-800' : 'text-slate-400'}`}>التوقيت</button>
-                        <button onClick={() => setScheduleTab('classes')} className={`flex-1 py-2 rounded-lg text-xs font-bold transition-all ${scheduleTab === 'classes' ? 'bg-white shadow text-slate-800' : 'text-slate-400'}`}>الحصص</button>
+                    <div className={`flex p-1 rounded-xl mb-4 shrink-0 ${isRamadan ? 'bg-white/5' : 'bg-slate-100'}`}>
+                        <button onClick={() => setScheduleTab('timing')} className={`flex-1 py-2 rounded-lg text-xs font-bold transition-all ${scheduleTab === 'timing' ? (isRamadan ? 'bg-white/10 shadow text-white' : 'bg-white shadow text-slate-800') : (isRamadan ? 'text-slate-400' : 'text-slate-400')}`}>التوقيت</button>
+                        <button onClick={() => setScheduleTab('classes')} className={`flex-1 py-2 rounded-lg text-xs font-bold transition-all ${scheduleTab === 'classes' ? (isRamadan ? 'bg-white/10 shadow text-white' : 'bg-white shadow text-slate-800') : (isRamadan ? 'text-slate-400' : 'text-slate-400')}`}>الحصص</button>
                     </div>
 
                     <div className="flex-1 overflow-y-auto custom-scrollbar p-1">
                         {scheduleTab === 'timing' ? (
                             <div className="space-y-2">
                                 {tempPeriodTimes.map((pt, idx) => (
-                                    <div key={idx} className="flex items-center gap-2 bg-slate-50 p-2 rounded-xl border border-slate-100">
-                                        <span className="text-[10px] font-bold w-8 text-slate-400 text-center">{idx+1}</span>
-                                        <input type="time" value={pt.startTime} onChange={(e) => {const n=[...tempPeriodTimes]; if(n[idx]) n[idx].startTime=e.target.value; setTempPeriodTimes(n)}} className="flex-1 bg-white rounded-lg px-2 py-1 text-xs font-bold border border-slate-200 text-center"/>
-                                        <span className="text-slate-300">-</span>
-                                        <input type="time" value={pt.endTime} onChange={(e) => {const n=[...tempPeriodTimes]; if(n[idx]) n[idx].endTime=e.target.value; setTempPeriodTimes(n)}} className="flex-1 bg-white rounded-lg px-2 py-1 text-xs font-bold border border-slate-200 text-center"/>
+                                    <div key={idx} className={`flex items-center gap-2 p-2 rounded-xl border ${isRamadan ? 'bg-white/5 border-white/10' : 'bg-slate-50 border-slate-100'}`}>
+                                        <span className={`text-[10px] font-bold w-8 text-center ${isRamadan ? 'text-slate-400' : 'text-slate-400'}`}>{idx+1}</span>
+                                        <input type="time" value={pt.startTime} onChange={(e) => {const n=[...tempPeriodTimes]; if(n[idx]) n[idx].startTime=e.target.value; setTempPeriodTimes(n)}} className={`flex-1 rounded-lg px-2 py-1 text-xs font-bold border text-center transition-colors ${isRamadan ? 'bg-[#1e1b4b]/50 border-indigo-500/30 text-white' : 'bg-white border-slate-200 text-slate-800'}`}/>
+                                        <span className={isRamadan ? 'text-slate-500' : 'text-slate-300'}>-</span>
+                                        <input type="time" value={pt.endTime} onChange={(e) => {const n=[...tempPeriodTimes]; if(n[idx]) n[idx].endTime=e.target.value; setTempPeriodTimes(n)}} className={`flex-1 rounded-lg px-2 py-1 text-xs font-bold border text-center transition-colors ${isRamadan ? 'bg-[#1e1b4b]/50 border-indigo-500/30 text-white' : 'bg-white border-slate-200 text-slate-800'}`}/>
                                     </div>
                                 ))}
                             </div>
@@ -836,14 +839,14 @@ const Dashboard: React.FC<DashboardProps> = ({
                             <div className="space-y-4">
                                 <div className="flex gap-2 overflow-x-auto pb-2 no-scrollbar">
                                     {tempSchedule.map((day, idx) => (
-                                        <button key={idx} onClick={() => setEditingDayIndex(idx)} className={`px-4 py-2 rounded-xl text-xs font-bold whitespace-nowrap border transition-all ${editingDayIndex === idx ? 'bg-indigo-600 text-white border-indigo-600' : 'bg-white text-slate-500 border-slate-200'}`}>{day.dayName}</button>
+                                        <button key={idx} onClick={() => setEditingDayIndex(idx)} className={`px-4 py-2 rounded-xl text-xs font-bold whitespace-nowrap border transition-all ${editingDayIndex === idx ? (isRamadan ? 'bg-indigo-600 text-white border-transparent' : 'bg-indigo-600 text-white border-indigo-600') : (isRamadan ? 'bg-white/5 text-slate-300 border-white/10' : 'bg-white text-slate-500 border-slate-200')}`}>{day.dayName}</button>
                                     ))}
                                 </div>
                                 <div className="space-y-2">
                                     {tempSchedule[editingDayIndex]?.periods.map((cls: string, pIdx: number) => (
-                                        <div key={pIdx} className="flex items-center gap-3 bg-slate-50 p-2 rounded-xl border border-slate-100">
-                                            <span className="text-[10px] font-bold text-slate-400 w-8 text-center">{pIdx + 1}</span>
-                                            <input value={cls} onChange={(e) => {const n=[...tempSchedule]; if(n[editingDayIndex]?.periods) n[editingDayIndex].periods[pIdx]=e.target.value; setTempSchedule(n)}} placeholder="اسم المادة" className="flex-1 bg-white border border-slate-200 rounded-lg px-3 py-2 text-xs font-bold outline-none focus:border-indigo-500 text-slate-800" />
+                                        <div key={pIdx} className={`flex items-center gap-3 p-2 rounded-xl border ${isRamadan ? 'bg-white/5 border-white/10' : 'bg-slate-50 border-slate-100'}`}>
+                                            <span className={`text-[10px] font-bold w-8 text-center ${isRamadan ? 'text-slate-400' : 'text-slate-400'}`}>{pIdx + 1}</span>
+                                            <input value={cls} onChange={(e) => {const n=[...tempSchedule]; if(n[editingDayIndex]?.periods) n[editingDayIndex].periods[pIdx]=e.target.value; setTempSchedule(n)}} placeholder="اسم المادة" className={`flex-1 border rounded-lg px-3 py-2 text-xs font-bold outline-none transition-colors ${isRamadan ? 'bg-[#1e1b4b]/50 border-indigo-500/30 text-white focus:border-indigo-400 placeholder:text-slate-500' : 'bg-white border-slate-200 focus:border-indigo-500 text-slate-800'}`} />
                                         </div>
                                     ))}
                                 </div>
@@ -851,8 +854,8 @@ const Dashboard: React.FC<DashboardProps> = ({
                         )}
                     </div>
 
-                    <div className="pt-4 mt-auto border-t border-slate-100">
-                        <button onClick={handleSaveScheduleSettings} className="w-full py-3 bg-slate-900 text-white rounded-xl font-bold text-xs shadow-lg hover:bg-slate-800 flex items-center justify-center gap-2"><Save size={16} /> حفظ التغييرات</button>
+                    <div className={`pt-4 mt-auto border-t ${isRamadan ? 'border-white/10' : 'border-slate-100'}`}>
+                        <button onClick={handleSaveScheduleSettings} className={`w-full py-3 text-white rounded-xl font-bold text-xs shadow-lg flex items-center justify-center gap-2 active:scale-95 transition-all ${isRamadan ? 'bg-indigo-600 hover:bg-indigo-500' : 'bg-slate-900 hover:bg-slate-800'}`}><Save size={16} /> حفظ التغييرات</button>
                     </div>
                 </div>
             </Modal>
