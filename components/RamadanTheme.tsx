@@ -75,7 +75,7 @@ const RamadanTheme: React.FC = () => {
     }
   }, []);
 
-  // ✅ تأثير سحري: تغيير لون شريط هاتف المستخدم (أو المتصفح) من الأبيض إلى الكحلي الليلي
+  // تغيير لون شريط هاتف المستخدم (أو المتصفح)
   useEffect(() => {
     if (isRamadan) {
       let metaThemeColor = document.querySelector("meta[name=theme-color]");
@@ -84,12 +84,10 @@ const RamadanTheme: React.FC = () => {
         metaThemeColor.setAttribute("name", "theme-color");
         document.head.appendChild(metaThemeColor);
       }
-      metaThemeColor.setAttribute("content", "#0f172a"); // لون سماء الليل
-      
-      // صبغ خلفية الـ body لتجنب أي بياض يظهر عند التمرير السريع
+      metaThemeColor.setAttribute("content", "#0f172a"); 
       document.body.style.backgroundColor = "#0f172a";
     } else {
-      document.body.style.backgroundColor = "#f3f4f6"; // العودة للون الفضي في الأيام العادية
+      document.body.style.backgroundColor = "#f3f4f6";
     }
   }, [isRamadan]);
 
@@ -97,7 +95,6 @@ const RamadanTheme: React.FC = () => {
 
   return (
     <>
-      {/* 🔮 أكواد الأنيميشن الحية + 🌟 ستايل أشرطة التمرير الزجاجية الذهبية */}
       <style>
         {`
           @keyframes swing {
@@ -109,40 +106,25 @@ const RamadanTheme: React.FC = () => {
             50% { transform: translateY(-15px) rotate(-8deg); }
             100% { transform: translateY(0px) rotate(-12deg); }
           }
-
-          /* سحر شريط التمرير (Scrollbar) العام */
-          ::-webkit-scrollbar {
-            width: 8px;
-            height: 8px;
-          }
-          ::-webkit-scrollbar-track {
-            background: transparent !important;
-          }
-          ::-webkit-scrollbar-thumb {
-            background: rgba(251, 191, 36, 0.25) !important; /* ذهبي شفاف */
-            border-radius: 10px;
-            border: 2px solid transparent;
-            background-clip: padding-box;
-          }
-          ::-webkit-scrollbar-thumb:hover {
-            background: rgba(251, 191, 36, 0.8) !important; /* ذهبي متوهج عند اللمس */
+          @keyframes slowPulseText {
+            0% { opacity: 0.05; text-shadow: 0 0 20px rgba(251,191,36,0.2); }
+            50% { opacity: 0.15; text-shadow: 0 0 40px rgba(251,191,36,0.6); }
+            100% { opacity: 0.05; text-shadow: 0 0 20px rgba(251,191,36,0.2); }
           }
 
-          /* سحر شريط التمرير المخصص (Custom Scrollbar) في التطبيق */
-          .custom-scrollbar::-webkit-scrollbar-track {
-            background: transparent !important;
-          }
-          .custom-scrollbar::-webkit-scrollbar-thumb {
-            background: rgba(251, 191, 36, 0.3) !important; 
-          }
-          .custom-scrollbar::-webkit-scrollbar-thumb:hover {
-            background: rgba(251, 191, 36, 0.9) !important;
-          }
+          ::-webkit-scrollbar { width: 8px; height: 8px; }
+          ::-webkit-scrollbar-track { background: transparent !important; }
+          ::-webkit-scrollbar-thumb { background: rgba(251, 191, 36, 0.25) !important; border-radius: 10px; border: 2px solid transparent; background-clip: padding-box; }
+          ::-webkit-scrollbar-thumb:hover { background: rgba(251, 191, 36, 0.8) !important; }
+
+          .custom-scrollbar::-webkit-scrollbar-track { background: transparent !important; }
+          .custom-scrollbar::-webkit-scrollbar-thumb { background: rgba(251, 191, 36, 0.3) !important; }
+          .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: rgba(251, 191, 36, 0.9) !important; }
         `}
       </style>
 
       {/* ===================================================== */}
-      {/* 🌌 الطبقة الخلفية (z-0) - السماء والنجوم فقط */}
+      {/* 🌌 الطبقة الخلفية (z-0) - السماء، النجوم، والنصوص السحرية */}
       {/* ===================================================== */}
       <div className="absolute inset-0 z-0 pointer-events-none overflow-hidden select-none">
         
@@ -151,7 +133,22 @@ const RamadanTheme: React.FC = () => {
         <div className="absolute top-0 right-0 w-[600px] h-[600px] bg-amber-500/10 rounded-full blur-[120px] -translate-y-1/2 translate-x-1/3"></div>
         <div className="absolute bottom-0 left-0 w-[500px] h-[500px] bg-indigo-500/10 rounded-full blur-[100px] translate-y-1/3 -translate-x-1/3"></div>
 
-        {/* النجوم المتلألئة (بقيت في الخلف لتعطي إحساساً بالعمق) */}
+        {/* ======================================= */}
+        {/* 🕌 المخطوطات الرمضانية (علامة مائية ضخمة) */}
+        {/* ======================================= */}
+        <div 
+            className="absolute top-[30%] right-[10%] md:top-[40%] md:right-[20%] -rotate-12 transform scale-150 pointer-events-none select-none"
+            style={{ animation: 'slowPulseText 6s ease-in-out infinite' }}
+        >
+            <h1 className="text-7xl md:text-9xl font-black text-transparent bg-clip-text bg-gradient-to-b from-amber-200 to-amber-600">
+                رمضان كريم
+            </h1>
+            <p className="text-2xl md:text-4xl font-black text-amber-400 mt-2 text-center tracking-widest opacity-80">
+                شَهْرُ الخَيْرِ وَالبَرَكَات
+            </p>
+        </div>
+
+        {/* النجوم المتلألئة */}
         <div className="absolute top-32 left-1/4 animate-[pulse_4s_ease-in-out_infinite]"><Star size={20} className="text-amber-200 fill-amber-200 opacity-60" /></div>
         <div className="absolute top-60 right-1/4 animate-[pulse_3s_ease-in-out_infinite]" style={{ animationDelay: '1s' }}><Star size={14} className="text-amber-100 fill-amber-100 opacity-40" /></div>
         <div className="absolute bottom-1/3 left-12 animate-[pulse_5s_ease-in-out_infinite]" style={{ animationDelay: '0.5s' }}><Star size={28} className="text-amber-300 fill-amber-300 opacity-30" /></div>
@@ -163,27 +160,17 @@ const RamadanTheme: React.FC = () => {
       {/* ===================================================== */}
       <div className="absolute inset-0 z-[100] pointer-events-none overflow-hidden select-none">
         
-        {/* ======================================= */}
-        {/* 🌙 الهلال العملاق العائم (تم نقله للأمام) */}
-        {/* ======================================= */}
+        {/* الهلال العملاق العائم */}
         <div className="absolute top-16 right-8 md:top-12 md:right-16 opacity-80" style={{ animation: 'floatCrescent 8s ease-in-out infinite' }}>
-          <Moon size={180} className="text-amber-300 fill-amber-300 drop-shadow-[0_0_40px_rgba(252,211,77,0.7)]" />
+          <Moon size={150} className="text-amber-300 fill-amber-300 drop-shadow-[0_0_40px_rgba(252,211,77,0.7)]" />
           <div className="absolute top-1/2 left-1/4 animate-pulse">
               <Star size={24} className="text-amber-100 fill-amber-200 drop-shadow-[0_0_15px_rgba(251,191,36,0.8)]" />
           </div>
         </div>
 
-        {/* ======================================= */}
-        {/* 🏮 الفوانيس المتدلية من الأعلى */}
-        {/* ======================================= */}
-        
-        {/* فانوس يسار الشاشة (طويل) */}
+        {/* الفوانيس المتدلية */}
         <HangingLantern stringLength={140} size={50} duration={3} delay={0} position="left-[10%] md:left-[15%]" />
-        
-        {/* فانوس وسط-يسار (قصير) */}
         <HangingLantern stringLength={70} size={35} duration={2.5} delay={0.5} position="left-[35%] md:left-[30%]" />
-        
-        {/* فانوس وسط-يمين (متوسط) - يختفي في الجوال لتجنب الزحمة */}
         <div className="hidden md:block">
           <HangingLantern stringLength={100} size={40} duration={3.5} delay={1} position="right-[35%]" />
         </div>
