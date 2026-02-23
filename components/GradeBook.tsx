@@ -429,7 +429,7 @@ const GradeBook: React.FC<GradeBookProps> = ({
             </button>
           </div>
           
-          <div className="relative" style={{ WebkitAppRegion: 'no-drag' } as any}>
+          <div "relative z-[9999]" style={{ WebkitAppRegion: 'no-drag' } as any}>
             <button onClick={() => setShowMenu(!showMenu)} className={`cursor-pointer relative z-50 p-2.5 rounded-xl border border-white/20 active:scale-95 transition-all ${showMenu ? (isRamadan ? 'bg-white/20 text-white' : 'bg-white text-[#1e3a8a]') : 'bg-white/10 text-white'}`}>
               <SlidersHorizontal className="w-5 h-5" />
             </button>
