@@ -68,7 +68,10 @@
       "package.json"
     ],
     "win": {
-      "target": "nsis",
+      "target": [
+        "nsis",
+        "appx"
+      ],
       "icon": "icon.png",
       "requestedExecutionLevel": "asInvoker"
     },
@@ -78,6 +81,16 @@
       "createDesktopShortcut": true,
       "createStartMenuShortcut": true,
       "shortcutName": "راصد"
+    },
+    "appx": {
+      "applicationId": "RasedApp",
+      "identityName": "alzaabi555.Rased555",
+      "publisher": "CN=83F2A458-642A-4D83-9CE8-5F30B93D4CC3",
+      "publisherDisplayName": "alzaabi555",
+      "languages": [
+        "ar-SA",
+        "en-US"
+      ]
     },
     "protocols": [
       {
