@@ -336,6 +336,7 @@ const Dashboard: React.FC<DashboardProps> = ({
         finally { setIsImportingSchedule(false); if (e.target) e.target.value = ''; setShowSettingsDropdown(false); }
     };
 
+    // 👨‍⚕️ التعديل الجراحي المطور: قراءة أفضل للمصفوفات وللكلمات العربية في الإكسل
     const handleImportPeriodTimes = async (e: React.ChangeEvent<HTMLInputElement>) => {
         const file = e.target.files?.[0];
         if (!file) return;
@@ -345,25 +346,51 @@ const Dashboard: React.FC<DashboardProps> = ({
             const workbook = XLSX.read(data, { type: 'array' });
             const worksheet = workbook.Sheets[workbook.SheetNames[0]];
             const jsonData = XLSX.utils.sheet_to_json(worksheet, { header: 1 }) as any[][];
-            const newPeriodTimes = [...tempPeriodTimes];
+            
+            let newPeriodTimes = tempPeriodTimes.map(pt => ({ ...pt }));
+            if (newPeriodTimes.length === 0) {
+                newPeriodTimes = Array(8).fill(null).map(() => ({ startTime: '', endTime: '' }));
+            }
+
             let updatesCount = 0;
             jsonData.forEach((row) => {
                 if (row.length < 2) return;
-                const firstCol = String(row[0] || '');
+                const firstCol = String(row[0] || '').trim();
+                let pIndex = -1;
                 const periodNumMatch = firstCol.match(/\d+/);
+                
                 if (periodNumMatch) {
-                    const pIndex = parseInt(periodNumMatch[0]) - 1; 
-                    if (pIndex >= 0 && pIndex < 8) {
-                        const parsedStart = parseExcelTime(row[1]);
-                        const parsedEnd = parseExcelTime(row[2]);
-                        if (parsedStart && newPeriodTimes[pIndex]) newPeriodTimes[pIndex].startTime = parsedStart;
-                        if (parsedEnd && newPeriodTimes[pIndex]) newPeriodTimes[pIndex].endTime = parsedEnd;
-                        if(parsedStart || parsedEnd) updatesCount++;
-                    }
+                    pIndex = parseInt(periodNumMatch[0]) - 1;
+                } else {
+                    const words = ['اول', 'ثاني', 'ثالث', 'رابع', 'خامس', 'سادس', 'سابع', 'ثامن'];
+                    const cleanStr = firstCol.replace(/أ/g, 'ا').replace(/ة/g, '').replace(/ي/g, 'ي').toLowerCase();
+                    const foundWordIndex = words.findIndex(w => cleanStr.includes(w));
+                    if (foundWordIndex !== -1) pIndex = foundWordIndex;
+                }
+
+                if (pIndex >= 0 && pIndex < 8) {
+                    if (!newPeriodTimes[pIndex]) newPeriodTimes[pIndex] = { startTime: '', endTime: '' };
+                    const parsedStart = parseExcelTime(row[1]);
+                    const parsedEnd = parseExcelTime(row[2]);
+                    if (parsedStart) newPeriodTimes[pIndex].startTime = parsedStart;
+                    if (parsedEnd) newPeriodTimes[pIndex].endTime = parsedEnd;
+                    if(parsedStart || parsedEnd) updatesCount++;
                 }
             });
-            if (updatesCount > 0) { setTempPeriodTimes(newPeriodTimes); alert(`تم تحديث توقيت ${updatesCount} حصص`); }
-        } catch (error) { alert('خطأ في الملف'); } finally { setIsImportingPeriods(false); if (e.target) e.target.value = ''; }
+
+            if (updatesCount > 0) { 
+                setTempPeriodTimes(newPeriodTimes); 
+                alert(`✅ تم استيراد وتحديث توقيت ${updatesCount} حصص بنجاح`); 
+            } else {
+                alert('⚠️ لم يتم العثور على أوقات صالحة في الملف. تأكد من أن الملف يحتوي على أرقام أو أسماء الحصص وأوقاتها.');
+            }
+        } catch (error) { 
+            console.error("Excel Import Error:", error);
+            alert('❌ حدث خطأ أثناء قراءة الملف. تأكد أنه ملف إكسل صالح.'); 
+        } finally { 
+            setIsImportingPeriods(false); 
+            if (e.target) e.target.value = ''; 
+        }
     };
 
     const checkActivePeriod = (start: string, end: string) => {
@@ -460,7 +487,8 @@ const Dashboard: React.FC<DashboardProps> = ({
                                             <div className={`p-2 rounded-lg ${isRamadan ? 'bg-amber-500/20' : 'bg-amber-50'}`}><PlayCircle size={18} className={isRamadan ? 'text-amber-400' : 'text-amber-600'}/></div>
                                             <span className="text-sm font-bold">تجربة الجرس</span>
                                         </button>
-                                        <button onClick={() => scheduleFileInputRef.current?.click()} className={`flex items-center gap-3 px-4 py-4 w-full text-right border-t ${isRamadan ? 'hover:bg-white/10 border-white/5 bg-white/5' : 'hover:bg-slate-50 border-slate-50 bg-slate-50/50'}`}>
+                                        {/* 👨‍⚕️ التعديل الجراحي: إضافة no-drag للزر الخاص باستيراد الجدول هنا */}
+                                        <button onClick={() => scheduleFileInputRef.current?.click()} style={{ WebkitAppRegion: 'no-drag' } as any} className={`cursor-pointer relative z-50 flex items-center gap-3 px-4 py-4 w-full text-right border-t ${isRamadan ? 'hover:bg-white/10 border-white/5 bg-white/5' : 'hover:bg-slate-50 border-slate-50 bg-slate-50/50'}`}>
                                             <div className={`p-2 rounded-lg ${isRamadan ? 'bg-blue-500/20' : 'bg-blue-50'}`}><Download size={18} className={isRamadan ? 'text-blue-400' : 'text-blue-600'}/></div>
                                             <span className="text-sm font-bold">استيراد الجدول</span>
                                             {isImportingSchedule && <Loader2 size={16} className={`ml-auto animate-spin ${isRamadan ? 'text-blue-400' : 'text-blue-600'}`} />}
@@ -809,9 +837,15 @@ const Dashboard: React.FC<DashboardProps> = ({
 
             <Modal isOpen={showScheduleModal} onClose={() => setShowScheduleModal(false)} className={`max-w-md rounded-[2rem] h-[80vh] ${isRamadan ? 'bg-transparent' : ''}`}>
                 <div className={`flex flex-col h-full p-2 rounded-[2rem] border transition-colors ${isRamadan ? 'bg-[#0f172a]/95 backdrop-blur-2xl border-white/10 text-white shadow-[0_0_40px_rgba(0,0,0,0.5)]' : 'bg-white border-transparent text-slate-800'}`}>
+                    
+                    {/* 👨‍⚕️ التعديل الجراحي: إضافة no-drag للزر داخل النافذة المنبثقة للجدول */}
                     <div className={`flex justify-between items-center mb-4 pb-2 border-b ${isRamadan ? 'border-white/10' : 'border-slate-50'}`}>
                         <h3 className="font-black text-lg">إدارة الجدول</h3>
-                        <button onClick={() => modalScheduleFileInputRef.current?.click()} className={`flex items-center gap-1 px-3 py-1.5 rounded-lg text-[10px] font-bold transition-colors ${isRamadan ? 'bg-emerald-500/20 text-emerald-400 hover:bg-emerald-500/30' : 'bg-emerald-50 text-emerald-600 hover:bg-emerald-100'}`}>
+                        <button 
+                            onClick={() => modalScheduleFileInputRef.current?.click()} 
+                            style={{ WebkitAppRegion: 'no-drag' } as any}
+                            className={`cursor-pointer relative z-50 flex items-center gap-1 px-3 py-1.5 rounded-lg text-[10px] font-bold transition-colors ${isRamadan ? 'bg-emerald-500/20 text-emerald-400 hover:bg-emerald-500/30' : 'bg-emerald-50 text-emerald-600 hover:bg-emerald-100'}`}
+                        >
                             <Download size={14}/> {isImportingPeriods ? '...' : 'استيراد Excel'}
                         </button>
                         <input type="file" ref={modalScheduleFileInputRef} onChange={handleImportPeriodTimes} accept=".xlsx,.xls" className="hidden" />
