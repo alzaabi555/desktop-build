@@ -56,7 +56,7 @@
   },
   "build": {
     "appId": "com.madrasati.app",
-    "productName": "راصد",
+    "productName": "تطبيق راصد",
     "npmRebuild": false,
     "directories": {
       "output": "dist"
