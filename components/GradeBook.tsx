@@ -431,9 +431,10 @@ const GradeBook: React.FC<GradeBookProps> = ({
               <BarChart3 className="w-5 h-5 text-white" />
             </div>
             <h1 className="text-xl md:text-2xl font-black tracking-wide">سجل الدرجات</h1>
+            {/* 👨‍⚕️ التعديل الجراحي هنا: no-drag و z-50 */}
             <button 
                 onClick={() => setShowToolsManager(true)} 
-                className="p-2 bg-white/10 hover:bg-white/20 rounded-full transition-colors active:scale-95 border border-white/10" 
+                className="p-2 bg-white/10 hover:bg-white/20 rounded-full transition-colors active:scale-95 border border-white/10 cursor-pointer relative z-50" 
                 title="إدارة الأدوات"
                 style={{ WebkitAppRegion: 'no-drag' } as any}
             >
@@ -442,7 +443,8 @@ const GradeBook: React.FC<GradeBookProps> = ({
           </div>
           
           <div className="relative" style={{ WebkitAppRegion: 'no-drag' } as any}>
-            <button onClick={() => setShowMenu(!showMenu)} className={`bg:white/10 p-2.5 rounded-xl backdrop-blur-md border border-white/20 active:scale-95 transition-all ${showMenu ? (isRamadan ? 'bg-white/20 text-white' : 'bg-white text-[#1e3a8a]') : 'bg-white/10 text-white'}`}>
+            {/* 👨‍⚕️ التعديل الجراحي هنا: no-drag و z-50 */}
+            <button onClick={() => setShowMenu(!showMenu)} className={`cursor-pointer relative z-50 bg:white/10 p-2.5 rounded-xl backdrop-blur-md border border-white/20 active:scale-95 transition-all ${showMenu ? (isRamadan ? 'bg-white/20 text-white' : 'bg-white text-[#1e3a8a]') : 'bg-white/10 text-white'}`}>
               <SlidersHorizontal className="w-5 h-5" />
             </button>
             {showMenu && (
@@ -490,21 +492,22 @@ const GradeBook: React.FC<GradeBookProps> = ({
           </div>
         </div>
 
-        <div className="space-y-4" style={{ WebkitAppRegion: 'no-drag' } as any}>
-          <div className="flex gap-2 overflow-x-auto no-scrollbar md:flex-wrap md:overflow-visible pt-1 pb-2">
+        {/* 👨‍⚕️ التعديل الجراحي: إضافة relative z-50 لمنع تداخل السحب، وتحويل القوائم إلى flex-wrap للنزول لصف ثاني */}
+        <div className="space-y-4 relative z-50" style={{ WebkitAppRegion: 'no-drag' } as any}>
+          <div className="flex flex-wrap gap-2 pt-1 pb-2">
             <button onClick={() => { setSelectedGrade('all'); setSelectedClass('all'); }} className={`px-4 py-2 text-[10px] font-bold whitespace-nowrap transition-all rounded-xl border ${selectedGrade === 'all' ? (isRamadan ? 'bg-amber-500/20 text-amber-300 border-amber-500/50 shadow-md' : 'bg-white text-[#1e3a8a] shadow-md border-white') : 'bg-white/10 text-blue-100 border-white/20'}`}>كل المراحل</button>
             {availableGrades.map(g => (
               <button key={g} onClick={() => { setSelectedGrade(g); setSelectedClass('all'); }} className={`px-4 py-2 text-[10px] font-bold whitespace-nowrap transition-all rounded-xl border ${selectedGrade === g ? (isRamadan ? 'bg-amber-500/20 text-amber-300 border-amber-500/50 shadow-md' : 'bg-white text-[#1e3a8a] shadow-md border-white') : 'bg-white/10 text-blue-100 border-white/20'}`}>صف {g}</button>
             ))}
           </div>
-          <div className="flex gap-2 overflow-x-auto no-scrollbar pb-1">
+          <div className="flex flex-wrap gap-2 pb-1">
             <button onClick={() => setSelectedClass('all')} className={`px-5 py-2.5 text-xs font-bold whitespace-nowrap transition-all rounded-xl border shadow-sm ${selectedClass === 'all' ? (isRamadan ? 'bg-amber-500/20 text-amber-300 border-amber-500/50 shadow-md' : 'bg-white text-[#1e3a8a] shadow-md border-white') : 'bg-white/10 text-blue-100 border-white/20'}`}>الكل</button>
             {visibleClasses.map(c => (
               <button key={c} onClick={() => setSelectedClass(c)} className={`px-5 py-2.5 text-xs font-bold whitespace-nowrap transition-all rounded-xl border shadow-sm ${selectedClass === c ? (isRamadan ? 'bg-amber-500/20 text-amber-300 border-amber-500/50 shadow-md' : 'bg-white text-[#1e3a8a] shadow-md border-white') : 'bg-white/10 text-blue-100 border-white/20'}`}>{c}</button>
             ))}
           </div>
           
-          <div className="overflow-x-auto no-scrollbar flex gap-2 pt-1 pb-1">
+          <div className="flex flex-wrap gap-2 pt-1 pb-1">
             {tools.map(tool => (
                 <button key={tool.id} onClick={() => setActiveToolId(tool.id)} className={`px-4 py-2 rounded-xl text-[10px] font-bold whitespace-nowrap border flex items-center gap-1.5 active:scale-95 shadow-sm transition-all ${activeToolId === tool.id ? (isRamadan ? 'bg-white/20 text-amber-300 border-amber-400/50 shadow-md' : 'bg-white text-[#1e3a8a] border-white shadow-md') : 'bg-white/10 hover:bg-white/20 text-white border-white/20'} ${tool.isFinal ? 'border-amber-400/50' : ''}`}>
                   {activeToolId === tool.id && <Check className="w-3 h-3" />}
