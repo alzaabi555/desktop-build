@@ -336,7 +336,6 @@ const Dashboard: React.FC<DashboardProps> = ({
         finally { setIsImportingSchedule(false); if (e.target) e.target.value = ''; setShowSettingsDropdown(false); }
     };
 
-    // 👨‍⚕️ التعديل الجراحي المطور: قراءة أفضل للمصفوفات وللكلمات العربية في الإكسل
     const handleImportPeriodTimes = async (e: React.ChangeEvent<HTMLInputElement>) => {
         const file = e.target.files?.[0];
         if (!file) return;
@@ -427,17 +426,17 @@ const Dashboard: React.FC<DashboardProps> = ({
 
     return (
         <div className="space-y-6 pb-28 animate-in fade-in duration-500 relative min-h-screen">
-            {/* 🌙 الهيدر */}
+            {/* 🚀 تم إزالة الزجاج المغبش واستخدام لون صلب للأداء */}
             <header 
-                className={`pt-10 pb-8 px-4 md:pt-16 md:pb-12 md:px-6 md:pl-40 shadow-xl relative z-20 -mx-4 -mt-4 transition-all duration-500 ${isRamadan ? 'bg-white/5 backdrop-blur-3xl border-b border-white/10 text-white' : 'bg-[#446A8D] text-white'}`}
+                className={`pt-10 pb-8 px-4 md:pt-16 md:pb-12 md:px-6 md:pl-40 shadow-xl relative z-20 -mx-4 -mt-4 transition-all duration-500 ${isRamadan ? 'bg-[#0f172a] border-b border-white/10 text-white' : 'bg-[#446A8D] text-white'}`}
                 style={{ WebkitAppRegion: 'drag' } as any}
             >
                 <div className="flex justify-between items-center mb-2">
                     
-                    {/* منطقة الصورة والاسم (محمية من السحب لتتمكن من ضغط زر التعديل) */}
+                    {/* منطقة الصورة والاسم */}
                     <div className="flex items-center gap-3 md:gap-5" style={{ WebkitAppRegion: 'no-drag' } as any}>
                         <div className="relative group">
-                            <div className="w-14 h-14 md:w-20 md:h-20 rounded-2xl bg-white/10 backdrop-blur-md border border-white/20 flex items-center justify-center overflow-hidden shadow-inner transition-transform hover:scale-105">
+                            <div className="w-14 h-14 md:w-20 md:h-20 rounded-2xl bg-white/10 border border-white/20 flex items-center justify-center overflow-hidden shadow-inner transition-transform hover:scale-105">
                                 {getDisplayImage(teacherInfo?.avatar, teacherInfo?.gender) ? (
                                     <img src={teacherInfo.avatar} className="w-full h-full object-cover" alt="Teacher" onError={(e) => e.currentTarget.style.display='none'} />
                                 ) : <DefaultAvatarSVG gender={teacherInfo?.gender || 'male'} />}
@@ -460,16 +459,16 @@ const Dashboard: React.FC<DashboardProps> = ({
                         </div>
                     </div>
                     
-                    {/* منطقة الإعدادات (محمية من السحب) */}
+                    {/* منطقة الإعدادات */}
                     <div className="flex gap-2 md:gap-3" style={{ WebkitAppRegion: 'no-drag' } as any}>
                         <div className="relative">
-                            <button onClick={() => setShowSettingsDropdown(!showSettingsDropdown)} className={`w-10 h-10 md:w-12 md:h-12 bg-white/10 hover:bg-white/20 backdrop-blur-md border border-white/10 rounded-2xl flex items-center justify-center transition-all ${showSettingsDropdown ? (isRamadan ? 'bg-amber-500/30 text-white' : 'bg-white text-[#446A8D]') : ''}`}>
+                            <button onClick={() => setShowSettingsDropdown(!showSettingsDropdown)} className={`w-10 h-10 md:w-12 md:h-12 bg-white/10 hover:bg-white/20 border border-white/10 rounded-2xl flex items-center justify-center transition-all ${showSettingsDropdown ? (isRamadan ? 'bg-amber-500/30 text-white' : 'bg-white text-[#446A8D]') : ''}`}>
                                 <Settings size={20} className="md:w-6 md:h-6" />
                             </button>
                             {showSettingsDropdown && (
                                 <>
                                     <div className="fixed inset-0 z-40" onClick={() => setShowSettingsDropdown(false)}></div>
-                                    <div className={`absolute left-0 top-full mt-3 w-60 rounded-2xl shadow-2xl border z-50 overflow-hidden animate-in zoom-in-95 origin-top-left ${isRamadan ? 'bg-[#1e1b4b]/95 backdrop-blur-xl border-indigo-500/30 text-indigo-100' : 'bg-white border-slate-100 text-slate-800'}`}>
+                                    <div className={`absolute left-0 top-full mt-3 w-60 rounded-2xl shadow-2xl border z-50 overflow-hidden animate-in zoom-in-95 origin-top-left ${isRamadan ? 'bg-[#0f172a] border-indigo-500/30 text-indigo-100' : 'bg-white border-slate-100 text-slate-800'}`}>
                                         <button onClick={() => { setShowEditModal(true); setShowSettingsDropdown(false); }} className={`flex items-center gap-3 px-4 py-4 w-full text-right border-b transition-colors ${isRamadan ? 'hover:bg-white/5 border-white/5' : 'hover:bg-slate-50 border-slate-50'}`}>
                                             <div className={`p-2 rounded-lg ${isRamadan ? 'bg-white/10' : 'bg-indigo-50'}`}><User size={18} className={isRamadan ? 'text-indigo-300' : 'text-indigo-600'}/></div>
                                             <span className="text-sm font-bold">تعديل الهوية</span>
@@ -487,7 +486,6 @@ const Dashboard: React.FC<DashboardProps> = ({
                                             <div className={`p-2 rounded-lg ${isRamadan ? 'bg-amber-500/20' : 'bg-amber-50'}`}><PlayCircle size={18} className={isRamadan ? 'text-amber-400' : 'text-amber-600'}/></div>
                                             <span className="text-sm font-bold">تجربة الجرس</span>
                                         </button>
-                                        {/* 👨‍⚕️ التعديل الجراحي: إضافة no-drag للزر الخاص باستيراد الجدول هنا */}
                                         <button onClick={() => scheduleFileInputRef.current?.click()} style={{ WebkitAppRegion: 'no-drag' } as any} className={`cursor-pointer relative z-50 flex items-center gap-3 px-4 py-4 w-full text-right border-t ${isRamadan ? 'hover:bg-white/10 border-white/5 bg-white/5' : 'hover:bg-slate-50 border-slate-50 bg-slate-50/50'}`}>
                                             <div className={`p-2 rounded-lg ${isRamadan ? 'bg-blue-500/20' : 'bg-blue-50'}`}><Download size={18} className={isRamadan ? 'text-blue-400' : 'text-blue-600'}/></div>
                                             <span className="text-sm font-bold">استيراد الجدول</span>
@@ -498,7 +496,7 @@ const Dashboard: React.FC<DashboardProps> = ({
                                 </>
                             )}
                         </div>
-                        <button onClick={onToggleNotifications} className={`w-10 h-10 md:w-12 md:h-12 rounded-2xl flex items-center justify-center backdrop-blur-md border transition-all ${notificationsEnabled ? 'bg-amber-400/20 border-amber-400/50 text-amber-300 shadow-[0_0_15px_rgba(251,191,36,0.3)]' : 'bg-white/10 border-white/10 text-white/60 hover:bg-white/20'}`}>
+                        <button onClick={onToggleNotifications} className={`w-10 h-10 md:w-12 md:h-12 rounded-2xl flex items-center justify-center border transition-all ${notificationsEnabled ? 'bg-amber-400/20 border-amber-400/50 text-amber-300 shadow-lg' : 'bg-white/10 border-white/10 text-white/60 hover:bg-white/20'}`}>
                             {notificationsEnabled ? <Bell size={20} className="md:w-6 md:h-6 animate-pulse" /> : <BellOff size={20} className="md:w-6 md:h-6" />}
                         </button>
                     </div>
@@ -515,6 +513,7 @@ const Dashboard: React.FC<DashboardProps> = ({
                     </button>
                 </div>
 
+                {/* 🚀 إزالة الزجاج من بطاقات الجدول */}
                 <div className="space-y-3">
                     {todaySchedule.periods && todaySchedule.periods.map((subject: string, idx: number) => {
                         if (!subject) return null;
@@ -522,13 +521,12 @@ const Dashboard: React.FC<DashboardProps> = ({
                         const isActive = isToday && checkActivePeriod(time.startTime, time.endTime);
                         const displaySubject = teacherInfo?.subject && teacherInfo.subject.trim().length > 0 ? teacherInfo.subject : subject;
 
-                        // 🌙 تحديد ألوان البطاقات
                         const activeClass = isRamadan 
-                            ? 'bg-amber-600 text-white border-amber-500 shadow-lg shadow-amber-900/50 scale-105 z-10' 
-                            : 'bg-[#446A8D] text-white border-[#446A8D] shadow-xl shadow-blue-200 scale-105 z-10';
+                            ? 'bg-amber-600 text-white border-amber-500 shadow-lg scale-105 z-10' 
+                            : 'bg-[#446A8D] text-white border-[#446A8D] shadow-xl scale-105 z-10';
                             
                         const inactiveClass = isRamadan 
-                            ? 'bg-white/5 backdrop-blur-xl border-white/10 hover:bg-white/10' 
+                            ? 'bg-[#1e293b] border-white/10 hover:bg-white/5' 
                             : 'bg-white border-slate-100 hover:shadow-md';
 
                         return (
@@ -564,7 +562,7 @@ const Dashboard: React.FC<DashboardProps> = ({
                         );
                     })}
                     {(!todaySchedule.periods || todaySchedule.periods.every((p: string) => !p)) && (
-                        <div className={`flex flex-col items-center justify-center py-10 rounded-3xl border border-dashed ${isRamadan ? 'bg-white/5 border-white/10 text-indigo-200/50' : 'bg-white border-slate-200 text-slate-400 opacity-60'}`}>
+                        <div className={`flex flex-col items-center justify-center py-10 rounded-3xl border border-dashed ${isRamadan ? 'bg-[#1e293b] border-white/10 text-indigo-200/50' : 'bg-white border-slate-200 text-slate-400 opacity-60'}`}>
                             <School size={40} className="mb-2" />
                             <p className="font-bold text-xs">لا توجد حصص اليوم</p>
                         </div>
@@ -573,7 +571,7 @@ const Dashboard: React.FC<DashboardProps> = ({
             </div>
 
             <div className="px-4 mt-6 relative z-10">
-                <div className={`rounded-[1.5rem] p-5 shadow-sm border ${isRamadan ? 'bg-[#0f172a]/60 backdrop-blur-xl border-white/10' : 'bg-white border-slate-100'}`}>
+                <div className={`rounded-[1.5rem] p-5 shadow-sm border ${isRamadan ? 'bg-[#0f172a] border-white/10' : 'bg-white border-slate-100'}`}>
                     <div className="flex justify-between items-center mb-4">
                         <div className="flex items-center gap-3">
                             <div className={`p-2 rounded-xl ${isRamadan ? 'bg-amber-500/20 text-amber-400' : 'bg-amber-50 text-amber-500'}`}><CalendarDays size={18}/></div>
@@ -588,7 +586,6 @@ const Dashboard: React.FC<DashboardProps> = ({
                             const isCurrent = currentMonthIndex === plan.monthIndex;
                             const isPast = currentMonthIndex > plan.monthIndex;
                             
-                            // 🌙 تحديد ألوان الشهور حسب النمط
                             let monthBg = isRamadan ? 'bg-white/5 border-white/10' : 'bg-white border-slate-100';
                             if(isCurrent) monthBg = isRamadan ? 'bg-indigo-500/20 border-indigo-400/50' : 'bg-indigo-50/50 border-indigo-200';
                             if(isPast) monthBg = isRamadan ? 'bg-white/5 border-transparent opacity-40' : 'bg-gray-50 border-gray-100 opacity-60';
@@ -615,9 +612,9 @@ const Dashboard: React.FC<DashboardProps> = ({
                 </div>
             </div>
 
-            {/* ✅ تحديث التنبيه السفلي ليتوافق مع الزجاج الليلي */}
+            {/* 🚀 إزالة الزجاج من شريط التنبيه السفلي */}
             {showAlertBar && currentTasks.length > 0 && (
-                <div className={`fixed bottom-[80px] left-4 right-4 backdrop-blur-xl p-4 rounded-2xl shadow-2xl z-30 flex items-start gap-3 animate-in slide-in-from-bottom-10 duration-500 border ${isRamadan ? 'bg-[#0f172a]/95 border-white/10 shadow-[0_0_40px_rgba(0,0,0,0.5)] text-white' : 'bg-indigo-900/95 border-indigo-800 text-white'}`}>
+                <div className={`fixed bottom-[80px] left-4 right-4 p-4 rounded-2xl shadow-2xl z-30 flex items-start gap-3 animate-in slide-in-from-bottom-10 duration-500 border ${isRamadan ? 'bg-[#0f172a] border-white/10 text-white' : 'bg-indigo-900/95 border-indigo-800 text-white'}`}>
                     <div className={`p-2 rounded-xl shrink-0 animate-pulse ${isRamadan ? 'bg-amber-500/20' : 'bg-indigo-700'}`}>
                         <AlertTriangle size={20} className="text-amber-400" />
                     </div>
@@ -633,12 +630,12 @@ const Dashboard: React.FC<DashboardProps> = ({
                 </div>
             )}
 
-            {/* ✅ تحديث الرسالة السحابية لرمضان */}
+            {/* 🚀 إزالة الزجاج من النوافذ المنبثقة */}
             {cloudMessage && (
-                <div className="fixed inset-0 z-[99999] flex items-center justify-center bg-black/60 backdrop-blur-sm animate-in fade-in duration-500 px-4">
-                    <div className={`w-full max-w-sm rounded-[2.5rem] overflow-hidden shadow-2xl relative animate-in zoom-in-95 duration-300 border ${isRamadan ? 'bg-[#0f172a]/95 backdrop-blur-2xl border-white/10 text-white' : 'bg-white border-transparent text-slate-800'}`}>
+                <div className="fixed inset-0 z-[99999] flex items-center justify-center bg-black/80 animate-in fade-in duration-500 px-4">
+                    <div className={`w-full max-w-sm rounded-[2.5rem] overflow-hidden shadow-2xl relative animate-in zoom-in-95 duration-300 border ${isRamadan ? 'bg-[#0f172a] border-white/10 text-white' : 'bg-white border-transparent text-slate-800'}`}>
                         <div className={`h-40 relative flex items-center justify-center ${cloudMessage.type === 'alert' ? (isRamadan ? 'bg-rose-900/50' : 'bg-rose-600') : (isRamadan ? 'bg-indigo-900/50' : 'bg-indigo-600')}`}>
-                            <div className={`relative z-10 p-6 backdrop-blur-md rounded-full border shadow-lg animate-bounce ${isRamadan ? 'bg-white/5 border-white/10' : 'bg-white/10 border-white/20'}`}>
+                            <div className={`relative z-10 p-6 rounded-full border shadow-lg animate-bounce ${isRamadan ? 'bg-[#1e293b] border-white/10' : 'bg-white/10 border-white/20'}`}>
                                 {cloudMessage.type === 'alert' ? <AlertTriangle size={48} className={isRamadan ? 'text-rose-400' : 'text-white'} /> : <Bell size={48} className={isRamadan ? 'text-indigo-300' : 'text-white'} />}
                             </div>
                         </div>
@@ -661,12 +658,11 @@ const Dashboard: React.FC<DashboardProps> = ({
                 </div>
             )}
 
-            {/* ✅ تحديث رسالة المناسبات لرمضان */}
             {occasionGreeting && !cloudMessage && (
-                <div className="fixed inset-0 z-[99999] flex items-center justify-center bg-black/60 backdrop-blur-sm animate-in fade-in duration-500 px-4">
-                    <div className={`w-full max-w-sm rounded-[2.5rem] overflow-hidden shadow-2xl relative animate-in zoom-in-95 duration-300 border ${isRamadan ? 'bg-[#0f172a]/95 backdrop-blur-2xl border-white/10 text-white' : 'bg-white border-transparent text-slate-800'}`}>
+                <div className="fixed inset-0 z-[99999] flex items-center justify-center bg-black/80 animate-in fade-in duration-500 px-4">
+                    <div className={`w-full max-w-sm rounded-[2.5rem] overflow-hidden shadow-2xl relative animate-in zoom-in-95 duration-300 border ${isRamadan ? 'bg-[#0f172a] border-white/10 text-white' : 'bg-white border-transparent text-slate-800'}`}>
                         <div className={`h-40 relative flex items-center justify-center ${occasionGreeting === 'ramadan' ? (isRamadan ? 'bg-[#1e1b4b]/80' : 'bg-[#1e1b4b]') : occasionGreeting === 'eid' ? (isRamadan ? 'bg-[#701a75]/80' : 'bg-[#701a75]') : (isRamadan ? 'bg-[#1e3a8a]/80' : 'bg-[#1e3a8a]')}`}>
-                            <div className={`relative z-10 p-6 backdrop-blur-md rounded-full border shadow-lg animate-bounce ${isRamadan ? 'bg-white/5 border-white/10' : 'bg-white/10 border-white/20'}`}>
+                            <div className={`relative z-10 p-6 rounded-full border shadow-lg animate-bounce ${isRamadan ? 'bg-[#1e293b] border-white/10' : 'bg-white/10 border-white/20'}`}>
                                 {occasionGreeting === 'ramadan' && <Moon size={48} className="text-amber-300 fill-amber-300" />}
                                 {occasionGreeting === 'eid' && <Award size={48} className="text-pink-300" />}
                                 {occasionGreeting === 'teacher' && <Heart size={48} className="text-blue-200" />}
@@ -690,7 +686,7 @@ const Dashboard: React.FC<DashboardProps> = ({
             )}
 
             <Modal isOpen={showPlanSettingsModal} onClose={() => setShowPlanSettingsModal(false)} className={`max-w-md rounded-[2rem] h-[80vh] ${isRamadan ? 'bg-transparent' : ''}`}>
-                <div className={`flex flex-col h-full p-2 rounded-[2rem] border ${isRamadan ? 'bg-[#0f172a]/95 backdrop-blur-2xl border-white/10 text-white shadow-[0_0_40px_rgba(0,0,0,0.5)]' : 'bg-white border-transparent text-slate-800'}`}>
+                <div className={`flex flex-col h-full p-2 rounded-[2rem] border ${isRamadan ? 'bg-[#0f172a] border-white/10 text-white shadow-2xl' : 'bg-white border-transparent text-slate-800'}`}>
                     <div className={`flex justify-between items-center mb-4 pb-2 border-b ${isRamadan ? 'border-white/10' : 'border-slate-50'}`}>
                         <h3 className="font-black text-lg">تخصيص خطة التقويم</h3>
                         <div className="flex gap-2">
@@ -720,7 +716,7 @@ const Dashboard: React.FC<DashboardProps> = ({
 
                     <div className="flex-1 overflow-y-auto custom-scrollbar space-y-4 p-1">
                         {tempPlan.map((month, idx) => (
-                            <div key={month.id} className={`rounded-xl p-3 border ${isRamadan ? 'bg-white/5 border-white/10' : 'bg-slate-50 border-slate-100'}`}>
+                            <div key={month.id} className={`rounded-xl p-3 border ${isRamadan ? 'bg-[#1e293b] border-white/10' : 'bg-slate-50 border-slate-100'}`}>
                                 <div className="flex gap-2 mb-3">
                                     <select 
                                         value={month.monthIndex} 
@@ -730,7 +726,7 @@ const Dashboard: React.FC<DashboardProps> = ({
                                             n[idx].monthName = monthNames[parseInt(e.target.value)];
                                             setTempPlan(n);
                                         }}
-                                        className={`rounded-lg text-xs font-bold p-2 outline-none flex-1 border transition-colors ${isRamadan ? 'bg-[#1e1b4b]/50 border-indigo-500/30 text-white' : 'bg-white border-slate-200 text-slate-800'}`}
+                                        className={`rounded-lg text-xs font-bold p-2 outline-none flex-1 border transition-colors ${isRamadan ? 'bg-[#0f172a] border-indigo-500/30 text-white' : 'bg-white border-slate-200 text-slate-800'}`}
                                     >
                                         {monthNames.map((m, i) => <option key={i} value={i} className={isRamadan ? 'bg-slate-900 text-white' : ''}>{m}</option>)}
                                     </select>
@@ -756,7 +752,7 @@ const Dashboard: React.FC<DashboardProps> = ({
                                                     n[idx].tasks[tIdx] = e.target.value;
                                                     setTempPlan(n);
                                                 }}
-                                                className={`flex-1 border rounded-lg px-3 py-2 text-xs font-bold outline-none transition-colors ${isRamadan ? 'bg-[#1e1b4b]/50 border-indigo-500/30 text-white focus:border-indigo-400' : 'bg-white border-slate-200 text-slate-800 focus:border-indigo-500'}`}
+                                                className={`flex-1 border rounded-lg px-3 py-2 text-xs font-bold outline-none transition-colors ${isRamadan ? 'bg-[#0f172a] border-indigo-500/30 text-white focus:border-indigo-400' : 'bg-white border-slate-200 text-slate-800 focus:border-indigo-500'}`}
                                             />
                                             <button 
                                                 onClick={() => {
@@ -792,7 +788,7 @@ const Dashboard: React.FC<DashboardProps> = ({
             </Modal>
 
             <Modal isOpen={showEditModal} onClose={() => setShowEditModal(false)} className={`max-w-md rounded-[2rem] ${isRamadan ? 'bg-transparent' : ''}`}>
-                <div className={`text-center p-4 rounded-[2rem] border transition-colors ${isRamadan ? 'bg-[#0f172a]/95 backdrop-blur-2xl border-white/10 text-white shadow-[0_0_40px_rgba(0,0,0,0.5)]' : 'bg-white border-transparent text-slate-800'}`}>
+                <div className={`text-center p-4 rounded-[2rem] border transition-colors ${isRamadan ? 'bg-[#0f172a] border-white/10 text-white shadow-2xl' : 'bg-white border-transparent text-slate-800'}`}>
                     <h3 className="font-black text-lg mb-4">الهوية الرسمية</h3>
                     <div className="w-24 h-24 mx-auto mb-4 relative group">
                         {editAvatar ? (
@@ -836,9 +832,8 @@ const Dashboard: React.FC<DashboardProps> = ({
             </Modal>
 
             <Modal isOpen={showScheduleModal} onClose={() => setShowScheduleModal(false)} className={`max-w-md rounded-[2rem] h-[80vh] ${isRamadan ? 'bg-transparent' : ''}`}>
-                <div className={`flex flex-col h-full p-2 rounded-[2rem] border transition-colors ${isRamadan ? 'bg-[#0f172a]/95 backdrop-blur-2xl border-white/10 text-white shadow-[0_0_40px_rgba(0,0,0,0.5)]' : 'bg-white border-transparent text-slate-800'}`}>
+                <div className={`flex flex-col h-full p-2 rounded-[2rem] border transition-colors ${isRamadan ? 'bg-[#0f172a] border-white/10 text-white shadow-2xl' : 'bg-white border-transparent text-slate-800'}`}>
                     
-                    {/* 👨‍⚕️ التعديل الجراحي: إضافة no-drag للزر داخل النافذة المنبثقة للجدول */}
                     <div className={`flex justify-between items-center mb-4 pb-2 border-b ${isRamadan ? 'border-white/10' : 'border-slate-50'}`}>
                         <h3 className="font-black text-lg">إدارة الجدول</h3>
                         <button 
@@ -851,7 +846,7 @@ const Dashboard: React.FC<DashboardProps> = ({
                         <input type="file" ref={modalScheduleFileInputRef} onChange={handleImportPeriodTimes} accept=".xlsx,.xls" className="hidden" />
                     </div>
 
-                    <div className={`flex p-1 rounded-xl mb-4 shrink-0 ${isRamadan ? 'bg-white/5' : 'bg-slate-100'}`}>
+                    <div className={`flex p-1 rounded-xl mb-4 shrink-0 ${isRamadan ? 'bg-[#1e293b]' : 'bg-slate-100'}`}>
                         <button onClick={() => setScheduleTab('timing')} className={`flex-1 py-2 rounded-lg text-xs font-bold transition-all ${scheduleTab === 'timing' ? (isRamadan ? 'bg-white/10 shadow text-white' : 'bg-white shadow text-slate-800') : (isRamadan ? 'text-slate-400' : 'text-slate-400')}`}>التوقيت</button>
                         <button onClick={() => setScheduleTab('classes')} className={`flex-1 py-2 rounded-lg text-xs font-bold transition-all ${scheduleTab === 'classes' ? (isRamadan ? 'bg-white/10 shadow text-white' : 'bg-white shadow text-slate-800') : (isRamadan ? 'text-slate-400' : 'text-slate-400')}`}>الحصص</button>
                     </div>
@@ -860,11 +855,11 @@ const Dashboard: React.FC<DashboardProps> = ({
                         {scheduleTab === 'timing' ? (
                             <div className="space-y-2">
                                 {tempPeriodTimes.map((pt, idx) => (
-                                    <div key={idx} className={`flex items-center gap-2 p-2 rounded-xl border ${isRamadan ? 'bg-white/5 border-white/10' : 'bg-slate-50 border-slate-100'}`}>
+                                    <div key={idx} className={`flex items-center gap-2 p-2 rounded-xl border ${isRamadan ? 'bg-[#1e293b] border-white/10' : 'bg-slate-50 border-slate-100'}`}>
                                         <span className={`text-[10px] font-bold w-8 text-center ${isRamadan ? 'text-slate-400' : 'text-slate-400'}`}>{idx+1}</span>
-                                        <input type="time" value={pt.startTime} onChange={(e) => {const n=[...tempPeriodTimes]; if(n[idx]) n[idx].startTime=e.target.value; setTempPeriodTimes(n)}} className={`flex-1 rounded-lg px-2 py-1 text-xs font-bold border text-center transition-colors ${isRamadan ? 'bg-[#1e1b4b]/50 border-indigo-500/30 text-white' : 'bg-white border-slate-200 text-slate-800'}`}/>
+                                        <input type="time" value={pt.startTime} onChange={(e) => {const n=[...tempPeriodTimes]; if(n[idx]) n[idx].startTime=e.target.value; setTempPeriodTimes(n)}} className={`flex-1 rounded-lg px-2 py-1 text-xs font-bold border text-center transition-colors ${isRamadan ? 'bg-[#0f172a] border-indigo-500/30 text-white' : 'bg-white border-slate-200 text-slate-800'}`}/>
                                         <span className={isRamadan ? 'text-slate-500' : 'text-slate-300'}>-</span>
-                                        <input type="time" value={pt.endTime} onChange={(e) => {const n=[...tempPeriodTimes]; if(n[idx]) n[idx].endTime=e.target.value; setTempPeriodTimes(n)}} className={`flex-1 rounded-lg px-2 py-1 text-xs font-bold border text-center transition-colors ${isRamadan ? 'bg-[#1e1b4b]/50 border-indigo-500/30 text-white' : 'bg-white border-slate-200 text-slate-800'}`}/>
+                                        <input type="time" value={pt.endTime} onChange={(e) => {const n=[...tempPeriodTimes]; if(n[idx]) n[idx].endTime=e.target.value; setTempPeriodTimes(n)}} className={`flex-1 rounded-lg px-2 py-1 text-xs font-bold border text-center transition-colors ${isRamadan ? 'bg-[#0f172a] border-indigo-500/30 text-white' : 'bg-white border-slate-200 text-slate-800'}`}/>
                                     </div>
                                 ))}
                             </div>
@@ -877,9 +872,9 @@ const Dashboard: React.FC<DashboardProps> = ({
                                 </div>
                                 <div className="space-y-2">
                                     {tempSchedule[editingDayIndex]?.periods.map((cls: string, pIdx: number) => (
-                                        <div key={pIdx} className={`flex items-center gap-3 p-2 rounded-xl border ${isRamadan ? 'bg-white/5 border-white/10' : 'bg-slate-50 border-slate-100'}`}>
+                                        <div key={pIdx} className={`flex items-center gap-3 p-2 rounded-xl border ${isRamadan ? 'bg-[#1e293b] border-white/10' : 'bg-slate-50 border-slate-100'}`}>
                                             <span className={`text-[10px] font-bold w-8 text-center ${isRamadan ? 'text-slate-400' : 'text-slate-400'}`}>{pIdx + 1}</span>
-                                            <input value={cls} onChange={(e) => {const n=[...tempSchedule]; if(n[editingDayIndex]?.periods) n[editingDayIndex].periods[pIdx]=e.target.value; setTempSchedule(n)}} placeholder="اسم المادة" className={`flex-1 border rounded-lg px-3 py-2 text-xs font-bold outline-none transition-colors ${isRamadan ? 'bg-[#1e1b4b]/50 border-indigo-500/30 text-white focus:border-indigo-400 placeholder:text-slate-500' : 'bg-white border-slate-200 focus:border-indigo-500 text-slate-800'}`} />
+                                            <input value={cls} onChange={(e) => {const n=[...tempSchedule]; if(n[editingDayIndex]?.periods) n[editingDayIndex].periods[pIdx]=e.target.value; setTempSchedule(n)}} placeholder="اسم المادة" className={`flex-1 border rounded-lg px-3 py-2 text-xs font-bold outline-none transition-colors ${isRamadan ? 'bg-[#0f172a] border-indigo-500/30 text-white focus:border-indigo-400 placeholder:text-slate-500' : 'bg-white border-slate-200 focus:border-indigo-500 text-slate-800'}`} />
                                         </div>
                                     ))}
                                 </div>
