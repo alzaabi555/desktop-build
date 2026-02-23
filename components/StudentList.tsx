@@ -474,14 +474,14 @@ const StudentList: React.FC<StudentListProps> = ({
     <div className={`flex flex-col h-full overflow-hidden ${isRamadan ? 'text-white' : 'text-slate-800'}`}>
         
         {/* ================= FIXED HEADER ================= */}
-        {/* 🌙 الهيدر السحري مع الحماية والسحب */}
+        {/* 🚀 إزالة الزجاج المغبش وتسريع الهيدر بلون صلب */}
             <header 
-                className={`fixed md:sticky top-0 z-40 md:z-30 shadow-lg px-4 pt-[env(safe-area-inset-top)] pb-6 md:pl-40 transition-all duration-500 md:rounded-none md:shadow-md w-full md:w-auto left-0 right-0 md:left-auto md:right-auto ${isRamadan ? 'bg-white/5 backdrop-blur-3xl border-b border-white/10 text-white' : 'bg-[#446A8D] text-white'}`}
+                className={`fixed md:sticky top-0 z-40 md:z-30 shadow-lg px-4 pt-[env(safe-area-inset-top)] pb-6 md:pl-40 transition-all duration-500 md:rounded-none md:shadow-md w-full md:w-auto left-0 right-0 md:left-auto md:right-auto ${isRamadan ? 'bg-[#0f172a] border-b border-white/10 text-white' : 'bg-[#446A8D] text-white'}`}
                 style={{ WebkitAppRegion: 'drag' } as any}
             >
                 <div className="flex justify-between items-center mb-6">
                     <div className="flex items-center gap-3">
-                        <div className="bg-white/10 p-2 rounded-xl backdrop-blur-md border border-white/20">
+                        <div className="bg-white/10 p-2 rounded-xl border border-white/20">
                             <Users className="w-5 h-5 text-white" />
                         </div>
                         <div>
@@ -494,7 +494,7 @@ const StudentList: React.FC<StudentListProps> = ({
                         <div className="relative">
                             <button 
                                 onClick={() => setShowTimerModal(true)} 
-                                className={`p-2.5 rounded-xl backdrop-blur-md border active:scale-95 transition-all flex items-center gap-2 ${timerSeconds > 0 ? (isRamadan ? 'bg-amber-500/80 border-amber-400 text-white shadow-[0_0_15px_rgba(245,158,11,0.5)] animate-pulse' : 'bg-amber-500 border-amber-400 text-white shadow-lg animate-pulse') : (isRamadan ? 'bg-white/10 border-white/20 text-white hover:bg-white/20' : 'bg-white/10 border-white/20 text-white hover:bg-white/20')}`}
+                                className={`p-2.5 rounded-xl border active:scale-95 transition-all flex items-center gap-2 ${timerSeconds > 0 ? (isRamadan ? 'bg-amber-500/80 border-amber-400 text-white shadow-[0_0_15px_rgba(245,158,11,0.5)] animate-pulse' : 'bg-amber-500 border-amber-400 text-white shadow-lg animate-pulse') : (isRamadan ? 'bg-white/10 border-white/20 text-white hover:bg-white/20' : 'bg-white/10 border-white/20 text-white hover:bg-white/20')}`}
                                 title="المؤقت"
                             >
                                 <Timer className="w-5 h-5" />
@@ -506,20 +506,20 @@ const StudentList: React.FC<StudentListProps> = ({
 
                         <button 
                             onClick={handleRandomPick} 
-                            className={`p-2.5 rounded-xl backdrop-blur-md border active:scale-95 transition-all ${isRamadan ? 'bg-white/10 border-white/20 text-white hover:bg-white/20' : 'bg-white/10 border-white/20 text-white hover:bg-white/20'}`}
+                            className={`p-2.5 rounded-xl border active:scale-95 transition-all ${isRamadan ? 'bg-white/10 border-white/20 text-white hover:bg-white/20' : 'bg-white/10 border-white/20 text-white hover:bg-white/20'}`}
                             title="القرعة العشوائية"
                         >
                             <Dices className="w-5 h-5" />
                         </button>
 
                         <div className="relative">
-                            <button onClick={() => setShowMenu(!showMenu)} className={`p-2.5 rounded-xl backdrop-blur-md border active:scale-95 transition-all ${showMenu ? (isRamadan ? 'bg-white/20 border-white/30 text-white' : 'bg-white text-[#1e3a8a]') : 'bg-white/10 border-white/20 text-white hover:bg-white/20'}`}>
+                            <button onClick={() => setShowMenu(!showMenu)} className={`p-2.5 rounded-xl border active:scale-95 transition-all ${showMenu ? (isRamadan ? 'bg-white/20 border-white/30 text-white' : 'bg-white text-[#1e3a8a]') : 'bg-white/10 border-white/20 text-white hover:bg-white/20'}`}>
                                 <MoreVertical className="w-5 h-5" />
                             </button>
                             {showMenu && (
                             <>
                                 <div className="fixed inset-0 z-40" onClick={() => setShowMenu(false)}></div>
-                                <div className={`absolute left-0 top-full mt-2 w-56 rounded-2xl shadow-2xl border overflow-hidden z-50 animate-in zoom-in-95 origin-top-left ${isRamadan ? 'bg-[#0f172a]/95 backdrop-blur-2xl border-white/10 text-white shadow-[0_0_40px_rgba(0,0,0,0.5)]' : 'bg-white border-slate-100 text-slate-800'}`}>
+                                <div className={`absolute left-0 top-full mt-2 w-56 rounded-2xl shadow-2xl border overflow-hidden z-50 animate-in zoom-in-95 origin-top-left ${isRamadan ? 'bg-[#0f172a] border-white/10 text-white' : 'bg-white border-slate-100 text-slate-800'}`}>
                                     <div className="p-1">
                                             <button onClick={handleQuietAndDiscipline} className={`flex items-center gap-3 px-4 py-3 transition-colors w-full text-right text-xs font-bold border-b ${isRamadan ? 'hover:bg-purple-900/40 border-white/10 text-purple-200' : 'hover:bg-purple-50 border-slate-50 text-slate-700'}`}>
                                                 <Sparkles className={`w-4 h-4 ${isRamadan ? 'text-purple-400' : 'text-purple-600'}`} /> مكافأة الانضباط (هدوء)
@@ -553,7 +553,7 @@ const StudentList: React.FC<StudentListProps> = ({
                             placeholder="بحث عن طالب..." 
                             value={searchTerm}
                             onChange={(e) => setSearchTerm(e.target.value)}
-                            className="w-full bg-white/10 border border-white/20 rounded-2xl py-3 pr-12 pl-4 text-sm font-bold text-white placeholder:text-blue-200/50 outline-none focus:bg-white/20 transition-all"
+                            className={`w-full border rounded-2xl py-3 pr-12 pl-4 text-sm font-bold outline-none transition-all ${isRamadan ? 'bg-white/10 border-white/20 text-white placeholder:text-blue-200/50 focus:bg-white/20' : 'bg-white/20 border-white/30 text-white placeholder:text-blue-100 focus:bg-white/30'}`}
                         />
                     </div>
                     
@@ -575,7 +575,7 @@ const StudentList: React.FC<StudentListProps> = ({
                     {filteredStudents.length > 0 ? filteredStudents.map(student => {
                         const totalPoints = calculateTotalPoints(student);
                         return (
-                        <div key={student.id} className={`rounded-[1.5rem] border flex flex-col items-center overflow-hidden transition-all duration-300 ${isRamadan ? 'bg-white/5 backdrop-blur-xl border-white/10 hover:bg-white/10' : 'bg-white border-slate-100 hover:shadow-md'}`}>
+                        <div key={student.id} className={`rounded-[1.5rem] border flex flex-col items-center overflow-hidden transition-all duration-300 ${isRamadan ? 'bg-[#1e293b] border-white/10 hover:bg-[#283548]' : 'bg-white border-slate-100 hover:shadow-md'}`}>
                             <div className="p-4 flex flex-col items-center w-full relative">
                                 
                                 <div className="relative mb-3">
@@ -585,9 +585,9 @@ const StudentList: React.FC<StudentListProps> = ({
                                     />
                                     {totalPoints !== 0 && (
                                        <div className={`absolute -top-3 -right-5 z-10 flex items-center justify-center gap-0.5 px-2 py-0.5 rounded-full text-[10px] font-black shadow-sm border-2 ${isRamadan ? 'border-amber-500/30 bg-amber-500/20 text-amber-300' : 'border-white bg-amber-100 text-amber-600'}`}>
-    <Star size={10} className={isRamadan ? "fill-amber-400 text-amber-400" : "fill-amber-500 text-amber-500"} />
-    {totalPoints}
-</div>
+                                            <Star size={10} className={isRamadan ? "fill-amber-400 text-amber-400" : "fill-amber-500 text-amber-500"} />
+                                            {totalPoints}
+                                        </div>
                                     )}
                                 </div>
 
@@ -634,7 +634,7 @@ const StudentList: React.FC<StudentListProps> = ({
 
             {/* Modals */}
             <Modal isOpen={showManualAddModal} onClose={() => setShowManualAddModal(false)} className={`max-w-md rounded-[2rem] ${isRamadan ? 'bg-transparent' : ''}`}>
-                 <div className={`text-center p-6 rounded-[2rem] border transition-colors ${isRamadan ? 'bg-[#0f172a]/95 backdrop-blur-2xl border-white/10 text-white shadow-[0_0_40px_rgba(0,0,0,0.5)]' : 'bg-white border-transparent text-slate-800'}`}>
+                 <div className={`text-center p-6 rounded-[2rem] border transition-colors ${isRamadan ? 'bg-[#0f172a] border-white/10 text-white shadow-2xl' : 'bg-white border-transparent text-slate-800 shadow-2xl'}`}>
                     <div className={`w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4 border ${isRamadan ? 'bg-indigo-900/50 text-indigo-400 border-indigo-500/30' : 'bg-indigo-50 text-indigo-500 border-transparent'}`}>
                         <UserPlus className="w-8 h-8" />
                     </div>
@@ -656,13 +656,13 @@ const StudentList: React.FC<StudentListProps> = ({
             </Modal>
 
             <Modal isOpen={showImportModal} onClose={() => setShowImportModal(false)} className={`max-w-lg rounded-[2rem] ${isRamadan ? 'bg-transparent' : ''}`}>
-                <div className={isRamadan ? 'bg-[#0f172a]/95 backdrop-blur-2xl border border-white/10 rounded-[2rem] shadow-[0_0_40px_rgba(0,0,0,0.5)] overflow-hidden' : ''}>
+                <div className={isRamadan ? 'bg-[#0f172a] border border-white/10 rounded-[2rem] shadow-2xl overflow-hidden' : ''}>
                     <ExcelImport existingClasses={safeClasses} onImport={(data) => { onBatchAddStudents(data); setShowImportModal(false); }} onAddClass={onAddClass} />
                 </div>
             </Modal>
 
             <Modal isOpen={showAddClassModal} onClose={() => setShowAddClassModal(false)} className={`max-w-sm rounded-[2rem] ${isRamadan ? 'bg-transparent' : ''}`}>
-                 <div className={`text-center p-6 rounded-[2rem] border transition-colors ${isRamadan ? 'bg-[#0f172a]/95 backdrop-blur-2xl border-white/10 text-white shadow-[0_0_40px_rgba(0,0,0,0.5)]' : 'bg-white border-transparent text-slate-800'}`}>
+                 <div className={`text-center p-6 rounded-[2rem] border transition-colors ${isRamadan ? 'bg-[#0f172a] border-white/10 text-white shadow-2xl' : 'bg-white border-transparent text-slate-800 shadow-2xl'}`}>
                     <h3 className="font-black text-lg mb-4">إضافة فصل جديد</h3>
                     <input autoFocus type="text" placeholder="اسم الفصل (مثال: 5/1)" value={newClassInput} onChange={(e) => setNewClassInput(e.target.value)} className={`w-full p-4 rounded-xl font-bold text-sm outline-none border mb-4 transition-colors ${isRamadan ? 'bg-[#1e1b4b]/50 border-indigo-500/30 focus:border-indigo-400 text-white placeholder:text-indigo-200/40' : 'bg-gray-50 border-gray-200 focus:border-indigo-500 text-slate-800'}`} />
                     <button onClick={handleAddClassSubmit} className={`w-full py-3 rounded-xl font-black text-xs shadow-lg active:scale-95 transition-colors ${isRamadan ? 'bg-indigo-600 text-white hover:bg-indigo-500' : 'bg-indigo-600 text-white hover:bg-indigo-700'}`}>إضافة</button>
@@ -670,7 +670,7 @@ const StudentList: React.FC<StudentListProps> = ({
             </Modal>
 
             <Modal isOpen={showManageClasses} onClose={() => setShowManageClasses(false)} className={`max-w-md rounded-[2rem] ${isRamadan ? 'bg-transparent' : ''}`}>
-                <div className={`text-center p-6 rounded-[2rem] border transition-colors ${isRamadan ? 'bg-[#0f172a]/95 backdrop-blur-2xl border-white/10 text-white shadow-[0_0_40px_rgba(0,0,0,0.5)]' : 'bg-white border-transparent text-slate-800'}`}>
+                <div className={`text-center p-6 rounded-[2rem] border transition-colors ${isRamadan ? 'bg-[#0f172a] border-white/10 text-white shadow-2xl' : 'bg-white border-transparent text-slate-800 shadow-2xl'}`}>
                     <h3 className="font-black text-xl mb-6">إعدادات الفصول والصفوف</h3>
                     <div className={`rounded-2xl p-4 mb-6 border ${isRamadan ? 'bg-indigo-900/20 border-indigo-500/30' : 'bg-indigo-50/50 border-indigo-100'}`}>
                         <div className={`flex items-center justify-center gap-2 mb-3 ${isRamadan ? 'text-indigo-300' : 'text-indigo-900'}`}>
@@ -716,7 +716,7 @@ const StudentList: React.FC<StudentListProps> = ({
             </Modal>
             
             <Modal isOpen={showPositiveModal} onClose={() => { setShowPositiveModal(false); setSelectedStudentForBehavior(null); }} className={`max-w-sm rounded-[2rem] ${isRamadan ? 'bg-transparent' : ''}`}>
-                <div className={`text-center p-6 rounded-[2rem] border transition-colors ${isRamadan ? 'bg-[#0f172a]/95 backdrop-blur-2xl border-white/10 text-white shadow-[0_0_40px_rgba(0,0,0,0.5)]' : 'bg-white border-transparent text-slate-800'}`}>
+                <div className={`text-center p-6 rounded-[2rem] border transition-colors ${isRamadan ? 'bg-[#0f172a] border-white/10 text-white shadow-2xl' : 'bg-white border-transparent text-slate-800 shadow-2xl'}`}>
                     <div className="flex justify-between items-center mb-4">
                         <h3 className="font-black text-lg flex items-center gap-2">
                             <CheckCircle2 className={`w-5 h-5 ${isRamadan ? 'text-emerald-400' : 'text-emerald-500'}`} />
@@ -765,7 +765,7 @@ const StudentList: React.FC<StudentListProps> = ({
             </Modal>
 
             <Modal isOpen={showNegativeModal} onClose={() => { setShowNegativeModal(false); setSelectedStudentForBehavior(null); }} className={`max-w-sm rounded-[2rem] ${isRamadan ? 'bg-transparent' : ''}`}>
-                <div className={`text-center p-6 rounded-[2rem] border transition-colors ${isRamadan ? 'bg-[#0f172a]/95 backdrop-blur-2xl border-white/10 text-white shadow-[0_0_40px_rgba(0,0,0,0.5)]' : 'bg-white border-transparent text-slate-800'}`}>
+                <div className={`text-center p-6 rounded-[2rem] border transition-colors ${isRamadan ? 'bg-[#0f172a] border-white/10 text-white shadow-2xl' : 'bg-white border-transparent text-slate-800 shadow-2xl'}`}>
                     <div className="flex justify-between items-center mb-4">
                         <h3 className="font-black text-lg flex items-center gap-2">
                             <AlertCircle className={`w-5 h-5 ${isRamadan ? 'text-rose-400' : 'text-rose-500'}`} />
@@ -815,7 +815,7 @@ const StudentList: React.FC<StudentListProps> = ({
 
             <Modal isOpen={!!editingStudent} onClose={() => setEditingStudent(null)} className={`max-w-md rounded-[2rem] ${isRamadan ? 'bg-transparent' : ''}`}>
                 {editingStudent && (
-                     <div className={`text-center p-6 rounded-[2rem] border transition-colors ${isRamadan ? 'bg-[#0f172a]/95 backdrop-blur-2xl border-white/10 text-white shadow-[0_0_40px_rgba(0,0,0,0.5)]' : 'bg-white border-transparent text-slate-800'}`}>
+                     <div className={`text-center p-6 rounded-[2rem] border transition-colors ${isRamadan ? 'bg-[#0f172a] border-white/10 text-white shadow-2xl' : 'bg-white border-transparent text-slate-800 shadow-2xl'}`}>
                         <h3 className="font-black text-xl mb-6">تعديل بيانات الطالب</h3>
                         <div className="space-y-3">
                             <input type="text" value={editingStudent.name} onChange={(e) => setEditingStudent({...editingStudent, name: e.target.value})} className={`w-full p-4 rounded-xl font-bold text-sm outline-none border transition-colors ${isRamadan ? 'bg-[#1e1b4b]/50 border-indigo-500/30 focus:border-indigo-400 text-white' : 'bg-gray-50 border-gray-200 focus:border-indigo-500 text-slate-800'}`} placeholder="الاسم" />
@@ -838,7 +838,7 @@ const StudentList: React.FC<StudentListProps> = ({
 
             <Modal isOpen={!!randomWinner} onClose={() => setRandomWinner(null)} className={`max-w-sm rounded-[2rem] ${isRamadan ? 'bg-transparent' : ''}`}>
                 {randomWinner && (
-                    <div className={`text-center py-6 px-4 animate-in zoom-in duration-300 rounded-[2rem] border transition-colors ${isRamadan ? 'bg-[#0f172a]/95 backdrop-blur-2xl border-white/10 text-white shadow-[0_0_40px_rgba(0,0,0,0.5)]' : 'bg-white border-transparent text-slate-800'}`}>
+                    <div className={`text-center py-6 px-4 animate-in zoom-in duration-300 rounded-[2rem] border transition-colors ${isRamadan ? 'bg-[#0f172a] border-white/10 text-white shadow-2xl' : 'bg-white border-transparent text-slate-800 shadow-2xl'}`}>
                         <div className="mb-6 relative inline-block">
                             <div className={`w-24 h-24 rounded-full border-4 shadow-xl overflow-hidden mx-auto transition-colors ${isRamadan ? 'border-purple-500/50 bg-purple-900/30' : 'border-purple-200 bg-purple-50'}`}>
                                 <StudentAvatar 
@@ -866,7 +866,7 @@ const StudentList: React.FC<StudentListProps> = ({
             </Modal>
 
             <Modal isOpen={showTimerModal} onClose={() => setShowTimerModal(false)} className={`max-w-xs rounded-[2rem] ${isRamadan ? 'bg-transparent' : ''}`}>
-                <div className={`text-center p-6 rounded-[2rem] border transition-colors ${isRamadan ? 'bg-[#0f172a]/95 backdrop-blur-2xl border-white/10 text-white shadow-[0_0_40px_rgba(0,0,0,0.5)]' : 'bg-white border-transparent text-slate-800'}`}>
+                <div className={`text-center p-6 rounded-[2rem] border transition-colors ${isRamadan ? 'bg-[#0f172a] border-white/10 text-white shadow-2xl' : 'bg-white border-transparent text-slate-800 shadow-2xl'}`}>
                     <h3 className="font-black text-lg mb-4 flex items-center justify-center gap-2">
                         <Timer className={`w-5 h-5 ${isRamadan ? 'text-amber-400' : 'text-amber-500'}`}/> المؤقت
                     </h3>
