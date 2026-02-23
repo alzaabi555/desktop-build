@@ -158,9 +158,9 @@ const Leaderboard: React.FC<LeaderboardProps> = ({ students, classes, onUpdateSt
     return (
         <div className={`flex flex-col h-full space-y-6 pb-24 md:pb-8 overflow-hidden relative ${isRamadan ? 'text-white' : 'text-slate-800'}`}>
             
-            {/* 🌙 الهيدر السحري مع خاصية السحب والحماية */}
+            {/* 🚀 إزالة الزجاج المغبش وتسريع الهيدر بلون صلب */}
             <header 
-                className={`fixed md:sticky top-0 z-40 shadow-lg px-4 md:pl-40 pt-8 pb-6 transition-all duration-500 w-full ${isRamadan ? 'bg-white/5 backdrop-blur-3xl border-b border-white/10 text-white' : 'bg-[#446A8D] text-white'}`}
+                className={`fixed md:sticky top-0 z-40 shadow-lg px-4 md:pl-40 pt-8 pb-6 transition-all duration-500 w-full ${isRamadan ? 'bg-[#0f172a] border-b border-white/10 text-white' : 'bg-[#446A8D] text-white'}`}
                 style={{ WebkitAppRegion: 'drag' } as any}
             >
                 <div className="flex flex-col items-center text-center relative">
@@ -169,7 +169,7 @@ const Leaderboard: React.FC<LeaderboardProps> = ({ students, classes, onUpdateSt
                         <select 
                             value={schoolType} 
                             onChange={(e) => setSchoolType(e.target.value as any)}
-                            className={`border rounded-lg text-[10px] p-1 outline-none font-bold cursor-pointer transition-colors ${isRamadan ? 'bg-[#1e1b4b]/80 border-indigo-500/30 text-indigo-100 hover:bg-[#1e1b4b]' : 'bg-white/10 border-white/20 hover:bg-white/20'}`}
+                            className={`border rounded-lg text-[10px] p-1 outline-none font-bold cursor-pointer transition-colors ${isRamadan ? 'bg-[#1e1b4b] border-indigo-500/30 text-indigo-100' : 'bg-white/10 border-white/20 hover:bg-white/20'}`}
                         >
                             <option value="mixed" className={isRamadan ? 'bg-slate-900 text-white' : 'text-slate-800'}>مدرسة مختلطة</option>
                             <option value="boys" className={isRamadan ? 'bg-slate-900 text-white' : 'text-slate-800'}>مدرسة ذكور</option>
@@ -211,14 +211,14 @@ const Leaderboard: React.FC<LeaderboardProps> = ({ students, classes, onUpdateSt
                                         <StudentAvatar gender={s.gender} className="w-full h-full" />
                                     </div>
                                 </div>
-                                {/* ✅ تعديل خط منصة التتويج والاسم المزدوج */}
-                                <div className={`px-3 py-2 rounded-xl text-center border shadow-sm w-28 md:w-36 transition-colors ${isRamadan ? 'bg-white/10 backdrop-blur-xl border-white/20' : 'bg-white/90 backdrop-blur border-slate-200'}`}>
+                                {/* 🚀 إزالة الزجاج من لوحة أسماء الفرسان */}
+                                <div className={`px-3 py-2 rounded-xl text-center border shadow-sm w-28 md:w-36 transition-colors ${isRamadan ? 'bg-[#1e293b] border-white/20' : 'bg-white border-slate-200'}`}>
                                     <h3 className={`font-black text-xs md:text-sm truncate ${isRamadan ? 'text-white' : 'text-slate-800'}`} title={s.name}>{getShortName(s.name)}</h3>
                                     <span className="text-amber-500 font-bold text-xs">{s.monthlyPoints} نقطة</span>
                                 </div>
                                 {/* ✅ أزرار الشهادة والخصم */}
                                 <div className="flex gap-1 mt-2">
-                                    <button onClick={() => setCertificateStudent(s)} className={`text-[10px] px-2 py-1 rounded-lg flex items-center gap-1 shadow-md transition-colors ${isRamadan ? 'bg-white/20 text-white hover:bg-white/30 border border-white/10' : 'bg-slate-700 text-white hover:bg-slate-800'}`}>
+                                    <button onClick={() => setCertificateStudent(s)} className={`text-[10px] px-2 py-1 rounded-lg flex items-center gap-1 shadow-md transition-colors ${isRamadan ? 'bg-[#1e293b] text-white hover:bg-white/10 border border-white/10' : 'bg-slate-700 text-white hover:bg-slate-800'}`}>
                                         <Award size={12} /> شهادة
                                     </button>
                                     <button onClick={() => handleDeductPoint(s)} className={`text-[10px] px-2 py-1 rounded-lg shadow-sm transition-colors ${isRamadan ? 'bg-rose-500/20 text-rose-400 hover:bg-rose-500/30' : 'bg-rose-100 text-rose-500 hover:bg-rose-200'}`} title="خصم نقطة">
@@ -233,7 +233,8 @@ const Leaderboard: React.FC<LeaderboardProps> = ({ students, classes, onUpdateSt
                 {/* باقي الطلاب */}
                 <div className="grid grid-cols-3 md:grid-cols-5 gap-3 mt-8 pb-20">
                     {restOfStudents.map((s, index) => (
-                        <div key={s.id} className={`rounded-2xl p-3 shadow-sm border flex flex-col items-center relative active:scale-95 transition-all duration-300 ${isRamadan ? 'bg-white/5 backdrop-blur-xl border-white/10 hover:bg-white/10' : 'bg-white border-slate-100'}`}>
+                        /* 🚀 إزالة الزجاج من بطاقات باقي الطلاب السفلية */
+                        <div key={s.id} className={`rounded-2xl p-3 shadow-sm border flex flex-col items-center relative active:scale-95 transition-all duration-300 ${isRamadan ? 'bg-[#1e293b] border-white/10 hover:bg-[#283548]' : 'bg-white border-slate-100 hover:shadow-md'}`}>
                             <div className={`absolute top-1 right-1 font-bold w-5 h-5 rounded flex items-center justify-center text-[9px] ${isRamadan ? 'bg-white/10 text-indigo-200' : 'bg-indigo-50 text-indigo-600'}`}>{index + 4}</div>
                             <div className={`w-12 h-12 rounded-full border-2 shadow-md overflow-hidden mb-2 cursor-pointer ${isRamadan ? 'border-white/20' : 'border-white'}`} onClick={() => handleAddPoints(s)}>
                                 <StudentAvatar gender={s.gender} className="w-full h-full" />
