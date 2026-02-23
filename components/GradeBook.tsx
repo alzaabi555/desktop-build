@@ -335,6 +335,33 @@ const GradeBook: React.FC<GradeBookProps> = ({
     return grade ? grade.score.toString() : '';
   };
 
+  // 👨‍⚕️ دالة جديدة لنسخ مجموع التقويم المستمر (الكل ما عدا النهائي)
+  const handleCopyContinuousTotal = () => {
+    const gradesList = filteredStudents.map(student => {
+        const semGrades = getSemesterGrades(student, currentSemester);
+        let continuousTotal = 0;
+        let hasAnyGrade = false;
+        
+        tools.forEach(tool => {
+            if (!tool.isFinal) { // تجاهل النهائي
+                const g = semGrades.find(grade => grade.category.trim() === tool.name.trim());
+                if (g && g.score !== null && g.score !== undefined && g.score !== '') {
+                    continuousTotal += Number(g.score);
+                    hasAnyGrade = true;
+                }
+            }
+        });
+        
+        // إذا لم يكن لديه أي درجة مسجلة إطلاقاً، نتركه فارغاً ليطابق ترتيب البوابة
+        return hasAnyGrade ? continuousTotal.toString() : ''; 
+    });
+    
+    const textToCopy = gradesList.join('\n');
+    navigator.clipboard.writeText(textToCopy).then(() => {
+        alert('✅ تم نسخ (مجموع التقويم المستمر) بنجاح!\n\nاذهب للبوابة والصقه في الإضافة الخاصة بك.');
+    }).catch(() => alert('❌ حدث خطأ أثناء النسخ.'));
+  };
+
   const handleAddTool = () => {
     if (newToolName.trim()) {
       if (tools.some(t => t.name === newToolName.trim())) return alert('موجودة مسبقاً');
@@ -408,7 +435,6 @@ const GradeBook: React.FC<GradeBookProps> = ({
   return (
     <div className={`flex flex-col h-full overflow-hidden relative ${isRamadan ? 'text-white' : 'text-slate-800'}`}>
       
-      {/* 🚀 تم إزالة التأثير الزجاجي من الهيدر واستخدام لون صلب للأداء */}
       <header 
           className={`fixed md:sticky top-0 z-40 md:z-30 shadow-lg px-4 pt-[env(safe-area-inset-top)] pb-6 md:pl-40 transition-all duration-500 md:rounded-none md:shadow-md w-full md:w-auto left-0 right-0 md:left-auto md:right-auto ${isRamadan ? 'bg-[#0f172a] border-b border-white/10 text-white' : 'bg-[#446A8D] text-white'}`}
           style={{ WebkitAppRegion: 'drag' } as any}
@@ -429,7 +455,8 @@ const GradeBook: React.FC<GradeBookProps> = ({
             </button>
           </div>
           
-          <div "relative z-[9999]" style={{ WebkitAppRegion: 'no-drag' } as any}>
+          {/* 👨‍⚕️ التعديل الجراحي الموضعي: وضعنا z-[9999] للقائمة المنسدلة لتبقى فوق الفصول */}
+          <div className="relative z-[9999]" style={{ WebkitAppRegion: 'no-drag' } as any}>
             <button onClick={() => setShowMenu(!showMenu)} className={`cursor-pointer relative z-50 p-2.5 rounded-xl border border-white/20 active:scale-95 transition-all ${showMenu ? (isRamadan ? 'bg-white/20 text-white' : 'bg-white text-[#1e3a8a]') : 'bg-white/10 text-white'}`}>
               <SlidersHorizontal className="w-5 h-5" />
             </button>
@@ -496,39 +523,50 @@ const GradeBook: React.FC<GradeBookProps> = ({
                 </button>
             ))}
             
-            {activeToolId && (
-              <div className="flex gap-2 ml-auto">
+            <div className="flex gap-2 ml-auto">
+              {/* 🔴 الزر السحري الجديد لنسخ مجموع التقويم المستمر فقط */}
+              {tools.length > 0 && (
                 <button 
-                  onClick={() => {
-                    if (!activeToolId) return alert('الرجاء اختيار أداة تقويم أولاً');
-                    const tool = tools.find(t => t.id === activeToolId);
-                    if (!tool) return;
-                    
-                    const gradesList = filteredStudents.map(student => {
-                      const grade = getStudentGradeForActiveTool(student);
-                      return grade !== '' ? grade : ''; 
-                    });
-                    
-                    const textToCopy = gradesList.join('\n');
-                    navigator.clipboard.writeText(textToCopy).then(() => {
-                      alert(`✅ تم نسخ عمود درجات (${tool.name}) بنجاح!\n\nاذهب الآن لمتصفحك، افتح إضافة الراصد السريع، واضغط (لصق أو Ctrl+V).`);
-                    }).catch(() => alert('❌ حدث خطأ أثناء محاولة النسخ.'));
-                  }} 
-                  className={`px-3 py-2 text-white rounded-xl text-[10px] font-bold flex items-center gap-1 shadow-md active:scale-95 transition-colors ${isRamadan ? 'bg-emerald-600/80 hover:bg-emerald-500' : 'bg-emerald-500 hover:bg-emerald-600'}`}
+                  onClick={handleCopyContinuousTotal} 
+                  className={`px-3 py-2 text-white rounded-xl text-[10px] font-bold flex items-center gap-1 shadow-md active:scale-95 transition-colors ${isRamadan ? 'bg-amber-600/80 hover:bg-amber-500' : 'bg-amber-500 hover:bg-amber-600'}`}
+                  title="نسخ مجموع التقويم المستمر (بدون الامتحان النهائي)"
                 >
-                  <Copy className="w-3 h-3" /> نسخ للبوابة
+                  <Copy className="w-3 h-3" /> التقويم المستمر
                 </button>
+              )}
 
-                <button onClick={() => setBulkFillTool(tools.find(t => t.id === activeToolId) || null)} className={`px-3 py-2 text-white rounded-xl text-[10px] font-bold flex items-center gap-1 shadow-md active:scale-95 transition-colors ${isRamadan ? 'bg-indigo-600/80 hover:bg-indigo-500' : 'bg-indigo-500 hover:bg-indigo-600'}`}>
-                  <Wand2 className="w-3 h-3" /> رصد جماعي
-                </button>
-              </div>
-            )}
+              {activeToolId && (
+                <>
+                  <button 
+                    onClick={() => {
+                      const tool = tools.find(t => t.id === activeToolId);
+                      if (!tool) return;
+                      
+                      const gradesList = filteredStudents.map(student => {
+                        const grade = getStudentGradeForActiveTool(student);
+                        return grade !== '' ? grade : ''; 
+                      });
+                      
+                      const textToCopy = gradesList.join('\n');
+                      navigator.clipboard.writeText(textToCopy).then(() => {
+                        alert(`✅ تم نسخ عمود درجات (${tool.name}) بنجاح!\n\nاذهب الآن لمتصفحك، افتح إضافة الراصد السريع، واضغط (لصق أو Ctrl+V).`);
+                      }).catch(() => alert('❌ حدث خطأ أثناء محاولة النسخ.'));
+                    }} 
+                    className={`px-3 py-2 text-white rounded-xl text-[10px] font-bold flex items-center gap-1 shadow-md active:scale-95 transition-colors ${isRamadan ? 'bg-emerald-600/80 hover:bg-emerald-500' : 'bg-emerald-500 hover:bg-emerald-600'}`}
+                  >
+                    <Copy className="w-3 h-3" /> نسخ الأداة
+                  </button>
+
+                  <button onClick={() => setBulkFillTool(tools.find(t => t.id === activeToolId) || null)} className={`px-3 py-2 text-white rounded-xl text-[10px] font-bold flex items-center gap-1 shadow-md active:scale-95 transition-colors ${isRamadan ? 'bg-indigo-600/80 hover:bg-indigo-500' : 'bg-indigo-500 hover:bg-indigo-600'}`}>
+                    <Wand2 className="w-3 h-3" /> رصد جماعي
+                  </button>
+                </>
+              )}
+            </div>
           </div>
         </div>
       </header>
 
-      {/* 🚀 إزالة الزجاج من بطاقات الطلاب لزيادة سرعة الكتابة والرصد */}
       <div className="flex-1 overflow-y-auto px-2 pb-20 custom-scrollbar pt-64 md:pt-2">
         <div className="grid grid-cols-2 gap-3">
           {filteredStudents.map(student => {
@@ -563,7 +601,6 @@ const GradeBook: React.FC<GradeBookProps> = ({
         </div>
       </div>
 
-      {/* 🚀 تخفيف ظل وتأثير النوافذ المنبثقة */}
       <Modal isOpen={showToolsManager} onClose={() => { setShowToolsManager(false); setIsAddingTool(false); }} className={`max-w-sm rounded-[2rem] ${isRamadan ? 'bg-transparent' : ''}`}>
          <div className={`text-center p-6 rounded-[2rem] border transition-colors ${isRamadan ? 'bg-[#0f172a] border-white/10 text-white shadow-2xl' : 'bg-white text-slate-900 border-transparent shadow-2xl'}`}>
           <div className="flex justify-between items-center mb-6">
