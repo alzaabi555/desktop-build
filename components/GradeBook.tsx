@@ -50,7 +50,6 @@ const GradeBook: React.FC<GradeBookProps> = ({
     localStorage.setItem('rased_grading_settings', JSON.stringify(gradingSettings));
   }, [gradingSettings]);
 
-  // ✅ ذاكرة الجلسة للفلاتر
   const [selectedGrade, setSelectedGrade] = useState<string>(() => sessionStorage.getItem('rased_grade') || 'all');
   const [selectedClass, setSelectedClass] = useState<string>(() => sessionStorage.getItem('rased_class') || 'all');
 
@@ -59,7 +58,6 @@ const GradeBook: React.FC<GradeBookProps> = ({
       sessionStorage.setItem('rased_class', selectedClass);
   }, [selectedGrade, selectedClass]);
 
-  // States للمودالات والإدارة
   const [isImporting, setIsImporting] = useState(false);
   const [isExporting, setIsExporting] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -71,7 +69,6 @@ const GradeBook: React.FC<GradeBookProps> = ({
   const [editToolName, setEditToolName] = useState('');
   const [showDistModal, setShowDistModal] = useState(false);
   
-  // بيانات توزيع الدرجات المؤقتة
   const [distTotal, setDistTotal] = useState<number>(gradingSettings.totalScore || 100);
   const [distFinalScore, setDistFinalScore] = useState<number>(gradingSettings.finalExamWeight || 40);
   const [distFinalName, setDistFinalName] = useState<string>(gradingSettings.finalExamName || 'الامتحان النهائي');
@@ -80,7 +77,6 @@ const GradeBook: React.FC<GradeBookProps> = ({
   const [bulkScore, setBulkScore] = useState('');
   const [activeToolId, setActiveToolId] = useState<string>('');
 
- // 🌙 المستشعر الرمضاني اللحظي (يمنع الوميض تماماً)
   const [isRamadan] = useState(() => {
       try {
           const parts = new Intl.DateTimeFormat('en-TN-u-ca-islamic', { month: 'numeric' }).formatToParts(new Date());
@@ -96,7 +92,6 @@ const GradeBook: React.FC<GradeBookProps> = ({
     }
   }, [tools, activeToolId]);
 
-  // --- دوال مساعدة للاستيراد والتصدير ---
   const cleanText = (text: string) => text ? String(text).trim() : '';
   const normalizeText = (text: string) => text ? String(text).trim().toLowerCase().replace(/[أإآ]/g, 'ا').replace(/ة/g, 'ه').replace(/ى/g, 'ي').replace(/[ـ]/g, '') : '';
   
@@ -108,7 +103,6 @@ const GradeBook: React.FC<GradeBookProps> = ({
     return isNaN(num) || cleanNum === '' ? null : num;
   };
 
-  // دالة استخراج التقدير
   const getGradeSymbol = (score: number) => {
     const percentage = (score / gradingSettings.totalScore) * 100;
     if (percentage >= 90) return 'أ';
@@ -159,7 +153,6 @@ const GradeBook: React.FC<GradeBookProps> = ({
     });
   }, [students, selectedClass, selectedGrade]);
 
-  // ✅ ميزة جديدة: تحميل قالب إكسل جاهز
   const handleDownloadTemplate = async () => {
     try {
       const headers = ['الاسم', 'الصف', ...tools.map(t => t.name)];
@@ -186,7 +179,6 @@ const GradeBook: React.FC<GradeBookProps> = ({
     }
   };
 
-  // ✅ دالة الاستيراد من Excel
   const handleImportExcel = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
@@ -261,7 +253,6 @@ const GradeBook: React.FC<GradeBookProps> = ({
     }
   };
 
-  // ✅ دالة تصدير التقرير
   const handleExportExcel = async () => {
     if (filteredStudents.length === 0) return alert('لا يوجد طلاب لتصدير درجاتهم');
     setIsExporting(true);
@@ -308,7 +299,6 @@ const GradeBook: React.FC<GradeBookProps> = ({
     }
   };
 
-  // دالة الرصد اليدوي
   const handleGradeChange = (studentId: string, value: string) => {
     if (!activeToolId) return alert('الرجاء اختيار أداة تقويم أولاً');
     const activeTool = tools.find(t => t.id === activeToolId);
@@ -318,8 +308,8 @@ const GradeBook: React.FC<GradeBookProps> = ({
     
     const numValue = value === '' ? null : Number(value);
     let updatedGrades = (student.grades || []).filter(
-      g => !(g.category.trim() === activeTool.name.trim() && (g.semester || '1') === currentSemester
-    ));
+      g => !(g.category.trim() === activeTool.name.trim() && (g.semester || '1') === currentSemester)
+    );
 
     if (numValue !== null) {
       updatedGrades.push({
@@ -345,7 +335,6 @@ const GradeBook: React.FC<GradeBookProps> = ({
     return grade ? grade.score.toString() : '';
   };
 
-  // إدارة أدوات التقويم
   const handleAddTool = () => {
     if (newToolName.trim()) {
       if (tools.some(t => t.name === newToolName.trim())) return alert('موجودة مسبقاً');
@@ -419,14 +408,14 @@ const GradeBook: React.FC<GradeBookProps> = ({
   return (
     <div className={`flex flex-col h-full overflow-hidden relative ${isRamadan ? 'text-white' : 'text-slate-800'}`}>
       
-      {/* ================= FIXED HEADER ================= */}
+      {/* 🚀 تم إزالة التأثير الزجاجي من الهيدر واستخدام لون صلب للأداء */}
       <header 
-          className={`fixed md:sticky top-0 z-40 md:z-30 shadow-lg px-4 pt-[env(safe-area-inset-top)] pb-6 md:pl-40 transition-all duration-500 md:rounded-none md:shadow-md w-full md:w-auto left-0 right-0 md:left-auto md:right-auto ${isRamadan ? 'bg-white/5 backdrop-blur-3xl border-b border-white/10 text-white' : 'bg-[#446A8D] text-white'}`}
+          className={`fixed md:sticky top-0 z-40 md:z-30 shadow-lg px-4 pt-[env(safe-area-inset-top)] pb-6 md:pl-40 transition-all duration-500 md:rounded-none md:shadow-md w-full md:w-auto left-0 right-0 md:left-auto md:right-auto ${isRamadan ? 'bg-[#0f172a] border-b border-white/10 text-white' : 'bg-[#446A8D] text-white'}`}
           style={{ WebkitAppRegion: 'drag' } as any}
       >
         <div className="flex justify-between items-center mb-6">
           <div className="flex items-center gap-3">
-            <div className="bg-white/10 p-2 rounded-xl backdrop-blur-md border border-white/20">
+            <div className="bg-white/10 p-2 rounded-xl border border-white/20">
               <BarChart3 className="w-5 h-5 text-white" />
             </div>
             <h1 className="text-xl md:text-2xl font-black tracking-wide">سجل الدرجات</h1>
@@ -441,13 +430,13 @@ const GradeBook: React.FC<GradeBookProps> = ({
           </div>
           
           <div className="relative" style={{ WebkitAppRegion: 'no-drag' } as any}>
-            <button onClick={() => setShowMenu(!showMenu)} className={`cursor-pointer relative z-50 bg:white/10 p-2.5 rounded-xl backdrop-blur-md border border-white/20 active:scale-95 transition-all ${showMenu ? (isRamadan ? 'bg-white/20 text-white' : 'bg-white text-[#1e3a8a]') : 'bg-white/10 text-white'}`}>
+            <button onClick={() => setShowMenu(!showMenu)} className={`cursor-pointer relative z-50 p-2.5 rounded-xl border border-white/20 active:scale-95 transition-all ${showMenu ? (isRamadan ? 'bg-white/20 text-white' : 'bg-white text-[#1e3a8a]') : 'bg-white/10 text-white'}`}>
               <SlidersHorizontal className="w-5 h-5" />
             </button>
             {showMenu && (
               <>
                 <div className="fixed inset-0 z-40" onClick={() => setShowMenu(false)}></div>
-                <div className={`absolute left-0 top-full mt-2 w-64 rounded-2xl shadow-2xl border overflow-hidden z-50 animate-in zoom-in-95 origin-top-left ${isRamadan ? 'bg-[#0f172a]/95 backdrop-blur-2xl border-white/10 text-white' : 'bg-white border-slate-100 text-slate-800'}`}>
+                <div className={`absolute left-0 top-full mt-2 w-64 rounded-2xl shadow-2xl border overflow-hidden z-50 animate-in zoom-in-95 origin-top-left ${isRamadan ? 'bg-[#0f172a] border-white/10 text-white' : 'bg-white border-slate-100 text-slate-800'}`}>
                   <div className="p-1">
                     <button onClick={() => { setShowDistModal(true); setShowMenu(false); }} className={`flex items-center gap-3 px-4 py-3 transition-colors w-full text-right border-b ${isRamadan ? 'hover:bg-white/10 border-white/10' : 'hover:bg-slate-50 border-slate-50'}`}>
                       <PieChart className={`w-4 h-4 ${isRamadan ? 'text-indigo-400' : 'text-indigo-600'}`} />
@@ -509,7 +498,6 @@ const GradeBook: React.FC<GradeBookProps> = ({
             
             {activeToolId && (
               <div className="flex gap-2 ml-auto">
-                {/* 🔴 الزر السحري الجديد: النسخ للبوابة */}
                 <button 
                   onClick={() => {
                     if (!activeToolId) return alert('الرجاء اختيار أداة تقويم أولاً');
@@ -531,7 +519,6 @@ const GradeBook: React.FC<GradeBookProps> = ({
                   <Copy className="w-3 h-3" /> نسخ للبوابة
                 </button>
 
-                {/* 🔵 الزر القديم: الرصد الجماعي */}
                 <button onClick={() => setBulkFillTool(tools.find(t => t.id === activeToolId) || null)} className={`px-3 py-2 text-white rounded-xl text-[10px] font-bold flex items-center gap-1 shadow-md active:scale-95 transition-colors ${isRamadan ? 'bg-indigo-600/80 hover:bg-indigo-500' : 'bg-indigo-500 hover:bg-indigo-600'}`}>
                   <Wand2 className="w-3 h-3" /> رصد جماعي
                 </button>
@@ -541,7 +528,7 @@ const GradeBook: React.FC<GradeBookProps> = ({
         </div>
       </header>
 
-      {/* Student List Grid */}
+      {/* 🚀 إزالة الزجاج من بطاقات الطلاب لزيادة سرعة الكتابة والرصد */}
       <div className="flex-1 overflow-y-auto px-2 pb-20 custom-scrollbar pt-64 md:pt-2">
         <div className="grid grid-cols-2 gap-3">
           {filteredStudents.map(student => {
@@ -551,7 +538,7 @@ const GradeBook: React.FC<GradeBookProps> = ({
             const symbolColor = getSymbolColor(totalScore, isRamadan);
 
             return (
-              <div key={student.id} className={`rounded-[1.5rem] p-4 shadow-sm border flex flex-col items-center relative transition-colors ${isRamadan ? 'bg-white/5 backdrop-blur-xl border-white/10' : 'bg-white border-slate-100'}`}>
+              <div key={student.id} className={`rounded-[1.5rem] p-4 shadow-sm border flex flex-col items-center relative transition-colors ${isRamadan ? 'bg-[#1e293b] border-white/10' : 'bg-white border-slate-100'}`}>
                 <StudentAvatar gender={student.gender} className={`w-16 h-16 mb-3 border-4 shadow-sm ${isRamadan ? 'border-indigo-900/50' : 'border-white'}`} />
                 <h3 className={`font-bold text-xs text-center line-clamp-1 mb-3 w-full ${isRamadan ? 'text-white' : 'text-slate-800'}`}>{student.name}</h3>
                 
@@ -576,9 +563,9 @@ const GradeBook: React.FC<GradeBookProps> = ({
         </div>
       </div>
 
-      {/* 1. مودال إدارة الأدوات */}
+      {/* 🚀 تخفيف ظل وتأثير النوافذ المنبثقة */}
       <Modal isOpen={showToolsManager} onClose={() => { setShowToolsManager(false); setIsAddingTool(false); }} className={`max-w-sm rounded-[2rem] ${isRamadan ? 'bg-transparent' : ''}`}>
-         <div className={`text-center p-6 rounded-[2rem] border transition-colors ${isRamadan ? 'bg-[#0f172a]/95 backdrop-blur-2xl border-white/10 text-white shadow-[0_0_40px_rgba(0,0,0,0.5)]' : 'bg-white text-slate-900 border-transparent'}`}>
+         <div className={`text-center p-6 rounded-[2rem] border transition-colors ${isRamadan ? 'bg-[#0f172a] border-white/10 text-white shadow-2xl' : 'bg-white text-slate-900 border-transparent shadow-2xl'}`}>
           <div className="flex justify-between items-center mb-6">
             <h3 className="font-black text-lg">أدوات التقويم</h3>
             <button onClick={() => { setShowToolsManager(false); setIsAddingTool(false); }} className={`p-2 rounded-full transition-colors ${isRamadan ? 'hover:bg-white/10' : 'hover:bg-gray-100'}`}><X className={`w-5 h-5 ${isRamadan ? 'text-slate-400' : 'text-gray-500'}`} /></button>
@@ -614,9 +601,8 @@ const GradeBook: React.FC<GradeBookProps> = ({
         </div>
       </Modal>
 
-      {/* 2. مودال توزيع الدرجات */}
       <Modal isOpen={showDistModal} onClose={() => setShowDistModal(false)} className={`max-w-md rounded-[2rem] ${isRamadan ? 'bg-transparent' : ''}`}>
-        <div className={`text-center p-6 rounded-[2rem] border transition-colors ${isRamadan ? 'bg-[#0f172a]/95 backdrop-blur-2xl border-white/10 text-white shadow-[0_0_40px_rgba(0,0,0,0.5)]' : 'bg-white text-slate-900 border-transparent'}`}>
+        <div className={`text-center p-6 rounded-[2rem] border transition-colors ${isRamadan ? 'bg-[#0f172a] border-white/10 text-white shadow-2xl' : 'bg-white text-slate-900 border-transparent shadow-2xl'}`}>
           <h3 className={`font-black text-xl mb-6 ${isRamadan ? 'text-white' : 'text-slate-800'}`}>إعدادات توزيع الدرجات</h3>
           <div className="space-y-6">
             <div className={`p-4 rounded-2xl border ${isRamadan ? 'bg-white/5 border-white/10' : 'bg-gray-50 border-gray-200'}`}>
@@ -644,10 +630,9 @@ const GradeBook: React.FC<GradeBookProps> = ({
         </div>
       </Modal>
 
-      {/* 3. مودال الرصد الجماعي */}
       <Modal isOpen={!!bulkFillTool} onClose={() => { setBulkFillTool(null); setBulkScore(''); }} className={`max-w-xs rounded-[2rem] ${isRamadan ? 'bg-transparent' : ''}`}>
          {bulkFillTool && (
-          <div className={`text-center p-6 rounded-[2rem] border transition-colors ${isRamadan ? 'bg-[#0f172a]/95 backdrop-blur-2xl border-white/10 text-white shadow-[0_0_40px_rgba(0,0,0,0.5)]' : 'bg-white text-slate-900 border-transparent'}`}>
+          <div className={`text-center p-6 rounded-[2rem] border transition-colors ${isRamadan ? 'bg-[#0f172a] border-white/10 text-white shadow-2xl' : 'bg-white text-slate-900 border-transparent shadow-2xl'}`}>
             <div className={`w-14 h-14 rounded-full flex items-center justify-center mx-auto mb-3 border ${isRamadan ? 'bg-indigo-900/50 text-indigo-400 border-indigo-500/30' : 'bg-indigo-50 text-indigo-500 border-indigo-100'}`}><Wand2 className="w-7 h-7" /></div>
             <h3 className={`font-black text-lg mb-1 ${isRamadan ? 'text-white' : 'text-slate-900'}`}>رصد جماعي</h3>
             <p className={`text-xs font-bold mb-4 inline-block px-3 py-1 rounded-lg ${isRamadan ? 'bg-indigo-500/20 text-indigo-300' : 'bg-indigo-50 text-indigo-600'}`}>{bulkFillTool.name}</p>
