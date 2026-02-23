@@ -3,7 +3,7 @@ import { Student, GradeRecord, AssessmentTool } from '../types';
 import { 
   Plus, X, Trash2, Settings, Check, Loader2, Edit2, 
   FileSpreadsheet, FileUp, Wand2, BarChart3, SlidersHorizontal, 
-  FileDown, PieChart, AlertTriangle, Download 
+  FileDown, PieChart, AlertTriangle, Download, Copy 
 } from 'lucide-react';
 import Modal from './Modal';
 import { useApp } from '../context/AppContext';
@@ -318,8 +318,8 @@ const GradeBook: React.FC<GradeBookProps> = ({
     
     const numValue = value === '' ? null : Number(value);
     let updatedGrades = (student.grades || []).filter(
-      g => !(g.category.trim() === activeTool.name.trim() && (g.semester || '1') === currentSemester)
-    );
+      g => !(g.category.trim() === activeTool.name.trim() && (g.semester || '1') === currentSemester
+    ));
 
     if (numValue !== null) {
       updatedGrades.push({
@@ -420,7 +420,6 @@ const GradeBook: React.FC<GradeBookProps> = ({
     <div className={`flex flex-col h-full overflow-hidden relative ${isRamadan ? 'text-white' : 'text-slate-800'}`}>
       
       {/* ================= FIXED HEADER ================= */}
-      {/* 🌙 الهيدر السحري مع الحماية والسحب */}
       <header 
           className={`fixed md:sticky top-0 z-40 md:z-30 shadow-lg px-4 pt-[env(safe-area-inset-top)] pb-6 md:pl-40 transition-all duration-500 md:rounded-none md:shadow-md w-full md:w-auto left-0 right-0 md:left-auto md:right-auto ${isRamadan ? 'bg-white/5 backdrop-blur-3xl border-b border-white/10 text-white' : 'bg-[#446A8D] text-white'}`}
           style={{ WebkitAppRegion: 'drag' } as any}
@@ -431,7 +430,6 @@ const GradeBook: React.FC<GradeBookProps> = ({
               <BarChart3 className="w-5 h-5 text-white" />
             </div>
             <h1 className="text-xl md:text-2xl font-black tracking-wide">سجل الدرجات</h1>
-            {/* 👨‍⚕️ التعديل الجراحي هنا: no-drag و z-50 */}
             <button 
                 onClick={() => setShowToolsManager(true)} 
                 className="p-2 bg-white/10 hover:bg-white/20 rounded-full transition-colors active:scale-95 border border-white/10 cursor-pointer relative z-50" 
@@ -443,7 +441,6 @@ const GradeBook: React.FC<GradeBookProps> = ({
           </div>
           
           <div className="relative" style={{ WebkitAppRegion: 'no-drag' } as any}>
-            {/* 👨‍⚕️ التعديل الجراحي هنا: no-drag و z-50 */}
             <button onClick={() => setShowMenu(!showMenu)} className={`cursor-pointer relative z-50 bg:white/10 p-2.5 rounded-xl backdrop-blur-md border border-white/20 active:scale-95 transition-all ${showMenu ? (isRamadan ? 'bg-white/20 text-white' : 'bg-white text-[#1e3a8a]') : 'bg-white/10 text-white'}`}>
               <SlidersHorizontal className="w-5 h-5" />
             </button>
@@ -452,7 +449,6 @@ const GradeBook: React.FC<GradeBookProps> = ({
                 <div className="fixed inset-0 z-40" onClick={() => setShowMenu(false)}></div>
                 <div className={`absolute left-0 top-full mt-2 w-64 rounded-2xl shadow-2xl border overflow-hidden z-50 animate-in zoom-in-95 origin-top-left ${isRamadan ? 'bg-[#0f172a]/95 backdrop-blur-2xl border-white/10 text-white' : 'bg-white border-slate-100 text-slate-800'}`}>
                   <div className="p-1">
-                    {/* زر توزيع الدرجات */}
                     <button onClick={() => { setShowDistModal(true); setShowMenu(false); }} className={`flex items-center gap-3 px-4 py-3 transition-colors w-full text-right border-b ${isRamadan ? 'hover:bg-white/10 border-white/10' : 'hover:bg-slate-50 border-slate-50'}`}>
                       <PieChart className={`w-4 h-4 ${isRamadan ? 'text-indigo-400' : 'text-indigo-600'}`} />
                       <div className="flex flex-col items-start text-xs font-bold">
@@ -461,26 +457,22 @@ const GradeBook: React.FC<GradeBookProps> = ({
                       </div>
                     </button>
 
-                    {/* زر تحميل القالب */}
                     <button onClick={handleDownloadTemplate} className={`flex items-center gap-3 px-4 py-3 transition-colors w-full text-right border-b ${isRamadan ? 'hover:bg-white/10 border-white/10' : 'hover:bg-slate-50 border-slate-50'}`}>
                       <FileSpreadsheet className={`w-4 h-4 ${isRamadan ? 'text-amber-400' : 'text-amber-600'}`} />
                       <span className={`text-xs font-bold ${isRamadan ? 'text-indigo-100' : 'text-slate-700'}`}>تحميل قالب إكسل فارغ</span>
                     </button>
 
-                    {/* زر استيراد Excel */}
                     <button onClick={() => fileInputRef.current?.click()} className={`flex items-center gap-3 px-4 py-3 transition-colors w-full text-right ${isRamadan ? 'hover:bg-white/10' : 'hover:bg-slate-50'}`}>
                       {isImporting ? <Loader2 className={`w-4 h-4 animate-spin ${isRamadan ? 'text-emerald-400' : 'text-emerald-600'}`} /> : <FileUp className={`w-4 h-4 ${isRamadan ? 'text-emerald-400' : 'text-emerald-600'}`} />}
                       <span className={`text-xs font-bold ${isRamadan ? 'text-indigo-100' : 'text-slate-700'}`}>استيراد من Excel</span>
                     </button>
                     <input type="file" ref={fileInputRef} onChange={handleImportExcel} accept=".xlsx, .xls" className="hidden" />
 
-                    {/* زر تصدير التقرير */}
                     <button onClick={handleExportExcel} disabled={isExporting} className={`flex items-center gap-3 px-4 py-3 transition-colors w-full text-right ${isRamadan ? 'hover:bg-white/10' : 'hover:bg-slate-50'}`}>
                       {isExporting ? <Loader2 className={`w-4 h-4 animate-spin ${isRamadan ? 'text-blue-400' : 'text-blue-600'}`} /> : <FileDown className={`w-4 h-4 ${isRamadan ? 'text-blue-400' : 'text-blue-600'}`} />}
                       <span className={`text-xs font-bold ${isRamadan ? 'text-indigo-100' : 'text-slate-700'}`}>تصدير التقرير</span>
                     </button>
 
-                    {/* زر تصفير الدرجات */}
                     <button onClick={handleClearGrades} className={`flex items-center gap-3 px-4 py-3 transition-colors w-full text-right border-t ${isRamadan ? 'hover:bg-rose-500/20 text-rose-400 border-white/10' : 'hover:bg-red-50 text-red-600 border-slate-50'}`}>
                       <Trash2 className="w-4 h-4" />
                       <span className="text-xs font-bold">تصفير درجات الفصل</span>
@@ -492,7 +484,6 @@ const GradeBook: React.FC<GradeBookProps> = ({
           </div>
         </div>
 
-        {/* 👨‍⚕️ التعديل الجراحي: إضافة relative z-50 لمنع تداخل السحب، وتحويل القوائم إلى flex-wrap للنزول لصف ثاني */}
         <div className="space-y-4 relative z-50" style={{ WebkitAppRegion: 'no-drag' } as any}>
           <div className="flex flex-wrap gap-2 pt-1 pb-2">
             <button onClick={() => { setSelectedGrade('all'); setSelectedClass('all'); }} className={`px-4 py-2 text-[10px] font-bold whitespace-nowrap transition-all rounded-xl border ${selectedGrade === 'all' ? (isRamadan ? 'bg-amber-500/20 text-amber-300 border-amber-500/50 shadow-md' : 'bg-white text-[#1e3a8a] shadow-md border-white') : 'bg-white/10 text-blue-100 border-white/20'}`}>كل المراحل</button>
@@ -515,10 +506,36 @@ const GradeBook: React.FC<GradeBookProps> = ({
                   {tool.name}
                 </button>
             ))}
+            
             {activeToolId && (
-              <button onClick={() => setBulkFillTool(tools.find(t => t.id === activeToolId) || null)} className={`px-3 py-2 text-white rounded-xl text-[10px] font-bold ml-auto flex items-center gap-1 shadow-md active:scale-95 transition-colors ${isRamadan ? 'bg-indigo-600/80 hover:bg-indigo-500' : 'bg-indigo-500 hover:bg-indigo-600'}`}>
-                <Wand2 className="w-3 h-3" /> رصد جماعي
-              </button>
+              <div className="flex gap-2 ml-auto">
+                {/* 🔴 الزر السحري الجديد: النسخ للبوابة */}
+                <button 
+                  onClick={() => {
+                    if (!activeToolId) return alert('الرجاء اختيار أداة تقويم أولاً');
+                    const tool = tools.find(t => t.id === activeToolId);
+                    if (!tool) return;
+                    
+                    const gradesList = filteredStudents.map(student => {
+                      const grade = getStudentGradeForActiveTool(student);
+                      return grade !== '' ? grade : ''; 
+                    });
+                    
+                    const textToCopy = gradesList.join('\n');
+                    navigator.clipboard.writeText(textToCopy).then(() => {
+                      alert(`✅ تم نسخ عمود درجات (${tool.name}) بنجاح!\n\nاذهب الآن لمتصفحك، افتح إضافة الراصد السريع، واضغط (لصق أو Ctrl+V).`);
+                    }).catch(() => alert('❌ حدث خطأ أثناء محاولة النسخ.'));
+                  }} 
+                  className={`px-3 py-2 text-white rounded-xl text-[10px] font-bold flex items-center gap-1 shadow-md active:scale-95 transition-colors ${isRamadan ? 'bg-emerald-600/80 hover:bg-emerald-500' : 'bg-emerald-500 hover:bg-emerald-600'}`}
+                >
+                  <Copy className="w-3 h-3" /> نسخ للبوابة
+                </button>
+
+                {/* 🔵 الزر القديم: الرصد الجماعي */}
+                <button onClick={() => setBulkFillTool(tools.find(t => t.id === activeToolId) || null)} className={`px-3 py-2 text-white rounded-xl text-[10px] font-bold flex items-center gap-1 shadow-md active:scale-95 transition-colors ${isRamadan ? 'bg-indigo-600/80 hover:bg-indigo-500' : 'bg-indigo-500 hover:bg-indigo-600'}`}>
+                  <Wand2 className="w-3 h-3" /> رصد جماعي
+                </button>
+              </div>
             )}
           </div>
         </div>
