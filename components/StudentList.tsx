@@ -39,7 +39,7 @@ const SOUNDS = {
     negative: negativeSound,
     tada: tadaSound, 
     alarm: alarmSound
-};
+}
 
 const NEGATIVE_BEHAVIORS = [
     { id: '1', title: 'إزعاج في الحصة', points: -1 },
@@ -76,15 +76,14 @@ const StudentList: React.FC<StudentListProps> = ({
     const [selectedGrade, setSelectedGrade] = useState<string>(() => sessionStorage.getItem('rased_grade') || 'all');
     const [selectedClass, setSelectedClass] = useState<string>(() => sessionStorage.getItem('rased_class') || 'all');
 
-    // 🌙 المستشعر الرمضاني اللحظي (يمنع الوميض تماماً)
-  const [isRamadan] = useState(() => {
+    const [isRamadan] = useState(() => {
       try {
           const parts = new Intl.DateTimeFormat('en-TN-u-ca-islamic', { month: 'numeric' }).formatToParts(new Date());
           return parseInt(parts.find(p => p.type === 'month')?.value || '0') === 9;
       } catch(e) {
           return false;
       }
-  });
+    });
 
     useEffect(() => {
         sessionStorage.setItem('rased_grade', selectedGrade);
@@ -115,7 +114,6 @@ const StudentList: React.FC<StudentListProps> = ({
     const [randomWinner, setRandomWinner] = useState<Student | null>(null);
     const [pickedStudentIds, setPickedStudentIds] = useState<string[]>([]);
 
-    // --- Timer Logic ---
     const [showTimerModal, setShowTimerModal] = useState(false);
     const [timerSeconds, setTimerSeconds] = useState(0);
     const [isTimerRunning, setIsTimerRunning] = useState(false);
@@ -474,450 +472,449 @@ const StudentList: React.FC<StudentListProps> = ({
     <div className={`flex flex-col h-full overflow-hidden ${isRamadan ? 'text-white' : 'text-slate-800'}`}>
         
         {/* ================= FIXED HEADER ================= */}
-        {/* 🚀 شفافية iOS للهيدر العلوي */}
-            <header 
-                className={`fixed md:sticky top-0 z-40 md:z-30 shadow-lg px-4 pt-[env(safe-area-inset-top)] pb-6 md:pl-40 transition-all duration-500 md:rounded-none md:shadow-md w-full md:w-auto left-0 right-0 md:left-auto md:right-auto ${isRamadan ? 'bg-white/5 border-b border-white/10 text-white' : 'bg-[#446A8D] text-white'}`}
-                style={{ WebkitAppRegion: 'drag' } as any}
-            >
-                <div className="flex justify-between items-center mb-6">
-                    <div className="flex items-center gap-3">
-                        <div className="bg-white/10 p-2 rounded-xl border border-white/20">
-                            <Users className="w-5 h-5 text-white" />
-                        </div>
-                        <div>
-                            <h1 className="text-xl md:text-2xl font-black tracking-wide">الطلاب</h1>
-                            <p className={`text-[10px] font-bold opacity-80 ${isRamadan ? 'text-indigo-200' : 'text-blue-200'}`}>{safeStudents.length} طالب مسجل</p>
-                        </div>
+        <header 
+            className={`fixed md:sticky top-0 z-40 md:z-30 shadow-lg px-4 pt-[env(safe-area-inset-top)] pb-6 md:pl-40 transition-all duration-500 md:rounded-none md:shadow-md w-full md:w-auto left-0 right-0 md:left-auto md:right-auto ${isRamadan ? 'bg-white/5 border-b border-white/10 text-white' : 'bg-[#446A8D] text-white'}`}
+            style={{ WebkitAppRegion: 'drag' } as any}
+        >
+            <div className="flex justify-between items-center mb-6">
+                <div className="flex items-center gap-3">
+                    <div className="bg-white/10 p-2 rounded-xl border border-white/20">
+                        <Users className="w-5 h-5 text-white" />
                     </div>
-
-                    <div className="flex gap-2" style={{ WebkitAppRegion: 'no-drag' } as any}>
-                        <div className="relative">
-                            <button 
-                                onClick={() => setShowTimerModal(true)} 
-                                className={`p-2.5 rounded-xl border active:scale-95 transition-all flex items-center gap-2 ${timerSeconds > 0 ? (isRamadan ? 'bg-amber-500/80 border-amber-400 text-white shadow-[0_0_15px_rgba(245,158,11,0.5)] animate-pulse' : 'bg-amber-500 border-amber-400 text-white shadow-lg animate-pulse') : (isRamadan ? 'bg-white/10 border-white/20 text-white hover:bg-white/20' : 'bg-white/10 border-white/20 text-white hover:bg-white/20')}`}
-                                title="المؤقت"
-                            >
-                                <Timer className="w-5 h-5" />
-                                {timerSeconds > 0 && (
-                                    <span className="text-xs font-black min-w-[30px]">{formatTime(timerSeconds)}</span>
-                                )}
-                            </button>
-                        </div>
-
-                        <button 
-                            onClick={handleRandomPick} 
-                            className={`p-2.5 rounded-xl border active:scale-95 transition-all ${isRamadan ? 'bg-white/10 border-white/20 text-white hover:bg-white/20' : 'bg-white/10 border-white/20 text-white hover:bg-white/20'}`}
-                            title="القرعة العشوائية"
-                        >
-                            <Dices className="w-5 h-5" />
-                        </button>
-
-                        <div className="relative">
-                            <button onClick={() => setShowMenu(!showMenu)} className={`p-2.5 rounded-xl border active:scale-95 transition-all ${showMenu ? (isRamadan ? 'bg-white/20 border-white/30 text-white' : 'bg-white text-[#1e3a8a]') : 'bg-white/10 border-white/20 text-white hover:bg-white/20'}`}>
-                                <MoreVertical className="w-5 h-5" />
-                            </button>
-                            {showMenu && (
-                            <>
-                                <div className="fixed inset-0 z-40" onClick={() => setShowMenu(false)}></div>
-                                <div className={`absolute left-0 top-full mt-2 w-56 rounded-2xl shadow-2xl border overflow-hidden z-50 animate-in zoom-in-95 origin-top-left ${isRamadan ? 'bg-[#0f172a] border-white/10 text-white' : 'bg-white border-slate-100 text-slate-800'}`}>
-                                    <div className="p-1">
-                                            <button onClick={handleQuietAndDiscipline} className={`flex items-center gap-3 px-4 py-3 transition-colors w-full text-right text-xs font-bold border-b ${isRamadan ? 'hover:bg-purple-900/40 border-white/10 text-purple-200' : 'hover:bg-purple-50 border-slate-50 text-slate-700'}`}>
-                                                <Sparkles className={`w-4 h-4 ${isRamadan ? 'text-purple-400' : 'text-purple-600'}`} /> مكافأة الانضباط (هدوء)
-                                            </button>
-                                            <button onClick={() => { setShowManualAddModal(true); setShowMenu(false); }} className={`flex items-center gap-3 px-4 py-3 transition-colors w-full text-right text-xs font-bold ${isRamadan ? 'hover:bg-white/10 text-indigo-100' : 'hover:bg-slate-50 text-slate-700'}`}>
-                                                <UserPlus className={`w-4 h-4 ${isRamadan ? 'text-indigo-400' : 'text-indigo-600'}`} /> إضافة طالب يدوياً
-                                            </button>
-                                            <button onClick={() => { setShowImportModal(true); setShowMenu(false); }} className={`flex items-center gap-3 px-4 py-3 transition-colors w-full text-right text-xs font-bold ${isRamadan ? 'hover:bg-white/10 text-indigo-100' : 'hover:bg-slate-50 text-slate-700'}`}>
-                                                <FileSpreadsheet className={`w-4 h-4 ${isRamadan ? 'text-emerald-400' : 'text-emerald-600'}`} /> استيراد من Excel
-                                            </button>
-                                            <div className={`my-1 border-t ${isRamadan ? 'border-white/10' : 'border-slate-100'}`}></div>
-                                            <button onClick={() => { setShowAddClassModal(true); setShowMenu(false); }} className={`flex items-center gap-3 px-4 py-3 transition-colors w-full text-right text-xs font-bold ${isRamadan ? 'hover:bg-white/10 text-indigo-100' : 'hover:bg-slate-50 text-slate-700'}`}>
-                                                <LayoutGrid className={`w-4 h-4 ${isRamadan ? 'text-amber-400' : 'text-amber-600'}`} /> إضافة فصل جديد
-                                            </button>
-                                            <button onClick={() => { setShowManageClasses(true); setShowMenu(false); }} className={`flex items-center gap-3 px-4 py-3 transition-colors w-full text-right text-xs font-bold ${isRamadan ? 'hover:bg-white/10 text-indigo-100' : 'hover:bg-slate-50 text-slate-700'}`}>
-                                                <Settings className={`w-4 h-4 ${isRamadan ? 'text-slate-400' : 'text-slate-500'}`} /> إدارة الفصول
-                                            </button>
-                                    </div>
-                                </div>
-                            </>
-                            )}
-                        </div>
+                    <div>
+                        <h1 className="text-xl md:text-2xl font-black tracking-wide">الطلاب</h1>
+                        <p className={`text-[10px] font-bold opacity-80 ${isRamadan ? 'text-indigo-200' : 'text-blue-200'}`}>{safeStudents.length} طالب مسجل</p>
                     </div>
                 </div>
 
-                <div className="space-y-3 relative z-10" style={{ WebkitAppRegion: 'no-drag' } as any}>
+                <div className="flex gap-2" style={{ WebkitAppRegion: 'no-drag' } as any}>
                     <div className="relative">
-                        <Search className="absolute right-4 top-3.5 w-5 h-5 text-blue-200" />
-                        <input 
-                            type="text" 
-                            placeholder="بحث عن طالب..." 
-                            value={searchTerm}
-                            onChange={(e) => setSearchTerm(e.target.value)}
-                            className={`w-full border rounded-2xl py-3 pr-12 pl-4 text-sm font-bold outline-none transition-all ${isRamadan ? 'bg-white/10 border-white/20 text-white placeholder:text-blue-200/50 focus:bg-white/20' : 'bg-white/20 border-white/30 text-white placeholder:text-blue-100 focus:bg-white/30'}`}
-                        />
+                        <button 
+                            onClick={() => setShowTimerModal(true)} 
+                            className={`p-2.5 rounded-xl border active:scale-95 transition-all flex items-center gap-2 ${timerSeconds > 0 ? (isRamadan ? 'bg-amber-500/80 border-amber-400 text-white shadow-[0_0_15px_rgba(245,158,11,0.5)] animate-pulse' : 'bg-amber-500 border-amber-400 text-white shadow-lg animate-pulse') : (isRamadan ? 'bg-white/10 border-white/20 text-white hover:bg-white/20' : 'bg-white/10 border-white/20 text-white hover:bg-white/20')}`}
+                            title="المؤقت"
+                        >
+                            <Timer className="w-5 h-5" />
+                            {timerSeconds > 0 && (
+                                <span className="text-xs font-black min-w-[30px]">{formatTime(timerSeconds)}</span>
+                            )}
+                        </button>
                     </div>
-                    
-                    <div className="flex gap-2 overflow-x-auto no-scrollbar md:flex-wrap md:overflow-visible pb-2">
-                        <button onClick={() => { setSelectedGrade('all'); setSelectedClass('all'); }} className={`px-4 py-2 text-[10px] font-bold whitespace-nowrap transition-all rounded-xl border ${selectedGrade === 'all' && selectedClass === 'all' ? (isRamadan ? 'bg-amber-500/20 text-amber-300 border-amber-500/50 shadow-md' : 'bg-white text-[#1e3a8a] shadow-md border-white') : 'bg-white/10 text-blue-100 border-white/20 hover:bg-white/20'}`}>الكل</button>
-                        {availableGrades.map(g => (
-                             <button key={g} onClick={() => { setSelectedGrade(g); setSelectedClass('all'); }} className={`px-4 py-2 text-[10px] font-bold whitespace-nowrap transition-all rounded-xl border ${selectedGrade === g ? (isRamadan ? 'bg-amber-500/20 text-amber-300 border-amber-500/50 shadow-md' : 'bg-white text-[#1e3a8a] shadow-md border-white') : 'bg-white/10 text-blue-100 border-white/20 hover:bg-white/20'}`}>صف {g}</button>
-                        ))}
-                        {safeClasses.filter(c => selectedGrade === 'all' || c.startsWith(selectedGrade)).map(c => (
-                            <button key={c} onClick={() => setSelectedClass(c)} className={`px-4 py-2 text-[10px] font-bold whitespace-nowrap transition-all rounded-xl border ${selectedClass === c ? (isRamadan ? 'bg-amber-500/20 text-amber-300 border-amber-500/50 shadow-md' : 'bg-white text-[#1e3a8a] shadow-md border-white') : 'bg-white/10 text-blue-100 border-white/20 hover:bg-white/20'}`}>{c}</button>
-                        ))}
-                    </div>
-                </div>
-            </header>
 
-            {/* List */}
-            <div className="flex-1 overflow-y-auto px-2 pb-20 custom-scrollbar pt-64 md:pt-2 relative z-10">
-                <div className="grid grid-cols-2 lg:grid-cols-3 gap-3">
-                    {filteredStudents.length > 0 ? filteredStudents.map(student => {
-                        const totalPoints = calculateTotalPoints(student);
-                        return (
-                        /* 🚀 شفافية iOS لبطاقات الطلاب - سريعة جداً بدون Blur */
-                        <div key={student.id} className={`rounded-[1.5rem] border flex flex-col items-center overflow-hidden transition-all duration-300 ${isRamadan ? 'bg-white/5 border-white/10 hover:bg-white/10' : 'bg-white border-slate-100 hover:shadow-md'}`}>
-                            <div className="p-4 flex flex-col items-center w-full relative">
-                                
-                                <div className="relative mb-3">
-                                    <StudentAvatar 
-                                        gender={student.gender}
-                                        className={`w-16 h-16 ${isRamadan ? 'opacity-90' : ''}`}
-                                    />
-                                    {totalPoints !== 0 && (
-                                       <div className={`absolute -top-3 -right-5 z-10 flex items-center justify-center gap-0.5 px-2 py-0.5 rounded-full text-[10px] font-black shadow-sm border-2 ${isRamadan ? 'border-amber-500/30 bg-amber-500/20 text-amber-300' : 'border-white bg-amber-100 text-amber-600'}`}>
-                                            <Star size={10} className={isRamadan ? "fill-amber-400 text-amber-400" : "fill-amber-500 text-amber-500"} />
-                                            {totalPoints}
-                                        </div>
-                                    )}
-                                </div>
+                    <button 
+                        onClick={handleRandomPick} 
+                        className={`p-2.5 rounded-xl border active:scale-95 transition-all ${isRamadan ? 'bg-white/10 border-white/20 text-white hover:bg-white/20' : 'bg-white/10 border-white/20 text-white hover:bg-white/20'}`}
+                        title="القرعة العشوائية"
+                    >
+                        <Dices className="w-5 h-5" />
+                    </button>
 
-                                <h3 className={`font-black text-sm text-center line-clamp-1 w-full ${isRamadan ? 'text-white' : 'text-slate-800'}`}>{student.name}</h3>
-                                <div className="flex gap-1 mt-1">
-                                    <span className={`text-[10px] px-2 py-0.5 rounded-full font-bold ${isRamadan ? 'bg-white/10 text-indigo-200' : 'bg-slate-100 text-slate-500'}`}>{student.classes && student.classes.length > 0 ? student.classes[0] : 'غير محدد'}</span>
+                    <div className="relative z-[9999]">
+                        <button onClick={() => setShowMenu(!showMenu)} className={`p-2.5 rounded-xl border active:scale-95 transition-all ${showMenu ? (isRamadan ? 'bg-white/20 border-white/30 text-white' : 'bg-white text-[#1e3a8a]') : 'bg-white/10 border-white/20 text-white hover:bg-white/20'}`}>
+                            <MoreVertical className="w-5 h-5" />
+                        </button>
+                        {showMenu && (
+                        <>
+                            <div className="fixed inset-0 z-40" onClick={() => setShowMenu(false)}></div>
+                            {/* ✅ القائمة المنسدلة: لون صلب لحل مشكلة اختفاء النصوص */}
+                            <div className={`absolute left-0 top-full mt-2 w-56 rounded-2xl shadow-2xl border overflow-hidden z-50 animate-in zoom-in-95 origin-top-left ${isRamadan ? 'bg-[#0f172a] border-white/10 text-white' : 'bg-white border-slate-100 text-slate-800'}`}>
+                                <div className="p-1">
+                                        <button onClick={handleQuietAndDiscipline} className={`flex items-center gap-3 px-4 py-3 transition-colors w-full text-right text-xs font-bold border-b ${isRamadan ? 'hover:bg-purple-900/40 border-white/10 text-purple-200' : 'hover:bg-purple-50 border-slate-50 text-slate-700'}`}>
+                                            <Sparkles className={`w-4 h-4 ${isRamadan ? 'text-purple-400' : 'text-purple-600'}`} /> مكافأة الانضباط (هدوء)
+                                        </button>
+                                        <button onClick={() => { setShowManualAddModal(true); setShowMenu(false); }} className={`flex items-center gap-3 px-4 py-3 transition-colors w-full text-right text-xs font-bold ${isRamadan ? 'hover:bg-white/10 text-indigo-100' : 'hover:bg-slate-50 text-slate-700'}`}>
+                                            <UserPlus className={`w-4 h-4 ${isRamadan ? 'text-indigo-400' : 'text-indigo-600'}`} /> إضافة طالب يدوياً
+                                        </button>
+                                        <button onClick={() => { setShowImportModal(true); setShowMenu(false); }} className={`flex items-center gap-3 px-4 py-3 transition-colors w-full text-right text-xs font-bold ${isRamadan ? 'hover:bg-white/10 text-indigo-100' : 'hover:bg-slate-50 text-slate-700'}`}>
+                                            <FileSpreadsheet className={`w-4 h-4 ${isRamadan ? 'text-emerald-400' : 'text-emerald-600'}`} /> استيراد من Excel
+                                        </button>
+                                        <div className={`my-1 border-t ${isRamadan ? 'border-white/10' : 'border-slate-100'}`}></div>
+                                        <button onClick={() => { setShowAddClassModal(true); setShowMenu(false); }} className={`flex items-center gap-3 px-4 py-3 transition-colors w-full text-right text-xs font-bold ${isRamadan ? 'hover:bg-white/10 text-indigo-100' : 'hover:bg-slate-50 text-slate-700'}`}>
+                                            <LayoutGrid className={`w-4 h-4 ${isRamadan ? 'text-amber-400' : 'text-amber-600'}`} /> إضافة فصل جديد
+                                        </button>
+                                        <button onClick={() => { setShowManageClasses(true); setShowMenu(false); }} className={`flex items-center gap-3 px-4 py-3 transition-colors w-full text-right text-xs font-bold ${isRamadan ? 'hover:bg-white/10 text-indigo-100' : 'hover:bg-slate-50 text-slate-700'}`}>
+                                            <Settings className={`w-4 h-4 ${isRamadan ? 'text-slate-400' : 'text-slate-500'}`} /> إدارة الفصول
+                                        </button>
                                 </div>
                             </div>
-
-                            <div className={`w-full h-px ${isRamadan ? 'bg-white/10' : 'bg-slate-100'}`}></div>
-
-                            {/* أزرار الإجراءات */}
-                            <div className={`flex w-full divide-x divide-x-reverse ${isRamadan ? 'divide-white/10' : 'divide-slate-100'}`}>
-                                <button onClick={() => handleBehavior(student, 'positive')} className={`flex-1 py-3 flex flex-col items-center justify-center transition-colors group ${isRamadan ? 'hover:bg-emerald-500/20 active:bg-emerald-500/30' : 'hover:bg-emerald-50 active:bg-emerald-100'}`} title="تعزيز إيجابي">
-                                    <ThumbsUp className={`w-4 h-4 group-hover:scale-110 transition-transform ${isRamadan ? 'text-emerald-400' : 'text-emerald-500'}`} />
-                                </button>
-                                
-                                <button onClick={() => handleBehavior(student, 'negative')} className={`flex-1 py-3 flex flex-col items-center justify-center transition-colors group ${isRamadan ? 'hover:bg-rose-500/20 active:bg-rose-500/30' : 'hover:bg-rose-50 active:bg-rose-100'}`} title="سلوك سلبي">
-                                    <ThumbsDown className={`w-4 h-4 group-hover:scale-110 transition-transform ${isRamadan ? 'text-rose-400' : 'text-rose-500'}`} />
-                                </button>
-
-                                <button onClick={() => handleSendSmartReport(student)} className={`flex-1 py-3 flex flex-col items-center justify-center transition-colors group ${isRamadan ? 'hover:bg-blue-500/20 active:bg-blue-500/30' : 'hover:bg-emerald-50 active:bg-emerald-100'}`} title="تقرير الدرجات والتميز">
-                                    <MessageCircle className={`w-4 h-4 group-hover:scale-110 transition-transform ${isRamadan ? 'text-blue-400' : 'text-emerald-600'}`} />
-                                </button>
-
-                                <button onClick={() => handleSendNegativeReport(student)} className={`flex-1 py-3 flex flex-col items-center justify-center transition-colors group ${isRamadan ? 'hover:bg-amber-500/20 active:bg-amber-500/30' : 'hover:bg-amber-50 active:bg-amber-100'}`} title="تقرير سلوكي (إنذار)">
-                                    <Send className={`w-4 h-4 group-hover:scale-110 transition-transform ${isRamadan ? 'text-amber-400' : 'text-amber-500'}`} />
-                                </button>
-                                
-                                <button onClick={() => setEditingStudent(student)} className={`flex-1 py-3 flex flex-col items-center justify-center transition-colors group ${isRamadan ? 'hover:bg-white/10 active:bg-white/20' : 'hover:bg-slate-50 active:bg-slate-100'}`} title="تعديل">
-                                    <Edit2 className={`w-4 h-4 transition-colors ${isRamadan ? 'text-slate-400 group-hover:text-indigo-300' : 'text-slate-400 group-hover:text-indigo-500'}`} />
-                                </button>
-                            </div>
-                        </div>
-                    )}) : (
-                        <div className={`flex flex-col items-center justify-center py-20 col-span-full text-center ${isRamadan ? 'opacity-70' : 'opacity-50'}`}>
-                            <UserPlus className={`w-16 h-16 mb-4 ${isRamadan ? 'text-white/20' : 'text-gray-300'}`} />
-                            <p className={`text-sm font-bold ${isRamadan ? 'text-indigo-200/50' : 'text-gray-400'}`}>لا يوجد طلاب مطابقين للبحث</p>
-                            {safeClasses.length === 0 && <p className={`text-xs mt-2 font-bold cursor-pointer ${isRamadan ? 'text-amber-400' : 'text-indigo-400'}`} onClick={() => setShowAddClassModal(true)}>ابدأ بإضافة فصل جديد</p>}
-                        </div>
-                    )}
+                        </>
+                        )}
+                    </div>
                 </div>
             </div>
 
-            {/* Modals - النوافذ أصبحت شفافة بدون تعتيم مزعج */}
-            <Modal isOpen={showManualAddModal} onClose={() => setShowManualAddModal(false)} className={`max-w-md rounded-[2rem] ${isRamadan ? 'bg-transparent' : ''}`}>
-                 <div className={`text-center p-6 rounded-[2rem] border transition-colors ${isRamadan ? 'bg-white/10 border-white/20 text-white shadow-2xl' : 'bg-white border-transparent text-slate-800 shadow-2xl'}`}>
-                    <div className={`w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4 border ${isRamadan ? 'bg-indigo-900/50 text-indigo-400 border-indigo-500/30' : 'bg-indigo-50 text-indigo-500 border-transparent'}`}>
-                        <UserPlus className="w-8 h-8" />
-                    </div>
-                    <h3 className="font-black text-xl mb-6">إضافة طالب جديد</h3>
-                    <div className="space-y-3">
-                        <input type="text" placeholder="اسم الطالب" value={newStudentName} onChange={(e) => setNewStudentName(e.target.value)} className={`w-full p-4 rounded-xl font-bold text-sm outline-none border transition-colors ${isRamadan ? 'bg-transparent border-indigo-500/30 focus:border-indigo-400 text-white placeholder:text-indigo-200/40' : 'bg-gray-50 border-gray-200 focus:border-indigo-500 text-slate-800'}`} />
-                        <select value={newStudentClass} onChange={(e) => setNewStudentClass(e.target.value)} className={`w-full p-4 rounded-xl font-bold text-sm outline-none border transition-colors ${isRamadan ? 'bg-transparent border-indigo-500/30 focus:border-indigo-400 text-white' : 'bg-gray-50 border-gray-200 focus:border-indigo-500 text-slate-800'}`}>
-                            <option value="" disabled className={isRamadan ? 'text-slate-500' : ''}>اختر الفصل</option>
-                            {safeClasses.map(c => <option key={c} value={c} className={isRamadan ? 'bg-slate-900' : ''}>{c}</option>)}
-                        </select>
-                        <input type="tel" placeholder="رقم ولي الأمر (اختياري)" value={newStudentPhone} onChange={(e) => setNewStudentPhone(e.target.value)} className={`w-full p-4 rounded-xl font-bold text-sm outline-none border transition-colors ${isRamadan ? 'bg-transparent border-indigo-500/30 focus:border-indigo-400 text-white placeholder:text-indigo-200/40' : 'bg-gray-50 border-gray-200 focus:border-indigo-500 text-slate-800'}`} />
-                         <div className="flex gap-2">
-                            <button onClick={() => setNewStudentGender('male')} className={`flex-1 py-3 rounded-xl font-bold text-xs transition-all border ${newStudentGender === 'male' ? (isRamadan ? 'bg-blue-500/20 border-blue-400/50 text-blue-300' : 'bg-blue-50 border-blue-200 text-blue-600') : (isRamadan ? 'bg-white/5 border-white/10 text-slate-400' : 'bg-gray-50 border-gray-200 text-gray-400')}`}>طالب 👨‍🎓</button>
-                            <button onClick={() => setNewStudentGender('female')} className={`flex-1 py-3 rounded-xl font-bold text-xs transition-all border ${newStudentGender === 'female' ? (isRamadan ? 'bg-pink-500/20 border-pink-400/50 text-pink-300' : 'bg-pink-50 border-pink-200 text-pink-600') : (isRamadan ? 'bg-white/5 border-white/10 text-slate-400' : 'bg-gray-50 border-gray-200 text-gray-400')}`}>طالبة 👩‍🎓</button>
-                        </div>
-                        <button onClick={handleManualAddSubmit} disabled={!newStudentName || !newStudentClass} className={`w-full py-4 rounded-xl font-black text-sm shadow-lg active:scale-95 transition-all disabled:opacity-50 mt-2 ${isRamadan ? 'bg-indigo-600 text-white hover:bg-indigo-500' : 'bg-indigo-600 text-white hover:bg-indigo-700'}`}>حفظ الطالب</button>
-                    </div>
+            <div className="space-y-3 relative z-10" style={{ WebkitAppRegion: 'no-drag' } as any}>
+                <div className="relative">
+                    <Search className="absolute right-4 top-3.5 w-5 h-5 text-blue-200" />
+                    <input 
+                        type="text" 
+                        placeholder="بحث عن طالب..." 
+                        value={searchTerm}
+                        onChange={(e) => setSearchTerm(e.target.value)}
+                        className={`w-full border rounded-2xl py-3 pr-12 pl-4 text-sm font-bold outline-none transition-all ${isRamadan ? 'bg-white/10 border-white/20 text-white placeholder:text-blue-200/50 focus:bg-white/20' : 'bg-white/20 border-white/30 text-white placeholder:text-blue-100 focus:bg-white/30'}`}
+                    />
                 </div>
-            </Modal>
-
-            <Modal isOpen={showImportModal} onClose={() => setShowImportModal(false)} className={`max-w-lg rounded-[2rem] ${isRamadan ? 'bg-transparent' : ''}`}>
-                <div className={isRamadan ? 'bg-[#0f172a] border border-white/10 rounded-[2rem] shadow-2xl overflow-hidden' : ''}>
-                    <ExcelImport existingClasses={safeClasses} onImport={(data) => { onBatchAddStudents(data); setShowImportModal(false); }} onAddClass={onAddClass} />
+                
+                <div className="flex gap-2 overflow-x-auto no-scrollbar md:flex-wrap md:overflow-visible pb-2">
+                    <button onClick={() => { setSelectedGrade('all'); setSelectedClass('all'); }} className={`px-4 py-2 text-[10px] font-bold whitespace-nowrap transition-all rounded-xl border ${selectedGrade === 'all' && selectedClass === 'all' ? (isRamadan ? 'bg-amber-500/20 text-amber-300 border-amber-500/50 shadow-md' : 'bg-white text-[#1e3a8a] shadow-md border-white') : 'bg-white/10 text-blue-100 border-white/20 hover:bg-white/20'}`}>الكل</button>
+                    {availableGrades.map(g => (
+                         <button key={g} onClick={() => { setSelectedGrade(g); setSelectedClass('all'); }} className={`px-4 py-2 text-[10px] font-bold whitespace-nowrap transition-all rounded-xl border ${selectedGrade === g ? (isRamadan ? 'bg-amber-500/20 text-amber-300 border-amber-500/50 shadow-md' : 'bg-white text-[#1e3a8a] shadow-md border-white') : 'bg-white/10 text-blue-100 border-white/20 hover:bg-white/20'}`}>صف {g}</button>
+                    ))}
+                    {safeClasses.filter(c => selectedGrade === 'all' || c.startsWith(selectedGrade)).map(c => (
+                        <button key={c} onClick={() => setSelectedClass(c)} className={`px-4 py-2 text-[10px] font-bold whitespace-nowrap transition-all rounded-xl border ${selectedClass === c ? (isRamadan ? 'bg-amber-500/20 text-amber-300 border-amber-500/50 shadow-md' : 'bg-white text-[#1e3a8a] shadow-md border-white') : 'bg-white/10 text-blue-100 border-white/20 hover:bg-white/20'}`}>{c}</button>
+                    ))}
                 </div>
-            </Modal>
+            </div>
+        </header>
 
-            <Modal isOpen={showAddClassModal} onClose={() => setShowAddClassModal(false)} className={`max-w-sm rounded-[2rem] ${isRamadan ? 'bg-transparent' : ''}`}>
-                 <div className={`text-center p-6 rounded-[2rem] border transition-colors ${isRamadan ? 'bg-white/10 border-white/20 text-white shadow-2xl' : 'bg-white border-transparent text-slate-800 shadow-2xl'}`}>
-                    <h3 className="font-black text-lg mb-4">إضافة فصل جديد</h3>
-                    <input autoFocus type="text" placeholder="اسم الفصل (مثال: 5/1)" value={newClassInput} onChange={(e) => setNewClassInput(e.target.value)} className={`w-full p-4 rounded-xl font-bold text-sm outline-none border mb-4 transition-colors ${isRamadan ? 'bg-transparent border-indigo-500/30 focus:border-indigo-400 text-white placeholder:text-indigo-200/40' : 'bg-gray-50 border-gray-200 focus:border-indigo-500 text-slate-800'}`} />
-                    <button onClick={handleAddClassSubmit} className={`w-full py-3 rounded-xl font-black text-xs shadow-lg active:scale-95 transition-colors ${isRamadan ? 'bg-indigo-600 text-white hover:bg-indigo-500' : 'bg-indigo-600 text-white hover:bg-indigo-700'}`}>إضافة</button>
-                 </div>
-            </Modal>
-
-            <Modal isOpen={showManageClasses} onClose={() => setShowManageClasses(false)} className={`max-w-md rounded-[2rem] ${isRamadan ? 'bg-transparent' : ''}`}>
-                <div className={`text-center p-6 rounded-[2rem] border transition-colors ${isRamadan ? 'bg-white/10 border-white/20 text-white shadow-2xl' : 'bg-white border-transparent text-slate-800 shadow-2xl'}`}>
-                    <h3 className="font-black text-xl mb-6">إعدادات الفصول والصفوف</h3>
-                    <div className={`rounded-2xl p-4 mb-6 border ${isRamadan ? 'bg-indigo-900/20 border-indigo-500/30' : 'bg-indigo-50/50 border-indigo-100'}`}>
-                        <div className={`flex items-center justify-center gap-2 mb-3 ${isRamadan ? 'text-indigo-300' : 'text-indigo-900'}`}>
-                            <Users className="w-4 h-4" />
-                            <span className="font-bold text-sm">نوع المدرسة (تغيير جماعي)</span>
-                        </div>
-                        <div className="flex gap-3 mb-2">
-                            <button 
-                                onClick={() => handleBatchGenderUpdate('male')}
-                                className={`flex-1 py-3 rounded-xl border-2 transition-all flex items-center justify-center gap-2 ${defaultStudentGender === 'male' ? (isRamadan ? 'bg-blue-500/20 border-blue-400/50 text-blue-300 shadow-md' : 'bg-white border-blue-200 shadow-md text-blue-700') : (isRamadan ? 'bg-white/5 border-transparent text-slate-400 hover:bg-white/10' : 'bg-white/50 border-transparent text-slate-500 hover:bg-white')}`}
-                            >
-                                <span className="text-xl">👨‍🎓</span>
-                                <span className="font-black text-sm">بنين</span>
-                            </button>
-                            <button 
-                                onClick={() => handleBatchGenderUpdate('female')}
-                                className={`flex-1 py-3 rounded-xl border-2 transition-all flex items-center justify-center gap-2 ${defaultStudentGender === 'female' ? (isRamadan ? 'bg-pink-500/20 border-pink-400/50 text-pink-300 shadow-md' : 'bg-white border-pink-200 shadow-md text-pink-700') : (isRamadan ? 'bg-white/5 border-transparent text-slate-400 hover:bg-white/10' : 'bg-white/50 border-transparent text-slate-500 hover:bg-white')}`}
-                            >
-                                <span className="text-xl">👩‍🎓</span>
-                                <span className="font-black text-sm">بنات</span>
-                            </button>
-                        </div>
-                        <p className={`text-[10px] font-bold ${isRamadan ? 'text-indigo-200/60' : 'text-indigo-400'}`}>* سيتم توحيد أيقونات جميع الطلاب حسب اختيارك.</p>
-                    </div>
-                    <div className={`w-full h-px mb-6 ${isRamadan ? 'bg-white/10' : 'bg-gray-100'}`}></div>
-                    <div className="flex justify-between items-center mb-2 px-2">
-                          <span className={`text-xs font-bold ${isRamadan ? 'text-slate-400' : 'text-slate-400'}`}>يمكنك هنا حذف الفصول الدراسية بالكامل.</span>
-                          <span className={`text-[10px] font-bold ${isRamadan ? 'text-rose-400' : 'text-red-400'}`}>تنبيه: الحذف سيؤثر على جميع الصفحات.</span>
-                    </div>
-                    <div className="max-h-60 overflow-y-auto custom-scrollbar p-1 space-y-2">
-                        {safeClasses.map(cls => (
-                            <div key={cls} className={`flex justify-between items-center p-3 rounded-xl border transition-colors ${isRamadan ? 'bg-white/5 border-white/10' : 'bg-gray-50 border-gray-200'}`}>
-                                <span className={`font-bold text-sm ${isRamadan ? 'text-white' : 'text-slate-800'}`}>{cls}</span>
-                                <div className="flex gap-2">
-                                    <button onClick={() => { if(onDeleteClass && confirm('هل أنت متأكد من حذف هذا الفصل؟ سيتم إخفاء الطلاب المرتبطين به.')) onDeleteClass(cls); }} className={`p-2 rounded-lg transition-colors ${isRamadan ? 'text-rose-400 bg-rose-500/20 hover:bg-rose-500/30' : 'text-rose-500 bg-rose-50 hover:bg-rose-100'}`}><Trash2 className="w-4 h-4"/></button>
-                                </div>
-                            </div>
-                        ))}
-                        {safeClasses.length === 0 && <p className={`text-xs ${isRamadan ? 'text-slate-500' : 'text-gray-400'}`}>لا توجد فصول مضافة</p>}
-                    </div>
-                    <button onClick={() => setShowManageClasses(false)} className={`mt-4 w-full py-3 rounded-xl font-bold text-xs transition-colors ${isRamadan ? 'bg-white/10 text-white hover:bg-white/20' : 'bg-gray-100 text-slate-600 hover:bg-gray-200'}`}>إغلاق</button>
-                </div>
-            </Modal>
-            
-            <Modal isOpen={showPositiveModal} onClose={() => { setShowPositiveModal(false); setSelectedStudentForBehavior(null); }} className={`max-w-sm rounded-[2rem] ${isRamadan ? 'bg-transparent' : ''}`}>
-                <div className={`text-center p-6 rounded-[2rem] border transition-colors ${isRamadan ? 'bg-white/10 border-white/20 text-white shadow-2xl' : 'bg-white border-transparent text-slate-800 shadow-2xl'}`}>
-                    <div className="flex justify-between items-center mb-4">
-                        <h3 className="font-black text-lg flex items-center gap-2">
-                            <CheckCircle2 className={`w-5 h-5 ${isRamadan ? 'text-emerald-400' : 'text-emerald-500'}`} />
-                            تعزيز إيجابي
-                        </h3>
-                        <button onClick={() => setShowPositiveModal(false)} className={`p-2 rounded-full transition-colors ${isRamadan ? 'bg-white/10 text-slate-300 hover:bg-white/20' : 'bg-gray-100 text-gray-500 hover:bg-gray-200'}`}><X className="w-4 h-4"/></button>
-                    </div>
-                    <p className={`text-xs font-bold mb-4 ${isRamadan ? 'text-slate-300' : 'text-gray-500'}`}>اختر نوع التميز للطالب <span className={isRamadan ? 'text-amber-400' : 'text-indigo-600'}>{selectedStudentForBehavior?.name}</span></p>
-                    
-                    <div className="grid grid-cols-2 gap-2 mb-4">
-                        {POSITIVE_BEHAVIORS.map(b => (
-                            <button 
-                                key={b.id}
-                                onClick={() => confirmPositiveBehavior(b.title, b.points)}
-                                className={`p-3 border rounded-xl text-xs font-bold active:scale-95 transition-all flex flex-col items-center gap-1 ${isRamadan ? 'bg-emerald-500/20 border-emerald-400/30 text-emerald-300 hover:bg-emerald-500/30' : 'bg-emerald-50 border-emerald-100 text-emerald-700 hover:bg-emerald-100'}`}
-                            >
-                                <span>{b.title}</span>
-                                <span className={`text-[10px] px-2 py-0.5 rounded-full shadow-sm ${isRamadan ? 'bg-emerald-500/30 text-emerald-200' : 'bg-white text-emerald-600'}`}>+{b.points}</span>
-                            </button>
-                        ))}
-                    </div>
-
-                    <div className={`pt-3 border-t ${isRamadan ? 'border-white/10' : 'border-slate-100'}`}>
-                        <p className={`text-[10px] font-bold mb-2 text-right ${isRamadan ? 'text-slate-400' : 'text-slate-400'}`}>أو أضف سلوكاً مخصصاً:</p>
-                        <div className="flex gap-2">
-                            <input 
-                                type="text" 
-                                value={customPositiveReason}
-                                onChange={(e) => setCustomPositiveReason(e.target.value)}
-                                placeholder="سبب آخر..." 
-                                className={`flex-1 border rounded-lg px-3 py-2 text-xs font-bold outline-none transition-colors ${isRamadan ? 'bg-transparent border-indigo-500/30 focus:border-emerald-400 text-white placeholder:text-indigo-200/40' : 'bg-slate-50 border-slate-200 focus:border-emerald-500 text-slate-800'}`}
-                            />
-                            <button 
-                                onClick={() => {
-                                    if(customPositiveReason.trim()) {
-                                        confirmPositiveBehavior(customPositiveReason, 1);
-                                    }
-                                }}
-                                className={`px-4 py-2 rounded-lg text-xs font-bold active:scale-95 flex items-center gap-1 transition-colors ${isRamadan ? 'bg-emerald-500 hover:bg-emerald-400 text-white' : 'bg-emerald-500 text-white hover:bg-emerald-600'}`}
-                            >
-                                <Plus size={14} /> إضافة
-                            </button>
-                        </div>
-                    </div>
-                </div>
-            </Modal>
-
-            <Modal isOpen={showNegativeModal} onClose={() => { setShowNegativeModal(false); setSelectedStudentForBehavior(null); }} className={`max-w-sm rounded-[2rem] ${isRamadan ? 'bg-transparent' : ''}`}>
-                <div className={`text-center p-6 rounded-[2rem] border transition-colors ${isRamadan ? 'bg-white/10 border-white/20 text-white shadow-2xl' : 'bg-white border-transparent text-slate-800 shadow-2xl'}`}>
-                    <div className="flex justify-between items-center mb-4">
-                        <h3 className="font-black text-lg flex items-center gap-2">
-                            <AlertCircle className={`w-5 h-5 ${isRamadan ? 'text-rose-400' : 'text-rose-500'}`} />
-                            تنبيه سلوكي
-                        </h3>
-                        <button onClick={() => setShowNegativeModal(false)} className={`p-2 rounded-full transition-colors ${isRamadan ? 'bg-white/10 text-slate-300 hover:bg-white/20' : 'bg-gray-100 text-gray-500 hover:bg-gray-200'}`}><X className="w-4 h-4"/></button>
-                    </div>
-                    <p className={`text-xs font-bold mb-4 ${isRamadan ? 'text-slate-300' : 'text-gray-500'}`}>اختر نوع الملاحظة للطالب <span className={isRamadan ? 'text-amber-400' : 'text-indigo-600'}>{selectedStudentForBehavior?.name}</span></p>
-                    
-                    <div className="grid grid-cols-2 gap-2 mb-4">
-                        {NEGATIVE_BEHAVIORS.map(b => (
-                            <button 
-                                key={b.id}
-                                onClick={() => confirmNegativeBehavior(b.title, b.points)}
-                                className={`p-3 border rounded-xl text-xs font-bold active:scale-95 transition-all flex flex-col items-center gap-1 ${isRamadan ? 'bg-rose-500/20 border-rose-400/30 text-rose-300 hover:bg-rose-500/30' : 'bg-rose-50 border-rose-100 text-rose-700 hover:bg-rose-100'}`}
-                            >
-                                <span>{b.title}</span>
-                                <span className={`text-[10px] px-2 py-0.5 rounded-full shadow-sm ${isRamadan ? 'bg-rose-500/30 text-rose-200' : 'bg-white text-rose-600'}`}>{b.points}</span>
-                            </button>
-                        ))}
-                    </div>
-
-                    <div className={`pt-3 border-t ${isRamadan ? 'border-white/10' : 'border-slate-100'}`}>
-                        <p className={`text-[10px] font-bold mb-2 text-right ${isRamadan ? 'text-slate-400' : 'text-slate-400'}`}>أو أضف ملاحظة مخصصة:</p>
-                        <div className="flex gap-2">
-                            <input 
-                                type="text" 
-                                value={customNegativeReason}
-                                onChange={(e) => setCustomNegativeReason(e.target.value)}
-                                placeholder="سبب آخر..." 
-                                className={`flex-1 border rounded-lg px-3 py-2 text-xs font-bold outline-none transition-colors ${isRamadan ? 'bg-transparent border-indigo-500/30 focus:border-rose-400 text-white placeholder:text-indigo-200/40' : 'bg-slate-50 border-slate-200 focus:border-rose-500 text-slate-800'}`}
-                            />
-                            <button 
-                                onClick={() => {
-                                    if(customNegativeReason.trim()) {
-                                        confirmNegativeBehavior(customNegativeReason, -1);
-                                    }
-                                }}
-                                className={`px-4 py-2 rounded-lg text-xs font-bold active:scale-95 flex items-center gap-1 transition-colors ${isRamadan ? 'bg-rose-500 hover:bg-rose-400 text-white' : 'bg-rose-500 text-white hover:bg-rose-600'}`}
-                            >
-                                <Plus size={14} /> إضافة
-                            </button>
-                        </div>
-                    </div>
-                </div>
-            </Modal>
-
-            <Modal isOpen={!!editingStudent} onClose={() => setEditingStudent(null)} className={`max-w-md rounded-[2rem] ${isRamadan ? 'bg-transparent' : ''}`}>
-                {editingStudent && (
-                     <div className={`text-center p-6 rounded-[2rem] border transition-colors ${isRamadan ? 'bg-white/10 border-white/20 text-white shadow-2xl' : 'bg-white border-transparent text-slate-800 shadow-2xl'}`}>
-                        <h3 className="font-black text-xl mb-6">تعديل بيانات الطالب</h3>
-                        <div className="space-y-3">
-                            <input type="text" value={editingStudent.name} onChange={(e) => setEditingStudent({...editingStudent, name: e.target.value})} className={`w-full p-4 rounded-xl font-bold text-sm outline-none border transition-colors ${isRamadan ? 'bg-transparent border-indigo-500/30 focus:border-indigo-400 text-white' : 'bg-gray-50 border-gray-200 focus:border-indigo-500 text-slate-800'}`} placeholder="الاسم" />
-                            <select value={editingStudent.classes && editingStudent.classes.length > 0 ? editingStudent.classes[0] : ''} onChange={(e) => setEditingStudent({...editingStudent, classes: [e.target.value]})} className={`w-full p-4 rounded-xl font-bold text-sm outline-none border transition-colors ${isRamadan ? 'bg-transparent border-indigo-500/30 focus:border-indigo-400 text-white' : 'bg-gray-50 border-gray-200 focus:border-indigo-500 text-slate-800'}`}>
-                                {safeClasses.map(c => <option key={c} value={c} className={isRamadan ? 'bg-slate-900' : ''}>{c}</option>)}
-                            </select>
-                            <input type="tel" value={editingStudent.parentPhone || ''} onChange={(e) => setEditingStudent({...editingStudent, parentPhone: e.target.value})} className={`w-full p-4 rounded-xl font-bold text-sm outline-none border transition-colors ${isRamadan ? 'bg-transparent border-indigo-500/30 focus:border-indigo-400 text-white placeholder:text-indigo-200/40' : 'bg-gray-50 border-gray-200 focus:border-indigo-500 text-slate-800'}`} placeholder="رقم الهاتف" />
-                            <div className="flex gap-2">
-                                <button onClick={() => setEditingStudent({...editingStudent, gender: 'male'})} className={`flex-1 py-3 rounded-xl font-bold text-xs transition-all border ${editingStudent.gender === 'male' ? (isRamadan ? 'bg-blue-500/20 border-blue-400/50 text-blue-300' : 'bg-blue-50 border-blue-200 text-blue-600') : (isRamadan ? 'bg-white/5 border-white/10 text-slate-400' : 'bg-gray-50 border-gray-200 text-gray-400')}`}>طالب 👨‍🎓</button>
-                                <button onClick={() => setEditingStudent({...editingStudent, gender: 'female'})} className={`flex-1 py-3 rounded-xl font-bold text-xs transition-all border ${editingStudent.gender === 'female' ? (isRamadan ? 'bg-pink-500/20 border-pink-400/50 text-pink-300' : 'bg-pink-50 border-pink-200 text-pink-600') : (isRamadan ? 'bg-white/5 border-white/10 text-slate-400' : 'bg-gray-50 border-gray-200 text-gray-400')}`}>طالبة 👩‍🎓</button>
-                            </div>
-                            <div className="flex gap-2 mt-4">
-                                <button onClick={handleEditStudentSave} className={`flex-1 py-3 rounded-xl font-black text-sm shadow-lg transition-colors ${isRamadan ? 'bg-indigo-600 text-white hover:bg-indigo-500' : 'bg-indigo-600 text-white hover:bg-indigo-700'}`}>حفظ التعديلات</button>
-                                <button onClick={() => { if(confirm('هل أنت متأكد من حذف الطالب؟')) { onDeleteStudent(editingStudent.id); setEditingStudent(null); }}} className={`px-4 py-3 border rounded-xl font-black text-sm transition-colors ${isRamadan ? 'bg-rose-500/20 text-rose-400 border-rose-500/30 hover:bg-rose-500/30' : 'bg-rose-50 text-rose-600 border-rose-200 hover:bg-rose-100'}`}><Trash2 className="w-5 h-5"/></button>
-                            </div>
-                        </div>
-                    </div>
-                )}
-            </Modal>
-
-            <Modal isOpen={!!randomWinner} onClose={() => setRandomWinner(null)} className={`max-w-sm rounded-[2rem] ${isRamadan ? 'bg-transparent' : ''}`}>
-                {randomWinner && (
-                    <div className={`text-center py-6 px-4 animate-in zoom-in duration-300 rounded-[2rem] border transition-colors ${isRamadan ? 'bg-white/10 border-white/20 text-white shadow-2xl' : 'bg-white border-transparent text-slate-800 shadow-2xl'}`}>
-                        <div className="mb-6 relative inline-block">
-                            <div className={`w-24 h-24 rounded-full border-4 shadow-xl overflow-hidden mx-auto transition-colors ${isRamadan ? 'border-purple-500/50 bg-purple-900/30' : 'border-purple-200 bg-purple-50'}`}>
+        {/* List */}
+        <div className="flex-1 overflow-y-auto px-2 pb-20 custom-scrollbar pt-64 md:pt-2 relative z-10">
+            <div className="grid grid-cols-2 lg:grid-cols-3 gap-3">
+                {filteredStudents.length > 0 ? filteredStudents.map(student => {
+                    const totalPoints = calculateTotalPoints(student);
+                    return (
+                    <div key={student.id} className={`rounded-[1.5rem] border flex flex-col items-center overflow-hidden transition-all duration-300 ${isRamadan ? 'bg-white/5 border-white/10 hover:bg-white/10' : 'bg-white border-slate-100 hover:shadow-md'}`}>
+                        <div className="p-4 flex flex-col items-center w-full relative">
+                            
+                            <div className="relative mb-3">
                                 <StudentAvatar 
-                                    gender={randomWinner.gender}
-                                    className="w-full h-full"
+                                    gender={student.gender}
+                                    className={`w-16 h-16 ${isRamadan ? 'opacity-90' : ''}`}
                                 />
+                                {totalPoints !== 0 && (
+                                   <div className={`absolute -top-3 -right-5 z-10 flex items-center justify-center gap-0.5 px-2 py-0.5 rounded-full text-[10px] font-black shadow-sm border-2 ${isRamadan ? 'border-amber-500/30 bg-amber-500/20 text-amber-300' : 'border-white bg-amber-100 text-amber-600'}`}>
+                                        <Star size={10} className={isRamadan ? "fill-amber-400 text-amber-400" : "fill-amber-500 text-amber-500"} />
+                                        {totalPoints}
+                                    </div>
+                                )}
                             </div>
-                            <div className="absolute -top-3 -right-3 text-4xl animate-bounce">🎉</div>
-                            <div className="absolute -bottom-2 -left-2 text-4xl animate-bounce" style={{animationDelay: '0.2s'}}>✨</div>
+
+                            <h3 className={`font-black text-sm text-center line-clamp-1 w-full ${isRamadan ? 'text-white' : 'text-slate-800'}`}>{student.name}</h3>
+                            <div className="flex gap-1 mt-1">
+                                <span className={`text-[10px] px-2 py-0.5 rounded-full font-bold ${isRamadan ? 'bg-white/10 text-indigo-200' : 'bg-slate-100 text-slate-500'}`}>{student.classes && student.classes.length > 0 ? student.classes[0] : 'غير محدد'}</span>
+                            </div>
                         </div>
-                        <h2 className="text-2xl font-black mb-1">{randomWinner.name}</h2>
-                        <p className={`text-sm font-bold inline-block px-3 py-1 rounded-full mb-6 transition-colors ${isRamadan ? 'bg-purple-500/20 text-purple-300' : 'bg-purple-50 text-purple-600'}`}>
-                            {randomWinner.classes[0]}
-                        </p>
-                        <div className="flex gap-3">
-                            <button onClick={() => { handleBehavior(randomWinner, 'positive'); setRandomWinner(null); }} className={`flex-1 py-3 rounded-xl font-black text-sm shadow-lg active:scale-95 transition-all ${isRamadan ? 'bg-emerald-500 text-white shadow-emerald-900/50 hover:bg-emerald-400' : 'bg-emerald-500 text-white shadow-emerald-200 hover:bg-emerald-600'}`}>
-                                تعزيز
+
+                        <div className={`w-full h-px ${isRamadan ? 'bg-white/10' : 'bg-slate-100'}`}></div>
+
+                        {/* أزرار الإجراءات */}
+                        <div className={`flex w-full divide-x divide-x-reverse ${isRamadan ? 'divide-white/10' : 'divide-slate-100'}`}>
+                            <button onClick={() => handleBehavior(student, 'positive')} className={`flex-1 py-3 flex flex-col items-center justify-center transition-colors group ${isRamadan ? 'hover:bg-emerald-500/20 active:bg-emerald-500/30' : 'hover:bg-emerald-50 active:bg-emerald-100'}`} title="تعزيز إيجابي">
+                                <ThumbsUp className={`w-4 h-4 group-hover:scale-110 transition-transform ${isRamadan ? 'text-emerald-400' : 'text-emerald-500'}`} />
                             </button>
-                            <button onClick={() => setRandomWinner(null)} className={`flex-1 py-3 rounded-xl font-black text-sm transition-all ${isRamadan ? 'bg-white/10 text-white hover:bg-white/20' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'}`}>
-                                إغلاق
+                            
+                            <button onClick={() => handleBehavior(student, 'negative')} className={`flex-1 py-3 flex flex-col items-center justify-center transition-colors group ${isRamadan ? 'hover:bg-rose-500/20 active:bg-rose-500/30' : 'hover:bg-rose-50 active:bg-rose-100'}`} title="سلوك سلبي">
+                                <ThumbsDown className={`w-4 h-4 group-hover:scale-110 transition-transform ${isRamadan ? 'text-rose-400' : 'text-rose-500'}`} />
+                            </button>
+
+                            <button onClick={() => handleSendSmartReport(student)} className={`flex-1 py-3 flex flex-col items-center justify-center transition-colors group ${isRamadan ? 'hover:bg-blue-500/20 active:bg-blue-500/30' : 'hover:bg-emerald-50 active:bg-emerald-100'}`} title="تقرير الدرجات والتميز">
+                                <MessageCircle className={`w-4 h-4 group-hover:scale-110 transition-transform ${isRamadan ? 'text-blue-400' : 'text-emerald-600'}`} />
+                            </button>
+
+                            <button onClick={() => handleSendNegativeReport(student)} className={`flex-1 py-3 flex flex-col items-center justify-center transition-colors group ${isRamadan ? 'hover:bg-amber-500/20 active:bg-amber-500/30' : 'hover:bg-amber-50 active:bg-amber-100'}`} title="تقرير سلوكي (إنذار)">
+                                <Send className={`w-4 h-4 group-hover:scale-110 transition-transform ${isRamadan ? 'text-amber-400' : 'text-amber-500'}`} />
+                            </button>
+                            
+                            <button onClick={() => setEditingStudent(student)} className={`flex-1 py-3 flex flex-col items-center justify-center transition-colors group ${isRamadan ? 'hover:bg-white/10 active:bg-white/20' : 'hover:bg-slate-50 active:bg-slate-100'}`} title="تعديل">
+                                <Edit2 className={`w-4 h-4 transition-colors ${isRamadan ? 'text-slate-400 group-hover:text-indigo-300' : 'text-slate-400 group-hover:text-indigo-500'}`} />
                             </button>
                         </div>
+                    </div>
+                )}) : (
+                    <div className={`flex flex-col items-center justify-center py-20 col-span-full text-center ${isRamadan ? 'opacity-70' : 'opacity-50'}`}>
+                        <UserPlus className={`w-16 h-16 mb-4 ${isRamadan ? 'text-white/20' : 'text-gray-300'}`} />
+                        <p className={`text-sm font-bold ${isRamadan ? 'text-indigo-200/50' : 'text-gray-400'}`}>لا يوجد طلاب مطابقين للبحث</p>
+                        {safeClasses.length === 0 && <p className={`text-xs mt-2 font-bold cursor-pointer ${isRamadan ? 'text-amber-400' : 'text-indigo-400'}`} onClick={() => setShowAddClassModal(true)}>ابدأ بإضافة فصل جديد</p>}
                     </div>
                 )}
-            </Modal>
+            </div>
+        </div>
 
-            <Modal isOpen={showTimerModal} onClose={() => setShowTimerModal(false)} className={`max-w-xs rounded-[2rem] ${isRamadan ? 'bg-transparent' : ''}`}>
-                <div className={`text-center p-6 rounded-[2rem] border transition-colors ${isRamadan ? 'bg-white/10 border-white/20 text-white shadow-2xl' : 'bg-white border-transparent text-slate-800 shadow-2xl'}`}>
-                    <h3 className="font-black text-lg mb-4 flex items-center justify-center gap-2">
-                        <Timer className={`w-5 h-5 ${isRamadan ? 'text-amber-400' : 'text-amber-500'}`}/> المؤقت
-                    </h3>
-                    
-                    <div className="grid grid-cols-3 gap-2 mb-4">
-                        {[1, 3, 5, 10, 15, 20].map(min => (
-                            <button 
-                                key={min} 
-                                onClick={() => startTimer(min)} 
-                                className={`border rounded-xl py-2 text-xs font-bold transition-all active:scale-95 ${isRamadan ? 'bg-white/5 border-white/10 text-slate-300 hover:bg-indigo-500/20 hover:border-indigo-400/50 hover:text-indigo-300' : 'bg-slate-50 border-slate-200 text-slate-600 hover:bg-indigo-50 hover:border-indigo-200 hover:text-indigo-600'}`}
-                            >
-                                {min} د
-                            </button>
-                        ))}
+        {/* ✅ النوافذ المنبثقة: ألوان صلبة مع حقول إدخال مميزة */}
+        <Modal isOpen={showManualAddModal} onClose={() => setShowManualAddModal(false)} className={`max-w-md rounded-[2rem] ${isRamadan ? 'bg-transparent' : ''}`}>
+             <div className={`text-center p-6 rounded-[2rem] border transition-colors ${isRamadan ? 'bg-[#0f172a] border-white/10 text-white shadow-2xl' : 'bg-white border-transparent text-slate-800 shadow-2xl'}`}>
+                <div className={`w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4 border ${isRamadan ? 'bg-indigo-900/50 text-indigo-400 border-indigo-500/30' : 'bg-indigo-50 text-indigo-500 border-transparent'}`}>
+                    <UserPlus className="w-8 h-8" />
+                </div>
+                <h3 className="font-black text-xl mb-6">إضافة طالب جديد</h3>
+                <div className="space-y-3">
+                    <input type="text" placeholder="اسم الطالب" value={newStudentName} onChange={(e) => setNewStudentName(e.target.value)} className={`w-full p-4 rounded-xl font-bold text-sm outline-none border transition-colors ${isRamadan ? 'bg-[#1e293b] border-indigo-500/30 focus:border-indigo-400 text-white placeholder:text-indigo-200/40' : 'bg-gray-50 border-gray-200 focus:border-indigo-500 text-slate-800'}`} />
+                    <select value={newStudentClass} onChange={(e) => setNewStudentClass(e.target.value)} className={`w-full p-4 rounded-xl font-bold text-sm outline-none border transition-colors ${isRamadan ? 'bg-[#1e293b] border-indigo-500/30 focus:border-indigo-400 text-white' : 'bg-gray-50 border-gray-200 focus:border-indigo-500 text-slate-800'}`}>
+                        <option value="" disabled className={isRamadan ? 'text-slate-500' : ''}>اختر الفصل</option>
+                        {safeClasses.map(c => <option key={c} value={c} className={isRamadan ? 'bg-[#0f172a]' : ''}>{c}</option>)}
+                    </select>
+                    <input type="tel" placeholder="رقم ولي الأمر (اختياري)" value={newStudentPhone} onChange={(e) => setNewStudentPhone(e.target.value)} className={`w-full p-4 rounded-xl font-bold text-sm outline-none border transition-colors ${isRamadan ? 'bg-[#1e293b] border-indigo-500/30 focus:border-indigo-400 text-white placeholder:text-indigo-200/40' : 'bg-gray-50 border-gray-200 focus:border-indigo-500 text-slate-800'}`} />
+                     <div className="flex gap-2">
+                        <button onClick={() => setNewStudentGender('male')} className={`flex-1 py-3 rounded-xl font-bold text-xs transition-all border ${newStudentGender === 'male' ? (isRamadan ? 'bg-blue-500/20 border-blue-400/50 text-blue-300' : 'bg-blue-50 border-blue-200 text-blue-600') : (isRamadan ? 'bg-white/5 border-white/10 text-slate-400' : 'bg-gray-50 border-gray-200 text-gray-400')}`}>طالب 👨‍🎓</button>
+                        <button onClick={() => setNewStudentGender('female')} className={`flex-1 py-3 rounded-xl font-bold text-xs transition-all border ${newStudentGender === 'female' ? (isRamadan ? 'bg-pink-500/20 border-pink-400/50 text-pink-300' : 'bg-pink-50 border-pink-200 text-pink-600') : (isRamadan ? 'bg-white/5 border-white/10 text-slate-400' : 'bg-gray-50 border-gray-200 text-gray-400')}`}>طالبة 👩‍🎓</button>
                     </div>
+                    <button onClick={handleManualAddSubmit} disabled={!newStudentName || !newStudentClass} className={`w-full py-4 rounded-xl font-black text-sm shadow-lg active:scale-95 transition-all disabled:opacity-50 mt-2 ${isRamadan ? 'bg-indigo-600 text-white hover:bg-indigo-500' : 'bg-indigo-600 text-white hover:bg-indigo-700'}`}>حفظ الطالب</button>
+                </div>
+            </div>
+        </Modal>
 
-                    <div className="flex gap-2 items-center mb-4">
-                        <input 
-                            type="number" 
-                            value={timerInput} 
-                            onChange={(e) => setTimerInput(e.target.value)} 
-                            className={`w-full border rounded-xl py-2 px-3 text-center font-black outline-none transition-colors ${isRamadan ? 'bg-transparent border-indigo-500/30 focus:border-indigo-400 text-white placeholder:text-indigo-200/40' : 'bg-slate-50 border-slate-200 focus:border-indigo-500 text-slate-800 placeholder:text-slate-400'}`} 
-                            placeholder="دقيقة"
-                        />
+        <Modal isOpen={showImportModal} onClose={() => setShowImportModal(false)} className={`max-w-lg rounded-[2rem] ${isRamadan ? 'bg-transparent' : ''}`}>
+            <div className={isRamadan ? 'bg-[#0f172a] border border-white/10 rounded-[2rem] shadow-2xl overflow-hidden' : ''}>
+                <ExcelImport existingClasses={safeClasses} onImport={(data) => { onBatchAddStudents(data); setShowImportModal(false); }} onAddClass={onAddClass} />
+            </div>
+        </Modal>
+
+        <Modal isOpen={showAddClassModal} onClose={() => setShowAddClassModal(false)} className={`max-w-sm rounded-[2rem] ${isRamadan ? 'bg-transparent' : ''}`}>
+             <div className={`text-center p-6 rounded-[2rem] border transition-colors ${isRamadan ? 'bg-[#0f172a] border-white/10 text-white shadow-2xl' : 'bg-white border-transparent text-slate-800 shadow-2xl'}`}>
+                <h3 className="font-black text-lg mb-4">إضافة فصل جديد</h3>
+                <input autoFocus type="text" placeholder="اسم الفصل (مثال: 5/1)" value={newClassInput} onChange={(e) => setNewClassInput(e.target.value)} className={`w-full p-4 rounded-xl font-bold text-sm outline-none border mb-4 transition-colors ${isRamadan ? 'bg-[#1e293b] border-indigo-500/30 focus:border-indigo-400 text-white placeholder:text-indigo-200/40' : 'bg-gray-50 border-gray-200 focus:border-indigo-500 text-slate-800'}`} />
+                <button onClick={handleAddClassSubmit} className={`w-full py-3 rounded-xl font-black text-xs shadow-lg active:scale-95 transition-colors ${isRamadan ? 'bg-indigo-600 text-white hover:bg-indigo-500' : 'bg-indigo-600 text-white hover:bg-indigo-700'}`}>إضافة</button>
+             </div>
+        </Modal>
+
+        <Modal isOpen={showManageClasses} onClose={() => setShowManageClasses(false)} className={`max-w-md rounded-[2rem] ${isRamadan ? 'bg-transparent' : ''}`}>
+            <div className={`text-center p-6 rounded-[2rem] border transition-colors ${isRamadan ? 'bg-[#0f172a] border-white/10 text-white shadow-2xl' : 'bg-white border-transparent text-slate-800 shadow-2xl'}`}>
+                <h3 className="font-black text-xl mb-6">إعدادات الفصول والصفوف</h3>
+                <div className={`rounded-2xl p-4 mb-6 border ${isRamadan ? 'bg-indigo-900/20 border-indigo-500/30' : 'bg-indigo-50/50 border-indigo-100'}`}>
+                    <div className={`flex items-center justify-center gap-2 mb-3 ${isRamadan ? 'text-indigo-300' : 'text-indigo-900'}`}>
+                        <Users className="w-4 h-4" />
+                        <span className="font-bold text-sm">نوع المدرسة (تغيير جماعي)</span>
+                    </div>
+                    <div className="flex gap-3 mb-2">
                         <button 
-                            onClick={() => startTimer(Number(timerInput))} 
-                            className={`p-2.5 rounded-xl active:scale-95 shadow-lg transition-colors ${isRamadan ? 'bg-indigo-500 shadow-indigo-900/50 hover:bg-indigo-400' : 'bg-indigo-600 shadow-indigo-200 hover:bg-indigo-700'}`}
+                            onClick={() => handleBatchGenderUpdate('male')}
+                            className={`flex-1 py-3 rounded-xl border-2 transition-all flex items-center justify-center gap-2 ${defaultStudentGender === 'male' ? (isRamadan ? 'bg-blue-500/20 border-blue-400/50 text-blue-300 shadow-md' : 'bg-white border-blue-200 shadow-md text-blue-700') : (isRamadan ? 'bg-white/5 border-transparent text-slate-400 hover:bg-white/10' : 'bg-white/50 border-transparent text-slate-500 hover:bg-white')}`}
                         >
-                            <Play size={16} fill="white" className="text-white" />
+                            <span className="text-xl">👨‍🎓</span>
+                            <span className="font-black text-sm">بنين</span>
+                        </button>
+                        <button 
+                            onClick={() => handleBatchGenderUpdate('female')}
+                            className={`flex-1 py-3 rounded-xl border-2 transition-all flex items-center justify-center gap-2 ${defaultStudentGender === 'female' ? (isRamadan ? 'bg-pink-500/20 border-pink-400/50 text-pink-300 shadow-md' : 'bg-white border-pink-200 shadow-md text-pink-700') : (isRamadan ? 'bg-white/5 border-transparent text-slate-400 hover:bg-white/10' : 'bg-white/50 border-transparent text-slate-500 hover:bg-white')}`}
+                        >
+                            <span className="text-xl">👩‍🎓</span>
+                            <span className="font-black text-sm">بنات</span>
                         </button>
                     </div>
-
-                    {isTimerRunning && (
-                        <div className={`border-t pt-4 mt-2 ${isRamadan ? 'border-white/10' : 'border-slate-100'}`}>
-                            <h2 className="text-4xl font-black mb-4 font-mono">{formatTime(timerSeconds)}</h2>
-                            <div className="flex gap-2 justify-center">
-                                <button onClick={() => setIsTimerRunning(false)} className={`p-3 rounded-full border active:scale-95 transition-colors ${isRamadan ? 'bg-rose-500/20 text-rose-400 border-rose-500/30 hover:bg-rose-500/30' : 'bg-rose-50 text-rose-600 border-rose-100 hover:bg-rose-100'}`}>
-                                    <Pause size={20} fill="currentColor" />
-                                </button>
-                                <button onClick={() => { setIsTimerRunning(false); setTimerSeconds(0); }} className={`p-3 rounded-full border active:scale-95 transition-colors ${isRamadan ? 'bg-white/10 text-slate-300 border-white/20 hover:bg-white/20' : 'bg-slate-100 text-slate-500 border-slate-200 hover:bg-slate-200'}`}>
-                                    <RotateCcw size={20} />
-                                </button>
+                    <p className={`text-[10px] font-bold ${isRamadan ? 'text-indigo-200/60' : 'text-indigo-400'}`}>* سيتم توحيد أيقونات جميع الطلاب حسب اختيارك.</p>
+                </div>
+                <div className={`w-full h-px mb-6 ${isRamadan ? 'bg-white/10' : 'bg-gray-100'}`}></div>
+                <div className="flex justify-between items-center mb-2 px-2">
+                      <span className={`text-xs font-bold ${isRamadan ? 'text-slate-400' : 'text-slate-400'}`}>يمكنك هنا حذف الفصول الدراسية بالكامل.</span>
+                      <span className={`text-[10px] font-bold ${isRamadan ? 'text-rose-400' : 'text-red-400'}`}>تنبيه: الحذف سيؤثر على جميع الصفحات.</span>
+                </div>
+                <div className="max-h-60 overflow-y-auto custom-scrollbar p-1 space-y-2">
+                    {safeClasses.map(cls => (
+                        <div key={cls} className={`flex justify-between items-center p-3 rounded-xl border transition-colors ${isRamadan ? 'bg-[#1e293b] border-white/10' : 'bg-gray-50 border-gray-200'}`}>
+                            <span className={`font-bold text-sm ${isRamadan ? 'text-white' : 'text-slate-800'}`}>{cls}</span>
+                            <div className="flex gap-2">
+                                <button onClick={() => { if(onDeleteClass && confirm('هل أنت متأكد من حذف هذا الفصل؟ سيتم إخفاء الطلاب المرتبطين به.')) onDeleteClass(cls); }} className={`p-2 rounded-lg transition-colors ${isRamadan ? 'text-rose-400 bg-rose-500/20 hover:bg-rose-500/30' : 'text-rose-500 bg-rose-50 hover:bg-rose-100'}`}><Trash2 className="w-4 h-4"/></button>
                             </div>
                         </div>
-                    )}
+                    ))}
+                    {safeClasses.length === 0 && <p className={`text-xs ${isRamadan ? 'text-slate-500' : 'text-gray-400'}`}>لا توجد فصول مضافة</p>}
                 </div>
-            </Modal>
+                <button onClick={() => setShowManageClasses(false)} className={`mt-4 w-full py-3 rounded-xl font-bold text-xs transition-colors ${isRamadan ? 'bg-white/10 text-white hover:bg-white/20' : 'bg-gray-100 text-slate-600 hover:bg-gray-200'}`}>إغلاق</button>
+            </div>
+        </Modal>
+        
+        <Modal isOpen={showPositiveModal} onClose={() => { setShowPositiveModal(false); setSelectedStudentForBehavior(null); }} className={`max-w-sm rounded-[2rem] ${isRamadan ? 'bg-transparent' : ''}`}>
+            <div className={`text-center p-6 rounded-[2rem] border transition-colors ${isRamadan ? 'bg-[#0f172a] border-white/10 text-white shadow-2xl' : 'bg-white border-transparent text-slate-800 shadow-2xl'}`}>
+                <div className="flex justify-between items-center mb-4">
+                    <h3 className="font-black text-lg flex items-center gap-2">
+                        <CheckCircle2 className={`w-5 h-5 ${isRamadan ? 'text-emerald-400' : 'text-emerald-500'}`} />
+                        تعزيز إيجابي
+                    </h3>
+                    <button onClick={() => setShowPositiveModal(false)} className={`p-2 rounded-full transition-colors ${isRamadan ? 'bg-white/10 text-slate-300 hover:bg-white/20' : 'bg-gray-100 text-gray-500 hover:bg-gray-200'}`}><X className="w-4 h-4"/></button>
+                </div>
+                <p className={`text-xs font-bold mb-4 ${isRamadan ? 'text-slate-300' : 'text-gray-500'}`}>اختر نوع التميز للطالب <span className={isRamadan ? 'text-amber-400' : 'text-indigo-600'}>{selectedStudentForBehavior?.name}</span></p>
+                
+                <div className="grid grid-cols-2 gap-2 mb-4">
+                    {POSITIVE_BEHAVIORS.map(b => (
+                        <button 
+                            key={b.id}
+                            onClick={() => confirmPositiveBehavior(b.title, b.points)}
+                            className={`p-3 border rounded-xl text-xs font-bold active:scale-95 transition-all flex flex-col items-center gap-1 ${isRamadan ? 'bg-[#1e293b] border-emerald-400/30 text-emerald-300 hover:bg-emerald-500/30' : 'bg-emerald-50 border-emerald-100 text-emerald-700 hover:bg-emerald-100'}`}
+                        >
+                            <span>{b.title}</span>
+                            <span className={`text-[10px] px-2 py-0.5 rounded-full shadow-sm ${isRamadan ? 'bg-emerald-500/30 text-emerald-200' : 'bg-white text-emerald-600'}`}>+{b.points}</span>
+                        </button>
+                    ))}
+                </div>
 
-        </div>
-    );
+                <div className={`pt-3 border-t ${isRamadan ? 'border-white/10' : 'border-slate-100'}`}>
+                    <p className={`text-[10px] font-bold mb-2 text-right ${isRamadan ? 'text-slate-400' : 'text-slate-400'}`}>أو أضف سلوكاً مخصصاً:</p>
+                    <div className="flex gap-2">
+                        <input 
+                            type="text" 
+                            value={customPositiveReason}
+                            onChange={(e) => setCustomPositiveReason(e.target.value)}
+                            placeholder="سبب آخر..." 
+                            className={`flex-1 border rounded-lg px-3 py-2 text-xs font-bold outline-none transition-colors ${isRamadan ? 'bg-[#1e293b] border-indigo-500/30 focus:border-emerald-400 text-white placeholder:text-indigo-200/40' : 'bg-slate-50 border-slate-200 focus:border-emerald-500 text-slate-800'}`}
+                        />
+                        <button 
+                            onClick={() => {
+                                if(customPositiveReason.trim()) {
+                                    confirmPositiveBehavior(customPositiveReason, 1);
+                                }
+                            }}
+                            className={`px-4 py-2 rounded-lg text-xs font-bold active:scale-95 flex items-center gap-1 transition-colors ${isRamadan ? 'bg-emerald-500 hover:bg-emerald-400 text-white' : 'bg-emerald-500 text-white hover:bg-emerald-600'}`}
+                        >
+                            <Plus size={14} /> إضافة
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </Modal>
+
+        <Modal isOpen={showNegativeModal} onClose={() => { setShowNegativeModal(false); setSelectedStudentForBehavior(null); }} className={`max-w-sm rounded-[2rem] ${isRamadan ? 'bg-transparent' : ''}`}>
+            <div className={`text-center p-6 rounded-[2rem] border transition-colors ${isRamadan ? 'bg-[#0f172a] border-white/10 text-white shadow-2xl' : 'bg-white border-transparent text-slate-800 shadow-2xl'}`}>
+                <div className="flex justify-between items-center mb-4">
+                    <h3 className="font-black text-lg flex items-center gap-2">
+                        <AlertCircle className={`w-5 h-5 ${isRamadan ? 'text-rose-400' : 'text-rose-500'}`} />
+                        تنبيه سلوكي
+                    </h3>
+                    <button onClick={() => setShowNegativeModal(false)} className={`p-2 rounded-full transition-colors ${isRamadan ? 'bg-white/10 text-slate-300 hover:bg-white/20' : 'bg-gray-100 text-gray-500 hover:bg-gray-200'}`}><X className="w-4 h-4"/></button>
+                </div>
+                <p className={`text-xs font-bold mb-4 ${isRamadan ? 'text-slate-300' : 'text-gray-500'}`}>اختر نوع الملاحظة للطالب <span className={isRamadan ? 'text-amber-400' : 'text-indigo-600'}>{selectedStudentForBehavior?.name}</span></p>
+                
+                <div className="grid grid-cols-2 gap-2 mb-4">
+                    {NEGATIVE_BEHAVIORS.map(b => (
+                        <button 
+                            key={b.id}
+                            onClick={() => confirmNegativeBehavior(b.title, b.points)}
+                            className={`p-3 border rounded-xl text-xs font-bold active:scale-95 transition-all flex flex-col items-center gap-1 ${isRamadan ? 'bg-[#1e293b] border-rose-400/30 text-rose-300 hover:bg-rose-500/30' : 'bg-rose-50 border-rose-100 text-rose-700 hover:bg-rose-100'}`}
+                        >
+                            <span>{b.title}</span>
+                            <span className={`text-[10px] px-2 py-0.5 rounded-full shadow-sm ${isRamadan ? 'bg-rose-500/30 text-rose-200' : 'bg-white text-rose-600'}`}>{b.points}</span>
+                        </button>
+                    ))}
+                </div>
+
+                <div className={`pt-3 border-t ${isRamadan ? 'border-white/10' : 'border-slate-100'}`}>
+                    <p className={`text-[10px] font-bold mb-2 text-right ${isRamadan ? 'text-slate-400' : 'text-slate-400'}`}>أو أضف ملاحظة مخصصة:</p>
+                    <div className="flex gap-2">
+                        <input 
+                            type="text" 
+                            value={customNegativeReason}
+                            onChange={(e) => setCustomNegativeReason(e.target.value)}
+                            placeholder="سبب آخر..." 
+                            className={`flex-1 border rounded-lg px-3 py-2 text-xs font-bold outline-none transition-colors ${isRamadan ? 'bg-[#1e293b] border-indigo-500/30 focus:border-rose-400 text-white placeholder:text-indigo-200/40' : 'bg-slate-50 border-slate-200 focus:border-rose-500 text-slate-800'}`}
+                        />
+                        <button 
+                            onClick={() => {
+                                if(customNegativeReason.trim()) {
+                                    confirmNegativeBehavior(customNegativeReason, -1);
+                                }
+                            }}
+                            className={`px-4 py-2 rounded-lg text-xs font-bold active:scale-95 flex items-center gap-1 transition-colors ${isRamadan ? 'bg-rose-500 hover:bg-rose-400 text-white' : 'bg-rose-500 text-white hover:bg-rose-600'}`}
+                        >
+                            <Plus size={14} /> إضافة
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </Modal>
+
+        <Modal isOpen={!!editingStudent} onClose={() => setEditingStudent(null)} className={`max-w-md rounded-[2rem] ${isRamadan ? 'bg-transparent' : ''}`}>
+            {editingStudent && (
+                 <div className={`text-center p-6 rounded-[2rem] border transition-colors ${isRamadan ? 'bg-[#0f172a] border-white/10 text-white shadow-2xl' : 'bg-white border-transparent text-slate-800 shadow-2xl'}`}>
+                    <h3 className="font-black text-xl mb-6">تعديل بيانات الطالب</h3>
+                    <div className="space-y-3">
+                        <input type="text" value={editingStudent.name} onChange={(e) => setEditingStudent({...editingStudent, name: e.target.value})} className={`w-full p-4 rounded-xl font-bold text-sm outline-none border transition-colors ${isRamadan ? 'bg-[#1e293b] border-indigo-500/30 focus:border-indigo-400 text-white' : 'bg-gray-50 border-gray-200 focus:border-indigo-500 text-slate-800'}`} placeholder="الاسم" />
+                        <select value={editingStudent.classes && editingStudent.classes.length > 0 ? editingStudent.classes[0] : ''} onChange={(e) => setEditingStudent({...editingStudent, classes: [e.target.value]})} className={`w-full p-4 rounded-xl font-bold text-sm outline-none border transition-colors ${isRamadan ? 'bg-[#1e293b] border-indigo-500/30 focus:border-indigo-400 text-white' : 'bg-gray-50 border-gray-200 focus:border-indigo-500 text-slate-800'}`}>
+                            {safeClasses.map(c => <option key={c} value={c} className={isRamadan ? 'bg-[#0f172a]' : ''}>{c}</option>)}
+                        </select>
+                        <input type="tel" value={editingStudent.parentPhone || ''} onChange={(e) => setEditingStudent({...editingStudent, parentPhone: e.target.value})} className={`w-full p-4 rounded-xl font-bold text-sm outline-none border transition-colors ${isRamadan ? 'bg-[#1e293b] border-indigo-500/30 focus:border-indigo-400 text-white placeholder:text-indigo-200/40' : 'bg-gray-50 border-gray-200 focus:border-indigo-500 text-slate-800'}`} placeholder="رقم الهاتف" />
+                        <div className="flex gap-2">
+                            <button onClick={() => setEditingStudent({...editingStudent, gender: 'male'})} className={`flex-1 py-3 rounded-xl font-bold text-xs transition-all border ${editingStudent.gender === 'male' ? (isRamadan ? 'bg-blue-500/20 border-blue-400/50 text-blue-300' : 'bg-blue-50 border-blue-200 text-blue-600') : (isRamadan ? 'bg-white/5 border-white/10 text-slate-400' : 'bg-gray-50 border-gray-200 text-gray-400')}`}>طالب 👨‍🎓</button>
+                            <button onClick={() => setEditingStudent({...editingStudent, gender: 'female'})} className={`flex-1 py-3 rounded-xl font-bold text-xs transition-all border ${editingStudent.gender === 'female' ? (isRamadan ? 'bg-pink-500/20 border-pink-400/50 text-pink-300' : 'bg-pink-50 border-pink-200 text-pink-600') : (isRamadan ? 'bg-white/5 border-white/10 text-slate-400' : 'bg-gray-50 border-gray-200 text-gray-400')}`}>طالبة 👩‍🎓</button>
+                        </div>
+                        <div className="flex gap-2 mt-4">
+                            <button onClick={handleEditStudentSave} className={`flex-1 py-3 rounded-xl font-black text-sm shadow-lg transition-colors ${isRamadan ? 'bg-indigo-600 text-white hover:bg-indigo-500' : 'bg-indigo-600 text-white hover:bg-indigo-700'}`}>حفظ التعديلات</button>
+                            <button onClick={() => { if(confirm('هل أنت متأكد من حذف الطالب؟')) { onDeleteStudent(editingStudent.id); setEditingStudent(null); }}} className={`px-4 py-3 border rounded-xl font-black text-sm transition-colors ${isRamadan ? 'bg-rose-500/20 text-rose-400 border-rose-500/30 hover:bg-rose-500/30' : 'bg-rose-50 text-rose-600 border-rose-200 hover:bg-rose-100'}`}><Trash2 className="w-5 h-5"/></button>
+                        </div>
+                    </div>
+                </div>
+            )}
+        </Modal>
+
+        <Modal isOpen={!!randomWinner} onClose={() => setRandomWinner(null)} className={`max-w-sm rounded-[2rem] ${isRamadan ? 'bg-transparent' : ''}`}>
+            {randomWinner && (
+                <div className={`text-center py-6 px-4 animate-in zoom-in duration-300 rounded-[2rem] border transition-colors ${isRamadan ? 'bg-[#0f172a] border-white/10 text-white shadow-2xl' : 'bg-white border-transparent text-slate-800 shadow-2xl'}`}>
+                    <div className="mb-6 relative inline-block">
+                        <div className={`w-24 h-24 rounded-full border-4 shadow-xl overflow-hidden mx-auto transition-colors ${isRamadan ? 'border-purple-500/50 bg-purple-900/30' : 'border-purple-200 bg-purple-50'}`}>
+                            <StudentAvatar 
+                                gender={randomWinner.gender}
+                                className="w-full h-full"
+                            />
+                        </div>
+                        <div className="absolute -top-3 -right-3 text-4xl animate-bounce">🎉</div>
+                        <div className="absolute -bottom-2 -left-2 text-4xl animate-bounce" style={{animationDelay: '0.2s'}}>✨</div>
+                    </div>
+                    <h2 className="text-2xl font-black mb-1">{randomWinner.name}</h2>
+                    <p className={`text-sm font-bold inline-block px-3 py-1 rounded-full mb-6 transition-colors ${isRamadan ? 'bg-purple-500/20 text-purple-300' : 'bg-purple-50 text-purple-600'}`}>
+                        {randomWinner.classes[0]}
+                    </p>
+                    <div className="flex gap-3">
+                        <button onClick={() => { handleBehavior(randomWinner, 'positive'); setRandomWinner(null); }} className={`flex-1 py-3 rounded-xl font-black text-sm shadow-lg active:scale-95 transition-all ${isRamadan ? 'bg-emerald-500 text-white shadow-emerald-900/50 hover:bg-emerald-400' : 'bg-emerald-500 text-white shadow-emerald-200 hover:bg-emerald-600'}`}>
+                            تعزيز
+                        </button>
+                        <button onClick={() => setRandomWinner(null)} className={`flex-1 py-3 rounded-xl font-black text-sm transition-all ${isRamadan ? 'bg-white/10 text-white hover:bg-white/20' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'}`}>
+                            إغلاق
+                        </button>
+                    </div>
+                </div>
+            )}
+        </Modal>
+
+        <Modal isOpen={showTimerModal} onClose={() => setShowTimerModal(false)} className={`max-w-xs rounded-[2rem] ${isRamadan ? 'bg-transparent' : ''}`}>
+            <div className={`text-center p-6 rounded-[2rem] border transition-colors ${isRamadan ? 'bg-[#0f172a] border-white/10 text-white shadow-2xl' : 'bg-white border-transparent text-slate-800 shadow-2xl'}`}>
+                <h3 className="font-black text-lg mb-4 flex items-center justify-center gap-2">
+                    <Timer className={`w-5 h-5 ${isRamadan ? 'text-amber-400' : 'text-amber-500'}`}/> المؤقت
+                </h3>
+                
+                <div className="grid grid-cols-3 gap-2 mb-4">
+                    {[1, 3, 5, 10, 15, 20].map(min => (
+                        <button 
+                            key={min} 
+                            onClick={() => startTimer(min)} 
+                            className={`border rounded-xl py-2 text-xs font-bold transition-all active:scale-95 ${isRamadan ? 'bg-[#1e293b] border-white/10 text-slate-300 hover:bg-indigo-500/20 hover:border-indigo-400/50 hover:text-indigo-300' : 'bg-slate-50 border-slate-200 text-slate-600 hover:bg-indigo-50 hover:border-indigo-200 hover:text-indigo-600'}`}
+                        >
+                            {min} د
+                        </button>
+                    ))}
+                </div>
+
+                <div className="flex gap-2 items-center mb-4">
+                    <input 
+                        type="number" 
+                        value={timerInput} 
+                        onChange={(e) => setTimerInput(e.target.value)} 
+                        className={`w-full border rounded-xl py-2 px-3 text-center font-black outline-none transition-colors ${isRamadan ? 'bg-[#1e293b] border-indigo-500/30 focus:border-indigo-400 text-white placeholder:text-indigo-200/40' : 'bg-slate-50 border-slate-200 focus:border-indigo-500 text-slate-800 placeholder:text-slate-400'}`} 
+                        placeholder="دقيقة"
+                    />
+                    <button 
+                        onClick={() => startTimer(Number(timerInput))} 
+                        className={`p-2.5 rounded-xl active:scale-95 shadow-lg transition-colors ${isRamadan ? 'bg-indigo-500 shadow-indigo-900/50 hover:bg-indigo-400' : 'bg-indigo-600 shadow-indigo-200 hover:bg-indigo-700'}`}
+                    >
+                        <Play size={16} fill="white" className="text-white" />
+                    </button>
+                </div>
+
+                {isTimerRunning && (
+                    <div className={`border-t pt-4 mt-2 ${isRamadan ? 'border-white/10' : 'border-slate-100'}`}>
+                        <h2 className="text-4xl font-black mb-4 font-mono">{formatTime(timerSeconds)}</h2>
+                        <div className="flex gap-2 justify-center">
+                            <button onClick={() => setIsTimerRunning(false)} className={`p-3 rounded-full border active:scale-95 transition-colors ${isRamadan ? 'bg-rose-500/20 text-rose-400 border-rose-500/30 hover:bg-rose-500/30' : 'bg-rose-50 text-rose-600 border-rose-100 hover:bg-rose-100'}`}>
+                                <Pause size={20} fill="currentColor" />
+                            </button>
+                            <button onClick={() => { setIsTimerRunning(false); setTimerSeconds(0); }} className={`p-3 rounded-full border active:scale-95 transition-colors ${isRamadan ? 'bg-white/10 text-slate-300 border-white/20 hover:bg-white/20' : 'bg-slate-100 text-slate-500 border-slate-200 hover:bg-slate-200'}`}>
+                                <RotateCcw size={20} />
+                            </button>
+                        </div>
+                    </div>
+                )}
+            </div>
+        </Modal>
+
+    </div>
+  );
 };
 
 export default StudentList;
