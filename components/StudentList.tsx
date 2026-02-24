@@ -474,9 +474,9 @@ const StudentList: React.FC<StudentListProps> = ({
     <div className={`flex flex-col h-full overflow-hidden ${isRamadan ? 'text-white' : 'text-slate-800'}`}>
         
         {/* ================= FIXED HEADER ================= */}
-        {/* 🚀 إزالة الزجاج المغبش وتسريع الهيدر بلون صلب */}
+        {/* 🚀 شفافية iOS للهيدر العلوي */}
             <header 
-                className={`fixed md:sticky top-0 z-40 md:z-30 shadow-lg px-4 pt-[env(safe-area-inset-top)] pb-6 md:pl-40 transition-all duration-500 md:rounded-none md:shadow-md w-full md:w-auto left-0 right-0 md:left-auto md:right-auto ${isRamadan ? 'bg-[#0f172a] border-b border-white/10 text-white' : 'bg-[#446A8D] text-white'}`}
+                className={`fixed md:sticky top-0 z-40 md:z-30 shadow-lg px-4 pt-[env(safe-area-inset-top)] pb-6 md:pl-40 transition-all duration-500 md:rounded-none md:shadow-md w-full md:w-auto left-0 right-0 md:left-auto md:right-auto ${isRamadan ? 'bg-white/5 border-b border-white/10 text-white' : 'bg-[#446A8D] text-white'}`}
                 style={{ WebkitAppRegion: 'drag' } as any}
             >
                 <div className="flex justify-between items-center mb-6">
@@ -575,7 +575,8 @@ const StudentList: React.FC<StudentListProps> = ({
                     {filteredStudents.length > 0 ? filteredStudents.map(student => {
                         const totalPoints = calculateTotalPoints(student);
                         return (
-                        <div key={student.id} className={`rounded-[1.5rem] border flex flex-col items-center overflow-hidden transition-all duration-300 ${isRamadan ? 'bg-[#1e293b] border-white/10 hover:bg-[#283548]' : 'bg-white border-slate-100 hover:shadow-md'}`}>
+                        /* 🚀 شفافية iOS لبطاقات الطلاب - سريعة جداً بدون Blur */
+                        <div key={student.id} className={`rounded-[1.5rem] border flex flex-col items-center overflow-hidden transition-all duration-300 ${isRamadan ? 'bg-white/5 border-white/10 hover:bg-white/10' : 'bg-white border-slate-100 hover:shadow-md'}`}>
                             <div className="p-4 flex flex-col items-center w-full relative">
                                 
                                 <div className="relative mb-3">
@@ -632,20 +633,20 @@ const StudentList: React.FC<StudentListProps> = ({
                 </div>
             </div>
 
-            {/* Modals */}
+            {/* Modals - النوافذ أصبحت شفافة بدون تعتيم مزعج */}
             <Modal isOpen={showManualAddModal} onClose={() => setShowManualAddModal(false)} className={`max-w-md rounded-[2rem] ${isRamadan ? 'bg-transparent' : ''}`}>
-                 <div className={`text-center p-6 rounded-[2rem] border transition-colors ${isRamadan ? 'bg-[#0f172a] border-white/10 text-white shadow-2xl' : 'bg-white border-transparent text-slate-800 shadow-2xl'}`}>
+                 <div className={`text-center p-6 rounded-[2rem] border transition-colors ${isRamadan ? 'bg-white/10 border-white/20 text-white shadow-2xl' : 'bg-white border-transparent text-slate-800 shadow-2xl'}`}>
                     <div className={`w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4 border ${isRamadan ? 'bg-indigo-900/50 text-indigo-400 border-indigo-500/30' : 'bg-indigo-50 text-indigo-500 border-transparent'}`}>
                         <UserPlus className="w-8 h-8" />
                     </div>
                     <h3 className="font-black text-xl mb-6">إضافة طالب جديد</h3>
                     <div className="space-y-3">
-                        <input type="text" placeholder="اسم الطالب" value={newStudentName} onChange={(e) => setNewStudentName(e.target.value)} className={`w-full p-4 rounded-xl font-bold text-sm outline-none border transition-colors ${isRamadan ? 'bg-[#1e1b4b]/50 border-indigo-500/30 focus:border-indigo-400 text-white placeholder:text-indigo-200/40' : 'bg-gray-50 border-gray-200 focus:border-indigo-500 text-slate-800'}`} />
-                        <select value={newStudentClass} onChange={(e) => setNewStudentClass(e.target.value)} className={`w-full p-4 rounded-xl font-bold text-sm outline-none border transition-colors ${isRamadan ? 'bg-[#1e1b4b]/50 border-indigo-500/30 focus:border-indigo-400 text-white' : 'bg-gray-50 border-gray-200 focus:border-indigo-500 text-slate-800'}`}>
+                        <input type="text" placeholder="اسم الطالب" value={newStudentName} onChange={(e) => setNewStudentName(e.target.value)} className={`w-full p-4 rounded-xl font-bold text-sm outline-none border transition-colors ${isRamadan ? 'bg-transparent border-indigo-500/30 focus:border-indigo-400 text-white placeholder:text-indigo-200/40' : 'bg-gray-50 border-gray-200 focus:border-indigo-500 text-slate-800'}`} />
+                        <select value={newStudentClass} onChange={(e) => setNewStudentClass(e.target.value)} className={`w-full p-4 rounded-xl font-bold text-sm outline-none border transition-colors ${isRamadan ? 'bg-transparent border-indigo-500/30 focus:border-indigo-400 text-white' : 'bg-gray-50 border-gray-200 focus:border-indigo-500 text-slate-800'}`}>
                             <option value="" disabled className={isRamadan ? 'text-slate-500' : ''}>اختر الفصل</option>
                             {safeClasses.map(c => <option key={c} value={c} className={isRamadan ? 'bg-slate-900' : ''}>{c}</option>)}
                         </select>
-                        <input type="tel" placeholder="رقم ولي الأمر (اختياري)" value={newStudentPhone} onChange={(e) => setNewStudentPhone(e.target.value)} className={`w-full p-4 rounded-xl font-bold text-sm outline-none border transition-colors ${isRamadan ? 'bg-[#1e1b4b]/50 border-indigo-500/30 focus:border-indigo-400 text-white placeholder:text-indigo-200/40' : 'bg-gray-50 border-gray-200 focus:border-indigo-500 text-slate-800'}`} />
+                        <input type="tel" placeholder="رقم ولي الأمر (اختياري)" value={newStudentPhone} onChange={(e) => setNewStudentPhone(e.target.value)} className={`w-full p-4 rounded-xl font-bold text-sm outline-none border transition-colors ${isRamadan ? 'bg-transparent border-indigo-500/30 focus:border-indigo-400 text-white placeholder:text-indigo-200/40' : 'bg-gray-50 border-gray-200 focus:border-indigo-500 text-slate-800'}`} />
                          <div className="flex gap-2">
                             <button onClick={() => setNewStudentGender('male')} className={`flex-1 py-3 rounded-xl font-bold text-xs transition-all border ${newStudentGender === 'male' ? (isRamadan ? 'bg-blue-500/20 border-blue-400/50 text-blue-300' : 'bg-blue-50 border-blue-200 text-blue-600') : (isRamadan ? 'bg-white/5 border-white/10 text-slate-400' : 'bg-gray-50 border-gray-200 text-gray-400')}`}>طالب 👨‍🎓</button>
                             <button onClick={() => setNewStudentGender('female')} className={`flex-1 py-3 rounded-xl font-bold text-xs transition-all border ${newStudentGender === 'female' ? (isRamadan ? 'bg-pink-500/20 border-pink-400/50 text-pink-300' : 'bg-pink-50 border-pink-200 text-pink-600') : (isRamadan ? 'bg-white/5 border-white/10 text-slate-400' : 'bg-gray-50 border-gray-200 text-gray-400')}`}>طالبة 👩‍🎓</button>
@@ -662,15 +663,15 @@ const StudentList: React.FC<StudentListProps> = ({
             </Modal>
 
             <Modal isOpen={showAddClassModal} onClose={() => setShowAddClassModal(false)} className={`max-w-sm rounded-[2rem] ${isRamadan ? 'bg-transparent' : ''}`}>
-                 <div className={`text-center p-6 rounded-[2rem] border transition-colors ${isRamadan ? 'bg-[#0f172a] border-white/10 text-white shadow-2xl' : 'bg-white border-transparent text-slate-800 shadow-2xl'}`}>
+                 <div className={`text-center p-6 rounded-[2rem] border transition-colors ${isRamadan ? 'bg-white/10 border-white/20 text-white shadow-2xl' : 'bg-white border-transparent text-slate-800 shadow-2xl'}`}>
                     <h3 className="font-black text-lg mb-4">إضافة فصل جديد</h3>
-                    <input autoFocus type="text" placeholder="اسم الفصل (مثال: 5/1)" value={newClassInput} onChange={(e) => setNewClassInput(e.target.value)} className={`w-full p-4 rounded-xl font-bold text-sm outline-none border mb-4 transition-colors ${isRamadan ? 'bg-[#1e1b4b]/50 border-indigo-500/30 focus:border-indigo-400 text-white placeholder:text-indigo-200/40' : 'bg-gray-50 border-gray-200 focus:border-indigo-500 text-slate-800'}`} />
+                    <input autoFocus type="text" placeholder="اسم الفصل (مثال: 5/1)" value={newClassInput} onChange={(e) => setNewClassInput(e.target.value)} className={`w-full p-4 rounded-xl font-bold text-sm outline-none border mb-4 transition-colors ${isRamadan ? 'bg-transparent border-indigo-500/30 focus:border-indigo-400 text-white placeholder:text-indigo-200/40' : 'bg-gray-50 border-gray-200 focus:border-indigo-500 text-slate-800'}`} />
                     <button onClick={handleAddClassSubmit} className={`w-full py-3 rounded-xl font-black text-xs shadow-lg active:scale-95 transition-colors ${isRamadan ? 'bg-indigo-600 text-white hover:bg-indigo-500' : 'bg-indigo-600 text-white hover:bg-indigo-700'}`}>إضافة</button>
                  </div>
             </Modal>
 
             <Modal isOpen={showManageClasses} onClose={() => setShowManageClasses(false)} className={`max-w-md rounded-[2rem] ${isRamadan ? 'bg-transparent' : ''}`}>
-                <div className={`text-center p-6 rounded-[2rem] border transition-colors ${isRamadan ? 'bg-[#0f172a] border-white/10 text-white shadow-2xl' : 'bg-white border-transparent text-slate-800 shadow-2xl'}`}>
+                <div className={`text-center p-6 rounded-[2rem] border transition-colors ${isRamadan ? 'bg-white/10 border-white/20 text-white shadow-2xl' : 'bg-white border-transparent text-slate-800 shadow-2xl'}`}>
                     <h3 className="font-black text-xl mb-6">إعدادات الفصول والصفوف</h3>
                     <div className={`rounded-2xl p-4 mb-6 border ${isRamadan ? 'bg-indigo-900/20 border-indigo-500/30' : 'bg-indigo-50/50 border-indigo-100'}`}>
                         <div className={`flex items-center justify-center gap-2 mb-3 ${isRamadan ? 'text-indigo-300' : 'text-indigo-900'}`}>
@@ -716,7 +717,7 @@ const StudentList: React.FC<StudentListProps> = ({
             </Modal>
             
             <Modal isOpen={showPositiveModal} onClose={() => { setShowPositiveModal(false); setSelectedStudentForBehavior(null); }} className={`max-w-sm rounded-[2rem] ${isRamadan ? 'bg-transparent' : ''}`}>
-                <div className={`text-center p-6 rounded-[2rem] border transition-colors ${isRamadan ? 'bg-[#0f172a] border-white/10 text-white shadow-2xl' : 'bg-white border-transparent text-slate-800 shadow-2xl'}`}>
+                <div className={`text-center p-6 rounded-[2rem] border transition-colors ${isRamadan ? 'bg-white/10 border-white/20 text-white shadow-2xl' : 'bg-white border-transparent text-slate-800 shadow-2xl'}`}>
                     <div className="flex justify-between items-center mb-4">
                         <h3 className="font-black text-lg flex items-center gap-2">
                             <CheckCircle2 className={`w-5 h-5 ${isRamadan ? 'text-emerald-400' : 'text-emerald-500'}`} />
@@ -747,7 +748,7 @@ const StudentList: React.FC<StudentListProps> = ({
                                 value={customPositiveReason}
                                 onChange={(e) => setCustomPositiveReason(e.target.value)}
                                 placeholder="سبب آخر..." 
-                                className={`flex-1 border rounded-lg px-3 py-2 text-xs font-bold outline-none transition-colors ${isRamadan ? 'bg-[#1e1b4b]/50 border-indigo-500/30 focus:border-emerald-400 text-white placeholder:text-indigo-200/40' : 'bg-slate-50 border-slate-200 focus:border-emerald-500 text-slate-800'}`}
+                                className={`flex-1 border rounded-lg px-3 py-2 text-xs font-bold outline-none transition-colors ${isRamadan ? 'bg-transparent border-indigo-500/30 focus:border-emerald-400 text-white placeholder:text-indigo-200/40' : 'bg-slate-50 border-slate-200 focus:border-emerald-500 text-slate-800'}`}
                             />
                             <button 
                                 onClick={() => {
@@ -765,7 +766,7 @@ const StudentList: React.FC<StudentListProps> = ({
             </Modal>
 
             <Modal isOpen={showNegativeModal} onClose={() => { setShowNegativeModal(false); setSelectedStudentForBehavior(null); }} className={`max-w-sm rounded-[2rem] ${isRamadan ? 'bg-transparent' : ''}`}>
-                <div className={`text-center p-6 rounded-[2rem] border transition-colors ${isRamadan ? 'bg-[#0f172a] border-white/10 text-white shadow-2xl' : 'bg-white border-transparent text-slate-800 shadow-2xl'}`}>
+                <div className={`text-center p-6 rounded-[2rem] border transition-colors ${isRamadan ? 'bg-white/10 border-white/20 text-white shadow-2xl' : 'bg-white border-transparent text-slate-800 shadow-2xl'}`}>
                     <div className="flex justify-between items-center mb-4">
                         <h3 className="font-black text-lg flex items-center gap-2">
                             <AlertCircle className={`w-5 h-5 ${isRamadan ? 'text-rose-400' : 'text-rose-500'}`} />
@@ -796,7 +797,7 @@ const StudentList: React.FC<StudentListProps> = ({
                                 value={customNegativeReason}
                                 onChange={(e) => setCustomNegativeReason(e.target.value)}
                                 placeholder="سبب آخر..." 
-                                className={`flex-1 border rounded-lg px-3 py-2 text-xs font-bold outline-none transition-colors ${isRamadan ? 'bg-[#1e1b4b]/50 border-indigo-500/30 focus:border-rose-400 text-white placeholder:text-indigo-200/40' : 'bg-slate-50 border-slate-200 focus:border-rose-500 text-slate-800'}`}
+                                className={`flex-1 border rounded-lg px-3 py-2 text-xs font-bold outline-none transition-colors ${isRamadan ? 'bg-transparent border-indigo-500/30 focus:border-rose-400 text-white placeholder:text-indigo-200/40' : 'bg-slate-50 border-slate-200 focus:border-rose-500 text-slate-800'}`}
                             />
                             <button 
                                 onClick={() => {
@@ -815,14 +816,14 @@ const StudentList: React.FC<StudentListProps> = ({
 
             <Modal isOpen={!!editingStudent} onClose={() => setEditingStudent(null)} className={`max-w-md rounded-[2rem] ${isRamadan ? 'bg-transparent' : ''}`}>
                 {editingStudent && (
-                     <div className={`text-center p-6 rounded-[2rem] border transition-colors ${isRamadan ? 'bg-[#0f172a] border-white/10 text-white shadow-2xl' : 'bg-white border-transparent text-slate-800 shadow-2xl'}`}>
+                     <div className={`text-center p-6 rounded-[2rem] border transition-colors ${isRamadan ? 'bg-white/10 border-white/20 text-white shadow-2xl' : 'bg-white border-transparent text-slate-800 shadow-2xl'}`}>
                         <h3 className="font-black text-xl mb-6">تعديل بيانات الطالب</h3>
                         <div className="space-y-3">
-                            <input type="text" value={editingStudent.name} onChange={(e) => setEditingStudent({...editingStudent, name: e.target.value})} className={`w-full p-4 rounded-xl font-bold text-sm outline-none border transition-colors ${isRamadan ? 'bg-[#1e1b4b]/50 border-indigo-500/30 focus:border-indigo-400 text-white' : 'bg-gray-50 border-gray-200 focus:border-indigo-500 text-slate-800'}`} placeholder="الاسم" />
-                            <select value={editingStudent.classes && editingStudent.classes.length > 0 ? editingStudent.classes[0] : ''} onChange={(e) => setEditingStudent({...editingStudent, classes: [e.target.value]})} className={`w-full p-4 rounded-xl font-bold text-sm outline-none border transition-colors ${isRamadan ? 'bg-[#1e1b4b]/50 border-indigo-500/30 focus:border-indigo-400 text-white' : 'bg-gray-50 border-gray-200 focus:border-indigo-500 text-slate-800'}`}>
+                            <input type="text" value={editingStudent.name} onChange={(e) => setEditingStudent({...editingStudent, name: e.target.value})} className={`w-full p-4 rounded-xl font-bold text-sm outline-none border transition-colors ${isRamadan ? 'bg-transparent border-indigo-500/30 focus:border-indigo-400 text-white' : 'bg-gray-50 border-gray-200 focus:border-indigo-500 text-slate-800'}`} placeholder="الاسم" />
+                            <select value={editingStudent.classes && editingStudent.classes.length > 0 ? editingStudent.classes[0] : ''} onChange={(e) => setEditingStudent({...editingStudent, classes: [e.target.value]})} className={`w-full p-4 rounded-xl font-bold text-sm outline-none border transition-colors ${isRamadan ? 'bg-transparent border-indigo-500/30 focus:border-indigo-400 text-white' : 'bg-gray-50 border-gray-200 focus:border-indigo-500 text-slate-800'}`}>
                                 {safeClasses.map(c => <option key={c} value={c} className={isRamadan ? 'bg-slate-900' : ''}>{c}</option>)}
                             </select>
-                            <input type="tel" value={editingStudent.parentPhone || ''} onChange={(e) => setEditingStudent({...editingStudent, parentPhone: e.target.value})} className={`w-full p-4 rounded-xl font-bold text-sm outline-none border transition-colors ${isRamadan ? 'bg-[#1e1b4b]/50 border-indigo-500/30 focus:border-indigo-400 text-white placeholder:text-indigo-200/40' : 'bg-gray-50 border-gray-200 focus:border-indigo-500 text-slate-800'}`} placeholder="رقم الهاتف" />
+                            <input type="tel" value={editingStudent.parentPhone || ''} onChange={(e) => setEditingStudent({...editingStudent, parentPhone: e.target.value})} className={`w-full p-4 rounded-xl font-bold text-sm outline-none border transition-colors ${isRamadan ? 'bg-transparent border-indigo-500/30 focus:border-indigo-400 text-white placeholder:text-indigo-200/40' : 'bg-gray-50 border-gray-200 focus:border-indigo-500 text-slate-800'}`} placeholder="رقم الهاتف" />
                             <div className="flex gap-2">
                                 <button onClick={() => setEditingStudent({...editingStudent, gender: 'male'})} className={`flex-1 py-3 rounded-xl font-bold text-xs transition-all border ${editingStudent.gender === 'male' ? (isRamadan ? 'bg-blue-500/20 border-blue-400/50 text-blue-300' : 'bg-blue-50 border-blue-200 text-blue-600') : (isRamadan ? 'bg-white/5 border-white/10 text-slate-400' : 'bg-gray-50 border-gray-200 text-gray-400')}`}>طالب 👨‍🎓</button>
                                 <button onClick={() => setEditingStudent({...editingStudent, gender: 'female'})} className={`flex-1 py-3 rounded-xl font-bold text-xs transition-all border ${editingStudent.gender === 'female' ? (isRamadan ? 'bg-pink-500/20 border-pink-400/50 text-pink-300' : 'bg-pink-50 border-pink-200 text-pink-600') : (isRamadan ? 'bg-white/5 border-white/10 text-slate-400' : 'bg-gray-50 border-gray-200 text-gray-400')}`}>طالبة 👩‍🎓</button>
@@ -838,7 +839,7 @@ const StudentList: React.FC<StudentListProps> = ({
 
             <Modal isOpen={!!randomWinner} onClose={() => setRandomWinner(null)} className={`max-w-sm rounded-[2rem] ${isRamadan ? 'bg-transparent' : ''}`}>
                 {randomWinner && (
-                    <div className={`text-center py-6 px-4 animate-in zoom-in duration-300 rounded-[2rem] border transition-colors ${isRamadan ? 'bg-[#0f172a] border-white/10 text-white shadow-2xl' : 'bg-white border-transparent text-slate-800 shadow-2xl'}`}>
+                    <div className={`text-center py-6 px-4 animate-in zoom-in duration-300 rounded-[2rem] border transition-colors ${isRamadan ? 'bg-white/10 border-white/20 text-white shadow-2xl' : 'bg-white border-transparent text-slate-800 shadow-2xl'}`}>
                         <div className="mb-6 relative inline-block">
                             <div className={`w-24 h-24 rounded-full border-4 shadow-xl overflow-hidden mx-auto transition-colors ${isRamadan ? 'border-purple-500/50 bg-purple-900/30' : 'border-purple-200 bg-purple-50'}`}>
                                 <StudentAvatar 
@@ -866,7 +867,7 @@ const StudentList: React.FC<StudentListProps> = ({
             </Modal>
 
             <Modal isOpen={showTimerModal} onClose={() => setShowTimerModal(false)} className={`max-w-xs rounded-[2rem] ${isRamadan ? 'bg-transparent' : ''}`}>
-                <div className={`text-center p-6 rounded-[2rem] border transition-colors ${isRamadan ? 'bg-[#0f172a] border-white/10 text-white shadow-2xl' : 'bg-white border-transparent text-slate-800 shadow-2xl'}`}>
+                <div className={`text-center p-6 rounded-[2rem] border transition-colors ${isRamadan ? 'bg-white/10 border-white/20 text-white shadow-2xl' : 'bg-white border-transparent text-slate-800 shadow-2xl'}`}>
                     <h3 className="font-black text-lg mb-4 flex items-center justify-center gap-2">
                         <Timer className={`w-5 h-5 ${isRamadan ? 'text-amber-400' : 'text-amber-500'}`}/> المؤقت
                     </h3>
@@ -888,7 +889,7 @@ const StudentList: React.FC<StudentListProps> = ({
                             type="number" 
                             value={timerInput} 
                             onChange={(e) => setTimerInput(e.target.value)} 
-                            className={`w-full border rounded-xl py-2 px-3 text-center font-black outline-none transition-colors ${isRamadan ? 'bg-[#1e1b4b]/50 border-indigo-500/30 focus:border-indigo-400 text-white placeholder:text-indigo-200/40' : 'bg-slate-50 border-slate-200 focus:border-indigo-500 text-slate-800 placeholder:text-slate-400'}`} 
+                            className={`w-full border rounded-xl py-2 px-3 text-center font-black outline-none transition-colors ${isRamadan ? 'bg-transparent border-indigo-500/30 focus:border-indigo-400 text-white placeholder:text-indigo-200/40' : 'bg-slate-50 border-slate-200 focus:border-indigo-500 text-slate-800 placeholder:text-slate-400'}`} 
                             placeholder="دقيقة"
                         />
                         <button 
