@@ -205,9 +205,9 @@ const AttendanceTracker: React.FC<AttendanceTrackerProps> = ({ students, classes
     <div className={`flex flex-col h-full relative ${isRamadan ? 'text-white' : 'text-slate-800'}`}>
         
         {/* ================= FIXED HEADER ================= */}
-        {/* 🚀 إزالة الزجاج المغبش وتسريع الهيدر بلون صلب */}
+        {/* 🚀 إضافة الشفافية الزجاجية (iOS Style) للهيدر بدون Blur */}
             <header 
-                className={`pt-10 pb-6 px-4 md:pt-14 md:pb-8 md:px-6 md:pl-40 shadow-xl relative z-20 -mx-4 -mt-4 transition-all duration-500 ${isRamadan ? 'bg-[#0f172a] border-b border-white/10 text-white' : 'bg-[#446A8D] text-white'}`}
+                className={`pt-10 pb-6 px-4 md:pt-14 md:pb-8 md:px-6 md:pl-40 shadow-lg relative z-20 -mx-4 -mt-4 transition-all duration-500 ${isRamadan ? 'bg-white/5 border-b border-white/10 text-white' : 'bg-[#446A8D] text-white'}`}
                 style={{ WebkitAppRegion: 'drag' } as any}
             >
                 <div className="flex justify-between items-center gap-3 mb-5">
@@ -235,7 +235,7 @@ const AttendanceTracker: React.FC<AttendanceTrackerProps> = ({ students, classes
                     </button>
                 </div>
 
-                <div className={`flex items-center justify-between gap-1 mb-4 p-2 rounded-2xl border shadow-inner ${isRamadan ? 'bg-[#1e293b] border-white/10' : 'bg-white/10 border-white/20'}`} style={{ WebkitAppRegion: 'no-drag' } as any}>
+                <div className={`flex items-center justify-between gap-1 mb-4 p-2 rounded-2xl border shadow-inner ${isRamadan ? 'bg-white/5 border-white/10' : 'bg-white/10 border-white/20'}`} style={{ WebkitAppRegion: 'no-drag' } as any}>
                     <button onClick={() => setWeekOffset(prev => prev - 1)} className="p-1 text-white hover:bg-white/10 rounded-lg transition-colors"><ChevronRight className="w-5 h-5 rtl:rotate-180"/></button>
                     <div className="flex flex-1 justify-between gap-1 text-center">
                         {weekDates.map((date, idx) => {
@@ -277,15 +277,15 @@ const AttendanceTracker: React.FC<AttendanceTrackerProps> = ({ students, classes
             <div className="-mt-4 relative z-10 px-2">
                 <div className="mb-4">
                     <div className="flex justify-between items-center gap-2 text-center">
-                        <button onClick={() => markAll('present')} className={`flex-1 rounded-2xl p-2.5 border shadow-sm active:scale-95 transition-all ${isRamadan ? 'bg-[#1e293b] border-emerald-500/30' : 'bg-emerald-50 border-emerald-100'}`}>
+                        <button onClick={() => markAll('present')} className={`flex-1 rounded-2xl p-2.5 border shadow-sm active:scale-95 transition-all ${isRamadan ? 'bg-emerald-500/10 border-emerald-400/30' : 'bg-emerald-50 border-emerald-100'}`}>
                             <span className={`block text-[10px] font-bold mb-1 ${isRamadan ? 'text-emerald-400' : 'text-emerald-600'}`}>حضور (الكل)</span>
                             <span className={`block text-xl font-black ${isRamadan ? 'text-emerald-300' : 'text-emerald-700'}`}>{stats.present}</span>
                         </button>
-                        <button onClick={() => markAll('absent')} className={`flex-1 rounded-2xl p-2.5 border shadow-sm active:scale-95 transition-all ${isRamadan ? 'bg-[#1e293b] border-rose-500/30' : 'bg-rose-50 border-rose-100'}`}>
+                        <button onClick={() => markAll('absent')} className={`flex-1 rounded-2xl p-2.5 border shadow-sm active:scale-95 transition-all ${isRamadan ? 'bg-rose-500/10 border-rose-400/30' : 'bg-rose-50 border-rose-100'}`}>
                             <span className={`block text-[10px] font-bold mb-1 ${isRamadan ? 'text-rose-400' : 'text-rose-600'}`}>غياب (الكل)</span>
                             <span className={`block text-xl font-black ${isRamadan ? 'text-rose-300' : 'text-rose-700'}`}>{stats.absent}</span>
                         </button>
-                        <div className={`flex-1 rounded-2xl p-2.5 border shadow-sm ${isRamadan ? 'bg-[#1e293b] border-amber-500/30' : 'bg-amber-50 border-amber-100'}`}>
+                        <div className={`flex-1 rounded-2xl p-2.5 border shadow-sm ${isRamadan ? 'bg-amber-500/10 border-amber-400/30' : 'bg-amber-50 border-amber-100'}`}>
                             <span className={`block text-[10px] font-bold mb-1 ${isRamadan ? 'text-amber-400' : 'text-amber-600'}`}>تأخير</span>
                             <span className={`block text-xl font-black ${isRamadan ? 'text-amber-300' : 'text-amber-700'}`}>{stats.late}</span>
                         </div>
@@ -297,8 +297,8 @@ const AttendanceTracker: React.FC<AttendanceTrackerProps> = ({ students, classes
                         {filteredStudents.map(student => {
                             const status = getStatus(student);
                             return (
-                                /* 🚀 إزالة الزجاج من بطاقات الطلاب لتسريع الرصد */
-                                <div key={student.id} className={`rounded-[1.5rem] border-2 flex flex-col items-center overflow-hidden transition-all duration-200 ${isRamadan ? 'bg-[#1e293b]' : 'bg-white'} ${
+                                /* 🚀 البطاقات الزجاجية الشفافة بدون Blur السريعة جداً */
+                                <div key={student.id} className={`rounded-[1.5rem] border-2 flex flex-col items-center overflow-hidden transition-all duration-200 ${isRamadan ? 'bg-white/5 hover:bg-white/10' : 'bg-white'} ${
                                     status === 'present' ? (isRamadan ? 'border-emerald-500/50 shadow-[0_0_10px_rgba(16,185,129,0.15)]' : 'border-emerald-400') : 
                                     status === 'absent' ? (isRamadan ? 'border-red-500/50 shadow-[0_0_10px_rgba(239,68,68,0.15)]' : 'border-red-400') : 
                                     status === 'late' ? (isRamadan ? 'border-amber-500/50 shadow-[0_0_10px_rgba(245,158,11,0.15)]' : 'border-amber-400') :
@@ -349,10 +349,10 @@ const AttendanceTracker: React.FC<AttendanceTrackerProps> = ({ students, classes
             </div>
         </div>
 
-        {/* 🚀 إزالة الزجاج من النوافذ المنبثقة */}
+        {/* 🚀 النوافذ الزجاجية السريعة */}
         <Modal isOpen={!!notificationTarget} onClose={() => setNotificationTarget(null)} className={`max-w-xs rounded-[2rem] ${isRamadan ? 'bg-transparent' : ''}`}>
             {notificationTarget && (
-                <div className={`text-center p-6 rounded-[2rem] border transition-colors ${isRamadan ? 'bg-[#0f172a] border-white/10 shadow-2xl' : 'bg-white border-transparent'}`}>
+                <div className={`text-center p-6 rounded-[2rem] border transition-colors ${isRamadan ? 'bg-white/5 border-white/10 shadow-2xl' : 'bg-white border-transparent'}`}>
                     <div className={`w-16 h-16 mx-auto mb-4 rounded-full flex items-center justify-center ${
                         notificationTarget.type === 'absent' ? (isRamadan ? 'bg-rose-500/20 text-rose-400' : 'bg-rose-100 text-rose-600') : 
                         notificationTarget.type === 'late' ? (isRamadan ? 'bg-amber-500/20 text-amber-400' : 'bg-amber-100 text-amber-600') : 
