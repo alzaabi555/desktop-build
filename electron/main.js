@@ -120,8 +120,9 @@ ipcMain.handle('get-app-version', () => app.getVersion());
 app.whenReady().then(() => {
   createWindow();
 
-  if (app.isPackaged) {
-    autoUpdater.checkForUpdatesAndNotify();
+ // if (process.env.NODE_ENV === 'production') {
+//   autoUpdater.checkForUpdatesAndNotify();
+// }
   }
 
   app.on('activate', () => {
