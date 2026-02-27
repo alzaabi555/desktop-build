@@ -1,3 +1,8 @@
+/**
+ * Rased App
+ * Developed by: Mohammed Al-Zaabi
+ * Copyright © 2026. All rights reserved.
+ */
 const { app, BrowserWindow, shell, ipcMain, dialog } = require('electron');
 const path = require('path');
 const { autoUpdater } = require('electron-updater');
