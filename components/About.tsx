@@ -24,7 +24,7 @@ const About: React.FC = () => {
       
       <h1 className={`text-4xl font-black mb-1 tracking-tighter transition-colors ${isRamadan ? 'text-white' : 'text-slate-800'}`}>تطبيق راصد</h1>
       <p className={`px-4 py-1 rounded-full font-black text-[10px] mb-8 border-none shadow-sm transition-colors ${isRamadan ? 'text-indigo-200 bg-white/10' : 'text-slate-500 bg-white'}`}>
-        V 4.3.0 • الإصدار الرسمي المعتمد
+        V 4.3.1 • الإصدار الرسمي المعتمد
       </p>
       
       <div className="max-w-2xl w-full space-y-6">
@@ -89,14 +89,16 @@ const About: React.FC = () => {
                   </div>
               </div>
 
-              {/* روابط إضافية */}
-              <div className="flex justify-center gap-6 mt-6">
-                  <a href="https://github.com/alzaabi555" target="_blank" rel="noreferrer" className={`flex items-center gap-2 text-[10px] font-bold transition-colors ${isRamadan ? 'text-indigo-300 hover:text-white' : 'text-slate-500 hover:text-indigo-600'}`}>
-                      <Github size={14} /> GitHub: @alzaabi555
-                  </a>
-                  <div className={`flex items-center gap-2 text-[10px] font-bold ${isRamadan ? 'text-indigo-300' : 'text-slate-500'}`}>
-                      <Mail size={14} /> البريد الإلكتروني: [mohammad.alzaabi21@edu.moe.om
-
+              {/* روابط إضافية - تم تصحيح القوس المفقود هنا */}
+              <div className="flex flex-col items-center gap-3 mt-6">
+                  <div className="flex justify-center gap-6">
+                      <a href="https://github.com/alzaabi555" target="_blank" rel="noreferrer" className={`flex items-center gap-2 text-[10px] font-bold transition-colors ${isRamadan ? 'text-indigo-300 hover:text-white' : 'text-slate-500 hover:text-indigo-600'}`}>
+                          <Github size={14} /> GitHub: @alzaabi555
+                      </a>
+                  </div>
+                  <div className={`flex items-center gap-2 text-[10px] font-bold ${isRamadan ? 'text-indigo-200/70' : 'text-slate-500'}`}>
+                      <Mail size={14} /> 
+                      <span>البريد الإلكتروني: mohammad.alzaabi21@edu.moe.om</span>
                   </div>
               </div>
           </div>
