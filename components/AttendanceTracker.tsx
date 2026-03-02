@@ -349,23 +349,73 @@ const AttendanceTracker: React.FC<AttendanceTrackerProps> = ({ students, classes
             </div>
         </div>
 
-        {/* 🚀 النوافذ الزجاجية السريعة */}
-        <Modal isOpen={!!notificationTarget} onClose={() => setNotificationTarget(null)} className={`max-w-xs rounded-[2rem] ${isRamadan ? 'bg-transparent' : ''}`}>
+        {/* 🚀 النوافذ الزجاجية المصلحة والمحسنة - الإصدار 4.3.1 */}
+        <Modal 
+            isOpen={!!notificationTarget} 
+            onClose={() => setNotificationTarget(null)} 
+            className={`max-w-xs rounded-[2.5rem] overflow-hidden ${isRamadan ? 'bg-transparent' : 'bg-white'}`}
+        >
             {notificationTarget && (
-                <div className={`text-center p-6 rounded-[2rem] border transition-colors ${isRamadan ? 'bg-white/5 border-white/10 shadow-2xl' : 'bg-white border-transparent'}`}>
-                    <div className={`w-16 h-16 mx-auto mb-4 rounded-full flex items-center justify-center ${
-                        notificationTarget.type === 'absent' ? (isRamadan ? 'bg-rose-500/20 text-rose-400' : 'bg-rose-100 text-rose-600') : 
-                        notificationTarget.type === 'late' ? (isRamadan ? 'bg-amber-500/20 text-amber-400' : 'bg-amber-100 text-amber-600') : 
-                        (isRamadan ? 'bg-purple-500/20 text-purple-400' : 'bg-purple-100 text-purple-600')
+                <div className={`text-center p-8 rounded-[2.5rem] border transition-all duration-500 ${
+                    isRamadan 
+                    ? 'bg-[#0f172a]/95 backdrop-blur-2xl border-white/10 shadow-[0_0_50px_rgba(0,0,0,0.5)]' 
+                    : 'bg-white border-gray-100 shadow-2xl'
+                }`}>
+                    {/* أيقونة الحالة المتغيرة */}
+                    <div className={`w-20 h-20 mx-auto mb-6 rounded-full flex items-center justify-center shadow-inner animate-bounce-short ${
+                        notificationTarget.type === 'absent' ? (isRamadan ? 'bg-rose-500/20 text-rose-400' : 'bg-rose-50 text-rose-600') : 
+                        notificationTarget.type === 'late' ? (isRamadan ? 'bg-amber-500/20 text-amber-400' : 'bg-amber-50 text-amber-600') : 
+                        (isRamadan ? 'bg-purple-500/20 text-purple-400' : 'bg-purple-50 text-purple-600')
                     }`}>
-                        <MessageCircle className="w-8 h-8" />
+                        <MessageCircle className="w-10 h-10" />
                     </div>
-                    <h3 className={`font-black text-lg mb-2 ${isRamadan ? 'text-white' : 'text-slate-800'}`}>إشعار ولي الأمر</h3>
-                    <p className={`text-xs font-bold mb-6 ${isRamadan ? 'text-indigo-200/70' : 'text-gray-500'}`}>إرسال رسالة لولي أمر الطالب <span className={isRamadan ? 'text-amber-400' : 'text-indigo-600'}>{notificationTarget.student.name}</span>؟</p>
-                    <div className="space-y-2">
-                        <button onClick={() => performNotification('whatsapp')} className={`w-full py-3 text-white rounded-xl font-black text-xs flex items-center justify-center gap-2 transition-transform active:scale-95 ${isRamadan ? 'bg-[#25D366]/80 hover:bg-[#25D366] border border-[#25D366]/50' : 'bg-[#25D366]'}`}>إرسال واتساب</button>
-                        <button onClick={() => performNotification('sms')} className={`w-full py-3 rounded-xl font-black text-xs transition-transform active:scale-95 ${isRamadan ? 'bg-white/10 text-white hover:bg-white/20 border border-white/10' : 'bg-slate-100 text-slate-600'}`}>إرسال SMS</button>
-                        <button onClick={() => setNotificationTarget(null)} className={`w-full py-2 font-bold text-xs ${isRamadan ? 'text-white/40 hover:text-white/60' : 'text-slate-400'}`}>إلغاء</button>
+
+                    <h3 className={`font-black text-xl mb-3 ${isRamadan ? 'text-white' : 'text-slate-900'}`}>
+                        إشعار ولي الأمر
+                    </h3>
+                    
+                    <div className={`text-sm font-bold mb-8 leading-relaxed ${isRamadan ? 'text-indigo-200/80' : 'text-slate-600'}`}>
+                        هل ترغب في إرسال رسالة تنبيه لولي أمر الطالب:
+                        <div className={`text-lg mt-2 font-black ${isRamadan ? 'text-amber-400' : 'text-indigo-600'}`}>
+                            {notificationTarget.student.name}
+                        </div>
+                    </div>
+
+                    <div className="space-y-3">
+                        {/* زر واتساب الاحترافي */}
+                        <button 
+                            onClick={() => performNotification('whatsapp')} 
+                            className={`w-full py-4 text-white rounded-2xl font-black text-sm flex items-center justify-center gap-3 transition-all active:scale-95 shadow-lg ${
+                                isRamadan 
+                                ? 'bg-emerald-600 hover:bg-emerald-500 border border-emerald-400/30' 
+                                : 'bg-[#25D366] hover:bg-[#20ba5a]'
+                            }`}
+                        >
+                            <MessageCircle className="w-5 h-5" />
+                            إرسال عبر واتساب
+                        </button>
+
+                        {/* زر SMS الأنيق */}
+                        <button 
+                            onClick={() => performNotification('sms')} 
+                            className={`w-full py-4 rounded-2xl font-black text-sm transition-all active:scale-95 border ${
+                                isRamadan 
+                                ? 'bg-white/5 text-white border-white/10 hover:bg-white/10' 
+                                : 'bg-slate-50 text-slate-700 border-slate-200 hover:bg-slate-100'
+                            }`}
+                        >
+                            إرسال رسالة SMS
+                        </button>
+
+                        {/* زر الإلغاء الشفاف */}
+                        <button 
+                            onClick={() => setNotificationTarget(null)} 
+                            className={`w-full py-3 font-bold text-xs transition-colors ${
+                                isRamadan ? 'text-white/40 hover:text-rose-400' : 'text-slate-400 hover:text-rose-500'
+                            }`}
+                        >
+                            تراجع عن الإجراء
+                        </button>
                     </div>
                 </div>
             )}
