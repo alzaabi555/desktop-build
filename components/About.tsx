@@ -92,8 +92,8 @@ const About: React.FC = () => {
               {/* روابط إضافية - تم تصحيح القوس المفقود هنا */}
               <div className="flex flex-col items-center gap-3 mt-6">
                   <div className="flex justify-center gap-6">
-                      <a href="https://github.com/alzaabi555" target="_blank" rel="noreferrer" className={`flex items-center gap-2 text-[10px] font-bold transition-colors ${isRamadan ? 'text-indigo-300 hover:text-white' : 'text-slate-500 hover:text-indigo-600'}`}>
-                          <Github size={14} /> GitHub: @alzaabi555
+                      <a href="https://*****" target="_blank" rel="noreferrer" className={`flex items-center gap-2 text-[10px] font-bold transition-colors ${isRamadan ? 'text-indigo-300 hover:text-white' : 'text-slate-500 hover:text-indigo-600'}`}>
+                          <Github size={14} /> GitHub: ******
                       </a>
                   </div>
                   <div className={`flex items-center gap-2 text-[10px] font-bold ${isRamadan ? 'text-indigo-200/70' : 'text-slate-500'}`}>
