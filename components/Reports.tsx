@@ -426,120 +426,127 @@ const GradesTemplate = ({ students, tools, teacherInfo, semester, gradeClass }: 
 const CertificatesTemplate = ({ students, settings, teacherInfo }: any) => {
   const safeSettings = settings || DEFAULT_CERT_SETTINGS;
   const title = safeSettings.title || 'شهادة شكر وتقدير';
-  const rawBody = safeSettings.bodyText || 'يسرنا تكريم الطالب...';
-  const hasImage = !!safeSettings.backgroundImage;
-
-  const containerStyle: React.CSSProperties = {
-    width: '100%',
-    height: '210mm',
-    position: 'relative',
-    backgroundColor: '#ffffff',
-    color: '#000000',
-    pageBreakAfter: 'always',
-    display: 'flex',
-    flexDirection: 'column',
-    alignItems: 'center',
-    justifyContent: 'center',
-    overflow: 'hidden',
-    ...(hasImage
-      ? { backgroundImage: `url('${safeSettings.backgroundImage}')`, backgroundSize: '100% 100%', backgroundRepeat: 'no-repeat' }
-      : { border: '10px double #047857' })
-  };
+  const rawBody = safeSettings.bodyText || 'وذلك لتميزه الدراسي وجهوده الواضحة ومشاركته الفعالة في الحصص الدراسية';
 
   if (!students || students.length === 0) return <div className="p-10 text-center text-black">لا يوجد طلاب</div>;
 
+  const date = new Date().toLocaleDateString('ar-EG');
+  const subject = teacherInfo?.subject || "المادة";
+  const schoolName = teacherInfo?.school || "مدرسة الابداع للبنين (5-8)";
+
   return (
     <div className="w-full text-black bg-white">
-      {students.map((s: any) => {
-        const safeName = `<span style="color:#b91c1c; font-weight:900; margin:0 5px; font-size: 1.2em;">${s.name}</span>`;
-        const processedBody = rawBody.replace(/(الطالبة|الطالب)/g, ` ${safeName} `);
-
+      {students.map((s: any, index: number) => {
         return (
-          <div key={s.id} style={containerStyle} className="cert-page">
-            <div
-              style={{
-                width: hasImage ? '90%' : '100%',
-                height: hasImage ? '85%' : '100%',
-                backgroundColor: hasImage ? 'rgba(255,255,255,0.95)' : 'transparent',
-                borderRadius: '20px',
-                padding: '40px',
-                boxSizing: 'border-box',
-                display: 'flex',
-                flexDirection: 'column',
-                justifyContent: 'space-between',
-                textAlign: 'center',
-                border: hasImage ? '1px solid rgba(0,0,0,0.1)' : 'none',
-                boxShadow: hasImage ? '0 10px 30px rgba(0,0,0,0.1)' : 'none'
-              }}
-            >
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', width: '100%' }}>
-                <div style={{ textAlign: 'right', fontSize: '14px', fontWeight: 'bold', lineHeight: '1.6' }}>
-                  <p style={{ margin: 0 }}>سلطنة عمان</p>
-                  <p style={{ margin: 0 }}>وزارة التربية والتعليم</p>
-                  <p style={{ margin: 0 }}>مدرسة {teacherInfo?.school || '................'}</p>
+          <div 
+            key={s.id} 
+            className="relative mx-auto font-sans [-webkit-print-color-adjust:exact] print:shadow-none bg-white"
+            style={{
+              width: '297mm', // مقاس A4 دقيق
+              height: '210mm',
+              pageBreakAfter: index === students.length - 1 ? 'auto' : 'always', // فاصل الصفحات لطباعة دفعة كاملة
+              padding: '10mm',
+              boxSizing: 'border-box',
+              overflow: 'hidden',
+              direction: 'rtl'
+            }}
+          >
+            {/* الإطار الخارجي الملكي */}
+            <div className="w-full h-full border-[12px] border-double border-amber-400 p-2 relative z-10">
+              
+              {/* الإطار الداخلي الكحلي */}
+              <div className="w-full h-full border-4 border-[#1e3a8a] bg-[#faf9f6] p-8 relative flex flex-col justify-between overflow-hidden">
+                
+                {/* العلامة المائية */}
+                <div className="absolute inset-0 flex items-center justify-center opacity-[0.03] pointer-events-none">
+                  <Award className="w-[600px] h-[600px] text-amber-900" />
                 </div>
 
-                <div>
-                  {teacherInfo?.ministryLogo ? (
-                    <img
-                      src={teacherInfo.ministryLogo}
-                      style={{ height: '80px', objectFit: 'contain', backgroundColor: 'transparent' }}
-                      alt="Logo"
-                    />
-                  ) : (
-                    <div style={{ height: '80px', width: '80px', border: '2px dashed #ccc', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '10px' }}>
-                      شعار
+                {/* ================= الترويسة ================= */}
+                <div className="w-full grid grid-cols-3 items-start relative z-10">
+                  <div className="text-right space-y-1">
+                    <h3 className="font-black text-[18px] text-[#1e3a8a]">سلطنة عُمان</h3>
+                    <h3 className="font-bold text-[16px] text-[#1e3a8a]">وزارة التربية والتعليم</h3>
+                    <h3 className="font-bold text-[16px] text-[#1e3a8a]">{teacherInfo?.governorate || 'المديرية العامة للتربية والتعليم'}</h3>
+                    <h3 className="font-bold text-[16px] text-amber-600">{schoolName}</h3>
+                  </div>
+
+                  {/* الشعار السلطاني (يتم سحبه من إعدادات المعلم ليكون مرناً) */}
+                  <div className="flex justify-center">
+                    {teacherInfo?.ministryLogo ? (
+                      <img src={teacherInfo.ministryLogo} alt="شعار سلطنة عمان" className="w-24 h-24 object-contain" />
+                    ) : (
+                      <div className="w-24 h-24 rounded-full border-2 border-dashed border-[#1e3a8a] flex items-center justify-center text-xs font-bold text-[#1e3a8a] bg-white">الشعار الرسمي</div>
+                    )}
+                  </div>
+
+                  <div className="text-left space-y-3 border-r-2 border-amber-400 pr-4 justify-self-end w-full">
+                    <div className="flex items-center justify-end gap-2">
+                      <span className="font-bold text-[16px] text-gray-500">التاريخ:</span>
+                      <span className="font-black text-[18px] text-[#1e3a8a]" dir="ltr">{date}</span>
                     </div>
-                  )}
+                    <div className="flex items-center justify-end gap-2">
+                      <span className="font-bold text-[16px] text-gray-500">المادة:</span>
+                      <span className="font-black text-[18px] text-[#1e3a8a]">{subject}</span>
+                    </div>
+                  </div>
                 </div>
 
-                <div style={{ textAlign: 'left', fontSize: '14px', fontWeight: 'bold', lineHeight: '1.6', visibility: 'hidden' }}>
-                  <p>مساحة فارغة للتوازن</p>
-                </div>
-              </div>
+                {/* ================= المحتوى الرئيسي ================= */}
+                <div className="flex flex-col items-center justify-center text-center w-full z-10 -mt-2">
+                  <h1 className="text-6xl font-black text-[#1e3a8a] mb-5 tracking-normal">
+                      {title}
+                  </h1>
+                  
+                  <div className="bg-amber-400 text-[#1e3a8a] px-10 py-2 rounded-full font-black text-xl mb-8 shadow-md">
+                    وسام الاستحقاق الطلابي
+                  </div>
 
-              <div style={{ flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center', padding: '20px 0' }}>
-                <h1
-                  style={{
-                    fontSize: '64px',
-                    fontWeight: '900',
-                    color: '#047857',
-                    marginBottom: '40px',
-                    fontFamily: 'Tajawal',
-                    letterSpacing: '0px'
-                  }}
-                >
-                  {title}
-                </h1>
+                  <p className="text-xl font-bold text-gray-700 mb-4">
+                    تتقدم إدارة المدرسة ومعلم المادة بجزيل الشكر والتقدير للطالب:
+                  </p>
 
-                <div style={{ fontSize: '26px', lineHeight: '2', fontWeight: '600', color: '#374151', maxWidth: '95%' }} dangerouslySetInnerHTML={{ __html: processedBody }} />
-              </div>
+                  <div className="relative w-2/3 py-4 border-y-2 border-amber-300 bg-white/50 backdrop-blur-sm shadow-sm mb-5 rounded-2xl">
+                    <h2 className="text-5xl font-black text-[#1e3a8a] leading-tight">
+                      {s.name}
+                    </h2>
+                  </div>
 
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', marginTop: '30px', width: '100%', padding: '0 40px' }}>
-                <div style={{ textAlign: 'center' }}>
-                  <p style={{ fontWeight: 'bold', fontSize: '18px', marginBottom: '50px', color: '#000' }}>معلم المادة</p>
-                  <p style={{ fontWeight: '900', fontSize: '22px', color: '#000' }}>{teacherInfo?.name}</p>
+                  <p className="text-xl font-bold text-gray-700 leading-relaxed max-w-3xl">
+                    المقيد بالصف <span className="text-amber-600 font-black text-2xl mx-2">({s.classes?.[0] || '-'})</span>، 
+                    {rawBody}
+                  </p>
                 </div>
 
-                <div style={{ textAlign: 'center' }}>
-                  {teacherInfo?.stamp && (
-                    <img
-                      src={teacherInfo.stamp}
-                      style={{
-                        width: '140px',
-                        opacity: 0.8,
-                        transform: 'rotate(-5deg)',
-                        backgroundColor: 'transparent'
-                      }}
-                      alt="Stamp"
-                    />
-                  )}
+                {/* ================= التذييل والأختام ================= */}
+                <div className="w-full grid grid-cols-3 items-end relative z-10 pt-2 mt-auto">
+                  <div className="text-center justify-self-start w-64">
+                    <h4 className="font-bold text-lg text-[#1e3a8a] mb-4">معلم المادة</h4>
+                    <div className="border-b-2 border-gray-400 mx-8 mb-2"></div>
+                    <h3 className="font-black text-lg text-gray-700">{teacherInfo?.name || '..........'}</h3>
+                  </div>
+
+                  {/* ختم المدرسة (يتم سحبه من إعدادات المعلم ليكون مرناً) */}
+                  <div className="flex justify-center translate-y-2">
+                    {teacherInfo?.stamp ? (
+                      <img src={teacherInfo.stamp} alt="ختم المدرسة" className="w-32 h-32 object-contain opacity-90 mix-blend-multiply" />
+                    ) : (
+                      <div className="w-32 h-32 rounded-full border-2 border-dashed border-red-500 flex items-center justify-center text-xs font-bold text-red-500 opacity-50 rotate-[-15deg] bg-white">ختم المدرسة</div>
+                    )}
+                  </div>
+
+                  <div className="text-center justify-self-end w-64">
+                    <h4 className="font-bold text-lg text-[#1e3a8a] mb-4">مدير/ة المدرسة</h4>
+                    <div className="border-b-2 border-gray-400 mx-8 mb-2"></div>
+                    <h3 className="font-black text-xl text-gray-400 italic">..........................</h3>
+                  </div>
                 </div>
 
-                <div style={{ textAlign: 'center' }}>
-                  <p style={{ fontWeight: 'bold', fontSize: '18px', marginBottom: '50px', color: '#000' }}>مدير المدرسة</p>
-                  <p style={{ fontWeight: '900', fontSize: '22px', color: '#000' }}>....................</p>
-                </div>
+                {/* زينة الزوايا */}
+                <div className="absolute top-2 right-2 w-16 h-16 border-t-4 border-r-4 border-[#1e3a8a]"></div>
+                <div className="absolute top-2 left-2 w-16 h-16 border-t-4 border-l-4 border-[#1e3a8a]"></div>
+                <div className="absolute bottom-2 right-2 w-16 h-16 border-b-4 border-r-4 border-[#1e3a8a]"></div>
+                <div className="absolute bottom-2 left-2 w-16 h-16 border-b-4 border-l-4 border-[#1e3a8a]"></div>
               </div>
             </div>
           </div>
@@ -928,54 +935,8 @@ const Reports: React.FC<ReportsProps> = ({ initialTab }) => {
       isOpen: true,
       title: 'شهادات التقدير',
       landscape: true,
-      content: <CertificatesTemplate students={targets} settings={certificateSettings || DEFAULT_CERT_SETTINGS} teacherInfo={teacherInfo} />
-    });
-  };
-
-  const openSummonPreview = () => {
-    const s = availableStudentsForSummon.find(st => st.id === summonStudentId);
-    if (!s) return alert('اختر طالباً');
-    setPreviewData({
-      isOpen: true,
-      title: `استدعاء - ${s.name}`,
-      landscape: false,
-      content: <SummonTemplate student={s} teacherInfo={teacherInfo} data={{ ...summonData, reason: getReasonText(), className: summonClass, procedures: takenProcedures, issueDate: summonData.issueDate }} />
-    });
-  };
-
-  const openClassReportsPreview = () => {
-    if (filteredStudentsForStudentTab.length === 0) return alert('لا يوجد طلاب في هذا الفصل');
-    setPreviewData({
-      isOpen: true,
-      title: `تقارير الصف ${stClass}`,
-      landscape: false,
-      content: <ClassReportsTemplate students={filteredStudentsForStudentTab} teacherInfo={teacherInfo} semester={currentSemester} assessmentTools={assessmentTools} />
-    });
-  };
-
-  const selectAllCertStudents = () => {
-    if (selectedCertStudents.length === filteredStudentsForCert.length) {
-      setSelectedCertStudents([]);
-    } else {
-      setSelectedCertStudents(filteredStudentsForCert.map(s => s.id));
-    }
-  };
-
-  const toggleCertStudent = (id: string) => {
-    setSelectedCertStudents(prev => prev.includes(id) ? prev.filter(sid => sid !== id) : [...prev, id]);
-  };
-
-  if (viewingStudent) {
-    return (
-      <StudentReport
-        student={viewingStudent}
-        onUpdateStudent={handleUpdateStudent}
-        currentSemester={currentSemester}
-        teacherInfo={teacherInfo}
-        onBack={() => setViewingStudent(null)}
-      />
-    );
-  }
+     
+      
 
   const tabs = [
     { id: 'student_report', label: 'تقرير طالب', icon: Icon3DStudent },
