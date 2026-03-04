@@ -1,5 +1,5 @@
 import React, { useState, useMemo, useEffect } from 'react';
-import { ArrowRight, Check, Loader2 } from 'lucide-react';
+import { ArrowRight, Check, Loader2, Award } from 'lucide-react'; // تم إضافة Award هنا
 import { useApp } from '../context/AppContext';
 import { Student } from '../types';
 import StudentReport from './StudentReport';
@@ -212,7 +212,7 @@ interface ReportsProps {
 
 const DEFAULT_CERT_SETTINGS = {
   title: 'شهادة تقدير',
-  bodyText: 'يسرنا تكريم الطالب/الطالبة لتفوقه الدراسي وتميزه في مادة...',
+  bodyText: 'وذلك لتميزه الدراسي وجهوده الواضحة ومشاركته الفعالة في الحصص الدراسية',
   showDefaultDesign: true,
   backgroundImage: ''
 };
@@ -321,7 +321,7 @@ const PrintPreviewModal: React.FC<{
 };
 
 // =================================================================================
-// ✅ القوالب (TEMPLATES) - لا مساس بها أبداً لضمان الطباعة
+// ✅ القوالب (TEMPLATES) - تم تحديث شهادة التقدير فقط بامتياز
 // =================================================================================
 
 const GradesTemplate = ({ students, tools, teacherInfo, semester, gradeClass }: any) => {
@@ -423,6 +423,7 @@ const GradesTemplate = ({ students, tools, teacherInfo, semester, gradeClass }: 
   );
 };
 
+// 🌟 القالب المطور لشهادات التقدير بلمسة "الفرسان" الفخمة
 const CertificatesTemplate = ({ students, settings, teacherInfo }: any) => {
   const safeSettings = settings || DEFAULT_CERT_SETTINGS;
   const title = safeSettings.title || 'شهادة شكر وتقدير';
@@ -442,9 +443,9 @@ const CertificatesTemplate = ({ students, settings, teacherInfo }: any) => {
             key={s.id} 
             className="relative mx-auto font-sans [-webkit-print-color-adjust:exact] print:shadow-none bg-white"
             style={{
-              width: '297mm', // مقاس A4 دقيق
+              width: '297mm',
               height: '210mm',
-              pageBreakAfter: index === students.length - 1 ? 'auto' : 'always', // فاصل الصفحات لطباعة دفعة كاملة
+              pageBreakAfter: index === students.length - 1 ? 'auto' : 'always', 
               padding: '10mm',
               boxSizing: 'border-box',
               overflow: 'hidden',
@@ -453,7 +454,6 @@ const CertificatesTemplate = ({ students, settings, teacherInfo }: any) => {
           >
             {/* الإطار الخارجي الملكي */}
             <div className="w-full h-full border-[12px] border-double border-amber-400 p-2 relative z-10">
-              
               {/* الإطار الداخلي الكحلي */}
               <div className="w-full h-full border-4 border-[#1e3a8a] bg-[#faf9f6] p-8 relative flex flex-col justify-between overflow-hidden">
                 
@@ -466,12 +466,12 @@ const CertificatesTemplate = ({ students, settings, teacherInfo }: any) => {
                 <div className="w-full grid grid-cols-3 items-start relative z-10">
                   <div className="text-right space-y-1">
                     <h3 className="font-black text-[18px] text-[#1e3a8a]">سلطنة عُمان</h3>
-                    <h3 className="font-bold text-[16px] text-[#1e3a8a]">وزارة التعليم</h3>
-                    <h3 className="font-bold text-[16px] text-[#1e3a8a]">{teacherInfo?.governorate || 'المديرية العامة للتعليم'}</h3>
+                    <h3 className="font-bold text-[16px] text-[#1e3a8a]">وزارة التربية والتعليم</h3>
+                    <h3 className="font-bold text-[16px] text-[#1e3a8a]">{teacherInfo?.governorate || 'المديرية العامة للتربية والتعليم'}</h3>
                     <h3 className="font-bold text-[16px] text-amber-600">{schoolName}</h3>
                   </div>
 
-                  {/* الشعار السلطاني (يتم سحبه من إعدادات المعلم ليكون مرناً) */}
+                  {/* الشعار السلطاني */}
                   <div className="flex justify-center">
                     {teacherInfo?.ministryLogo ? (
                       <img src={teacherInfo.ministryLogo} alt="شعار سلطنة عمان" className="w-24 h-24 object-contain" />
@@ -526,7 +526,7 @@ const CertificatesTemplate = ({ students, settings, teacherInfo }: any) => {
                     <h3 className="font-black text-lg text-gray-700">{teacherInfo?.name || '..........'}</h3>
                   </div>
 
-                  {/* ختم المدرسة (يتم سحبه من إعدادات المعلم ليكون مرناً) */}
+                  {/* ختم المدرسة */}
                   <div className="flex justify-center translate-y-2">
                     {teacherInfo?.stamp ? (
                       <img src={teacherInfo.stamp} alt="ختم المدرسة" className="w-32 h-32 object-contain opacity-90 mix-blend-multiply" />
@@ -849,7 +849,7 @@ const Reports: React.FC<ReportsProps> = ({ initialTab }) => {
     isOpen: false, title: '', content: null
   });
 
-  // 🌙 المستشعر الرمضاني اللحظي (يمنع الوميض تماماً)
+  // المستشعر الرمضاني
   const [isRamadan] = useState(() => {
       try {
           const parts = new Intl.DateTimeFormat('en-TN-u-ca-islamic', { month: 'numeric' }).formatToParts(new Date());
@@ -935,8 +935,54 @@ const Reports: React.FC<ReportsProps> = ({ initialTab }) => {
       isOpen: true,
       title: 'شهادات التقدير',
       landscape: true,
-     
-      
+      content: <CertificatesTemplate students={targets} settings={certificateSettings || DEFAULT_CERT_SETTINGS} teacherInfo={teacherInfo} />
+    });
+  };
+
+  const openSummonPreview = () => {
+    const s = availableStudentsForSummon.find(st => st.id === summonStudentId);
+    if (!s) return alert('اختر طالباً');
+    setPreviewData({
+      isOpen: true,
+      title: `استدعاء - ${s.name}`,
+      landscape: false,
+      content: <SummonTemplate student={s} teacherInfo={teacherInfo} data={{ ...summonData, reason: getReasonText(), className: summonClass, procedures: takenProcedures, issueDate: summonData.issueDate }} />
+    });
+  };
+
+  const openClassReportsPreview = () => {
+    if (filteredStudentsForStudentTab.length === 0) return alert('لا يوجد طلاب في هذا الفصل');
+    setPreviewData({
+      isOpen: true,
+      title: `تقارير الصف ${stClass}`,
+      landscape: false,
+      content: <ClassReportsTemplate students={filteredStudentsForStudentTab} teacherInfo={teacherInfo} semester={currentSemester} assessmentTools={assessmentTools} />
+    });
+  };
+
+  const selectAllCertStudents = () => {
+    if (selectedCertStudents.length === filteredStudentsForCert.length) {
+      setSelectedCertStudents([]);
+    } else {
+      setSelectedCertStudents(filteredStudentsForCert.map(s => s.id));
+    }
+  };
+
+  const toggleCertStudent = (id: string) => {
+    setSelectedCertStudents(prev => prev.includes(id) ? prev.filter(sid => sid !== id) : [...prev, id]);
+  };
+
+  if (viewingStudent) {
+    return (
+      <StudentReport
+        student={viewingStudent}
+        onUpdateStudent={handleUpdateStudent}
+        currentSemester={currentSemester}
+        teacherInfo={teacherInfo}
+        onBack={() => setViewingStudent(null)}
+      />
+    );
+  }
 
   const tabs = [
     { id: 'student_report', label: 'تقرير طالب', icon: Icon3DStudent },
