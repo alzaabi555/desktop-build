@@ -466,8 +466,8 @@ const CertificatesTemplate = ({ students, settings, teacherInfo }: any) => {
                 <div className="w-full grid grid-cols-3 items-start relative z-10">
                   <div className="text-right space-y-1">
                     <h3 className="font-black text-[18px] text-[#1e3a8a]">سلطنة عُمان</h3>
-                    <h3 className="font-bold text-[16px] text-[#1e3a8a]">وزارة التربية والتعليم</h3>
-                    <h3 className="font-bold text-[16px] text-[#1e3a8a]">{teacherInfo?.governorate || 'المديرية العامة للتربية والتعليم'}</h3>
+                    <h3 className="font-bold text-[16px] text-[#1e3a8a]">وزارة التعليم</h3>
+                    <h3 className="font-bold text-[16px] text-[#1e3a8a]">{teacherInfo?.governorate || 'المديرية العامة للتعليم'}</h3>
                     <h3 className="font-bold text-[16px] text-amber-600">{schoolName}</h3>
                   </div>
 
