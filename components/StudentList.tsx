@@ -458,14 +458,14 @@ const StudentList: React.FC<StudentListProps> = ({
         const currentMonth = today.getMonth();
         const currentYear = today.getFullYear();
 
-        const monthlyPositivePoints = (student.behaviors || [])
+        const monthlyPoints = (student.behaviors || [])
             .filter(b => {
                 const d = new Date(b.date);
-                return b.type === 'positive' && d.getMonth() === currentMonth && d.getFullYear() === currentYear;
+                // فلترة تعتمد على الشهر الحالي فقط بغض النظر عن كون السلوك إيجابي أو سلبي
+                return d.getMonth() === currentMonth && d.getFullYear() === currentYear;
             })
-            .reduce((acc, b) => acc + b.points, 0);
-
-        return monthlyPositivePoints;
+            .reduce((acc, b) => acc + b.points, 0); // جمع النقاط (بما أن السلبي مُخزن بقيمة سالبة، سيتم الخصم تلقائياً)
+        return monthlyPoints;
     };
 
     return (
