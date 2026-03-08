@@ -4,7 +4,7 @@ import {
     Search, ThumbsUp, ThumbsDown, Edit2, Trash2, LayoutGrid, UserPlus, 
     FileSpreadsheet, MoreVertical, Settings, Users, AlertCircle, X, 
     Dices, Timer, Play, Pause, RotateCcw, CheckCircle2, MessageCircle, Plus,
-    Sparkles, Phone, Send, Star 
+    Sparkles, Phone, Send, Star, CloudUpload, Loader2 
 } from 'lucide-react';
 import Modal from './Modal';
 import ExcelImport from './ExcelImport';
@@ -118,6 +118,8 @@ const StudentList: React.FC<StudentListProps> = ({
     const [timerSeconds, setTimerSeconds] = useState(0);
     const [isTimerRunning, setIsTimerRunning] = useState(false);
     const [timerInput, setTimerInput] = useState('5');
+    
+    const [isSyncing, setIsSyncing] = useState(false); // حالة التحميل للسحابة
 
     useEffect(() => {
         let interval: any;
@@ -220,7 +222,6 @@ const StudentList: React.FC<StudentListProps> = ({
             const updatedStudents = students.map(s => {
                 if (s.classes.includes(selectedClass) && !s.parentCode) {
                     generatedCount++;
-                    // توليد كود عشوائي (مثال: RSD-X9A2)
                     const randomChars = Math.random().toString(36).substring(2, 6).toUpperCase();
                     return { ...s, parentCode: `RSD-${randomChars}` };
                 }
@@ -234,6 +235,68 @@ const StudentList: React.FC<StudentListProps> = ({
             } else {
                 alert('جميع طلاب هذا الفصل يمتلكون أكواداً سرية بالفعل. 👍');
             }
+        }
+    };
+
+    const calculateTotalPoints = (student: Student) => {
+        const today = new Date();
+        const currentMonth = today.getMonth();
+        const currentYear = today.getFullYear();
+
+        const monthlyPoints = (student.behaviors || [])
+            .filter(b => {
+                const d = new Date(b.date);
+                return d.getMonth() === currentMonth && d.getFullYear() === currentYear;
+            })
+            .reduce((acc, b) => acc + b.points, 0); 
+        return monthlyPoints;
+    };
+
+    // ☁️ خوارزمية المزامنة السحابية مع Google Sheets
+    const handleCloudSync = async () => {
+        const GOOGLE_WEB_APP_URL = "https://script.google.com/macros/s/AKfycbzKPPsQsM_dIttcYSxRLs6LQuvXhT6Qia5TwJ1Tw4ObQ-eZFZeJhV6epXXjxA9_SwWk/exec"; 
+
+        const payload = students
+            .filter(s => s.parentCode)
+            .map(s => {
+                return {
+                    parentCode: s.parentCode,
+                    name: s.name,
+                    className: s.classes[0] || "",
+                    totalPoints: calculateTotalPoints(s),
+                    behaviors: s.behaviors || [],
+                    grades: s.grades || []
+                };
+            });
+
+        if (payload.length === 0) {
+            alert("لا يوجد طلاب لديهم أكواد أولياء أمور ليتم مزامنتهم. قم بتوليد الأكواد أولاً من القائمة.");
+            return;
+        }
+
+        try {
+            setIsSyncing(true);
+            
+            const response = await fetch(GOOGLE_WEB_APP_URL, {
+                method: 'POST',
+                headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+                body: JSON.stringify(payload)
+            });
+
+            const result = await response.json();
+
+            if (result.status === "success") {
+                playSound('tada');
+                alert(`تمت المزامنة بنجاح! ☁️✅\nتم رفع بيانات ${payload.length} طالب إلى السحابة.`);
+            } else {
+                throw new Error(result.message);
+            }
+
+        } catch (error) {
+            console.error("Sync Error:", error);
+            alert("حدث خطأ أثناء المزامنة. تأكد من اتصالك بالإنترنت.");
+        } finally {
+            setIsSyncing(false);
         }
     };
 
@@ -482,20 +545,6 @@ const StudentList: React.FC<StudentListProps> = ({
         }
     };
 
-    const calculateTotalPoints = (student: Student) => {
-        const today = new Date();
-        const currentMonth = today.getMonth();
-        const currentYear = today.getFullYear();
-
-        const monthlyPoints = (student.behaviors || [])
-            .filter(b => {
-                const d = new Date(b.date);
-                return d.getMonth() === currentMonth && d.getFullYear() === currentYear;
-            })
-            .reduce((acc, b) => acc + b.points, 0); 
-        return monthlyPoints;
-    };
-
     return (
     <div className={`flex flex-col h-full overflow-hidden ${isRamadan ? 'text-white' : 'text-slate-800'}`}>
         
@@ -516,6 +565,17 @@ const StudentList: React.FC<StudentListProps> = ({
                 </div>
 
                 <div className="flex gap-2" style={{ WebkitAppRegion: 'no-drag' } as any}>
+                    {/* ☁️ زر المزامنة السحابية */}
+                    <button 
+                        onClick={handleCloudSync} 
+                        disabled={isSyncing}
+                        className={`p-2.5 rounded-xl border active:scale-95 transition-all flex items-center gap-2 ${isSyncing ? 'opacity-70 cursor-not-allowed' : ''} ${isRamadan ? 'bg-indigo-600/80 border-indigo-400 text-white shadow-[0_0_15px_rgba(79,70,229,0.5)]' : 'bg-indigo-600 border-indigo-500 text-white shadow-lg hover:bg-indigo-700'}`}
+                        title="مزامنة بيانات أولياء الأمور للسحابة"
+                    >
+                        {isSyncing ? <Loader2 className="w-5 h-5 animate-spin" /> : <CloudUpload className="w-5 h-5" />}
+                        <span className="text-xs font-black hidden md:inline">مزامنة الآباء</span>
+                    </button>
+
                     <div className="relative">
                         <button 
                             onClick={() => setShowTimerModal(true)} 
@@ -546,7 +606,6 @@ const StudentList: React.FC<StudentListProps> = ({
                             <div className="fixed inset-0 z-40" onClick={() => setShowMenu(false)}></div>
                             <div className={`absolute left-0 top-full mt-2 w-56 rounded-2xl shadow-2xl border overflow-hidden z-50 animate-in zoom-in-95 origin-top-left ${isRamadan ? 'bg-[#0f172a] border-white/10 text-white' : 'bg-white border-slate-100 text-slate-800'}`}>
                                 <div className="p-1">
-                                        {/* ✅ الزر الجديد لتوليد الأكواد */}
                                         <button onClick={() => { handleGenerateParentCodes(); setShowMenu(false); }} className={`flex items-center gap-3 px-4 py-3 transition-colors w-full text-right text-xs font-bold border-b ${isRamadan ? 'hover:bg-amber-900/40 border-white/10 text-amber-300' : 'hover:bg-amber-50 border-slate-50 text-amber-700'}`}>
                                             <span className="text-lg leading-none">🔐</span> توليد أكواد الآباء
                                         </button>
