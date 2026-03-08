@@ -23,7 +23,8 @@ interface StudentListProps {
     students: Student[];
     classes: string[];
     onAddClass: (name: string) => void;
-    onAddStudentManually: (name: string, className: string, phone?: string, avatar?: string, gender?: 'male'|'female') => void;
+    // ✅ تم إضافة الرقم المدني (civilID) للدالة ليتم تمريره عند الإضافة
+    onAddStudentManually: (name: string, className: string, phone?: string, avatar?: string, gender?: 'male'|'female', civilID?: string) => void;
     onBatchAddStudents: (students: Student[]) => void;
     onUpdateStudent: (student: Student) => void;
     onDeleteStudent: (id: string) => void;
@@ -103,6 +104,7 @@ const StudentList: React.FC<StudentListProps> = ({
     const [newStudentPhone, setNewStudentPhone] = useState('');
     const [newStudentGender, setNewStudentGender] = useState<'male' | 'female'>(defaultStudentGender);
     const [newStudentClass, setNewStudentClass] = useState('');
+    const [newStudentCivilID, setNewStudentCivilID] = useState(''); // ✅ حقل الرقم المدني للإضافة اليدوية
 
     const [showNegativeModal, setShowNegativeModal] = useState(false);
     const [showPositiveModal, setShowPositiveModal] = useState(false);
@@ -119,7 +121,7 @@ const StudentList: React.FC<StudentListProps> = ({
     const [isTimerRunning, setIsTimerRunning] = useState(false);
     const [timerInput, setTimerInput] = useState('5');
     
-    const [isSyncing, setIsSyncing] = useState(false); // حالة التحميل للسحابة
+    const [isSyncing, setIsSyncing] = useState(false);
 
     useEffect(() => {
         let interval: any;
@@ -210,34 +212,6 @@ const StudentList: React.FC<StudentListProps> = ({
         audio.play().catch(e => console.error(e));
     };
 
-    // ✅ خوارزمية توليد الأكواد السرية
-    const handleGenerateParentCodes = () => {
-        if (selectedClass === 'all') {
-            alert('الرجاء اختيار فصل محدد أولاً من الشريط العلوي لتوليد الأكواد لطلابه.');
-            return;
-        }
-
-        if (confirm(`هل تريد توليد أكواد دخول لأولياء أمور طلاب صف (${selectedClass})؟ \nملاحظة: الطلاب الذين يمتلكون كوداً مسبقاً لن يتغير كودهم.`)) {
-            let generatedCount = 0;
-            const updatedStudents = students.map(s => {
-                if (s.classes.includes(selectedClass) && !s.parentCode) {
-                    generatedCount++;
-                    const randomChars = Math.random().toString(36).substring(2, 6).toUpperCase();
-                    return { ...s, parentCode: `RSD-${randomChars}` };
-                }
-                return s;
-            });
-
-            if (generatedCount > 0) {
-                setStudents(updatedStudents);
-                playSound('tada');
-                alert(`تم توليد أكواد سرية بنجاح لعدد ${generatedCount} طالب/طالبة! 🎉\nيمكنك رؤية الكود من خلال نافذة تعديل بيانات الطالب.`);
-            } else {
-                alert('جميع طلاب هذا الفصل يمتلكون أكواداً سرية بالفعل. 👍');
-            }
-        }
-    };
-
     const calculateTotalPoints = (student: Student) => {
         const today = new Date();
         const currentMonth = today.getMonth();
@@ -252,17 +226,19 @@ const StudentList: React.FC<StudentListProps> = ({
         return monthlyPoints;
     };
 
-    // ☁️ خوارزمية المزامنة السحابية مع Google Sheets
+    // ☁️ خوارزمية المزامنة السحابية المحدثة (تعتمد على الرقم المدني واسم المادة)
     const handleCloudSync = async () => {
         const GOOGLE_WEB_APP_URL = "https://script.google.com/macros/s/AKfycbzKPPsQsM_dIttcYSxRLs6LQuvXhT6Qia5TwJ1Tw4ObQ-eZFZeJhV6epXXjxA9_SwWk/exec"; 
 
         const payload = students
-            .filter(s => s.parentCode)
+            // ✅ نكتفي بالطلاب الذين لديهم رقم مدني فقط
+            .filter(s => s.parentCode && s.parentCode.trim() !== "")
             .map(s => {
                 return {
-                    parentCode: s.parentCode,
+                    parentCode: s.parentCode, // هذا الحقل أصبح يمثل الرقم المدني
                     name: s.name,
                     className: s.classes[0] || "",
+                    subject: teacherInfo?.subject || "بدون مادة", // ✅ إضافة اسم المادة ضروري
                     totalPoints: calculateTotalPoints(s),
                     behaviors: s.behaviors || [],
                     grades: s.grades || []
@@ -270,7 +246,7 @@ const StudentList: React.FC<StudentListProps> = ({
             });
 
         if (payload.length === 0) {
-            alert("لا يوجد طلاب لديهم أكواد أولياء أمور ليتم مزامنتهم. قم بتوليد الأكواد أولاً من القائمة.");
+            alert("لا يوجد طلاب لديهم (رقم مدني) ليتم مزامنتهم! تأكد من إضافة الرقم المدني للطلاب.");
             return;
         }
 
@@ -510,12 +486,16 @@ const StudentList: React.FC<StudentListProps> = ({
         setShowMenu(false);
     };
 
+    // ✅ تحديث دالة الحفظ اليدوي لتدعم الرقم المدني
     const handleManualAddSubmit = () => {
-        if (newStudentName && newStudentClass) {
-            onAddStudentManually(newStudentName, newStudentClass, newStudentPhone, undefined, newStudentGender);
+        if (newStudentName && newStudentClass && newStudentCivilID) {
+            onAddStudentManually(newStudentName, newStudentClass, newStudentPhone, undefined, newStudentGender, newStudentCivilID);
             setNewStudentName('');
             setNewStudentPhone('');
+            setNewStudentCivilID('');
             setShowManualAddModal(false);
+        } else {
+            alert('الرجاء إدخال اسم الطالب، الفصل، والرقم المدني.');
         }
     };
 
@@ -529,6 +509,10 @@ const StudentList: React.FC<StudentListProps> = ({
     
     const handleEditStudentSave = () => {
         if (editingStudent) {
+            if (!editingStudent.parentCode || editingStudent.parentCode.trim() === '') {
+                alert('الرقم المدني مطلوب جداً لربط الطالب بالسحابة.');
+                return;
+            }
             onUpdateStudent(editingStudent);
             setEditingStudent(null);
         }
@@ -606,10 +590,6 @@ const StudentList: React.FC<StudentListProps> = ({
                             <div className="fixed inset-0 z-40" onClick={() => setShowMenu(false)}></div>
                             <div className={`absolute left-0 top-full mt-2 w-56 rounded-2xl shadow-2xl border overflow-hidden z-50 animate-in zoom-in-95 origin-top-left ${isRamadan ? 'bg-[#0f172a] border-white/10 text-white' : 'bg-white border-slate-100 text-slate-800'}`}>
                                 <div className="p-1">
-                                        <button onClick={() => { handleGenerateParentCodes(); setShowMenu(false); }} className={`flex items-center gap-3 px-4 py-3 transition-colors w-full text-right text-xs font-bold border-b ${isRamadan ? 'hover:bg-amber-900/40 border-white/10 text-amber-300' : 'hover:bg-amber-50 border-slate-50 text-amber-700'}`}>
-                                            <span className="text-lg leading-none">🔐</span> توليد أكواد الآباء
-                                        </button>
-                                        
                                         <button onClick={handleQuietAndDiscipline} className={`flex items-center gap-3 px-4 py-3 transition-colors w-full text-right text-xs font-bold border-b ${isRamadan ? 'hover:bg-purple-900/40 border-white/10 text-purple-200' : 'hover:bg-purple-50 border-slate-50 text-slate-700'}`}>
                                             <Sparkles className={`w-4 h-4 ${isRamadan ? 'text-purple-400' : 'text-purple-600'}`} /> مكافأة الانضباط (هدوء)
                                         </button>
@@ -721,7 +701,7 @@ const StudentList: React.FC<StudentListProps> = ({
             </div>
         </div>
 
-        {/* ✅ النوافذ المنبثقة */}
+        {/* ✅ نافذة إضافة طالب يدوياً (تم إضافة الرقم المدني) */}
         <Modal isOpen={showManualAddModal} onClose={() => setShowManualAddModal(false)} className={`max-w-md rounded-[2rem] ${isRamadan ? 'bg-transparent' : ''}`}>
              <div className={`text-center p-6 rounded-[2rem] border transition-colors ${isRamadan ? 'bg-[#0f172a] border-white/10 text-white shadow-2xl' : 'bg-white border-transparent text-slate-800 shadow-2xl'}`}>
                 <div className={`w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4 border ${isRamadan ? 'bg-indigo-900/50 text-indigo-400 border-indigo-500/30' : 'bg-indigo-50 text-indigo-500 border-transparent'}`}>
@@ -734,12 +714,13 @@ const StudentList: React.FC<StudentListProps> = ({
                         <option value="" disabled className={isRamadan ? 'text-slate-500' : ''}>اختر الفصل</option>
                         {safeClasses.map(c => <option key={c} value={c} className={isRamadan ? 'bg-[#0f172a]' : ''}>{c}</option>)}
                     </select>
+                    <input type="number" placeholder="الرقم المدني (أساسي)" value={newStudentCivilID} onChange={(e) => setNewStudentCivilID(e.target.value)} className={`w-full p-4 rounded-xl font-bold text-sm outline-none border transition-colors ${isRamadan ? 'bg-[#1e293b] border-indigo-500/30 focus:border-indigo-400 text-white placeholder:text-indigo-200/40' : 'bg-amber-50 border-amber-200 focus:border-amber-500 text-slate-800'}`} />
                     <input type="tel" placeholder="رقم ولي الأمر (اختياري)" value={newStudentPhone} onChange={(e) => setNewStudentPhone(e.target.value)} className={`w-full p-4 rounded-xl font-bold text-sm outline-none border transition-colors ${isRamadan ? 'bg-[#1e293b] border-indigo-500/30 focus:border-indigo-400 text-white placeholder:text-indigo-200/40' : 'bg-gray-50 border-gray-200 focus:border-indigo-500 text-slate-800'}`} />
                      <div className="flex gap-2">
                         <button onClick={() => setNewStudentGender('male')} className={`flex-1 py-3 rounded-xl font-bold text-xs transition-all border ${newStudentGender === 'male' ? (isRamadan ? 'bg-blue-500/20 border-blue-400/50 text-blue-300' : 'bg-blue-50 border-blue-200 text-blue-600') : (isRamadan ? 'bg-white/5 border-white/10 text-slate-400' : 'bg-gray-50 border-gray-200 text-gray-400')}`}>طالب 👨‍🎓</button>
                         <button onClick={() => setNewStudentGender('female')} className={`flex-1 py-3 rounded-xl font-bold text-xs transition-all border ${newStudentGender === 'female' ? (isRamadan ? 'bg-pink-500/20 border-pink-400/50 text-pink-300' : 'bg-pink-50 border-pink-200 text-pink-600') : (isRamadan ? 'bg-white/5 border-white/10 text-slate-400' : 'bg-gray-50 border-gray-200 text-gray-400')}`}>طالبة 👩‍🎓</button>
                     </div>
-                    <button onClick={handleManualAddSubmit} disabled={!newStudentName || !newStudentClass} className={`w-full py-4 rounded-xl font-black text-sm shadow-lg active:scale-95 transition-all disabled:opacity-50 mt-2 ${isRamadan ? 'bg-indigo-600 text-white hover:bg-indigo-500' : 'bg-indigo-600 text-white hover:bg-indigo-700'}`}>حفظ الطالب</button>
+                    <button onClick={handleManualAddSubmit} disabled={!newStudentName || !newStudentClass || !newStudentCivilID} className={`w-full py-4 rounded-xl font-black text-sm shadow-lg active:scale-95 transition-all disabled:opacity-50 mt-2 ${isRamadan ? 'bg-indigo-600 text-white hover:bg-indigo-500' : 'bg-indigo-600 text-white hover:bg-indigo-700'}`}>حفظ الطالب</button>
                 </div>
             </div>
         </Modal>
@@ -902,6 +883,7 @@ const StudentList: React.FC<StudentListProps> = ({
             </div>
         </Modal>
 
+        {/* ✅ نافذة تعديل بيانات الطالب (تم تحويل الكود إلى حقل إدخال للرقم المدني) */}
         <Modal isOpen={!!editingStudent} onClose={() => setEditingStudent(null)} className={`max-w-md rounded-[2rem] ${isRamadan ? 'bg-transparent' : ''}`}>
             {editingStudent && (
                  <div className={`text-center p-6 rounded-[2rem] border transition-colors ${isRamadan ? 'bg-[#0f172a] border-white/10 text-white shadow-2xl' : 'bg-white border-transparent text-slate-800 shadow-2xl'}`}>
@@ -913,17 +895,16 @@ const StudentList: React.FC<StudentListProps> = ({
                         </select>
                         <input type="tel" value={editingStudent.parentPhone || ''} onChange={(e) => setEditingStudent({...editingStudent, parentPhone: e.target.value})} className={`w-full p-4 rounded-xl font-bold text-sm outline-none border transition-colors ${isRamadan ? 'bg-[#1e293b] border-indigo-500/30 focus:border-indigo-400 text-white placeholder:text-indigo-200/40' : 'bg-gray-50 border-gray-200 focus:border-indigo-500 text-slate-800'}`} placeholder="رقم الهاتف" />
                         
-                        {/* ✅ حقل عرض الكود السري لولي الأمر */}
+                        {/* ✅ حقل الرقم المدني (قابل للتعديل الآن) */}
                         <div className="relative mt-2">
-                            <p className={`text-[10px] text-right mb-1 font-bold ${isRamadan ? 'text-slate-400' : 'text-slate-500'}`}>كود دخول ولي الأمر (تطبيق الآباء):</p>
-                            <div className="flex gap-2">
-                                <input 
-                                    type="text" 
-                                    readOnly 
-                                    value={editingStudent.parentCode || 'لم يتم التوليد'} 
-                                    className={`w-full p-3 rounded-xl font-mono text-center font-black tracking-widest outline-none border transition-colors ${isRamadan ? 'bg-black/50 border-amber-500/30 text-amber-400' : 'bg-slate-100 border-slate-300 text-slate-600'}`} 
-                                />
-                            </div>
+                            <p className={`text-[10px] text-right mb-1 font-bold ${isRamadan ? 'text-slate-400' : 'text-slate-500'}`}>الرقم المدني للطالب (أساسي لدخول ولي الأمر):</p>
+                            <input 
+                                type="number" 
+                                value={editingStudent.parentCode || ''} 
+                                onChange={(e) => setEditingStudent({...editingStudent, parentCode: e.target.value})}
+                                placeholder="أدخل الرقم المدني هنا..."
+                                className={`w-full p-4 rounded-xl font-mono text-center font-black tracking-widest outline-none border transition-colors ${isRamadan ? 'bg-black/50 border-amber-500/50 focus:border-amber-400 text-amber-400' : 'bg-amber-50 border-amber-200 focus:border-amber-500 text-slate-800'}`} 
+                            />
                         </div>
 
                         <div className="flex gap-2 pt-2">
