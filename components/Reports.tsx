@@ -1,5 +1,5 @@
 import React, { useState, useMemo, useEffect } from 'react';
-import { ArrowRight, Check, Loader2, Award } from 'lucide-react'; // تم إضافة Award هنا
+import { ArrowRight, Check, Loader2, Award } from 'lucide-react';
 import { useApp } from '../context/AppContext';
 import { Student } from '../types';
 import StudentReport from './StudentReport';
@@ -9,9 +9,33 @@ import { Share } from '@capacitor/share';
 import { Capacitor } from '@capacitor/core';
 import html2pdf from 'html2pdf.js';
 
+// ✅ استدعاء قالب البطاقات الجديد
+import ParentCardsTemplate from './ParentCardsTemplate';
+
 // =================================================================================
-// ✅ أيقونات 3D الجديدة (New 3D SVG Icons)
+// ✅ أيقونات 3D (بما فيها أيقونة البطاقات الجديدة)
 // =================================================================================
+
+const Icon3DParentCard = ({ className }: { className?: string }) => (
+  <svg viewBox="0 0 100 100" className={className || "w-6 h-6"} xmlns="http://www.w3.org/2000/svg">
+    <defs>
+      <linearGradient id="gradCard" x1="0%" y1="0%" x2="100%" y2="100%">
+        <stop offset="0%" stopColor="#f59e0b" />
+        <stop offset="100%" stopColor="#d97706" />
+      </linearGradient>
+      <filter id="shadowCard" x="-20%" y="-20%" width="140%" height="140%">
+        <feGaussianBlur in="SourceAlpha" stdDeviation="1.5" />
+        <feOffset dx="1" dy="2" result="offsetblur" />
+        <feMerge><feMergeNode /><feMergeNode in="SourceGraphic" /></feMerge>
+      </filter>
+    </defs>
+    <rect x="15" y="30" width="70" height="40" rx="6" fill="url(#gradCard)" filter="url(#shadowCard)" />
+    <circle cx="30" cy="50" r="8" fill="white" opacity="0.9" />
+    <rect x="45" y="45" width="30" height="4" rx="2" fill="white" opacity="0.9" />
+    <rect x="45" y="55" width="20" height="4" rx="2" fill="white" opacity="0.9" />
+    <path d="M15 50 L20 50 M80 50 L85 50" stroke="white" strokeWidth="2" strokeDasharray="2 2" />
+  </svg>
+);
 
 const Icon3DReportCenter = ({ className }: { className?: string }) => (
   <svg viewBox="0 0 100 100" className={className || "w-6 h-6"} xmlns="http://www.w3.org/2000/svg">
@@ -207,7 +231,7 @@ const Icon3DEye = ({ className }: { className?: string }) => (
 // =================================================================================
 
 interface ReportsProps {
-  initialTab?: 'student_report' | 'grades_record' | 'certificates' | 'summon';
+  initialTab?: 'student_report' | 'grades_record' | 'certificates' | 'parent_cards' | 'summon';
 }
 
 const DEFAULT_CERT_SETTINGS = {
@@ -274,14 +298,10 @@ const PrintPreviewModal: React.FC<{
   if (!isOpen) return null;
 
   return (
-    // ✅ الحل الجذري: إضافة md:pr-[18rem] لإبعاد النافذة عن القائمة الجانبية تماماً
     <div className="fixed inset-0 z-[99999] bg-slate-900/95 backdrop-blur-sm md:pr-[18rem] flex flex-col">
       <div id="preview-scroll-container" className="h-full overflow-auto p-4 md:p-8 custom-scrollbar">
         
-        {/* ✅ شريط التحكم العلوي الجديد (واضح ومرتب) */}
         <div className="sticky top-0 z-50 bg-slate-800 text-white p-4 flex justify-between items-center border border-white/10 shadow-2xl rounded-2xl mb-6">
-          
-          {/* 🔴 زر الإغلاق والعودة البارز */}
           <button
             onClick={onClose}
             className="bg-rose-600 hover:bg-rose-500 text-white px-4 md:px-6 py-2.5 rounded-xl font-black flex items-center gap-2 shadow-lg transition-all active:scale-95"
@@ -290,13 +310,11 @@ const PrintPreviewModal: React.FC<{
             <span className="hidden sm:inline">إغلاق والعودة</span>
           </button>
 
-          {/* العنوان */}
           <div className="text-center flex-1 px-4">
             <h3 className="font-black text-lg text-indigo-300">{title}</h3>
             <p className="text-[10px] text-slate-400 font-mono tracking-widest">{landscape ? 'A4 Landscape' : 'A4 Portrait'}</p>
           </div>
 
-          {/* 🖨️ زر التصدير */}
           <button
             onClick={handlePrint}
             disabled={isPrinting}
@@ -307,7 +325,6 @@ const PrintPreviewModal: React.FC<{
           </button>
         </div>
 
-        {/* مساحة عرض الورقة البيضاء */}
         <div className="flex justify-center pb-20">
           <div
             id="preview-content-area"
@@ -332,7 +349,7 @@ const PrintPreviewModal: React.FC<{
 };
 
 // =================================================================================
-// ✅ القوالب (TEMPLATES) - تم تحديث شهادة التقدير فقط بامتياز
+// ✅ القوالب (TEMPLATES)
 // =================================================================================
 
 const GradesTemplate = ({ students, tools, teacherInfo, semester, gradeClass }: any) => {
@@ -434,7 +451,6 @@ const GradesTemplate = ({ students, tools, teacherInfo, semester, gradeClass }: 
   );
 };
 
-// 🌟 القالب المطور لشهادات التقدير بلمسة "الفرسان" الفخمة
 const CertificatesTemplate = ({ students, settings, teacherInfo }: any) => {
   const safeSettings = settings || DEFAULT_CERT_SETTINGS;
   const title = safeSettings.title || 'شهادة شكر وتقدير';
@@ -463,17 +479,13 @@ const CertificatesTemplate = ({ students, settings, teacherInfo }: any) => {
               direction: 'rtl'
             }}
           >
-            {/* الإطار الخارجي الملكي */}
             <div className="w-full h-full border-[12px] border-double border-amber-400 p-2 relative z-10">
-              {/* الإطار الداخلي الكحلي */}
               <div className="w-full h-full border-4 border-[#1e3a8a] bg-[#faf9f6] p-8 relative flex flex-col justify-between overflow-hidden">
                 
-                {/* العلامة المائية */}
                 <div className="absolute inset-0 flex items-center justify-center opacity-[0.03] pointer-events-none">
                   <Award className="w-[600px] h-[600px] text-amber-900" />
                 </div>
 
-                {/* ================= الترويسة ================= */}
                 <div className="w-full grid grid-cols-3 items-start relative z-10">
                   <div className="text-right space-y-1">
                     <h3 className="font-black text-[18px] text-[#1e3a8a]">سلطنة عُمان</h3>
@@ -482,7 +494,6 @@ const CertificatesTemplate = ({ students, settings, teacherInfo }: any) => {
                     <h3 className="font-bold text-[16px] text-amber-600">{schoolName}</h3>
                   </div>
 
-                  {/* الشعار السلطاني */}
                   <div className="flex justify-center">
                     {teacherInfo?.ministryLogo ? (
                       <img src={teacherInfo.ministryLogo} alt="شعار سلطنة عمان" className="w-24 h-24 object-contain" />
@@ -503,7 +514,6 @@ const CertificatesTemplate = ({ students, settings, teacherInfo }: any) => {
                   </div>
                 </div>
 
-                {/* ================= المحتوى الرئيسي ================= */}
                 <div className="flex flex-col items-center justify-center text-center w-full z-10 -mt-2">
                   <h1 className="text-6xl font-black text-[#1e3a8a] mb-5 tracking-normal">
                       {title}
@@ -529,7 +539,6 @@ const CertificatesTemplate = ({ students, settings, teacherInfo }: any) => {
                   </p>
                 </div>
 
-                {/* ================= التذييل والأختام ================= */}
                 <div className="w-full grid grid-cols-3 items-end relative z-10 pt-2 mt-auto">
                   <div className="text-center justify-self-start w-64">
                     <h4 className="font-bold text-lg text-[#1e3a8a] mb-4">معلم المادة</h4>
@@ -537,7 +546,6 @@ const CertificatesTemplate = ({ students, settings, teacherInfo }: any) => {
                     <h3 className="font-black text-lg text-gray-700">{teacherInfo?.name || '..........'}</h3>
                   </div>
 
-                  {/* ختم المدرسة */}
                   <div className="flex justify-center translate-y-2">
                     {teacherInfo?.stamp ? (
                       <img src={teacherInfo.stamp} alt="ختم المدرسة" className="w-32 h-32 object-contain opacity-90 mix-blend-multiply" />
@@ -553,7 +561,6 @@ const CertificatesTemplate = ({ students, settings, teacherInfo }: any) => {
                   </div>
                 </div>
 
-                {/* زينة الزوايا */}
                 <div className="absolute top-2 right-2 w-16 h-16 border-t-4 border-r-4 border-[#1e3a8a]"></div>
                 <div className="absolute top-2 left-2 w-16 h-16 border-t-4 border-l-4 border-[#1e3a8a]"></div>
                 <div className="absolute bottom-2 right-2 w-16 h-16 border-b-4 border-r-4 border-[#1e3a8a]"></div>
@@ -677,7 +684,6 @@ const ClassReportsTemplate = ({ students, teacherInfo, semester, assessmentTools
         return (
           <div key={student.id} className="w-full min-h-[297mm] p-10 border-b border-black page-break-after-always relative bg-white" style={{ pageBreakAfter: 'always' }}>
             
-            {/* Header */}
             <div className="flex justify-between items-start mb-8 border-b-2 border-black pb-4">
               <div className="text-right w-1/3 text-sm font-bold">
                 <p>سلطنة عمان</p>
@@ -696,7 +702,6 @@ const ClassReportsTemplate = ({ students, teacherInfo, semester, assessmentTools
               </div>
             </div>
 
-            {/* Student Info Box */}
             <div className="bg-slate-50 p-6 rounded-2xl border-2 border-black mb-8 flex justify-between items-center text-black">
               <div>
                 <h3 className="text-2xl font-black mb-1">{student.name}</h3>
@@ -746,7 +751,6 @@ const ClassReportsTemplate = ({ students, teacherInfo, semester, assessmentTools
               </tbody>
             </table>
 
-            {/* Attendance Summary */}
             <div className="flex gap-6 mb-8">
               <div className="flex-1 border-2 border-black p-4 rounded-xl text-center">
                 <p className="text-sm font-bold text-black mb-1">أيام الغياب</p>
@@ -758,7 +762,6 @@ const ClassReportsTemplate = ({ students, teacherInfo, semester, assessmentTools
               </div>
             </div>
 
-            {/* Behavior Section */}
             <div className="mb-12">
                 <h3 className="font-bold text-lg mb-3 border-b-2 border-black inline-block">سجل السلوك والمواظبة</h3>
                 <div className="flex gap-4 items-start">
@@ -825,7 +828,7 @@ const ClassReportsTemplate = ({ students, teacherInfo, semester, assessmentTools
 // =================================================================================
 const Reports: React.FC<ReportsProps> = ({ initialTab }) => {
   const { students, setStudents, classes, teacherInfo, currentSemester, assessmentTools, certificateSettings, setCertificateSettings } = useApp();
-  const [activeTab, setActiveTab] = useState<'student_report' | 'grades_record' | 'certificates' | 'summon'>(initialTab || 'student_report');
+  const [activeTab, setActiveTab] = useState<'student_report' | 'grades_record' | 'certificates' | 'parent_cards' | 'summon'>(initialTab || 'student_report');
 
   const [stGrade, setStGrade] = useState<string>('all');
   const [stClass, setStClass] = useState<string>('');
@@ -856,11 +859,14 @@ const Reports: React.FC<ReportsProps> = ({ initialTab }) => {
 
   const [takenProcedures, setTakenProcedures] = useState<string[]>([]);
 
+  // ✅ حالات جديدة لبطاقات الآباء
+  const [cardsGrade, setCardsGrade] = useState<string>('all');
+  const [cardsClass, setCardsClass] = useState<string>('all');
+
   const [previewData, setPreviewData] = useState<{ isOpen: boolean; title: string; content: React.ReactNode; landscape?: boolean }>({
     isOpen: false, title: '', content: null
   });
 
-  // المستشعر الرمضاني
   const [isRamadan] = useState(() => {
       try {
           const parts = new Intl.DateTimeFormat('en-TN-u-ca-islamic', { month: 'numeric' }).formatToParts(new Date());
@@ -908,6 +914,7 @@ const Reports: React.FC<ReportsProps> = ({ initialTab }) => {
   useEffect(() => { const cls = getClassesForGrade(stGrade); if (cls.length > 0) setStClass(cls[0]); }, [stGrade, classes]);
   useEffect(() => { const cls = getClassesForGrade(certGrade); if (cls.length > 0) setCertClass(cls[0]); }, [certGrade, classes]);
   useEffect(() => { const cls = getClassesForGrade(summonGrade); if (cls.length > 0) setSummonClass(cls[0]); }, [summonGrade, classes]);
+  useEffect(() => { const cls = getClassesForGrade(cardsGrade); if (cls.length > 0) setCardsClass('all'); }, [cardsGrade, classes]); // تعيين الكل كافتراضي
   useEffect(() => { if (certificateSettings) setTempCertSettings(certificateSettings); }, [certificateSettings]);
 
   const handleUpdateStudent = (updatedStudent: Student) => {
@@ -971,6 +978,16 @@ const Reports: React.FC<ReportsProps> = ({ initialTab }) => {
     });
   };
 
+  // ✅ فتح معاينة بطاقات الآباء
+  const openParentCardsPreview = () => {
+    setPreviewData({
+      isOpen: true,
+      title: 'بطاقات دخول الآباء',
+      landscape: false, // الوضع الرأسي (A4) ليناسب التقطيع
+      content: <ParentCardsTemplate students={students} schoolName={teacherInfo?.school} teacherName={teacherInfo?.name} selectedClass={cardsClass} />
+    });
+  };
+
   const selectAllCertStudents = () => {
     if (selectedCertStudents.length === filteredStudentsForCert.length) {
       setSelectedCertStudents([]);
@@ -999,6 +1016,7 @@ const Reports: React.FC<ReportsProps> = ({ initialTab }) => {
     { id: 'student_report', label: 'تقرير طالب', icon: Icon3DStudent },
     { id: 'grades_record', label: 'سجل الدرجات', icon: Icon3DGrades },
     { id: 'certificates', label: 'الشهادات', icon: Icon3DCertificate },
+    { id: 'parent_cards', label: 'بطاقات الآباء', icon: Icon3DParentCard }, // 🎟️ التبويب الجديد
     { id: 'summon', label: 'استدعاء', icon: Icon3DSummon },
   ];
 
@@ -1195,6 +1213,41 @@ const Reports: React.FC<ReportsProps> = ({ initialTab }) => {
                   className={`w-full disabled:opacity-50 text-white px-6 py-4 rounded-xl font-black text-xs flex items-center justify-center gap-2 shadow-lg active:scale-95 transition-all ${isRamadan ? 'bg-emerald-600 hover:bg-emerald-500' : 'bg-emerald-600 hover:bg-emerald-700'}`}
                 >
                   <Icon3DPrint className="w-5 h-5" /> معاينة وطباعة الشهادات
+                </button>
+              </div>
+            </div>
+          )}
+
+          {/* ================= ✅ تبويب بطاقات الآباء الجديد ================= */}
+          {activeTab === 'parent_cards' && (
+            <div className="space-y-6">
+              <div className={`flex items-center gap-3 border-b pb-4 mb-2 ${isRamadan ? 'border-white/10' : 'border-slate-50'}`}>
+                <div className={`p-2 rounded-xl ${isRamadan ? 'bg-amber-500/20 text-amber-400' : 'bg-amber-50 text-amber-600'}`}><Icon3DParentCard className="w-5 h-5" /></div>
+                <h3 className={`font-black text-lg ${isRamadan ? 'text-white' : 'text-slate-800'}`}>بطاقات دخول أولياء الأمور</h3>
+              </div>
+
+              <div className="space-y-4">
+                <div className="flex gap-2 overflow-x-auto pb-1 no-scrollbar">
+                  {availableGrades.map(g => (
+                    <button
+                      key={g}
+                      onClick={() => { setCardsGrade(g); setCardsClass('all'); }}
+                      className={`px-4 py-2 text-xs font-bold rounded-xl border transition-all ${cardsGrade === g ? (isRamadan ? 'bg-amber-500/40 text-amber-200 border-amber-400/50' : 'bg-amber-600 text-white border-transparent') : (isRamadan ? 'bg-white/5 text-slate-300 border-white/10 hover:bg-white/10' : 'bg-slate-50 text-slate-600 border-slate-200')}`}
+                    >
+                      صف {g}
+                    </button>
+                  ))}
+                </div>
+
+                <select value={cardsClass} onChange={(e) => setCardsClass(e.target.value)} className={`w-full p-4 border rounded-2xl font-bold outline-none transition-colors text-sm ${isRamadan ? 'bg-[#0f172a]/50 border-white/20 text-white focus:border-amber-400' : 'bg-slate-50 border-slate-200 text-slate-700 focus:border-amber-500'}`}>
+                  <option value="all" className={isRamadan ? 'bg-slate-900 text-white' : ''}>الكل (جميع فصول هذا الصف)</option>
+                  {getClassesForGrade(cardsGrade).map(c => <option key={c} value={c} className={isRamadan ? 'bg-slate-900 text-white' : ''}>{c}</option>)}
+                </select>
+              </div>
+
+              <div className="flex justify-end pt-4">
+                <button onClick={openParentCardsPreview} className={`w-full text-white px-6 py-4 rounded-xl font-black text-xs flex items-center justify-center gap-2 shadow-lg active:scale-95 transition-all ${isRamadan ? 'bg-amber-600 hover:bg-amber-500' : 'bg-amber-500 hover:bg-amber-600'}`}>
+                  <Icon3DPrint className="w-5 h-5" /> معاينة وطباعة البطاقات 🎟️
                 </button>
               </div>
             </div>
