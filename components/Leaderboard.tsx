@@ -73,8 +73,58 @@ const Leaderboard: React.FC<LeaderboardProps> = ({ students, classes, onUpdateSt
           return false;
       }
   });
+
+    const getShortName = (fullName: string) => {
+        if (!fullName) return '';
+        const nameParts = fullName.trim().split(' ');
+        if (nameParts.length === 1) return nameParts[0];
+        return `${nameParts[0]} ${nameParts[nameParts.length - 1]}`;
+    };
     
-    // ✅ هنا تم التدخل الجراحي لحساب "صافي النقاط" الرادع
+    // 📢 خوارزمية الشريط الإخباري الذكي (لا تتأثر بشريط البحث)
+    const tickerText = useMemo(() => {
+        let baseStudents = students;
+        if (selectedClass !== 'all') {
+            baseStudents = students.filter(s => s.classes?.includes(selectedClass));
+        }
+
+        // حساب صافي النقاط للشهر الحالي
+        const studentsWithPoints = baseStudents.map(student => {
+            const monthlyPoints = (student.behaviors || [])
+                .filter(b => {
+                    const d = new Date(b.date);
+                    return d.getMonth() === currentMonth && d.getFullYear() === today.getFullYear();
+                })
+                .reduce((acc, b) => acc + b.points, 0);
+            return { ...student, monthlyPoints };
+        }).filter(s => s.monthlyPoints > 0)
+          .sort((a, b) => b.monthlyPoints - a.monthlyPoints);
+
+        if (studentsWithPoints.length === 0) return "المنافسة جارية... لا توجد نقاط مسجلة هذا الشهر بعد!";
+
+        if (selectedClass === 'all') {
+            // بطل كل فصل
+            const classTopMap = new Map<string, typeof studentsWithPoints[0]>();
+            studentsWithPoints.forEach(s => {
+                const sClass = s.classes[0];
+                if (sClass && !classTopMap.has(sClass)) {
+                    classTopMap.set(sClass, s);
+                }
+            });
+
+            return Array.from(classTopMap.values())
+                .map(s => `👑 بطل (${s.classes[0]}): ${getShortName(s.name)} [${s.monthlyPoints} نقطة]`)
+                .join(' 🌟 | 🌟 ');
+        } else {
+            // أول 3 في الفصل المحدد
+            const top3 = studentsWithPoints.slice(0, 3);
+            const medals = ['🥇 المركز الأول', '🥈 المركز الثاني', '🥉 المركز الثالث'];
+            return top3
+                .map((s, idx) => `${medals[idx]}: ${getShortName(s.name)} [${s.monthlyPoints} نقطة]`)
+                .join(' ✨ | ✨ ');
+        }
+    }, [students, selectedClass, currentMonth]);
+
     const rankedStudents = useMemo(() => {
         let filtered = students;
         if (selectedClass !== 'all') filtered = students.filter(s => s.classes?.includes(selectedClass));
@@ -84,21 +134,18 @@ const Leaderboard: React.FC<LeaderboardProps> = ({ students, classes, onUpdateSt
             const monthlyPoints = (student.behaviors || [])
                 .filter(b => {
                     const d = new Date(b.date);
-                    // 👈 إزالة الفلترة بالنوع الإيجابي فقط، ليقوم بجمع كل النقاط خلال الشهر (موجبة وسالبة)
                     return d.getMonth() === currentMonth && d.getFullYear() === today.getFullYear();
                 })
-                .reduce((acc, b) => acc + b.points, 0); // 👈 النقاط السلبية مخزنة أصلاً كأرقام سالبة (-1, -2)، فعملية الجمع ستقوم بخصمها تلقائياً
+                .reduce((acc, b) => acc + b.points, 0);
             return { ...student, monthlyPoints };
         });
-        
-        // 👈 ترتيب الطلاب من الأعلى للأسفل بناءً على صافي الرصيد
         return withPoints.sort((a, b) => b.monthlyPoints - a.monthlyPoints);
     }, [students, selectedClass, searchTerm, currentMonth]);
 
     const topThree = rankedStudents.slice(0, 3);
     const restOfStudents = rankedStudents.slice(3);
 
-    // إضافة نقاط (لم تتغير)
+    // إضافة نقاط
     const handleAddPoints = (student: Student) => {
         if (!onUpdateStudent) return;
         new Audio(positiveSound).play().catch(() => {});
@@ -114,14 +161,14 @@ const Leaderboard: React.FC<LeaderboardProps> = ({ students, classes, onUpdateSt
         onUpdateStudent({ ...student, behaviors: [newBehavior, ...(student.behaviors || [])] });
     };
 
-    // خصم النقاط (يدوي من صفحة الفرسان)
+    // خصم النقاط
     const handleDeductPoint = (student: Student) => {
         if (!onUpdateStudent) return;
         if (confirm(`هل تريد خصم نقطة واحدة من الطالب/ة ${student.name}؟ (تصحيح)`)) {
             const correctionBehavior = {
                 id: Math.random().toString(36).substr(2, 9),
                 date: new Date().toISOString(),
-                type: 'negative' as const, // 👈 تم تصحيح النوع إلى negative ليكون دقيقاً إحصائياً
+                type: 'negative' as const, 
                 description: 'تصحيح نقاط (خصم)',
                 points: -3, 
                 semester: currentSemester
@@ -152,20 +199,11 @@ const Leaderboard: React.FC<LeaderboardProps> = ({ students, classes, onUpdateSt
         } catch (e) { alert('خطأ في الحفظ'); } finally { setIsGeneratingPdf(false); }
     };
 
-    const isFemale = certificateStudent?.gender === 'female';
-
-    const getShortName = (fullName: string) => {
-        if (!fullName) return '';
-        const nameParts = fullName.trim().split(' ');
-        if (nameParts.length === 1) return nameParts[0];
-        return `${nameParts[0]} ${nameParts[nameParts.length - 1]}`;
-    };
-
     return (
         <div className={`flex flex-col h-full space-y-6 pb-24 md:pb-8 overflow-hidden relative ${isRamadan ? 'text-white' : 'text-slate-800'}`}>
             
             <header 
-                className={`fixed md:sticky top-0 z-40 shadow-lg px-4 md:pl-40 pt-8 pb-6 transition-all duration-500 w-full ${isRamadan ? 'bg-white/5 border-b border-white/10 text-white' : 'bg-[#446A8D] text-white'}`}
+                className={`fixed md:sticky top-0 z-40 shadow-lg px-4 md:pl-40 pt-8 pb-4 transition-all duration-500 w-full ${isRamadan ? 'bg-white/5 border-b border-white/10 text-white' : 'bg-[#446A8D] text-white'}`}
                 style={{ WebkitAppRegion: 'drag' } as any}
             >
                 <div className="flex flex-col items-center text-center relative">
@@ -185,8 +223,22 @@ const Leaderboard: React.FC<LeaderboardProps> = ({ students, classes, onUpdateSt
                         <Crown className="w-8 h-8 text-amber-400 fill-amber-400 animate-bounce" />
                     </div>
                     <h1 className="text-2xl font-black tracking-wide mb-1">{getPageTitle()}</h1>
+
+                    {/* 📢 الشريط الإخباري الذكي (News Ticker) */}
+                    <div className={`w-full max-w-2xl mt-3 mb-2 flex items-center rounded-xl border overflow-hidden shadow-sm ${isRamadan ? 'bg-[#1e1b4b]/80 border-indigo-500/30' : 'bg-white/20 border-white/30 backdrop-blur-md'}`} style={{ WebkitAppRegion: 'no-drag' } as any}>
+                        <div className={`px-4 py-2 flex items-center gap-1 font-black text-[11px] shrink-0 z-10 ${isRamadan ? 'bg-amber-600 text-white' : 'bg-amber-400 text-[#1e3a8a]'}`}>
+                            <Sparkles size={14} className="animate-pulse" />
+                            أخبار الفرسان
+                        </div>
+                        <div className="flex-1 overflow-hidden relative flex items-center">
+                            {/* @ts-ignore */}
+                            <marquee direction="right" scrollamount="4" className={`font-bold text-xs pt-1 tracking-wide ${isRamadan ? 'text-amber-300' : 'text-white'}`}>
+                                {tickerText}
+                            </marquee>
+                        </div>
+                    </div>
                     
-                    <div className="relative w-full max-w-sm my-4" style={{ WebkitAppRegion: 'no-drag' } as any}>
+                    <div className="relative w-full max-w-sm my-2" style={{ WebkitAppRegion: 'no-drag' } as any}>
                         <Search className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-blue-300" />
                         <input type="text" placeholder="بحث..." value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} className={`w-full border rounded-xl py-2 pr-10 text-xs font-bold outline-none transition-all ${isRamadan ? 'bg-white/10 border-white/20 text-white placeholder:text-blue-200/50 focus:bg-white/20' : 'bg-white/20 border-white/30 text-white placeholder:text-blue-100 focus:bg-white/30'}`} />
                     </div>
@@ -247,7 +299,6 @@ const Leaderboard: React.FC<LeaderboardProps> = ({ students, classes, onUpdateSt
                 </div>
             </div>
 
-            {/* 🏆 مودال عرض وطباعة الشهادة الجديد */}
             <Modal isOpen={!!certificateStudent} onClose={() => !isGeneratingPdf && setCertificateStudent(null)} className="max-w-[1200px] w-[95vw] p-0 overflow-hidden bg-white rounded-2xl">
                 {certificateStudent && (
                     <div className="flex flex-col bg-white">
