@@ -74,6 +74,7 @@ const Leaderboard: React.FC<LeaderboardProps> = ({ students, classes, onUpdateSt
       }
   });
     
+    // ✅ هنا تم التدخل الجراحي لحساب "صافي النقاط" الرادع
     const rankedStudents = useMemo(() => {
         let filtered = students;
         if (selectedClass !== 'all') filtered = students.filter(s => s.classes?.includes(selectedClass));
@@ -83,18 +84,21 @@ const Leaderboard: React.FC<LeaderboardProps> = ({ students, classes, onUpdateSt
             const monthlyPoints = (student.behaviors || [])
                 .filter(b => {
                     const d = new Date(b.date);
-                    return b.type === 'positive' && d.getMonth() === currentMonth && d.getFullYear() === today.getFullYear();
+                    // 👈 إزالة الفلترة بالنوع الإيجابي فقط، ليقوم بجمع كل النقاط خلال الشهر (موجبة وسالبة)
+                    return d.getMonth() === currentMonth && d.getFullYear() === today.getFullYear();
                 })
-                .reduce((acc, b) => acc + b.points, 0);
+                .reduce((acc, b) => acc + b.points, 0); // 👈 النقاط السلبية مخزنة أصلاً كأرقام سالبة (-1, -2)، فعملية الجمع ستقوم بخصمها تلقائياً
             return { ...student, monthlyPoints };
         });
+        
+        // 👈 ترتيب الطلاب من الأعلى للأسفل بناءً على صافي الرصيد
         return withPoints.sort((a, b) => b.monthlyPoints - a.monthlyPoints);
     }, [students, selectedClass, searchTerm, currentMonth]);
 
     const topThree = rankedStudents.slice(0, 3);
     const restOfStudents = rankedStudents.slice(3);
 
-    // إضافة نقاط
+    // إضافة نقاط (لم تتغير)
     const handleAddPoints = (student: Student) => {
         if (!onUpdateStudent) return;
         new Audio(positiveSound).play().catch(() => {});
@@ -110,14 +114,14 @@ const Leaderboard: React.FC<LeaderboardProps> = ({ students, classes, onUpdateSt
         onUpdateStudent({ ...student, behaviors: [newBehavior, ...(student.behaviors || [])] });
     };
 
-    // خصم النقاط
+    // خصم النقاط (يدوي من صفحة الفرسان)
     const handleDeductPoint = (student: Student) => {
         if (!onUpdateStudent) return;
         if (confirm(`هل تريد خصم نقطة واحدة من الطالب/ة ${student.name}؟ (تصحيح)`)) {
             const correctionBehavior = {
                 id: Math.random().toString(36).substr(2, 9),
                 date: new Date().toISOString(),
-                type: 'positive' as const, 
+                type: 'negative' as const, // 👈 تم تصحيح النوع إلى negative ليكون دقيقاً إحصائياً
                 description: 'تصحيح نقاط (خصم)',
                 points: -3, 
                 semester: currentSemester
@@ -133,7 +137,7 @@ const Leaderboard: React.FC<LeaderboardProps> = ({ students, classes, onUpdateSt
         const opt = {
             margin: 0, filename: `Rased_Award_${certificateStudent.name}.pdf`,
             image: { type: 'jpeg', quality: 1.0 },
-            html2canvas: { scale: 3, useCORS: true }, // رفعنا المقياس إلى 3 لضمان دقة خيالية عند الطباعة
+            html2canvas: { scale: 3, useCORS: true },
             jsPDF: { unit: 'mm', format: 'a4', orientation: 'landscape' }
         };
         try {
@@ -209,10 +213,9 @@ const Leaderboard: React.FC<LeaderboardProps> = ({ students, classes, onUpdateSt
                                 </div>
                                 <div className={`px-3 py-2 rounded-xl text-center border shadow-sm w-28 md:w-36 transition-colors ${isRamadan ? 'bg-white/10 border-white/20' : 'bg-white border-slate-200'}`}>
                                     <h3 className={`font-black text-xs md:text-sm truncate ${isRamadan ? 'text-white' : 'text-slate-800'}`} title={s.name}>{getShortName(s.name)}</h3>
-                                    <span className="text-amber-500 font-bold text-xs">{s.monthlyPoints} نقطة</span>
+                                    <span className="text-amber-500 font-bold text-xs" dir="ltr">{s.monthlyPoints}</span>
                                 </div>
                                 <div className="flex gap-1 mt-2">
-                                    {/* 📜 أزرار استدعاء الشهادة تعمل بامتياز */}
                                     <button onClick={() => setCertificateStudent(s)} className={`text-[10px] px-2 py-1 rounded-lg flex items-center gap-1 shadow-md transition-colors ${isRamadan ? 'bg-white/10 text-white hover:bg-white/20 border border-white/10' : 'bg-slate-700 text-white hover:bg-slate-800'}`}>
                                         <Award size={12} /> شهادة
                                     </button>
@@ -233,10 +236,9 @@ const Leaderboard: React.FC<LeaderboardProps> = ({ students, classes, onUpdateSt
                                 <StudentAvatar gender={s.gender} className="w-full h-full" />
                             </div>
                             <h3 className={`font-black text-[11px] truncate w-full text-center ${isRamadan ? 'text-white' : 'text-slate-800'}`} title={s.name}>{getShortName(s.name)}</h3>
-                            <span className={`font-bold text-[10px] mt-0.5 ${isRamadan ? 'text-amber-400' : 'text-amber-600'}`}>{s.monthlyPoints} نقطة</span>
+                            <span className={`font-bold text-[10px] mt-0.5 ${isRamadan ? 'text-amber-400' : 'text-amber-600'}`} dir="ltr">{s.monthlyPoints}</span>
                             
                             <div className="flex gap-1 w-full mt-2">
-                                {/* 📜 أزرار استدعاء الشهادة لباقي القائمة */}
                                 <button onClick={() => setCertificateStudent(s)} className={`flex-1 py-1 text-[10px] font-bold rounded-md border transition-colors ${isRamadan ? 'bg-white/10 text-indigo-200 border-white/10 hover:bg-white/20' : 'bg-slate-50 text-slate-500 border-slate-100 hover:bg-slate-100'}`}>شهادة</button>
                                 <button onClick={() => handleDeductPoint(s)} className={`px-2 py-1 text-[10px] font-bold rounded-md border transition-colors ${isRamadan ? 'bg-rose-500/20 text-rose-400 border-rose-500/30 hover:bg-rose-500/30' : 'bg-rose-50 text-rose-500 border-rose-100 hover:bg-rose-100'}`}><MinusCircle size={12} /></button>
                             </div>
@@ -254,7 +256,6 @@ const Leaderboard: React.FC<LeaderboardProps> = ({ students, classes, onUpdateSt
                             <button onClick={() => setCertificateStudent(null)} className="p-2 text-slate-400 hover:text-red-500 transition-colors"><X size={20} /></button>
                         </div>
 
-                        {/* 🛠️ هنا تم زرع المكون الجديد بدلاً من الأكواد القديمة */}
                         <div className="flex-1 overflow-auto bg-slate-200 p-4 md:p-8 flex justify-center items-center custom-scrollbar">
                             <div ref={certificateRef} className="shrink-0">
                                 <CertificateTemplate 
