@@ -208,6 +208,35 @@ const StudentList: React.FC<StudentListProps> = ({
         audio.play().catch(e => console.error(e));
     };
 
+    // ✅ خوارزمية توليد الأكواد السرية
+    const handleGenerateParentCodes = () => {
+        if (selectedClass === 'all') {
+            alert('الرجاء اختيار فصل محدد أولاً من الشريط العلوي لتوليد الأكواد لطلابه.');
+            return;
+        }
+
+        if (confirm(`هل تريد توليد أكواد دخول لأولياء أمور طلاب صف (${selectedClass})؟ \nملاحظة: الطلاب الذين يمتلكون كوداً مسبقاً لن يتغير كودهم.`)) {
+            let generatedCount = 0;
+            const updatedStudents = students.map(s => {
+                if (s.classes.includes(selectedClass) && !s.parentCode) {
+                    generatedCount++;
+                    // توليد كود عشوائي (مثال: RSD-X9A2)
+                    const randomChars = Math.random().toString(36).substring(2, 6).toUpperCase();
+                    return { ...s, parentCode: `RSD-${randomChars}` };
+                }
+                return s;
+            });
+
+            if (generatedCount > 0) {
+                setStudents(updatedStudents);
+                playSound('tada');
+                alert(`تم توليد أكواد سرية بنجاح لعدد ${generatedCount} طالب/طالبة! 🎉\nيمكنك رؤية الكود من خلال نافذة تعديل بيانات الطالب.`);
+            } else {
+                alert('جميع طلاب هذا الفصل يمتلكون أكواداً سرية بالفعل. 👍');
+            }
+        }
+    };
+
     const handleRandomPick = () => {
         const todayStr = new Date().toLocaleDateString('en-CA');
         const presentStudents = filteredStudents.filter(s => {
@@ -461,10 +490,9 @@ const StudentList: React.FC<StudentListProps> = ({
         const monthlyPoints = (student.behaviors || [])
             .filter(b => {
                 const d = new Date(b.date);
-                // فلترة تعتمد على الشهر الحالي فقط بغض النظر عن كون السلوك إيجابي أو سلبي
                 return d.getMonth() === currentMonth && d.getFullYear() === currentYear;
             })
-            .reduce((acc, b) => acc + b.points, 0); // جمع النقاط (بما أن السلبي مُخزن بقيمة سالبة، سيتم الخصم تلقائياً)
+            .reduce((acc, b) => acc + b.points, 0); 
         return monthlyPoints;
     };
 
@@ -516,9 +544,13 @@ const StudentList: React.FC<StudentListProps> = ({
                         {showMenu && (
                         <>
                             <div className="fixed inset-0 z-40" onClick={() => setShowMenu(false)}></div>
-                            {/* ✅ القائمة المنسدلة: لون صلب لحل مشكلة اختفاء النصوص */}
                             <div className={`absolute left-0 top-full mt-2 w-56 rounded-2xl shadow-2xl border overflow-hidden z-50 animate-in zoom-in-95 origin-top-left ${isRamadan ? 'bg-[#0f172a] border-white/10 text-white' : 'bg-white border-slate-100 text-slate-800'}`}>
                                 <div className="p-1">
+                                        {/* ✅ الزر الجديد لتوليد الأكواد */}
+                                        <button onClick={() => { handleGenerateParentCodes(); setShowMenu(false); }} className={`flex items-center gap-3 px-4 py-3 transition-colors w-full text-right text-xs font-bold border-b ${isRamadan ? 'hover:bg-amber-900/40 border-white/10 text-amber-300' : 'hover:bg-amber-50 border-slate-50 text-amber-700'}`}>
+                                            <span className="text-lg leading-none">🔐</span> توليد أكواد الآباء
+                                        </button>
+                                        
                                         <button onClick={handleQuietAndDiscipline} className={`flex items-center gap-3 px-4 py-3 transition-colors w-full text-right text-xs font-bold border-b ${isRamadan ? 'hover:bg-purple-900/40 border-white/10 text-purple-200' : 'hover:bg-purple-50 border-slate-50 text-slate-700'}`}>
                                             <Sparkles className={`w-4 h-4 ${isRamadan ? 'text-purple-400' : 'text-purple-600'}`} /> مكافأة الانضباط (هدوء)
                                         </button>
@@ -630,7 +662,7 @@ const StudentList: React.FC<StudentListProps> = ({
             </div>
         </div>
 
-        {/* ✅ النوافذ المنبثقة: ألوان صلبة مع حقول إدخال مميزة */}
+        {/* ✅ النوافذ المنبثقة */}
         <Modal isOpen={showManualAddModal} onClose={() => setShowManualAddModal(false)} className={`max-w-md rounded-[2rem] ${isRamadan ? 'bg-transparent' : ''}`}>
              <div className={`text-center p-6 rounded-[2rem] border transition-colors ${isRamadan ? 'bg-[#0f172a] border-white/10 text-white shadow-2xl' : 'bg-white border-transparent text-slate-800 shadow-2xl'}`}>
                 <div className={`w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4 border ${isRamadan ? 'bg-indigo-900/50 text-indigo-400 border-indigo-500/30' : 'bg-indigo-50 text-indigo-500 border-transparent'}`}>
@@ -821,7 +853,21 @@ const StudentList: React.FC<StudentListProps> = ({
                             {safeClasses.map(c => <option key={c} value={c} className={isRamadan ? 'bg-[#0f172a]' : ''}>{c}</option>)}
                         </select>
                         <input type="tel" value={editingStudent.parentPhone || ''} onChange={(e) => setEditingStudent({...editingStudent, parentPhone: e.target.value})} className={`w-full p-4 rounded-xl font-bold text-sm outline-none border transition-colors ${isRamadan ? 'bg-[#1e293b] border-indigo-500/30 focus:border-indigo-400 text-white placeholder:text-indigo-200/40' : 'bg-gray-50 border-gray-200 focus:border-indigo-500 text-slate-800'}`} placeholder="رقم الهاتف" />
-                        <div className="flex gap-2">
+                        
+                        {/* ✅ حقل عرض الكود السري لولي الأمر */}
+                        <div className="relative mt-2">
+                            <p className={`text-[10px] text-right mb-1 font-bold ${isRamadan ? 'text-slate-400' : 'text-slate-500'}`}>كود دخول ولي الأمر (تطبيق الآباء):</p>
+                            <div className="flex gap-2">
+                                <input 
+                                    type="text" 
+                                    readOnly 
+                                    value={editingStudent.parentCode || 'لم يتم التوليد'} 
+                                    className={`w-full p-3 rounded-xl font-mono text-center font-black tracking-widest outline-none border transition-colors ${isRamadan ? 'bg-black/50 border-amber-500/30 text-amber-400' : 'bg-slate-100 border-slate-300 text-slate-600'}`} 
+                                />
+                            </div>
+                        </div>
+
+                        <div className="flex gap-2 pt-2">
                             <button onClick={() => setEditingStudent({...editingStudent, gender: 'male'})} className={`flex-1 py-3 rounded-xl font-bold text-xs transition-all border ${editingStudent.gender === 'male' ? (isRamadan ? 'bg-blue-500/20 border-blue-400/50 text-blue-300' : 'bg-blue-50 border-blue-200 text-blue-600') : (isRamadan ? 'bg-white/5 border-white/10 text-slate-400' : 'bg-gray-50 border-gray-200 text-gray-400')}`}>طالب 👨‍🎓</button>
                             <button onClick={() => setEditingStudent({...editingStudent, gender: 'female'})} className={`flex-1 py-3 rounded-xl font-bold text-xs transition-all border ${editingStudent.gender === 'female' ? (isRamadan ? 'bg-pink-500/20 border-pink-400/50 text-pink-300' : 'bg-pink-50 border-pink-200 text-pink-600') : (isRamadan ? 'bg-white/5 border-white/10 text-slate-400' : 'bg-gray-50 border-gray-200 text-gray-400')}`}>طالبة 👩‍🎓</button>
                         </div>
