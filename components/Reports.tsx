@@ -222,7 +222,7 @@ const getGradingSettings = () => {
   return saved ? JSON.parse(saved) : { totalScore: 100, finalExamWeight: 40, finalExamName: 'الامتحان النهائي' };
 };
 
-// --- نافذة المعاينة (Print Preview Modal) ---
+// --- نافذة المعاينة (Print Preview Modal) المحدثة ---
 const PrintPreviewModal: React.FC<{
   isOpen: boolean;
   onClose: () => void;
@@ -274,33 +274,44 @@ const PrintPreviewModal: React.FC<{
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-[99999] bg-slate-800">
-      <div id="preview-scroll-container" className="h-full overflow-auto bg-slate-800 p-2 md:p-8">
-        <div className="sticky top-0 z-50 bg-slate-900 text-white p-4 flex justify-between items-center border-b border-white/10 shadow-xl rounded-t-2xl md:rounded-none">
-          <div className="flex items-center gap-3">
-            <button onClick={onClose} className="p-2 hover:bg-white/10 rounded-full transition-colors">
-              <ArrowRight className="w-6 h-6" />
-            </button>
-            <div>
-              <h3 className="font-bold text-lg">{title}</h3>
-              <p className="text-xs text-slate-400 font-mono">{landscape ? 'A4 Landscape' : 'A4 Portrait'}</p>
-            </div>
+    // ✅ الحل الجذري: إضافة md:pr-[18rem] لإبعاد النافذة عن القائمة الجانبية تماماً
+    <div className="fixed inset-0 z-[99999] bg-slate-900/95 backdrop-blur-sm md:pr-[18rem] flex flex-col">
+      <div id="preview-scroll-container" className="h-full overflow-auto p-4 md:p-8 custom-scrollbar">
+        
+        {/* ✅ شريط التحكم العلوي الجديد (واضح ومرتب) */}
+        <div className="sticky top-0 z-50 bg-slate-800 text-white p-4 flex justify-between items-center border border-white/10 shadow-2xl rounded-2xl mb-6">
+          
+          {/* 🔴 زر الإغلاق والعودة البارز */}
+          <button
+            onClick={onClose}
+            className="bg-rose-600 hover:bg-rose-500 text-white px-4 md:px-6 py-2.5 rounded-xl font-black flex items-center gap-2 shadow-lg transition-all active:scale-95"
+          >
+            <ArrowRight className="w-5 h-5" />
+            <span className="hidden sm:inline">إغلاق والعودة</span>
+          </button>
+
+          {/* العنوان */}
+          <div className="text-center flex-1 px-4">
+            <h3 className="font-black text-lg text-indigo-300">{title}</h3>
+            <p className="text-[10px] text-slate-400 font-mono tracking-widest">{landscape ? 'A4 Landscape' : 'A4 Portrait'}</p>
           </div>
 
+          {/* 🖨️ زر التصدير */}
           <button
             onClick={handlePrint}
             disabled={isPrinting}
-            className="bg-indigo-600 hover:bg-indigo-500 text-white px-6 py-2 rounded-xl font-bold flex items-center gap-2 shadow-lg disabled:opacity-50 transition-all active:scale-95 pointer-events-auto"
+            className="bg-indigo-600 hover:bg-indigo-500 text-white px-4 md:px-6 py-2.5 rounded-xl font-black flex items-center gap-2 shadow-lg disabled:opacity-50 transition-all active:scale-95 pointer-events-auto"
           >
             {isPrinting ? <Loader2 className="animate-spin w-5 h-5" /> : <Icon3DPrint className="w-5 h-5" />}
-            {isPrinting ? 'جاري المعالجة...' : 'تصدير ومشاركة'}
+            <span className="hidden sm:inline">{isPrinting ? 'جاري المعالجة...' : 'تصدير للطباعة'}</span>
           </button>
         </div>
 
-        <div className="flex justify-center pt-4">
+        {/* مساحة عرض الورقة البيضاء */}
+        <div className="flex justify-center pb-20">
           <div
             id="preview-content-area"
-            className="bg-white text-black shadow-2xl"
+            className="bg-white text-black shadow-[0_0_50px_rgba(0,0,0,0.5)]"
             style={{
               width: landscape ? '297mm' : '210mm',
               minHeight: landscape ? '210mm' : '297mm',
