@@ -3,7 +3,7 @@ import { AppProvider, useApp } from './context/AppContext';
 import { ThemeProvider } from './context/ThemeContext';
 import {
   LayoutDashboard, Users, CalendarCheck, BarChart3,
-  Settings as SettingsIcon, Info, FileText, BookOpen, Medal, Loader2
+  Settings as SettingsIcon, Info, FileText, BookOpen, Medal, Loader2, Network // تمت إضافة Network للمجموعات
 } from 'lucide-react';
 
 import { App as CapacitorApp } from '@capacitor/app';
@@ -21,6 +21,7 @@ import About from './components/About';
 import UserGuide from './components/UserGuide';
 import BrandLogo from './components/BrandLogo';
 import WelcomeScreen from './components/WelcomeScreen';
+import StudentGroups from './components/StudentGroups'; // ✅ تم استيراد مكون المجموعات
 import { useSchoolBell } from './hooks/useSchoolBell';
 
 // 🌙 استدعاء الثيم الخارجي المستقل
@@ -181,6 +182,7 @@ const AppContent: React.FC = () => {
           onDeleteStudent={(id) => setStudents(prev => prev.filter(s => s.id !== id))} onViewReport={(s) => { }}
           currentSemester={currentSemester} onSemesterChange={setCurrentSemester} onDeleteClass={handleDeleteClass}
         />;
+      case 'groups': return <StudentGroups />; // ✅ توجيه لصفحة المجموعات الجديدة
       case 'grades':
         return <GradeBook
           students={students} classes={classes} onUpdateStudent={handleUpdateStudent} setStudents={setStudents}
@@ -202,10 +204,12 @@ const AppContent: React.FC = () => {
     { id: 'grades', label: 'الدرجات', IconComponent: Grades3D },
   ];
   
+  // ✅ تم إضافة المجموعات للقائمة الجانبية في الكمبيوتر
   const desktopNavItems = [
     { id: 'dashboard', label: 'الرئيسية', icon: LayoutDashboard },
     { id: 'attendance', label: 'الحضور', icon: CalendarCheck },
     { id: 'students', label: 'الطلاب', icon: Users },
+    { id: 'groups', label: 'المجموعات', icon: Network }, // 👈 تمت إضافتها هنا
     { id: 'grades', label: 'الدرجات', icon: BarChart3 },
     { id: 'leaderboard', label: 'فرسان الشهر', icon: Medal },
     { id: 'reports', label: 'التقارير', icon: FileText },
@@ -253,7 +257,7 @@ const AppContent: React.FC = () => {
           ))}
         </nav>
 
-        {/* 🛡️ قسم التوثيق الشخصي (البصمة الملكية) - تمت إضافته هنا */}
+        {/* 🛡️ قسم التوثيق الشخصي (البصمة الملكية) */}
         <div className={`p-6 border-t relative z-10 space-y-4 ${isRamadan ? 'border-white/10' : 'border-slate-100'}`}>
             <div className="flex items-center gap-3 group transition-all duration-300">
                 <div className={`w-11 h-11 rounded-full border-2 p-0.5 transition-all duration-500 group-hover:rotate-[360deg] shadow-lg ${isRamadan ? 'border-amber-400/50 bg-white/5 shadow-[0_0_15px_rgba(251,191,36,0.3)]' : 'border-indigo-100 bg-white'}`}>
@@ -307,9 +311,14 @@ const AppContent: React.FC = () => {
         </button>
       </div>
 
-      {/* More Menu Modal */}
+      {/* More Menu Modal (Mobile) */}
       <Modal isOpen={showMoreMenu} onClose={() => setShowMoreMenu(false)} className={`max-w-md rounded-[2rem] mb-28 md:hidden z-[10000] ${isRamadan ? 'bg-transparent' : ''}`}>
         <div className={`grid grid-cols-3 gap-3 p-4 rounded-[2rem] border transition-colors ${isRamadan ? 'bg-[#0f172a]/95 backdrop-blur-2xl border-white/10 shadow-[0_0_40px_rgba(0,0,0,0.5)]' : 'bg-white border-transparent'}`}>
+          {/* ✅ تم إضافة زر المجموعات في قائمة المزيد للجوال */}
+          <button onClick={() => handleNavigate('groups')} className={`p-4 rounded-2xl flex flex-col items-center justify-center gap-2 active:scale-95 border aspect-square transition-all ${isRamadan ? 'bg-white/5 border-white/10 hover:bg-white/10' : 'bg-emerald-50 border-emerald-200'}`}>
+            <Network className={`w-7 h-7 ${isRamadan ? 'text-emerald-400' : 'text-emerald-600'}`} />
+            <span className={`font-bold text-[10px] ${isRamadan ? 'text-indigo-100' : 'text-slate-800'}`}>المجموعات</span>
+          </button>
           <button onClick={() => handleNavigate('leaderboard')} className={`p-4 rounded-2xl flex flex-col items-center justify-center gap-2 active:scale-95 border aspect-square transition-all ${isRamadan ? 'bg-white/5 border-white/10 hover:bg-white/10' : 'bg-amber-50 border-amber-200'}`}>
             <Medal className={`w-7 h-7 ${isRamadan ? 'text-amber-400' : 'text-amber-600'}`} />
             <span className={`font-bold text-[10px] ${isRamadan ? 'text-indigo-100' : 'text-slate-800'}`}>فرسان الشهر</span>
