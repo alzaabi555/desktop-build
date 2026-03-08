@@ -1,4 +1,3 @@
-
 export interface Student {
   id: string;
   ministryId?: string; // معرف الوزارة للمزامنة
@@ -14,6 +13,7 @@ export interface Student {
   spentCoins?: number; 
   groupId?: string | null; // معرف الفريق (ديناميكي)
   examPapers?: ExamPaper[];
+  parentCode?: string; // ✅ الكود السري الخاص بتطبيق ولي الأمر
 }
 
 export interface Group {
@@ -112,14 +112,7 @@ export interface ExamPaper {
   maxScore?: number;
 }
 
-// --- تعريف الجسر الإلكتروني (Electron Bridge) ---
-// هذا يسمح لـ TypeScript بمعرفة أن window.electron موجود وآمن للاستخدام
-declare global {
-  interface Window {
-    electron?: {
-      openExternal: (url: string) => Promise<void>;
-    };
-    // ============================================================================
+// ============================================================================
 // ✅ نظام المجموعات التفاعلية (Interactive Student Groups)
 // ============================================================================
 
@@ -139,5 +132,13 @@ export interface GroupCategorization {
   createdAt: string;     // تاريخ الإنشاء
   groups: SubGroup[];    // المجموعات الفرعية التي تندرج تحت هذه التقسيمة
 }
+
+// --- تعريف الجسر الإلكتروني (Electron Bridge) ---
+// هذا يسمح لـ TypeScript بمعرفة أن window.electron موجود وآمن للاستخدام
+declare global {
+  interface Window {
+    electron?: {
+      openExternal: (url: string) => Promise<void>;
+    };
   }
 }
