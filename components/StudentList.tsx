@@ -727,7 +727,37 @@ const StudentList: React.FC<StudentListProps> = ({
 
         <Modal isOpen={showImportModal} onClose={() => setShowImportModal(false)} className={`max-w-lg rounded-[2rem] ${isRamadan ? 'bg-transparent' : ''}`}>
             <div className={isRamadan ? 'bg-[#0f172a] border border-white/10 rounded-[2rem] shadow-2xl overflow-hidden' : ''}>
-                <ExcelImport existingClasses={safeClasses} onImport={(data) => { onBatchAddStudents(data); setShowImportModal(false); }} onAddClass={onAddClass} />
+                <ExcelImport 
+    existingClasses={safeClasses} 
+    onImport={(importedStudents) => {
+        // 🧠 خوارزمية الدمج الذكي لتحديث الطلاب الموجودين أو إضافة الجدد
+        setStudents(prevStudents => {
+            const updatedStudents = [...prevStudents];
+            
+            importedStudents.forEach(imported => {
+                // البحث هل الطالب موجود مسبقاً (حسب الاسم)
+                const existingIndex = updatedStudents.findIndex(s => s.name.trim() === imported.name.trim());
+                
+                if (existingIndex >= 0) {
+                    // 🔄 تحديث بيانات الطالب الموجود (إدراج الرقم المدني ورقم الهاتف دون مسح درجاته)
+                    updatedStudents[existingIndex] = {
+                        ...updatedStudents[existingIndex],
+                        parentCode: imported.parentCode || updatedStudents[existingIndex].parentCode,
+                        parentPhone: imported.parentPhone || updatedStudents[existingIndex].parentPhone,
+                        gender: imported.gender || updatedStudents[existingIndex].gender
+                    };
+                } else {
+                    // ➕ إضافة طالب جديد تماماً
+                    updatedStudents.push(imported);
+                }
+            });
+            
+            return updatedStudents;
+        });
+        setShowImportModal(false); 
+    }} 
+    onAddClass={onAddClass} 
+/>
             </div>
         </Modal>
 
