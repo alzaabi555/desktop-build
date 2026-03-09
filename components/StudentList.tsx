@@ -730,24 +730,49 @@ const StudentList: React.FC<StudentListProps> = ({
                 <ExcelImport 
     existingClasses={safeClasses} 
     onImport={(importedStudents) => {
-        // 🧠 خوارزمية الدمج الذكي لتحديث الطلاب الموجودين أو إضافة الجدد
+        // 🧠 دالة فولاذية لتنظيف الأسماء (تحذف كل المسافات لضمان التطابق 100%)
+        const normalizeArabicName = (name: string) => {
+            if (!name) return '';
+            return name
+                .replace(/[أإآءؤئ]/g, 'ا') // توحيد كل أشكال الهمزات
+                .replace(/ة/g, 'ه') // توحيد التاء المربوطة
+                .replace(/ى/g, 'ي') // توحيد الألف المقصورة
+                .replace(/عبد /g, 'عبد') // دمج عبد الله لتصبح عبدالله
+                .replace(/\s+/g, '') // 👈 إزالة جميع المسافات نهائياً للمطابقة
+                .trim();
+        };
+
         setStudents(prevStudents => {
             const updatedStudents = [...prevStudents];
             
             importedStudents.forEach(imported => {
-                // البحث هل الطالب موجود مسبقاً (حسب الاسم)
-                const existingIndex = updatedStudents.findIndex(s => s.name.trim() === imported.name.trim());
+                const normalizedImportedName = normalizeArabicName(imported.name);
+                
+                // 1. البحث بالرقم المدني أولاً (أدق طريقة إذا كان موجوداً)
+                let existingIndex = -1;
+                if (imported.parentCode && imported.parentCode.trim() !== '') {
+                    existingIndex = updatedStudents.findIndex(s => s.parentCode === imported.parentCode);
+                }
+                
+                // 2. إذا لم يجده بالرقم المدني، يبحث بالاسم (المطابقة العمياء)
+                if (existingIndex === -1) {
+                    existingIndex = updatedStudents.findIndex(s => 
+                        normalizeArabicName(s.name) === normalizedImportedName
+                    );
+                }
                 
                 if (existingIndex >= 0) {
-                    // 🔄 تحديث بيانات الطالب الموجود (إدراج الرقم المدني ورقم الهاتف دون مسح درجاته)
+                    // 🔄 الطالب موجود: تحديث (الرقم المدني والهاتف) والاحتفاظ بالدرجات!
                     updatedStudents[existingIndex] = {
                         ...updatedStudents[existingIndex],
-                        parentCode: imported.parentCode || updatedStudents[existingIndex].parentCode,
-                        parentPhone: imported.parentPhone || updatedStudents[existingIndex].parentPhone,
+                        // إذا جاء رقم مدني من الإكسيل خذه، وإلا احتفظ بالقديم
+                        parentCode: (imported.parentCode && imported.parentCode.trim() !== '') ? imported.parentCode : updatedStudents[existingIndex].parentCode,
+                        // إذا جاء هاتف من الإكسيل خذه، وإلا احتفظ بالقديم
+                        parentPhone: (imported.parentPhone && imported.parentPhone.trim() !== '') ? imported.parentPhone : updatedStudents[existingIndex].parentPhone,
                         gender: imported.gender || updatedStudents[existingIndex].gender
                     };
                 } else {
-                    // ➕ إضافة طالب جديد تماماً
+                    // ➕ الطالب غير موجود نهائياً: إضافته كطالب جديد
                     updatedStudents.push(imported);
                 }
             });
