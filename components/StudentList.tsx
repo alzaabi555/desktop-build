@@ -45,18 +45,18 @@ const SOUNDS = {
 const NEGATIVE_BEHAVIORS = [
     { id: '1', title: 'إزعاج في الحصة', points: -1 },
     { id: '2', title: 'عدم حل الواجب', points: -2 },
-    { id: '3', title: 'نسيان الكتاب', points: -1 },
+    { id: '3', title: 'نسيان الكتاب او الدفتر', points: -1 },
     { id: '4', title: 'تأخر عن الحصة', points: -1 },
     { id: '5', title: 'سلوك غير لائق', points: -3 },
-    { id: '6', title: 'النوم في الفصل', points: -1 },
+    { id: '6', title: 'النوم في الفصل', points: -2 },
 ];
 
 const POSITIVE_BEHAVIORS = [
-    { id: 'p1', title: 'مشاركة فعالة', points: 1 },
+    { id: 'p1', title: 'مشاركة فعالة', points: 2 },
     { id: 'p2', title: 'إجابة صحيحة', points: 1 },
     { id: 'p3', title: 'واجب مميز', points: 2 },
     { id: 'p4', title: 'مساعدة الزملاء', points: 2 },
-    { id: 'p5', title: 'نظام وانضباط', points: 1 },
+    { id: 'p5', title: 'اجابة متميزة', points: 5 },
     { id: 'p6', title: 'إبداع وتميز', points: 3 },
 ];
 
@@ -469,7 +469,7 @@ const StudentList: React.FC<StudentListProps> = ({
                     date: new Date().toISOString(),
                     type: 'positive' as const,
                     description: 'هدوء وانضباط',
-                    points: 2,
+                    points: 3,
                     semester: currentSemester
                 };
                 return {
