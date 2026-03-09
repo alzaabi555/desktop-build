@@ -4,15 +4,12 @@ import {
     Search, ThumbsUp, ThumbsDown, Edit2, Trash2, LayoutGrid, UserPlus, 
     FileSpreadsheet, MoreVertical, Settings, Users, AlertCircle, X, 
     Dices, Timer, Play, Pause, RotateCcw, CheckCircle2, MessageCircle, Plus,
-    Sparkles, Phone, Send, Star, CloudUpload, Loader2 
+    Sparkles, Phone, Send, Star, CloudUpload, Loader2, Mail, RefreshCcw 
 } from 'lucide-react';
 import Modal from './Modal';
 import ExcelImport from './ExcelImport';
 import { useApp } from '../context/AppContext';
 import { StudentAvatar } from './StudentAvatar';
-
-import { Capacitor } from '@capacitor/core';
-import { Browser } from '@capacitor/browser';
 
 import positiveSound from '../assets/positive.mp3';
 import negativeSound from '../assets/negative.mp3';
@@ -23,7 +20,6 @@ interface StudentListProps {
     students: Student[];
     classes: string[];
     onAddClass: (name: string) => void;
-    // ✅ تم إضافة الرقم المدني (civilID) للدالة ليتم تمريره عند الإضافة
     onAddStudentManually: (name: string, className: string, phone?: string, avatar?: string, gender?: 'male'|'female', civilID?: string) => void;
     onBatchAddStudents: (students: Student[]) => void;
     onUpdateStudent: (student: Student) => void;
@@ -45,20 +41,23 @@ const SOUNDS = {
 const NEGATIVE_BEHAVIORS = [
     { id: '1', title: 'إزعاج في الحصة', points: -1 },
     { id: '2', title: 'عدم حل الواجب', points: -2 },
-    { id: '3', title: 'نسيان الكتاب او الدفتر', points: -1 },
+    { id: '3', title: 'نسيان الكتاب', points: -1 },
     { id: '4', title: 'تأخر عن الحصة', points: -1 },
     { id: '5', title: 'سلوك غير لائق', points: -3 },
-    { id: '6', title: 'النوم في الفصل', points: -2 },
+    { id: '6', title: 'النوم في الفصل', points: -1 },
 ];
 
 const POSITIVE_BEHAVIORS = [
-    { id: 'p1', title: 'مشاركة فعالة', points: 2 },
+    { id: 'p1', title: 'مشاركة فعالة', points: 1 },
     { id: 'p2', title: 'إجابة صحيحة', points: 1 },
     { id: 'p3', title: 'واجب مميز', points: 2 },
     { id: 'p4', title: 'مساعدة الزملاء', points: 2 },
-    { id: 'p5', title: 'اجابة متميزة', points: 5 },
+    { id: 'p5', title: 'نظام وانضباط', points: 1 },
     { id: 'p6', title: 'إبداع وتميز', points: 3 },
 ];
+
+// ✅ الرابط السحابي الموحد
+const GOOGLE_WEB_APP_URL = "https://script.google.com/macros/s/AKfycbzKPPsQsM_dIttcYSxRLs6LQuvXhT6Qia5TwJ1Tw4ObQ-eZFZeJhV6epXXjxA9_SwWk/exec"; 
 
 const StudentList: React.FC<StudentListProps> = ({ 
     students = [], 
@@ -104,7 +103,7 @@ const StudentList: React.FC<StudentListProps> = ({
     const [newStudentPhone, setNewStudentPhone] = useState('');
     const [newStudentGender, setNewStudentGender] = useState<'male' | 'female'>(defaultStudentGender);
     const [newStudentClass, setNewStudentClass] = useState('');
-    const [newStudentCivilID, setNewStudentCivilID] = useState(''); // ✅ حقل الرقم المدني للإضافة اليدوية
+    const [newStudentCivilID, setNewStudentCivilID] = useState(''); 
 
     const [showNegativeModal, setShowNegativeModal] = useState(false);
     const [showPositiveModal, setShowPositiveModal] = useState(false);
@@ -122,6 +121,34 @@ const StudentList: React.FC<StudentListProps> = ({
     const [timerInput, setTimerInput] = useState('5');
     
     const [isSyncing, setIsSyncing] = useState(false);
+
+    // 📥 حالات صندوق الوارد (Messages)
+    const [messages, setMessages] = useState<any[]>([]);
+    const [isMessagesModalOpen, setIsMessagesModalOpen] = useState(false);
+    const [isFetchingMsgs, setIsFetchingMsgs] = useState(false);
+
+    // 📥 دالة جلب الرسائل من السحابة
+    const fetchParentMessages = async () => {
+        if (!teacherInfo?.school || !teacherInfo?.subject) return;
+        setIsFetchingMsgs(true);
+        try {
+            const url = `${GOOGLE_WEB_APP_URL}?action=getMessages&school=${encodeURIComponent(teacherInfo.school)}&subject=${encodeURIComponent(teacherInfo.subject)}`;
+            const response = await fetch(url);
+            const result = await response.json();
+            if (result.status === 'success') {
+                setMessages(result.messages || []);
+            }
+        } catch (error) {
+            console.error("Error fetching messages:", error);
+        } finally {
+            setIsFetchingMsgs(false);
+        }
+    };
+
+    // جلب الرسائل تلقائياً عند فتح التطبيق
+    useEffect(() => {
+        fetchParentMessages();
+    }, [teacherInfo?.school, teacherInfo?.subject]);
 
     useEffect(() => {
         let interval: any;
@@ -226,10 +253,8 @@ const StudentList: React.FC<StudentListProps> = ({
         return monthlyPoints;
     };
 
-    // ☁️ خوارزمية المزامنة السحابية
+    // ☁️ خوارزمية المزامنة السحابية المحدثة
     const handleCloudSync = async () => {
-        const GOOGLE_WEB_APP_URL = "https://script.google.com/macros/s/AKfycbzKPPsQsM_dIttcYSxRLs6LQuvXhT6Qia5TwJ1Tw4ObQ-eZFZeJhV6epXXjxA9_SwWk/exec"; 
-
         const payload = students
             .filter(s => s.parentCode && s.parentCode.trim() !== "")
             .map(s => {
@@ -237,11 +262,12 @@ const StudentList: React.FC<StudentListProps> = ({
                     parentCode: s.parentCode,
                     name: s.name,
                     className: s.classes[0] || "",
-                    subject: teacherInfo?.subject || "بدون مادة",
-                    schoolName: teacherInfo?.school || "مدرسة غير محددة", // 👈 هذا هو السطر السحري الجديد
+                    subject: teacherInfo?.subject || "بدون مادة", 
+                    schoolName: teacherInfo?.school || "مدرسة غير محددة",
                     totalPoints: calculateTotalPoints(s),
                     behaviors: s.behaviors || [],
-                    grades: s.grades || []
+                    grades: s.grades || [],
+                    attendance: s.attendance || [] 
                 };
             });
 
@@ -252,22 +278,18 @@ const StudentList: React.FC<StudentListProps> = ({
 
         try {
             setIsSyncing(true);
-            
             const response = await fetch(GOOGLE_WEB_APP_URL, {
                 method: 'POST',
                 headers: { 'Content-Type': 'text/plain;charset=utf-8' },
                 body: JSON.stringify(payload)
             });
-
             const result = await response.json();
-
             if (result.status === "success") {
                 playSound('tada');
                 alert(`تمت المزامنة بنجاح! ☁️✅\nتم رفع بيانات ${payload.length} طالب إلى السحابة.`);
             } else {
                 throw new Error(result.message);
             }
-
         } catch (error) {
             console.error("Sync Error:", error);
             alert("حدث خطأ أثناء المزامنة. تأكد من اتصالك بالإنترنت.");
@@ -316,83 +338,6 @@ const StudentList: React.FC<StudentListProps> = ({
             setShowPositiveModal(true);
         } else {
             setShowNegativeModal(true);
-        }
-    };
-
-    const handleSendSmartReport = (student: Student) => {
-        if (!student.parentPhone) {
-            alert('⚠️ عذراً، لا يوجد رقم هاتف مسجل لولي الأمر.');
-            return;
-        }
-
-        const currentGrades = (student.grades || []).filter(g => (g.semester || '1') === currentSemester);
-        const totalScore = currentGrades.reduce((acc, curr) => acc + (curr.score || 0), 0);
-
-        const positiveBehaviors = (student.behaviors || []).filter(b => b.type === 'positive');
-        const topBehavior = positiveBehaviors.length > 0 
-            ? positiveBehaviors[0].description 
-            : (student.gender === 'female' ? 'انضباطها وتميزها العام' : 'انضباطه وتميزه العام');
-
-        const isFemale = student.gender === 'female';
-        const childTitle = isFemale ? 'ابنتكم الطالبة' : 'ابنكم الطالب';
-        const scoreText = isFemale ? 'حصلت على مجموع' : 'حصل على مجموع';
-        const behaviorText = isFemale ? 'وتميزت في' : 'وتميز في';
-        const teacherTitle = teacherInfo?.gender === 'female' ? 'المعلمة' : 'المعلم';
-
-        const message = `السلام عليكم ورحمة الله، ولي أمر ${childTitle} (${student.name}) المحترم.\n\nيسرنا إعلامكم بأن ${childTitle} ${scoreText} (${totalScore}) درجة في مادة ${teacherInfo?.subject || '...'}، ${behaviorText}: "${topBehavior}".\n\nشاكرين لكم حسن متابعتكم.\nإدارة تطبيق راصد - ${teacherTitle}: ${teacherInfo?.name || ''}`;
-
-        const msg = encodeURIComponent(message);
-        let cleanPhone = student.parentPhone.replace(/[^0-9]/g, '');
-        if (cleanPhone.startsWith('00')) cleanPhone = cleanPhone.substring(2);
-        if (cleanPhone.length === 8) cleanPhone = '968' + cleanPhone;
-        else if (cleanPhone.length === 9 && cleanPhone.startsWith('0')) cleanPhone = '968' + cleanPhone.substring(1);
-
-        if ((window as any).electron) { 
-            (window as any).electron.openExternal(`whatsapp://send?phone=${cleanPhone}&text=${msg}`); 
-        } else { 
-            const universalUrl = `https://api.whatsapp.com/send?phone=${cleanPhone}&text=${msg}`; 
-            window.open(universalUrl, '_blank'); 
-        }
-    };
-
-    const handleSendNegativeReport = async (student: Student) => {
-        if (!student.parentPhone) {
-            alert('⚠️ عذراً، لا يوجد رقم هاتف مسجل لولي الأمر.');
-            return;
-        }
-
-        const negativeBehaviors = (student.behaviors || []).filter(b => b.type === 'negative');
-
-        if (negativeBehaviors.length === 0) {
-            alert('🎉 هذا الطالب متميز! لا توجد لديه سلوكيات سلبية مسجلة.');
-            return;
-        }
-
-        let message = `السلام عليكم، ولي أمر الطالب *${student.name}* المحترم.\n`;
-        message += `تحية طيبة،\nنود إشعاركم بتقرير بالملاحظات السلوكية المسجلة على الطالب مؤخراً:\n\n`;
-
-        negativeBehaviors.slice(0, 5).forEach(b => {
-            const dateObj = new Date(b.date);
-            const date = dateObj.toLocaleDateString('ar-EG');
-            const time = dateObj.toLocaleTimeString('ar-EG', { hour: '2-digit', minute: '2-digit' });
-            
-            message += `🔴 *${b.description}*\n📅 ${date} - ⏰ ${time}\n─────────────────\n`;
-        });
-
-        message += `\nنأمل منكم التكرم بمتابعة الطالب وتوجيهه.\nشكراً لتعاونكم.\n*إدارة المدرسة*`;
-        
-        const msg = encodeURIComponent(message);
-        let cleanPhone = student.parentPhone.replace(/[^0-9]/g, '');
-        
-        if (cleanPhone.startsWith('00')) cleanPhone = cleanPhone.substring(2);
-        if (cleanPhone.length === 8) cleanPhone = '968' + cleanPhone;
-        else if (cleanPhone.length === 9 && cleanPhone.startsWith('0')) cleanPhone = '968' + cleanPhone.substring(1);
-
-        if ((window as any).electron) { 
-            (window as any).electron.openExternal(`whatsapp://send?phone=${cleanPhone}&text=${msg}`); 
-        } else { 
-            const universalUrl = `https://api.whatsapp.com/send?phone=${cleanPhone}&text=${msg}`; 
-            window.open(universalUrl, '_blank'); 
         }
     };
 
@@ -469,13 +414,10 @@ const StudentList: React.FC<StudentListProps> = ({
                     date: new Date().toISOString(),
                     type: 'positive' as const,
                     description: 'هدوء وانضباط',
-                    points: 3,
+                    points: 2,
                     semester: currentSemester
                 };
-                return {
-                    ...student,
-                    behaviors: [newBehavior, ...(student.behaviors || [])]
-                };
+                return { ...student, behaviors: [newBehavior, ...(student.behaviors || [])] };
             }
             return student;
         });
@@ -486,7 +428,6 @@ const StudentList: React.FC<StudentListProps> = ({
         setShowMenu(false);
     };
 
-    // ✅ تحديث دالة الحفظ اليدوي لتدعم الرقم المدني
     const handleManualAddSubmit = () => {
         if (newStudentName && newStudentClass && newStudentCivilID) {
             onAddStudentManually(newStudentName, newStudentClass, newStudentPhone, undefined, newStudentGender, newStudentCivilID);
@@ -521,11 +462,7 @@ const StudentList: React.FC<StudentListProps> = ({
     const handleBatchGenderUpdate = (gender: 'male' | 'female') => {
         if (confirm('هل أنت متأكد؟ سيتم تغيير أيقونات جميع الطلاب المسجلين حالياً ليتناسب مع النوع المختار.')) {
             setDefaultStudentGender(gender);
-            setStudents(prev => prev.map(s => ({
-                ...s,
-                gender: gender,
-                avatar: undefined 
-            })));
+            setStudents(prev => prev.map(s => ({ ...s, gender: gender, avatar: undefined })));
         }
     };
 
@@ -549,6 +486,22 @@ const StudentList: React.FC<StudentListProps> = ({
                 </div>
 
                 <div className="flex gap-2" style={{ WebkitAppRegion: 'no-drag' } as any}>
+                    
+                    {/* 📥 صندوق الوارد (رسائل الآباء) */}
+                    <button 
+                        onClick={() => { setIsMessagesModalOpen(true); fetchParentMessages(); }} 
+                        className={`relative p-2.5 rounded-xl border active:scale-95 transition-all flex items-center gap-2 ${isRamadan ? 'bg-purple-600/80 border-purple-400 text-white shadow-[0_0_15px_rgba(168,85,247,0.5)]' : 'bg-purple-600 border-purple-500 text-white shadow-lg hover:bg-purple-700'}`}
+                        title="صندوق الوارد للرسائل"
+                    >
+                        <Mail className="w-5 h-5" />
+                        <span className="hidden md:inline text-xs font-black">الوارد</span>
+                        {messages.length > 0 && (
+                            <span className="absolute -top-2 -right-2 bg-rose-500 text-white text-[10px] font-black w-5 h-5 flex items-center justify-center rounded-full shadow-md animate-bounce border border-white">
+                                {messages.length}
+                            </span>
+                        )}
+                    </button>
+
                     {/* ☁️ زر المزامنة السحابية */}
                     <button 
                         onClick={handleCloudSync} 
@@ -677,14 +630,6 @@ const StudentList: React.FC<StudentListProps> = ({
                             <button onClick={() => handleBehavior(student, 'negative')} className={`flex-1 py-3 flex flex-col items-center justify-center transition-colors group ${isRamadan ? 'hover:bg-rose-500/20 active:bg-rose-500/30' : 'hover:bg-rose-50 active:bg-rose-100'}`} title="سلوك سلبي">
                                 <ThumbsDown className={`w-4 h-4 group-hover:scale-110 transition-transform ${isRamadan ? 'text-rose-400' : 'text-rose-500'}`} />
                             </button>
-
-                            <button onClick={() => handleSendSmartReport(student)} className={`flex-1 py-3 flex flex-col items-center justify-center transition-colors group ${isRamadan ? 'hover:bg-blue-500/20 active:bg-blue-500/30' : 'hover:bg-emerald-50 active:bg-emerald-100'}`} title="تقرير الدرجات والتميز">
-                                <MessageCircle className={`w-4 h-4 group-hover:scale-110 transition-transform ${isRamadan ? 'text-blue-400' : 'text-emerald-600'}`} />
-                            </button>
-
-                            <button onClick={() => handleSendNegativeReport(student)} className={`flex-1 py-3 flex flex-col items-center justify-center transition-colors group ${isRamadan ? 'hover:bg-amber-500/20 active:bg-amber-500/30' : 'hover:bg-amber-50 active:bg-amber-100'}`} title="تقرير سلوكي (إنذار)">
-                                <Send className={`w-4 h-4 group-hover:scale-110 transition-transform ${isRamadan ? 'text-amber-400' : 'text-amber-500'}`} />
-                            </button>
                             
                             <button onClick={() => setEditingStudent(student)} className={`flex-1 py-3 flex flex-col items-center justify-center transition-colors group ${isRamadan ? 'hover:bg-white/10 active:bg-white/20' : 'hover:bg-slate-50 active:bg-slate-100'}`} title="تعديل">
                                 <Edit2 className={`w-4 h-4 transition-colors ${isRamadan ? 'text-slate-400 group-hover:text-indigo-300' : 'text-slate-400 group-hover:text-indigo-500'}`} />
@@ -701,7 +646,61 @@ const StudentList: React.FC<StudentListProps> = ({
             </div>
         </div>
 
-        {/* ✅ نافذة إضافة طالب يدوياً (تم إضافة الرقم المدني) */}
+        {/* ================= نوافذ منبثقة (Modals) ================= */}
+
+        {/* 📥 نافذة صندوق الوارد للرسائل */}
+        <Modal isOpen={isMessagesModalOpen} onClose={() => setIsMessagesModalOpen(false)} className={`max-w-2xl rounded-[2rem] ${isRamadan ? 'bg-transparent' : ''}`}>
+            <div className={`p-6 rounded-[2rem] border transition-colors ${isRamadan ? 'bg-[#0f172a] border-white/10 text-white shadow-2xl' : 'bg-white border-transparent text-slate-800 shadow-2xl'}`}>
+                <div className="flex justify-between items-center mb-6 border-b pb-4 border-slate-100">
+                    <h3 className="font-black text-xl flex items-center gap-2 text-purple-600">
+                        <Mail className="w-6 h-6" />
+                        صندوق وارد الآباء
+                    </h3>
+                    <div className="flex gap-2">
+                        <button onClick={fetchParentMessages} className="p-2 bg-slate-100 text-slate-600 rounded-full hover:bg-slate-200 transition-colors" title="تحديث الرسائل">
+                            <RefreshCcw className={`w-5 h-5 ${isFetchingMsgs ? 'animate-spin text-purple-600' : ''}`} />
+                        </button>
+                        <button onClick={() => setIsMessagesModalOpen(false)} className="p-2 bg-slate-100 text-slate-500 rounded-full hover:bg-slate-200">
+                            <X className="w-5 h-5"/>
+                        </button>
+                    </div>
+                </div>
+
+                <div className="space-y-4 max-h-[60vh] overflow-y-auto custom-scrollbar pr-2">
+                    {isFetchingMsgs && messages.length === 0 ? (
+                        <div className="flex flex-col items-center justify-center py-10">
+                            <Loader2 className="w-10 h-10 animate-spin text-purple-500 mb-2" />
+                            <p className="text-slate-500 font-bold">جاري جلب الرسائل...</p>
+                        </div>
+                    ) : messages.length === 0 ? (
+                        <div className="text-center py-10">
+                            <Mail className="w-16 h-16 text-slate-200 mx-auto mb-4" />
+                            <p className="text-slate-500 font-bold">لا توجد رسائل جديدة من أولياء الأمور</p>
+                        </div>
+                    ) : (
+                        messages.map((msg, index) => (
+                            <div key={index} className="p-5 border border-slate-200 rounded-2xl bg-slate-50 relative overflow-hidden group">
+                                <div className="absolute top-0 right-0 w-2 h-full bg-purple-500"></div>
+                                <div className="flex justify-between items-start mb-3 pl-2">
+                                    <div>
+                                        <h4 className="font-black text-slate-800 text-lg">{msg.studentName}</h4>
+                                        <p className="text-[10px] font-bold text-slate-400 font-mono mt-0.5">رقم مدني: {msg.civilID}</p>
+                                    </div>
+                                    <span className="text-[10px] font-bold bg-white px-2 py-1 rounded-lg border text-slate-500 shadow-sm">
+                                        {new Date(msg.date).toLocaleString('ar-EG', { dateStyle: 'medium', timeStyle: 'short' })}
+                                    </span>
+                                </div>
+                                <div className="bg-white p-4 rounded-xl border border-slate-100 text-sm font-bold text-slate-700 leading-relaxed shadow-inner">
+                                    {msg.message}
+                                </div>
+                            </div>
+                        ))
+                    )}
+                </div>
+            </div>
+        </Modal>
+
+        {/* باقي النوافذ المعتادة (الإضافة اليدوية، الاستيراد، الفصول، السلوكيات...) */}
         <Modal isOpen={showManualAddModal} onClose={() => setShowManualAddModal(false)} className={`max-w-md rounded-[2rem] ${isRamadan ? 'bg-transparent' : ''}`}>
              <div className={`text-center p-6 rounded-[2rem] border transition-colors ${isRamadan ? 'bg-[#0f172a] border-white/10 text-white shadow-2xl' : 'bg-white border-transparent text-slate-800 shadow-2xl'}`}>
                 <div className={`w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4 border ${isRamadan ? 'bg-indigo-900/50 text-indigo-400 border-indigo-500/30' : 'bg-indigo-50 text-indigo-500 border-transparent'}`}>
@@ -728,61 +727,46 @@ const StudentList: React.FC<StudentListProps> = ({
         <Modal isOpen={showImportModal} onClose={() => setShowImportModal(false)} className={`max-w-lg rounded-[2rem] ${isRamadan ? 'bg-transparent' : ''}`}>
             <div className={isRamadan ? 'bg-[#0f172a] border border-white/10 rounded-[2rem] shadow-2xl overflow-hidden' : ''}>
                 <ExcelImport 
-    existingClasses={safeClasses} 
-    onImport={(importedStudents) => {
-        // 🧠 دالة فولاذية لتنظيف الأسماء (تحذف كل المسافات لضمان التطابق 100%)
-        const normalizeArabicName = (name: string) => {
-            if (!name) return '';
-            return name
-                .replace(/[أإآءؤئ]/g, 'ا') // توحيد كل أشكال الهمزات
-                .replace(/ة/g, 'ه') // توحيد التاء المربوطة
-                .replace(/ى/g, 'ي') // توحيد الألف المقصورة
-                .replace(/عبد /g, 'عبد') // دمج عبد الله لتصبح عبدالله
-                .replace(/\s+/g, '') // 👈 إزالة جميع المسافات نهائياً للمطابقة
-                .trim();
-        };
-
-        setStudents(prevStudents => {
-            const updatedStudents = [...prevStudents];
-            
-            importedStudents.forEach(imported => {
-                const normalizedImportedName = normalizeArabicName(imported.name);
-                
-                // 1. البحث بالرقم المدني أولاً (أدق طريقة إذا كان موجوداً)
-                let existingIndex = -1;
-                if (imported.parentCode && imported.parentCode.trim() !== '') {
-                    existingIndex = updatedStudents.findIndex(s => s.parentCode === imported.parentCode);
-                }
-                
-                // 2. إذا لم يجده بالرقم المدني، يبحث بالاسم (المطابقة العمياء)
-                if (existingIndex === -1) {
-                    existingIndex = updatedStudents.findIndex(s => 
-                        normalizeArabicName(s.name) === normalizedImportedName
-                    );
-                }
-                
-                if (existingIndex >= 0) {
-                    // 🔄 الطالب موجود: تحديث (الرقم المدني والهاتف) والاحتفاظ بالدرجات!
-                    updatedStudents[existingIndex] = {
-                        ...updatedStudents[existingIndex],
-                        // إذا جاء رقم مدني من الإكسيل خذه، وإلا احتفظ بالقديم
-                        parentCode: (imported.parentCode && imported.parentCode.trim() !== '') ? imported.parentCode : updatedStudents[existingIndex].parentCode,
-                        // إذا جاء هاتف من الإكسيل خذه، وإلا احتفظ بالقديم
-                        parentPhone: (imported.parentPhone && imported.parentPhone.trim() !== '') ? imported.parentPhone : updatedStudents[existingIndex].parentPhone,
-                        gender: imported.gender || updatedStudents[existingIndex].gender
-                    };
-                } else {
-                    // ➕ الطالب غير موجود نهائياً: إضافته كطالب جديد
-                    updatedStudents.push(imported);
-                }
-            });
-            
-            return updatedStudents;
-        });
-        setShowImportModal(false); 
-    }} 
-    onAddClass={onAddClass} 
-/>
+                    existingClasses={safeClasses} 
+                    onImport={(importedStudents) => {
+                        const normalizeArabicName = (name: string) => {
+                            if (!name) return '';
+                            return name
+                                .replace(/[أإآءؤئ]/g, 'ا')
+                                .replace(/ة/g, 'ه')
+                                .replace(/ى/g, 'ي')
+                                .replace(/عبد /g, 'عبد')
+                                .replace(/\s+/g, '')
+                                .trim();
+                        };
+                        setStudents(prevStudents => {
+                            const updatedStudents = [...prevStudents];
+                            importedStudents.forEach(imported => {
+                                const normalizedImportedName = normalizeArabicName(imported.name);
+                                let existingIndex = -1;
+                                if (imported.parentCode && imported.parentCode.trim() !== '') {
+                                    existingIndex = updatedStudents.findIndex(s => s.parentCode === imported.parentCode);
+                                }
+                                if (existingIndex === -1) {
+                                    existingIndex = updatedStudents.findIndex(s => normalizeArabicName(s.name) === normalizedImportedName);
+                                }
+                                if (existingIndex >= 0) {
+                                    updatedStudents[existingIndex] = {
+                                        ...updatedStudents[existingIndex],
+                                        parentCode: (imported.parentCode && imported.parentCode.trim() !== '') ? imported.parentCode : updatedStudents[existingIndex].parentCode,
+                                        parentPhone: (imported.parentPhone && imported.parentPhone.trim() !== '') ? imported.parentPhone : updatedStudents[existingIndex].parentPhone,
+                                        gender: imported.gender || updatedStudents[existingIndex].gender
+                                    };
+                                } else {
+                                    updatedStudents.push(imported);
+                                }
+                            });
+                            return updatedStudents;
+                        });
+                        setShowImportModal(false); 
+                    }} 
+                    onAddClass={onAddClass} 
+                />
             </div>
         </Modal>
 
@@ -938,7 +922,6 @@ const StudentList: React.FC<StudentListProps> = ({
             </div>
         </Modal>
 
-        {/* ✅ نافذة تعديل بيانات الطالب (تم تحويل الكود إلى حقل إدخال للرقم المدني) */}
         <Modal isOpen={!!editingStudent} onClose={() => setEditingStudent(null)} className={`max-w-md rounded-[2rem] ${isRamadan ? 'bg-transparent' : ''}`}>
             {editingStudent && (
                  <div className={`text-center p-6 rounded-[2rem] border transition-colors ${isRamadan ? 'bg-[#0f172a] border-white/10 text-white shadow-2xl' : 'bg-white border-transparent text-slate-800 shadow-2xl'}`}>
@@ -950,7 +933,6 @@ const StudentList: React.FC<StudentListProps> = ({
                         </select>
                         <input type="tel" value={editingStudent.parentPhone || ''} onChange={(e) => setEditingStudent({...editingStudent, parentPhone: e.target.value})} className={`w-full p-4 rounded-xl font-bold text-sm outline-none border transition-colors ${isRamadan ? 'bg-[#1e293b] border-indigo-500/30 focus:border-indigo-400 text-white placeholder:text-indigo-200/40' : 'bg-gray-50 border-gray-200 focus:border-indigo-500 text-slate-800'}`} placeholder="رقم الهاتف" />
                         
-                        {/* ✅ حقل الرقم المدني (قابل للتعديل الآن) */}
                         <div className="relative mt-2">
                             <p className={`text-[10px] text-right mb-1 font-bold ${isRamadan ? 'text-slate-400' : 'text-slate-500'}`}>الرقم المدني للطالب (أساسي لدخول ولي الأمر):</p>
                             <input 
