@@ -226,19 +226,19 @@ const StudentList: React.FC<StudentListProps> = ({
         return monthlyPoints;
     };
 
-    // ☁️ خوارزمية المزامنة السحابية المحدثة (تعتمد على الرقم المدني واسم المادة)
+    // ☁️ خوارزمية المزامنة السحابية
     const handleCloudSync = async () => {
         const GOOGLE_WEB_APP_URL = "https://script.google.com/macros/s/AKfycbzKPPsQsM_dIttcYSxRLs6LQuvXhT6Qia5TwJ1Tw4ObQ-eZFZeJhV6epXXjxA9_SwWk/exec"; 
 
         const payload = students
-            // ✅ نكتفي بالطلاب الذين لديهم رقم مدني فقط
             .filter(s => s.parentCode && s.parentCode.trim() !== "")
             .map(s => {
                 return {
-                    parentCode: s.parentCode, // هذا الحقل أصبح يمثل الرقم المدني
+                    parentCode: s.parentCode,
                     name: s.name,
                     className: s.classes[0] || "",
-                    subject: teacherInfo?.subject || "بدون مادة", // ✅ إضافة اسم المادة ضروري
+                    subject: teacherInfo?.subject || "بدون مادة",
+                    schoolName: teacherInfo?.school || "مدرسة غير محددة", // 👈 هذا هو السطر السحري الجديد
                     totalPoints: calculateTotalPoints(s),
                     behaviors: s.behaviors || [],
                     grades: s.grades || []
