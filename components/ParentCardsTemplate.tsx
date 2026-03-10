@@ -9,12 +9,10 @@ interface ParentCardsTemplateProps {
 }
 
 const ParentCardsTemplate: React.FC<ParentCardsTemplateProps> = ({ students, schoolName, teacherName, selectedClass }) => {
-  // 1. تصفية الطلاب حسب الفصل
   const targetStudents = selectedClass === 'all'
     ? students
     : students.filter((s: any) => s.classes && s.classes.includes(selectedClass));
 
-  // 2. استبعاد الطلاب الذين لا يملكون رقماً مدنياً
   const validStudents = targetStudents.filter((s: any) => s.parentCode && s.parentCode.trim() !== '');
 
   if (validStudents.length === 0) {
@@ -23,47 +21,51 @@ const ParentCardsTemplate: React.FC<ParentCardsTemplateProps> = ({ students, sch
         <Info className="w-16 h-16 text-amber-500 mb-4 opacity-50" />
         <h2 className="text-xl font-black text-slate-800 mb-2">لا يمكن توليد البطاقات</h2>
         <p className="text-slate-500 font-bold">لا يوجد طلاب في هذا الفصل لديهم (رقم مدني) مسجل.</p>
-        <p className="text-sm text-amber-600 mt-2">يرجى الذهاب لقائمة الطلاب وتحديث بياناتهم بإضافة الرقم المدني أولاً.</p>
       </div>
     );
   }
 
   return (
     <div className="w-full bg-white p-8 font-sans text-black print:p-0" dir="rtl">
-      <div className="mb-6 text-center border-b-2 border-black pb-4 print:mb-4">
+      <div className="mb-6 text-center border-b-2 border-black pb-4 print:mb-6">
         <h1 className="text-2xl font-black">بطاقات الدخول لولي الأمر (بواسطة الرقم المدني)</h1>
         <p className="text-slate-600 font-bold mt-1">قص هذه البطاقات ووزعها على الطلاب لتسليمها لأولياء أمورهم</p>
       </div>
 
-      {/* شبكة البطاقات - 2 في كل صف */}
-      <div className="grid grid-cols-2 gap-4 print:gap-4" style={{ pageBreakInside: 'auto' }}>
+      {/* التعديل الجذري الأول: استخدام flex flex-wrap بدلاً من grid 
+        لحل مشكلة التمدد الجنوني عند نهاية ورقة الطباعة 
+      */}
+      <div className="flex flex-wrap gap-x-[4%] gap-y-6 justify-start print:gap-y-8" style={{ pageBreakInside: 'auto' }}>
+        
         {validStudents.map((student: any) => (
-          <div key={student.id} className="border-2 border-dashed border-gray-400 p-1.5 rounded-[1.5rem]" style={{ pageBreakInside: 'avoid' }}>
+          /* التعديل الجذري الثاني: تحديد العرض ليكون تقريباً النصف (48%) ليناسب الطباعة */
+          <div key={student.id} className="w-[48%] border-2 border-dashed border-gray-400 p-1.5 rounded-[1.5rem]" style={{ pageBreakInside: 'avoid', breakInside: 'avoid' }}>
             
-            {/* التعديل الجوهري: إزالة الارتفاع الثابت واستخدام min-h مع justify-between */}
-            <div className="bg-gradient-to-br from-[#0f172a] to-[#1e3a8a] rounded-2xl p-4 text-white flex flex-col justify-between h-full min-h-[180px] relative overflow-hidden shadow-md print:break-inside-avoid">
+            {/* التعديل الجذري الثالث: ارتفاع ثابت h-[210px] لضمان عدم تغير المقاس */}
+            <div className="bg-gradient-to-br from-[#0f172a] to-[#1e3a8a] rounded-2xl p-4 text-white flex flex-col justify-between h-[210px] relative overflow-hidden shadow-md">
               
-              {/* زينة الخلفية */}
-              <div className="absolute -top-10 -right-10 w-28 h-28 bg-blue-500 rounded-full mix-blend-multiply filter blur-2xl opacity-20 pointer-events-none"></div>
-              <div className="absolute -bottom-10 -left-10 w-28 h-28 bg-amber-500 rounded-full mix-blend-multiply filter blur-2xl opacity-20 pointer-events-none"></div>
+              <div className="absolute -top-10 -right-10 w-28 h-28 bg-blue-500 rounded-full mix-blend-multiply filter blur-2xl opacity-20 pointer-events-none print:hidden"></div>
+              <div className="absolute -bottom-10 -left-10 w-28 h-28 bg-amber-500 rounded-full mix-blend-multiply filter blur-2xl opacity-20 pointer-events-none print:hidden"></div>
 
-              {/* الترويسة العلوية للمدرسة - shrink-0 يمنع انضغاطها */}
-              <div className="flex justify-between items-start relative z-10 border-b border-white/20 pb-2 mb-2 shrink-0">
+              {/* الترويسة العلوية للمدرسة */}
+              <div className="flex justify-between items-start relative z-10 border-b border-white/20 pb-3 mb-2 shrink-0">
                 <div className="flex items-center gap-2">
                   <div className="bg-white/10 p-1.5 rounded-lg backdrop-blur-sm border border-white/10">
                     <School className="w-5 h-5 text-amber-400" />
                   </div>
                   <div>
-                    <h3 className="font-black text-xs tracking-wide line-clamp-1 max-w-[120px]">{schoolName || 'مدرسة الإبداع'}</h3>
+                    {/* إزالة truncate و line-clamp للسماح للحروف بالتنفس */}
+                    <h3 className="font-black text-xs leading-normal">{schoolName || 'مدرسة الإبداع'}</h3>
                     <p className="text-[9px] text-blue-200 font-bold mt-0.5">بوابة "راصد" للآباء</p>
                   </div>
                 </div>
                 <QrCode className="w-8 h-8 text-white opacity-90 shrink-0" />
               </div>
 
-              {/* بيانات الطالب - flex-1 يجعله يتمدد في المساحة المتبقية بأمان */}
-              <div className="relative z-10 flex-1 flex flex-col justify-center py-2">
-                <h2 className="font-black text-sm text-amber-400 mb-2 leading-snug break-words">
+              {/* بيانات الطالب */}
+              <div className="relative z-10 flex-1 flex flex-col justify-center py-1">
+                {/* استخدام leading-normal لعدم قص الحروف العربية من الأعلى */}
+                <h2 className="font-black text-[13px] text-amber-400 mb-2 leading-normal break-words">
                   {student.name}
                 </h2>
                 <div className="self-start bg-white/10 px-2 py-1 rounded-md text-[10px] font-bold text-white border border-white/10">
@@ -71,15 +73,15 @@ const ParentCardsTemplate: React.FC<ParentCardsTemplateProps> = ({ students, sch
                 </div>
               </div>
 
-              {/* الرقم المدني - قسم بارز مع mb-4 لترك مسافة للمعلم */}
-              <div className="bg-white rounded-xl p-2.5 flex items-center justify-between relative z-10 shadow-inner border border-slate-100 shrink-0 mb-3">
+              {/* الرقم المدني */}
+              <div className="bg-white rounded-xl p-2.5 flex items-center justify-between relative z-10 shadow-inner border border-slate-100 shrink-0 mb-3 mt-2">
                 <div className="flex items-center gap-1.5">
                   <div className="bg-blue-50 p-1 rounded-md shrink-0">
                     <Fingerprint className="w-4 h-4 text-[#1e3a8a]" />
                   </div>
                   <span className="text-[10px] font-black text-slate-600">الرقم المدني:</span>
                 </div>
-                <span className="font-mono font-black text-base text-[#1e3a8a] tracking-widest bg-slate-50 px-2 py-0.5 rounded shrink-0">
+                <span className="font-mono font-black text-[15px] text-[#1e3a8a] tracking-widest bg-slate-50 px-2 py-0.5 rounded shrink-0">
                   {student.parentCode}
                 </span>
               </div>
@@ -87,7 +89,7 @@ const ParentCardsTemplate: React.FC<ParentCardsTemplateProps> = ({ students, sch
               {/* اسم المعلم */}
               {teacherName && (
                 <div className="absolute bottom-1.5 left-3 z-10">
-                  <span className="text-[8px] text-blue-200/60 font-bold">المعلم: {teacherName}</span>
+                  <span className="text-[8px] text-blue-200/80 font-bold">المعلم: {teacherName}</span>
                 </div>
               )}
 
