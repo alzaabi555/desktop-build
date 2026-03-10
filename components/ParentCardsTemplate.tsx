@@ -29,62 +29,65 @@ const ParentCardsTemplate: React.FC<ParentCardsTemplateProps> = ({ students, sch
   }
 
   return (
-    <div className="w-full bg-white p-8 font-sans text-black" dir="rtl">
-      <div className="mb-6 text-center border-b-2 border-black pb-4">
+    <div className="w-full bg-white p-8 font-sans text-black print:p-0" dir="rtl">
+      <div className="mb-6 text-center border-b-2 border-black pb-4 print:mb-4">
         <h1 className="text-2xl font-black">بطاقات الدخول لولي الأمر (بواسطة الرقم المدني)</h1>
         <p className="text-slate-600 font-bold mt-1">قص هذه البطاقات ووزعها على الطلاب لتسليمها لأولياء أمورهم</p>
       </div>
 
-      {/* شبكة البطاقات - 2 في كل صف (بحجم مصغر ومثالي للطباعة A4) */}
-      <div className="grid grid-cols-2 gap-x-6 gap-y-6" style={{ pageBreakInside: 'auto' }}>
+      {/* شبكة البطاقات - 2 في كل صف */}
+      <div className="grid grid-cols-2 gap-4 print:gap-4" style={{ pageBreakInside: 'auto' }}>
         {validStudents.map((student: any) => (
           <div key={student.id} className="border-2 border-dashed border-gray-400 p-1.5 rounded-[1.5rem]" style={{ pageBreakInside: 'avoid' }}>
-            {/* تم تصغير الارتفاع إلى h-44 (حوالي 176 بكسل) */}
-            <div className="bg-gradient-to-br from-[#0f172a] to-[#1e3a8a] rounded-2xl p-4 text-white flex flex-col h-44 relative overflow-hidden shadow-md">
+            
+            {/* التعديل الجوهري: إزالة الارتفاع الثابت واستخدام min-h مع justify-between */}
+            <div className="bg-gradient-to-br from-[#0f172a] to-[#1e3a8a] rounded-2xl p-4 text-white flex flex-col justify-between h-full min-h-[180px] relative overflow-hidden shadow-md print:break-inside-avoid">
               
               {/* زينة الخلفية */}
-              <div className="absolute -top-10 -right-10 w-28 h-28 bg-blue-500 rounded-full mix-blend-multiply filter blur-2xl opacity-20"></div>
-              <div className="absolute -bottom-10 -left-10 w-28 h-28 bg-amber-500 rounded-full mix-blend-multiply filter blur-2xl opacity-20"></div>
+              <div className="absolute -top-10 -right-10 w-28 h-28 bg-blue-500 rounded-full mix-blend-multiply filter blur-2xl opacity-20 pointer-events-none"></div>
+              <div className="absolute -bottom-10 -left-10 w-28 h-28 bg-amber-500 rounded-full mix-blend-multiply filter blur-2xl opacity-20 pointer-events-none"></div>
 
-              {/* الترويسة العلوية للمدرسة */}
-              <div className="flex justify-between items-start relative z-10 border-b border-white/20 pb-2 mb-2">
+              {/* الترويسة العلوية للمدرسة - shrink-0 يمنع انضغاطها */}
+              <div className="flex justify-between items-start relative z-10 border-b border-white/20 pb-2 mb-2 shrink-0">
                 <div className="flex items-center gap-2">
                   <div className="bg-white/10 p-1.5 rounded-lg backdrop-blur-sm border border-white/10">
                     <School className="w-5 h-5 text-amber-400" />
                   </div>
                   <div>
-                    <h3 className="font-black text-xs tracking-wide truncate max-w-[120px]">{schoolName || 'مدرسة الإبداع'}</h3>
+                    <h3 className="font-black text-xs tracking-wide line-clamp-1 max-w-[120px]">{schoolName || 'مدرسة الإبداع'}</h3>
                     <p className="text-[9px] text-blue-200 font-bold mt-0.5">بوابة "راصد" للآباء</p>
                   </div>
                 </div>
-                <QrCode className="w-8 h-8 text-white opacity-90" />
+                <QrCode className="w-8 h-8 text-white opacity-90 shrink-0" />
               </div>
 
-              {/* بيانات الطالب */}
-              <div className="relative z-10 mb-auto">
-                <h2 className="font-black text-sm text-amber-400 mb-1 truncate leading-none">{student.name}</h2>
-                <span className="inline-block bg-white/10 px-2 py-0.5 rounded-md text-[9px] font-bold text-white border border-white/10">
+              {/* بيانات الطالب - flex-1 يجعله يتمدد في المساحة المتبقية بأمان */}
+              <div className="relative z-10 flex-1 flex flex-col justify-center py-2">
+                <h2 className="font-black text-sm text-amber-400 mb-2 leading-snug break-words">
+                  {student.name}
+                </h2>
+                <div className="self-start bg-white/10 px-2 py-1 rounded-md text-[10px] font-bold text-white border border-white/10">
                   الصف: {student.classes[0] || 'غير محدد'}
-                </span>
+                </div>
               </div>
 
-              {/* الرقم المدني - قسم بارز */}
-              <div className="bg-white rounded-xl p-2.5 flex items-center justify-between relative z-10 shadow-inner mt-2 border border-slate-100">
+              {/* الرقم المدني - قسم بارز مع mb-4 لترك مسافة للمعلم */}
+              <div className="bg-white rounded-xl p-2.5 flex items-center justify-between relative z-10 shadow-inner border border-slate-100 shrink-0 mb-3">
                 <div className="flex items-center gap-1.5">
-                  <div className="bg-blue-50 p-1 rounded-md">
+                  <div className="bg-blue-50 p-1 rounded-md shrink-0">
                     <Fingerprint className="w-4 h-4 text-[#1e3a8a]" />
                   </div>
                   <span className="text-[10px] font-black text-slate-600">الرقم المدني:</span>
                 </div>
-                <span className="font-mono font-black text-base text-[#1e3a8a] tracking-widest bg-slate-50 px-2 py-0.5 rounded">
+                <span className="font-mono font-black text-base text-[#1e3a8a] tracking-widest bg-slate-50 px-2 py-0.5 rounded shrink-0">
                   {student.parentCode}
                 </span>
               </div>
 
-              {/* اسم المعلم كإمضاء */}
+              {/* اسم المعلم */}
               {teacherName && (
-                <div className="absolute bottom-1 left-3 z-10">
-                  <span className="text-[7px] text-blue-200/50 font-bold">المعلم: {teacherName}</span>
+                <div className="absolute bottom-1.5 left-3 z-10">
+                  <span className="text-[8px] text-blue-200/60 font-bold">المعلم: {teacherName}</span>
                 </div>
               )}
 
