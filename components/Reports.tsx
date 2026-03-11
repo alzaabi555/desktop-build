@@ -662,7 +662,8 @@ const ClassReportsTemplate = ({ students, teacherInfo, semester, assessmentTools
 
         const posBehaviors = behaviors.filter((b: any) => b.type === 'positive');
         const negBehaviors = behaviors.filter((b: any) => b.type === 'negative');
-
+// فلتر لغرض الطباعة فقط: استبعاد "هدوء وانضباط" من القائمة الطويلة
+        const displayPosBehaviors = posBehaviors.filter((b: any) => b.description !== 'هدوء وانضباط');
         let continuousSum = 0;
         continuousTools.forEach((tool: any) => {
           const g = grades.find((r: any) => r.category.trim() === tool.name.trim());
@@ -768,10 +769,10 @@ const ClassReportsTemplate = ({ students, teacherInfo, semester, assessmentTools
                     
                     <div className="flex-1 border-2 border-black rounded-xl overflow-hidden min-h-[150px]">
                         <div className="bg-green-100 p-2 text-center font-bold border-b-2 border-black text-green-900 text-sm">
-                            سلوكيات إيجابية ({posBehaviors.length})
+                            سلوكيات إيجابية بارزة ({displayPosBehaviors.length})
                         </div>
                         <div className="p-2 space-y-2">
-                            {posBehaviors.length > 0 ? posBehaviors.map((b: any, idx: number) => (
+                            {displayPosBehaviors.length > 0 ? displayPosBehaviors.map((b: any, idx: number) => (
                                 <div key={idx} className="flex justify-between items-center border-b border-black/50 pb-1 last:border-0 text-sm">
                                     <span className="font-bold text-black">{b.description}</span>
                                     <div className="text-left text-[10px] font-bold text-black flex flex-col items-end">
