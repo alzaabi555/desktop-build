@@ -404,6 +404,15 @@ const Dashboard: React.FC<DashboardProps> = ({
         }
     };
 
+    // ================= دالة إغلاق الإشعار السحابي =================
+    const handleCloseCloudMessage = () => {
+        if (cloudMessage && cloudMessage.id) {
+            localStorage.setItem(`rased_cloud_msg_${cloudMessage.id}`, 'true');
+        }
+        setCloudMessage(null);
+    };
+    // ==============================================================
+
     const todayRaw = new Date().getDay();
     const dayIndex = (todayRaw === 5 || todayRaw === 6) ? 0 : todayRaw;
     const todaySchedule = schedule ? schedule[dayIndex] : { dayName: 'اليوم', periods: [] };
@@ -488,6 +497,37 @@ const Dashboard: React.FC<DashboardProps> = ({
                     </div>
                 </div>
             </header>
+
+            {/* ================= منطقة الإشعارات السحابية (تم إعادتها للحياة) ================= */}
+            {cloudMessage && (
+                <div className="px-4 mt-4 relative z-10 animate-in fade-in slide-in-from-top-4">
+                    <div className={`relative p-4 rounded-2xl border shadow-md overflow-hidden ${
+                        cloudMessage.type === 'warning' ? (isRamadan ? 'bg-rose-900/40 border-rose-500/30' : 'bg-rose-50 border-rose-200') :
+                        cloudMessage.type === 'success' ? (isRamadan ? 'bg-emerald-900/40 border-emerald-500/30' : 'bg-emerald-50 border-emerald-200') :
+                        (isRamadan ? 'bg-blue-900/40 border-blue-500/30' : 'bg-blue-50 border-blue-200')
+                    }`}>
+                        <div className="flex justify-between items-start">
+                            <div className="flex items-start gap-3">
+                                <div className={`p-2 rounded-xl mt-0.5 ${
+                                    cloudMessage.type === 'warning' ? (isRamadan ? 'bg-rose-500/20 text-rose-400' : 'bg-rose-500/20 text-rose-600') :
+                                    cloudMessage.type === 'success' ? (isRamadan ? 'bg-emerald-500/20 text-emerald-400' : 'bg-emerald-500/20 text-emerald-600') :
+                                    (isRamadan ? 'bg-blue-500/20 text-blue-400' : 'bg-blue-500/20 text-blue-600')
+                                }`}>
+                                    <Bell size={20} className="animate-pulse" />
+                                </div>
+                                <div>
+                                    <h3 className={`font-black text-sm ${isRamadan ? 'text-white' : 'text-slate-800'}`}>{cloudMessage.title}</h3>
+                                    <p className={`text-xs font-bold mt-1 leading-relaxed ${isRamadan ? 'text-indigo-200/90' : 'text-slate-600'}`}>{cloudMessage.body}</p>
+                                </div>
+                            </div>
+                            <button onClick={handleCloseCloudMessage} className={`p-1.5 rounded-lg transition-colors shrink-0 ${isRamadan ? 'text-white/50 hover:bg-white/10 hover:text-white' : 'text-slate-400 hover:bg-slate-200 hover:text-slate-600'}`}>
+                                <X size={16} />
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
+            {/* ============================================================================== */}
 
             <div className="px-4 mt-6 relative z-10">
                 <div className="flex justify-between items-center mb-4">
