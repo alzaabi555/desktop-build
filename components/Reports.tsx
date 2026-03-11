@@ -377,9 +377,9 @@ const GradesTemplate = ({ students, tools, teacherInfo, semester, gradeClass }: 
         </div>
       </div>
 
-      <table className="w-full border-collapse border border-black text-[10px]">
-        <thead>
-          <tr className="bg-gray-200">
+      <table className="w-full border-collapse border border-black text-[10px]" style={{ pageBreakInside: 'auto' }}>
+        <thead style={{ display: 'table-header-group' }}>
+          <tr className="bg-gray-200" style={{ pageBreakInside: 'avoid', pageBreakAfter: 'auto' }}>
             <th className="border border-black p-1 w-8 text-center">م</th>
             <th className="border border-black p-1 text-right w-48">الاسم</th>
             {continuousTools.map((t: any) => (
@@ -394,7 +394,7 @@ const GradesTemplate = ({ students, tools, teacherInfo, semester, gradeClass }: 
           </tr>
         </thead>
 
-        <tbody>
+        <tbody style={{ display: 'table-row-group' }}>
           {students.map((s: any, i: number) => {
             const semGrades = (s.grades || []).filter((g: any) => (g.semester || '1') === semester);
             let contSum = 0;
