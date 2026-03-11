@@ -48,11 +48,11 @@ const NEGATIVE_BEHAVIORS = [
 ];
 
 const POSITIVE_BEHAVIORS = [
-    { id: 'p1', title: 'مشاركة فعالة', points: 12 },
+    { id: 'p1', title: 'إجابة متميزة', points: 2 },
     { id: 'p2', title: 'إجابة صحيحة', points: 1 },
     { id: 'p3', title: 'واجب مميز', points: 2 },
     { id: 'p4', title: 'مساعدة الزملاء', points: 2 },
-    { id: 'p5', title: 'مشاركة متميزة', points: 5 },
+    { id: 'p5', title: 'مشاركة صفية متميزة', points: 5 },
     { id: 'p6', title: 'إبداع وتميز', points: 3 },
 ];
 
