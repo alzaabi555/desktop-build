@@ -26,8 +26,12 @@ const StudentReport: React.FC<StudentReportProps> = ({ student, onUpdateStudent,
   const posBehaviors = behaviors.filter(b => b.type === 'positive');
   const negBehaviors = behaviors.filter(b => b.type === 'negative');
 
+  // حساب النقاط الكلية (بما فيها هدوء وانضباط)
   const totalPositivePoints = posBehaviors.reduce((acc, b) => acc + b.points, 0);
   const totalNegativePoints = negBehaviors.reduce((acc, b) => acc + Math.abs(b.points), 0);
+
+  // ✅ الفلتر البصري: استبعاد "هدوء وانضباط" من العرض لتجنب التكرار الطويل
+  const displayPosBehaviors = posBehaviors.filter(b => b.description !== 'هدوء وانضباط');
 
   // Filter grades for current semester
   const currentSemesterGrades = allGrades.filter(g => !g.semester || g.semester === (currentSemester || '1'));
@@ -332,7 +336,7 @@ const StudentReport: React.FC<StudentReportProps> = ({ student, onUpdateStudent,
                     )}
                 </div>
 
-                {/* ✅ سجل السلوك والمواظبة (التصميم العمودي الجديد المقسم) */}
+                {/* ✅ سجل السلوك والمواظبة (باستخدام الفلتر الجديد) */}
                 <div className="mb-12">
                     <h3 className="font-black text-lg mb-3 border-b-2 border-black inline-block text-black">سجل السلوك والمواظبة</h3>
                     <div className="flex gap-4 items-start">
@@ -340,10 +344,10 @@ const StudentReport: React.FC<StudentReportProps> = ({ student, onUpdateStudent,
                         {/* العمود الأيمن: السلوكيات الإيجابية */}
                         <div className="flex-1 border-2 border-black rounded-xl overflow-hidden min-h-[150px]">
                             <div className="bg-green-100 p-2 text-center font-bold border-b-2 border-black text-green-900 text-sm">
-                                سلوكيات إيجابية ({posBehaviors.length})
+                                سلوكيات إيجابية بارزة ({displayPosBehaviors.length})
                             </div>
                             <div className="p-2 space-y-2">
-                                {posBehaviors.length > 0 ? posBehaviors.map((b: any, idx: number) => (
+                                {displayPosBehaviors.length > 0 ? displayPosBehaviors.map((b: any, idx: number) => (
                                     <div key={idx} className="flex justify-between items-center border-b border-black/50 pb-1 last:border-0 text-sm">
                                         <span className="font-bold text-black">{b.description}</span>
                                         <div className="text-left text-[10px] font-bold text-black flex items-center gap-2">
