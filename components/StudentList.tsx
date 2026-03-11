@@ -127,6 +127,19 @@ const StudentList: React.FC<StudentListProps> = ({
     const [isMessagesModalOpen, setIsMessagesModalOpen] = useState(false);
     const [isFetchingMsgs, setIsFetchingMsgs] = useState(false);
 
+    // 🔔 عداد الرسائل المقروءة (ذاكرة لحل مشكلة الإشعارات المزعجة)
+    const [readMessagesCount, setReadMessagesCount] = useState<number>(() => {
+        return parseInt(localStorage.getItem('rased_read_messages_count') || '0', 10);
+    });
+
+    // 🔔 تحديث العداد الذكي بمجرد فتح الصندوق
+    useEffect(() => {
+        if (isMessagesModalOpen && messages.length > 0) {
+            setReadMessagesCount(messages.length);
+            localStorage.setItem('rased_read_messages_count', messages.length.toString());
+        }
+    }, [isMessagesModalOpen, messages.length]);
+
     // 📥 دالة جلب الرسائل من السحابة
     const fetchParentMessages = async () => {
         if (!teacherInfo?.school || !teacherInfo?.subject) return;
@@ -142,6 +155,36 @@ const StudentList: React.FC<StudentListProps> = ({
             console.error("Error fetching messages:", error);
         } finally {
             setIsFetchingMsgs(false);
+        }
+    };
+
+    // 💬 دالة الرد المباشر على رسالة ولي الأمر عبر الواتساب
+    const handleReplyToMessage = (msg: any) => {
+        const student = students.find(s => s.parentCode === msg.civilID);
+        
+        if (!student) {
+            alert('⚠️ لم يتم العثور على طالب بهذا الرقم المدني في القائمة الحالية.');
+            return;
+        }
+        if (!student.parentPhone) {
+            alert(`⚠️ لا يوجد رقم هاتف مسجل لولي أمر الطالب: ${student.name}`);
+            return;
+        }
+
+        const truncatedMsg = msg.message.length > 60 ? msg.message.substring(0, 60) + '...' : msg.message;
+        const replyText = `أهلاً بك ولي أمر الطالب "${student.name}"،\nبخصوص استفساركم: "${truncatedMsg}"\n\nنود إفادتكم بـ: `;
+        const encodedText = encodeURIComponent(replyText);
+
+        let cleanPhone = student.parentPhone.replace(/[^0-9]/g, '');
+        if (cleanPhone.startsWith('00')) cleanPhone = cleanPhone.substring(2);
+        if (cleanPhone.length === 8) cleanPhone = '968' + cleanPhone;
+        else if (cleanPhone.length === 9 && cleanPhone.startsWith('0')) cleanPhone = '968' + cleanPhone.substring(1);
+
+        if ((window as any).electron) { 
+            (window as any).electron.openExternal(`whatsapp://send?phone=${cleanPhone}&text=${encodedText}`); 
+        } else { 
+            const universalUrl = `https://api.whatsapp.com/send?phone=${cleanPhone}&text=${encodedText}`; 
+            window.open(universalUrl, '_blank'); 
         }
     };
 
@@ -574,9 +617,9 @@ const StudentList: React.FC<StudentListProps> = ({
                     >
                         <Mail className="w-5 h-5" />
                         <span className="hidden md:inline text-xs font-black">الوارد</span>
-                        {messages.length > 0 && (
+                        {messages.length > readMessagesCount && (
                             <span className="absolute -top-2 -right-2 bg-rose-500 text-white text-[10px] font-black w-5 h-5 flex items-center justify-center rounded-full shadow-md animate-bounce border border-white">
-                                {messages.length}
+                                {messages.length - readMessagesCount}
                             </span>
                         )}
                     </button>
@@ -781,6 +824,16 @@ const StudentList: React.FC<StudentListProps> = ({
                                 </div>
                                 <div className="bg-white p-4 rounded-xl border border-slate-100 text-sm font-bold text-slate-700 leading-relaxed shadow-inner">
                                     {msg.message}
+                                </div>
+                                {/* 💬 زر الرد عبر الواتساب الجديد */}
+                                <div className="mt-3 flex justify-end">
+                                    <button 
+                                        onClick={() => handleReplyToMessage(msg)}
+                                        className={`flex items-center gap-1.5 px-4 py-2 rounded-lg text-xs font-black shadow-sm active:scale-95 transition-all ${isRamadan ? 'bg-emerald-500/20 text-emerald-400 hover:bg-emerald-500/30' : 'bg-emerald-50 text-emerald-600 hover:bg-emerald-100 border border-emerald-100'}`}
+                                    >
+                                        <MessageCircle size={14} />
+                                        رد عبر الواتساب
+                                    </button>
                                 </div>
                             </div>
                         ))
