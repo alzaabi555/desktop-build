@@ -27,7 +27,7 @@ const ParentCardsTemplate: React.FC<ParentCardsTemplateProps> = ({ students, sch
 
   // رابط موقع تطبيق الآباء
   const appWebsiteUrl = "https://alzaabi555.github.io/Rased-Parents-website/";
-  // جلب صورة الباركود عبر خدمة Google Chart API 
+  // جلب صورة الباركود عبر خدمة Google Chart API
   const qrCodeUrl = `https://chart.googleapis.com/chart?cht=qr&chl=${encodeURIComponent(appWebsiteUrl)}&chs=150x150&choe=UTF-8&chld=L|0`;
 
   return (
