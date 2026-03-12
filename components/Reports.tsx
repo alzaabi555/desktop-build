@@ -359,8 +359,8 @@ const GradesTemplate = ({ students, tools, teacherInfo, semester, gradeClass }: 
   const continuousWeight = settings.totalScore - finalWeight;
   const continuousTools = tools.filter((t: any) => t.name.trim() !== finalExamName);
 
-  // 1. خوارزمية تقسيم الطلاب (25 طالب في كل صفحة) لضمان عدم انقسام الجدول
-  const ROWS_PER_PAGE = 25;
+  // 1. خوارزمية تقسيم الطلاب (20 طالب في كل صفحة)
+  const ROWS_PER_PAGE = 20;
   const chunkedStudents = [];
   for (let i = 0; i < students.length; i += ROWS_PER_PAGE) {
     chunkedStudents.push(students.slice(i, i + ROWS_PER_PAGE));
@@ -369,111 +369,115 @@ const GradesTemplate = ({ students, tools, teacherInfo, semester, gradeClass }: 
   return (
     <div className="w-full text-black bg-white">
       {chunkedStudents.map((chunk, pageIndex) => (
-        <div 
-          key={pageIndex} 
-          className="p-10 w-full bg-white relative"
-          // إجبار المتصفح ومكتبة PDF على بدء صفحة جديدة بعد كل مجموعة
-          style={{ pageBreakAfter: pageIndex !== chunkedStudents.length - 1 ? 'always' : 'auto', minHeight: '210mm' }}
-        >
-          
-          {/* ================= الترويسة (تتكرر في كل صفحة) ================= */}
-          <div className="text-center mb-6 border-b-2 border-black pb-4">
-            <div className="flex justify-between items-center mb-4">
-              <div className="text-right text-sm font-bold leading-relaxed">
-                <p>سلطنة عمان</p>
-                <p>وزارة التعليم</p>
-              </div>
-              <div>
-                <h1 className="text-2xl font-black underline">سجل درجات الطلاب</h1>
-              </div>
-              <div className="text-left text-sm font-bold leading-relaxed">
-                <p>المادة: {teacherInfo?.subject || '........'}</p>
-                <p>الصف: {gradeClass}</p>
+        <React.Fragment key={pageIndex}>
+          {/* حاوية الصفحة (بدون إجبار على ارتفاع معين لتجنب الصفحة الشبح) */}
+          <div className="p-8 w-full bg-white relative">
+            
+            {/* ================= الترويسة (تتكرر في كل صفحة) ================= */}
+            <div className="text-center mb-6 border-b-2 border-black pb-4">
+              <div className="flex justify-between items-center mb-4">
+                <div className="text-right text-sm font-bold leading-relaxed">
+                  <p>سلطنة عمان</p>
+                  <p>وزارة التعليم</p>
+                </div>
+                <div>
+                  <h1 className="text-2xl font-black underline">سجل درجات الطلاب</h1>
+                </div>
+                <div className="text-left text-sm font-bold leading-relaxed">
+                  <p>المادة: {teacherInfo?.subject || '........'}</p>
+                  <p>الصف: {gradeClass}</p>
+                </div>
               </div>
             </div>
-          </div>
 
-          {/* ================= الجدول الخاص بهذه الصفحة ================= */}
-          <table className="w-full border-collapse border border-black text-[10px]">
-            <thead>
-              <tr className="bg-gray-200">
-                <th className="border border-black p-1 w-8 text-center">م</th>
-                <th className="border border-black p-1 text-right w-48">الاسم</th>
-                {continuousTools.map((t: any) => (
-                  <th key={t.id} className="border border-black p-1 bg-orange-50 text-center">{t.name}</th>
-                ))}
-                <th className="border border-black p-1 bg-blue-100 text-center font-bold">المجموع ({continuousWeight})</th>
-                {finalWeight > 0 && (
-                  <th className="border border-black p-1 bg-pink-100 text-center font-bold">{finalExamName} ({finalWeight})</th>
-                )}
-                <th className="border border-black p-1 bg-gray-300 text-center font-black">الكلي ({settings.totalScore})</th>
-                <th className="border border-black p-1 text-center">الرمز</th>
-              </tr>
-            </thead>
+            {/* ================= الجدول الخاص بهذه الصفحة ================= */}
+            <table className="w-full border-collapse border border-black text-[10px]">
+              <thead>
+                <tr className="bg-gray-200">
+                  <th className="border border-black p-1 w-8 text-center">م</th>
+                  <th className="border border-black p-1 text-right w-48">الاسم</th>
+                  {continuousTools.map((t: any) => (
+                    <th key={t.id} className="border border-black p-1 bg-orange-50 text-center">{t.name}</th>
+                  ))}
+                  <th className="border border-black p-1 bg-blue-100 text-center font-bold">المجموع ({continuousWeight})</th>
+                  {finalWeight > 0 && (
+                    <th className="border border-black p-1 bg-pink-100 text-center font-bold">{finalExamName} ({finalWeight})</th>
+                  )}
+                  <th className="border border-black p-1 bg-gray-300 text-center font-black">الكلي ({settings.totalScore})</th>
+                  <th className="border border-black p-1 text-center">الرمز</th>
+                </tr>
+              </thead>
 
-            <tbody>
-              {chunk.map((s: any, i: number) => {
-                // حساب الرقم التسلسلي الحقيقي للطالب عبر كل الصفحات
-                const globalIndex = (pageIndex * ROWS_PER_PAGE) + i + 1;
-                
-                const semGrades = (s.grades || []).filter((g: any) => (g.semester || '1') === semester);
-                let contSum = 0;
+              <tbody>
+                {chunk.map((s: any, i: number) => {
+                  // حساب الرقم التسلسلي الحقيقي للطالب عبر كل الصفحات
+                  const globalIndex = (pageIndex * ROWS_PER_PAGE) + i + 1;
+                  
+                  const semGrades = (s.grades || []).filter((g: any) => (g.semester || '1') === semester);
+                  let contSum = 0;
 
-                const contCells = continuousTools.map((tool: any) => {
-                  const g = semGrades.find((r: any) => r.category.trim() === tool.name.trim());
-                  const val = g ? Number(g.score) : 0;
-                  contSum += val;
+                  const contCells = continuousTools.map((tool: any) => {
+                    const g = semGrades.find((r: any) => r.category.trim() === tool.name.trim());
+                    const val = g ? Number(g.score) : 0;
+                    contSum += val;
+                    return (
+                      <td key={tool.id} className="border border-black p-1 text-center font-medium">
+                        {g ? g.score : '-'}
+                      </td>
+                    );
+                  });
+
+                  let finalVal = 0;
+                  let finalCell = null;
+
+                  if (finalWeight > 0) {
+                    const finalG = semGrades.find((r: any) => r.category.trim() === finalExamName);
+                    finalVal = finalG ? Number(finalG.score) : 0;
+                    finalCell = (
+                      <td className="border border-black p-1 text-center font-bold bg-pink-50">
+                        {finalG ? finalG.score : '-'}
+                      </td>
+                    );
+                  }
+
+                  const total = contSum + finalVal;
+                  const getSymbol = (sc: number) => {
+                    const percent = (sc / settings.totalScore) * 100;
+                    if (percent >= 90) return 'أ';
+                    if (percent >= 80) return 'ب';
+                    if (percent >= 65) return 'ج';
+                    if (percent >= 50) return 'د';
+                    return 'هـ';
+                  };
+
                   return (
-                    <td key={tool.id} className="border border-black p-1 text-center font-medium">
-                      {g ? g.score : '-'}
-                    </td>
+                    <tr key={s.id}>
+                      <td className="border border-black p-1 text-center">{globalIndex}</td>
+                      <td className="border border-black p-1 font-bold whitespace-nowrap">{s.name}</td>
+                      {contCells}
+                      <td className="border border-black p-1 text-center font-bold bg-blue-50">{contSum}</td>
+                      {finalWeight > 0 && finalCell}
+                      <td className="border border-black p-1 text-center font-black bg-gray-100">{total}</td>
+                      <td className="border border-black p-1 text-center font-bold">{getSymbol(total)}</td>
+                    </tr>
                   );
-                });
+                })}
+              </tbody>
+            </table>
+            
+            {/* رقم الصفحة يظهر في الأسفل كإضافة احترافية */}
+            <div className="text-center text-[10px] text-gray-500 mt-4">
+                صفحة {pageIndex + 1} من {chunkedStudents.length}
+            </div>
 
-                let finalVal = 0;
-                let finalCell = null;
-
-                if (finalWeight > 0) {
-                  const finalG = semGrades.find((r: any) => r.category.trim() === finalExamName);
-                  finalVal = finalG ? Number(finalG.score) : 0;
-                  finalCell = (
-                    <td className="border border-black p-1 text-center font-bold bg-pink-50">
-                      {finalG ? finalG.score : '-'}
-                    </td>
-                  );
-                }
-
-                const total = contSum + finalVal;
-                const getSymbol = (sc: number) => {
-                  const percent = (sc / settings.totalScore) * 100;
-                  if (percent >= 90) return 'أ';
-                  if (percent >= 80) return 'ب';
-                  if (percent >= 65) return 'ج';
-                  if (percent >= 50) return 'د';
-                  return 'هـ';
-                };
-
-                return (
-                  <tr key={s.id}>
-                    <td className="border border-black p-1 text-center">{globalIndex}</td>
-                    <td className="border border-black p-1 font-bold whitespace-nowrap">{s.name}</td>
-                    {contCells}
-                    <td className="border border-black p-1 text-center font-bold bg-blue-50">{contSum}</td>
-                    {finalWeight > 0 && finalCell}
-                    <td className="border border-black p-1 text-center font-black bg-gray-100">{total}</td>
-                    <td className="border border-black p-1 text-center font-bold">{getSymbol(total)}</td>
-                  </tr>
-                );
-              })}
-            </tbody>
-          </table>
-          
-          {/* رقم الصفحة يظهر في الأسفل كإضافة احترافية */}
-          <div className="text-center text-[10px] text-gray-500 mt-4">
-              صفحة {pageIndex + 1} من {chunkedStudents.length}
           </div>
 
-        </div>
+          {/* ================= الفاصل الذكي للصفحات ================= */}
+          {/* هذا الكود يفهمه متصفح الطباعة على أنه أمر قاطع بالنزول لصفحة جديدة بدون ترك مساحات */}
+          {pageIndex !== chunkedStudents.length - 1 && (
+            <div className="html2pdf__page-break" style={{ pageBreakBefore: 'always', height: 0, margin: 0, padding: 0, overflow: 'hidden' }}></div>
+          )}
+        </React.Fragment>
       ))}
     </div>
   );
