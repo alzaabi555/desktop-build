@@ -83,8 +83,8 @@
       "shortcutName": "راصد",
       "language": "1025",
       "displayLanguageSelector": false,
-      "installerSidebar": "sidebar.bmp",
-      "uninstallerSidebar": "sidebar.bmp",
+      "installerSidebar":"assets/sidebar.bmp",
+      "uninstallerSidebar":"assets/sidebar.bmp",
       "artifactName": "Rased-Setup.${ext}"
     },
     "appx": {
