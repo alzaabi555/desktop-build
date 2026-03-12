@@ -160,7 +160,10 @@ const StudentList: React.FC<StudentListProps> = ({
 
     // 💬 دالة الرد المباشر على رسالة ولي الأمر عبر الواتساب
     const handleReplyToMessage = (msg: any) => {
-        const student = students.find(s => s.parentCode === msg.civilID);
+        // [التعديل الجراحي هنا]: تحويل كلا الرقمين إلى نصوص وتنظيفهما من أي مسافات لضمان التطابق 100%
+        const student = students.find(s => 
+            String(s.parentCode || '').trim() === String(msg.civilID || '').trim()
+        );
         
         if (!student) {
             alert('⚠️ لم يتم العثور على طالب بهذا الرقم المدني في القائمة الحالية.');
@@ -187,7 +190,6 @@ const StudentList: React.FC<StudentListProps> = ({
             window.open(universalUrl, '_blank'); 
         }
     };
-
     // جلب الرسائل تلقائياً عند فتح التطبيق
     useEffect(() => {
         fetchParentMessages();
