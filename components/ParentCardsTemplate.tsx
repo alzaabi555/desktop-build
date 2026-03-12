@@ -27,7 +27,7 @@ const ParentCardsTemplate: React.FC<ParentCardsTemplateProps> = ({ students, sch
 
   // رابط موقع تطبيق الآباء
   const appWebsiteUrl = "https://alzaabi555.github.io/Rased-Parents-website/";
-  // جلب صورة الباركود عبر خدمة Google Chart API (سريعة وموثوقة ولا تحتاج مكتبات خارجية)
+  // جلب صورة الباركود عبر خدمة Google Chart API 
   const qrCodeUrl = `https://chart.googleapis.com/chart?cht=qr&chl=${encodeURIComponent(appWebsiteUrl)}&chs=150x150&choe=UTF-8&chld=L|0`;
 
   return (
@@ -42,7 +42,6 @@ const ParentCardsTemplate: React.FC<ParentCardsTemplateProps> = ({ students, sch
         {validStudents.map((student: any) => (
           <div key={student.id} className="w-[48%] border-2 border-dashed border-gray-400 p-1.5 rounded-[1.5rem]" style={{ pageBreakInside: 'avoid', breakInside: 'avoid' }}>
             
-            {/* الحاوية الرئيسية للبطاقة مقسمة إلى عمودين */}
             <div className="bg-gradient-to-br from-[#0f172a] to-[#1e3a8a] rounded-2xl p-4 text-white flex h-[210px] relative overflow-hidden shadow-md gap-3">
               
               <div className="absolute -top-10 -right-10 w-28 h-28 bg-blue-500 rounded-full mix-blend-multiply filter blur-2xl opacity-20 pointer-events-none print:hidden"></div>
@@ -50,7 +49,6 @@ const ParentCardsTemplate: React.FC<ParentCardsTemplateProps> = ({ students, sch
 
               {/* ================= القسم الأيمن (بيانات الطالب) ================= */}
               <div className="flex-1 flex flex-col justify-between z-10 border-l border-white/10 pl-3">
-                {/* الترويسة العلوية للمدرسة */}
                 <div className="flex items-start gap-2 border-b border-white/20 pb-3 mb-2 shrink-0">
                   <div className="bg-white/10 p-1.5 rounded-lg backdrop-blur-sm border border-white/10 shrink-0">
                     <School className="w-5 h-5 text-amber-400" />
@@ -61,7 +59,6 @@ const ParentCardsTemplate: React.FC<ParentCardsTemplateProps> = ({ students, sch
                   </div>
                 </div>
 
-                {/* بيانات الطالب */}
                 <div className="flex-1 flex flex-col justify-center py-1">
                   <h2 className="font-black text-[13px] text-amber-400 mb-2 leading-normal break-words">
                     {student.name}
@@ -71,7 +68,6 @@ const ParentCardsTemplate: React.FC<ParentCardsTemplateProps> = ({ students, sch
                   </div>
                 </div>
 
-                {/* الرقم المدني */}
                 <div className="bg-white rounded-xl p-2 flex items-center justify-between shadow-inner border border-slate-100 shrink-0 mb-1 mt-2">
                   <div className="flex items-center gap-1.5">
                     <div className="bg-blue-50 p-1 rounded-md shrink-0">
@@ -84,7 +80,6 @@ const ParentCardsTemplate: React.FC<ParentCardsTemplateProps> = ({ students, sch
                   </span>
                 </div>
 
-                {/* اسم المعلم */}
                 {teacherName && (
                   <div className="mt-1">
                     <span className="text-[8px] text-blue-200/80 font-bold">المعلم: {teacherName}</span>
@@ -103,9 +98,8 @@ const ParentCardsTemplate: React.FC<ParentCardsTemplateProps> = ({ students, sch
                     امسح الرمز بكاميرا <br/>
                     هاتفك للدخول
                   </p>
-                 <p className="text-[7px] font-bold text-amber-400/80 mt-1" dir="ltr" style={{fontSize: '5px', wordBreak: 'break-all', textAlign: 'center'}}>
-  alzaabi555.github.io/Rased-Parents-website
-</p>
+                  <p className="text-[7px] font-bold text-amber-400/80 mt-1" dir="ltr" style={{fontSize: '5px', wordBreak: 'break-all', textAlign: 'center'}}>
+                    alzaabi555.github.io/Rased-Parents-website
                   </p>
                 </div>
               </div>
