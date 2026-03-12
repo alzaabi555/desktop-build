@@ -1,5 +1,5 @@
 import React from 'react';
-import { QrCode, School, Fingerprint, Info, Smartphone } from 'lucide-react';
+import { School, Fingerprint, Info, Smartphone, User } from 'lucide-react'; // ✅ استيراد User لاسم المعلم
 
 interface ParentCardsTemplateProps {
   students: any[];
@@ -25,10 +25,8 @@ const ParentCardsTemplate: React.FC<ParentCardsTemplateProps> = ({ students, sch
     );
   }
 
-  // رابط موقع تطبيق الآباء
-  const appWebsiteUrl = "https://alzaabi555.github.io/Rased-Parents-website/";
-  // جلب صورة الباركود عبر خدمة Google Chart API
-  const qrCodeUrl = `https://chart.googleapis.com/chart?cht=qr&chl=${encodeURIComponent(appWebsiteUrl)}&chs=150x150&choe=UTF-8&chld=L|0`;
+  // ✅ تعري مسار ملف الباركود الثابت منassets
+  const qrCodeImageUrl = "assets/qr-code.png"; 
 
   return (
     <div className="w-full bg-white p-8 font-sans text-black print:p-0" dir="rtl">
@@ -48,40 +46,45 @@ const ParentCardsTemplate: React.FC<ParentCardsTemplateProps> = ({ students, sch
               <div className="absolute -bottom-10 -left-10 w-28 h-28 bg-amber-500 rounded-full mix-blend-multiply filter blur-2xl opacity-20 pointer-events-none print:hidden"></div>
 
               {/* ================= القسم الأيمن (بيانات الطالب) ================= */}
-              <div className="flex-1 flex flex-col justify-between z-10 border-l border-white/10 pl-3">
-                <div className="flex items-start gap-2 border-b border-white/20 pb-3 mb-2 shrink-0">
-                  <div className="bg-white/10 p-1.5 rounded-lg backdrop-blur-sm border border-white/10 shrink-0">
-                    <School className="w-5 h-5 text-amber-400" />
+              <div className="flex-1 flex flex-col justify-between z-10 border-l border-white/10 pl-3 gap-1">
+                {/* الترويسة العلوية للمدرسة */}
+                <div className="flex items-start gap-2 border-b border-white/20 pb-2 mb-1 shrink-0">
+                  <div className="bg-white/10 p-1 rounded-lg backdrop-blur-sm border border-white/10 shrink-0">
+                    <School className="w-4 h-4 text-amber-400" />
                   </div>
                   <div>
-                    <h3 className="font-black text-[11px] leading-normal">{schoolName || 'مدرسة الإبداع'}</h3>
-                    <p className="text-[9px] text-blue-200 font-bold mt-0.5">بوابة راصد للآباء</p>
+                    <h3 className="font-black text-[10px] leading-normal">{schoolName || 'مدرسة الإبداع'}</h3>
+                    <p className="text-[8px] text-blue-200 font-bold mt-0.5">بوابة راصد للآباء</p>
                   </div>
                 </div>
 
-                <div className="flex-1 flex flex-col justify-center py-1">
-                  <h2 className="font-black text-[13px] text-amber-400 mb-2 leading-normal break-words">
+                {/* بيانات الطالب */}
+                <div className="flex-1 flex flex-col justify-center py-1 gap-1">
+                  <h2 className="font-black text-[12px] text-amber-400 mb-1 leading-normal break-words">
                     {student.name}
                   </h2>
-                  <div className="self-start bg-white/10 px-2 py-1 rounded-md text-[10px] font-bold text-white border border-white/10">
+                  <div className="self-start bg-white/10 px-1.5 py-0.5 rounded-md text-[9px] font-bold text-white border border-white/10">
                     الصف: {student.classes[0] || 'غير محدد'}
                   </div>
                 </div>
 
-                <div className="bg-white rounded-xl p-2 flex items-center justify-between shadow-inner border border-slate-100 shrink-0 mb-1 mt-2">
-                  <div className="flex items-center gap-1.5">
+                {/* الرقم المدني */}
+                <div className="bg-white rounded-xl p-2 flex items-center justify-between shadow-inner border border-slate-100 shrink-0 mb-1 mt-1">
+                  <div className="flex items-center gap-1">
                     <div className="bg-blue-50 p-1 rounded-md shrink-0">
-                      <Fingerprint className="w-4 h-4 text-[#1e3a8a]" />
+                      <Fingerprint className="w-3.5 h-3.5 text-[#1e3a8a]" />
                     </div>
-                    <span className="text-[9px] font-black text-slate-600">الرقم المدني:</span>
+                    <span className="text-[8px] font-black text-slate-600">الرقم المدني:</span>
                   </div>
                   <span className="font-mono font-black text-[13px] text-[#1e3a8a] tracking-widest bg-slate-50 px-1.5 py-0.5 rounded shrink-0">
                     {student.parentCode}
                   </span>
                 </div>
 
+                {/* ✅ اسم المعلم (تم نقله هنا ليكون جزءاً من البيانات الرئيسية الأنيقة) */}
                 {teacherName && (
-                  <div className="mt-1">
+                  <div className="flex items-center gap-1.5 mt-1 pt-1 border-t border-white/10 shrink-0">
+                    <User className="w-3.5 h-3.5 text-blue-200/80" />
                     <span className="text-[8px] text-blue-200/80 font-bold">المعلم: {teacherName}</span>
                   </div>
                 )}
@@ -89,8 +92,9 @@ const ParentCardsTemplate: React.FC<ParentCardsTemplateProps> = ({ students, sch
 
               {/* ================= القسم الأيسر (الباركود والتوجيهات) ================= */}
               <div className="w-[85px] flex flex-col items-center justify-center z-10 shrink-0">
+                {/* ✅ استخدام ملف الباركود الثابت منassets */}
                 <div className="bg-white p-1 rounded-xl mb-2 shadow-lg">
-                  <img src={qrCodeUrl} alt="QR Code" className="w-16 h-16 object-contain" crossOrigin="anonymous" />
+                  <img src={qrCodeImageUrl} alt="QR Code" className="w-16 h-16 object-contain" />
                 </div>
                 <div className="text-center flex flex-col items-center gap-1">
                   <Smartphone className="w-4 h-4 text-amber-400" />
@@ -98,8 +102,8 @@ const ParentCardsTemplate: React.FC<ParentCardsTemplateProps> = ({ students, sch
                     امسح الرمز بكاميرا <br/>
                     هاتفك للدخول
                   </p>
-                  <p className="text-[7px] font-bold text-amber-400/80 mt-1" dir="ltr" style={{fontSize: '5px', wordBreak: 'break-all', textAlign: 'center'}}>
-                    alzaabi555.github.io/Rased-Parents-website
+                  <p className="text-[7px] font-bold text-amber-400/80 mt-1 uppercase" dir="ltr" style={{fontSize: '6px'}}>
+                    alzaabi555.github.io
                   </p>
                 </div>
               </div>
