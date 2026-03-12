@@ -102,8 +102,8 @@ const ParentCardsTemplate: React.FC<ParentCardsTemplateProps> = ({ students, sch
                     امسح الرمز بكاميرا <br/>
                     هاتفك للدخول
                   </p>
-                  <p className="text-[7px] font-bold text-amber-400/80 mt-1 uppercase" dir="ltr" style={{fontSize: '6px'}}>
-                    alzaabi555.github.io
+                  <className="text-[7px] font-bold text-amber-400/80 mt-1" dir="ltr" style={{fontSize: '5px', wordBreak: 'break-all', textAlign: 'center'}}>
+                    alzaabi555.github.io/Rased-Parents-website
                   </p>
                 </div>
               </div>
