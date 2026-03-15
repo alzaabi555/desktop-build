@@ -3,7 +3,7 @@ import { useApp } from '../context/AppContext';
 import { Cloud, Loader2, CheckCircle, XCircle } from 'lucide-react';
 
 // ⚠️ استبدل هذا الرابط برابط الـ API السري الذي حصلت عليه من Google Apps Script
-const SCRIPT_URL = "https://script.google.com/macros/s/YOUR_SCRIPT_ID/exec"; 
+const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxXUII_Q_6K6TuewJ0k44mi8mCB-6LQNbDo9rhVdaVOvYCyKFRNCBuddLe_PyLorCdT/exec"; 
 
 export const CloudSyncButton = () => {
   const { 
