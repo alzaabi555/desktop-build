@@ -10,7 +10,7 @@ import { Capacitor } from '@capacitor/core';
 import Modal from './Modal';
 
 // ⚠️ استبدل هذا الرابط برابط الـ API السري الذي حصلت عليه من Google Apps Script
-const SCRIPT_URL = "https://script.google.com/macros/s/YOUR_SCRIPT_ID/exec";
+const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxXUII_Q_6K6TuewJ0k44mi8mCB-6LQNbDo9rhVdaVOvYCyKFRNCBuddLe_PyLorCdT/exec";
 
 // ✅ أيقونات 3D فخمة بتدرجات محسنة تستشعر رمضان
 const Icon3DProfile = ({ isRamadan }: { isRamadan?: boolean }) => (
