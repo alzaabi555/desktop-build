@@ -1349,3 +1349,22 @@ export const translations = {
     techSupport: "Technical Support",
     emailLabel: "Email:",
     allRightsReservedFooter: "All rights reserved ©",
+    // ---------------- Certificate Template ----------------
+    directorateNorthBatinah: "المديرية العامة للتعليم بمحافظة شمال الباطنة",
+    defaultSchoolNameAlEbdaa: "مدرسة الابداع للبنين (5-8)",
+    defaultSubjectSocialStudies: "الدراسات الاجتماعية",
+    certificateOfExcellence: "شهادة تميز",
+    forKnightsOfMonth: "لفرسان الشهر",
+    proudToCrownKnight: "يُسعدنا بكل فخر واعتزاز أن نُتوّج الفارس:",
+    knightAppreciationText: "، تقديراً لجهوده العظيمة واعتلاءه صدارة فرسان هذا الشهر. متمنين له دوام التألق والنجاح.",
+
+    // ==================================================
+    // في قسم الـ (en) أضف التالي:
+    // ---------------- Certificate Template ----------------
+    directorateNorthBatinah: "General Directorate of Education, North Al Batinah",
+    defaultSchoolNameAlEbdaa: "Al Ebdaa School for Boys (5-8)",
+    defaultSubjectSocialStudies: "Social Studies",
+    certificateOfExcellence: "Certificate of Excellence",
+    forKnightsOfMonth: "For Knights of the Month",
+    proudToCrownKnight: "We are proud and honored to crown the knight:",
+    knightAppreciationText: ", in appreciation of his great efforts and topping the knights of this month. Wishing him continued brilliance and success.",
