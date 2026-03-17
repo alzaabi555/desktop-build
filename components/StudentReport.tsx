@@ -16,69 +16,57 @@ interface StudentReportProps {
 }
 
 const StudentReport: React.FC<StudentReportProps> = ({ student, onUpdateStudent, currentSemester, teacherInfo, onBack }) => {
-  const { assessmentTools, gradeSettings } = useApp();
+  // 🌍 استدعاء محرك الترجمة والاتجاه
+  const { assessmentTools, gradeSettings, t, dir, language } = useApp();
   const [isGeneratingPdf, setIsGeneratingPdf] = useState(false);
   
   const behaviors = (student.behaviors || []).filter(b => !b.semester || b.semester === (currentSemester || '1'));
   const allGrades = student.grades || [];
 
-  // فصل السلوكيات لتوزيعها في العمودين
   const posBehaviors = behaviors.filter(b => b.type === 'positive');
   const negBehaviors = behaviors.filter(b => b.type === 'negative');
 
-  // حساب النقاط الكلية (بما فيها هدوء وانضباط)
   const totalPositivePoints = posBehaviors.reduce((acc, b) => acc + b.points, 0);
   const totalNegativePoints = negBehaviors.reduce((acc, b) => acc + Math.abs(b.points), 0);
 
-  // ✅ الفلتر البصري: استبعاد "هدوء وانضباط" من العرض لتجنب التكرار الطويل
+  // ✅ الفلتر البصري يبقى كما هو باللغة العربية لارتباطه المباشر بالبيانات المخزنة
   const displayPosBehaviors = posBehaviors.filter(b => b.description !== 'هدوء وانضباط');
 
-  // Filter grades for current semester
   const currentSemesterGrades = allGrades.filter(g => !g.semester || g.semester === (currentSemester || '1'));
-
-  // --- Logic for Ordered Grade Rows (Improved with GradeSettings) ---
   
-  // Find the final exam tool
-  // Priority: 1. Tool with isFinal=true, 2. Tool matching configured final name, 3. Fallback to default name
   let finalTool = assessmentTools.find(t => t.isFinal === true);
   
   if (!finalTool && gradeSettings?.finalExamName) {
       finalTool = assessmentTools.find(t => t.name.trim() === gradeSettings.finalExamName.trim());
   }
   
-  // Identify Final Tool Name for display
-  const finalToolName = finalTool ? finalTool.name : (gradeSettings?.finalExamName || "الامتحان النهائي");
+  const finalToolName = finalTool ? finalTool.name : (gradeSettings?.finalExamName || t('finalExamNameDefault') || "الامتحان النهائي");
 
-  // Filter out the final tool from continuous tools
   const continuousTools = assessmentTools.filter(t => 
       t.id !== finalTool?.id && t.name.trim() !== finalToolName.trim()
   );
 
   let continuousSum = 0;
   
-  // Calculate continuous sum based on tools
   continuousTools.forEach(tool => {
       const g = currentSemesterGrades.find(r => r.category.trim() === tool.name.trim());
       if (g) continuousSum += (Number(g.score) || 0);
   });
 
-  // Calculate final score
   let finalScore = 0;
   if (finalToolName) {
       const g = currentSemesterGrades.find(r => r.category.trim() === finalToolName.trim());
       if (g) finalScore = (Number(g.score) || 0);
   }
 
-  // Fallback total calculation if no tools defined
   const fallbackTotal = currentSemesterGrades.reduce((a, b) => a + (Number(b.score) || 0), 0);
   const totalScore = assessmentTools.length > 0 ? (continuousSum + finalScore) : fallbackTotal;
 
-  // Filter Absence and Truant records
   const absenceRecords = (student.attendance || []).filter(a => a.status === 'absent');
   const truantRecords = (student.attendance || []).filter(a => a.status === 'truant');
 
   const handleDeleteBehavior = (behaviorId: string) => {
-      if (confirm('هل أنت متأكد من حذف هذا السلوك؟')) {
+      if (confirm(t('confirmDeleteBehavior'))) {
           const updatedBehaviors = (student.behaviors || []).filter(b => b.id !== behaviorId);
           if (onUpdateStudent) {
               onUpdateStudent({ ...student, behaviors: updatedBehaviors });
@@ -91,7 +79,7 @@ const StudentReport: React.FC<StudentReportProps> = ({ student, onUpdateStudent,
       if (!element) return;
 
       setIsGeneratingPdf(true);
-      window.scrollTo(0, 0); // ضمان البدء من الأعلى
+      window.scrollTo(0, 0); 
 
       const opt = {
           margin: 10,
@@ -123,29 +111,29 @@ const StudentReport: React.FC<StudentReportProps> = ({ student, onUpdateStudent,
           }
       } catch (err) { 
           console.error('PDF Error:', err); 
-          alert('حدث خطأ أثناء الطباعة');
+          alert(t('errorPrinting'));
       } finally { 
           setIsGeneratingPdf(false); 
       }
   };
 
-  // Determine Max Scores for Display
   const maxTotal = gradeSettings?.totalScore || 100;
   const maxFinal = gradeSettings?.finalExamScore || 40;
   const maxContinuous = maxTotal - maxFinal;
 
+  // 🌍 تطبيق الاتجاه العام على الصفحة
   return (
-    <div className="flex flex-col h-full space-y-4 pb-20 animate-in fade-in slide-in-from-bottom-4 duration-500 text-slate-900">
+    <div className={`flex flex-col h-full space-y-4 pb-20 animate-in fade-in slide-in-from-bottom-4 duration-500 text-slate-900 ${dir === 'rtl' ? 'text-right' : 'text-left'}`} dir={dir}>
         
         {/* Header Action Bar */}
         <div className="flex items-center justify-between glass-heavy p-4 rounded-[2rem] print:hidden">
             <div className="flex items-center gap-3">
                 <button onClick={onBack} className="p-3 rounded-full glass-icon hover:bg-gray-100 transition-colors">
-                    <ArrowRight className="w-5 h-5 text-slate-600" />
+                    <ArrowRight className={`w-5 h-5 text-slate-600 ${dir === 'ltr' ? 'rotate-180' : ''}`} />
                 </button>
                 <div>
                     <h2 className="text-lg font-black text-slate-900">{student.name}</h2>
-                    <p className="text-xs font-bold text-gray-500">{student.classes[0]} • تقرير الفصل {currentSemester}</p>
+                    <p className="text-xs font-bold text-gray-500">{student.classes[0]} • {t('semesterReportText')} {currentSemester}</p>
                 </div>
             </div>
             <div className="flex gap-2">
@@ -155,22 +143,22 @@ const StudentReport: React.FC<StudentReportProps> = ({ student, onUpdateStudent,
                     className="bg-indigo-600 text-white px-4 py-2.5 rounded-xl font-black text-xs shadow-lg shadow-indigo-200 active:scale-95 transition-all flex items-center gap-2"
                 >
                     {isGeneratingPdf ? <Loader2 className="w-4 h-4 animate-spin" /> : <Printer className="w-4 h-4" />}
-                    طباعة التقرير
+                    {t('printReportBtn')}
                 </button>
             </div>
         </div>
 
-        {/* Report Preview (Screen) */}
+        {/* Report Preview (Screen) - 🌍 ربط dir بالمحتوى المطبوع ليعكس اللغات */}
         <div className="flex-1 overflow-y-auto custom-scrollbar p-1">
-            <div id="report-content" className="bg-white text-black p-8 rounded-none md:rounded-[2rem] max-w-4xl mx-auto shadow-sm border border-gray-200 relative overflow-hidden box-border" dir="rtl">
+            <div id="report-content" className={`bg-white text-black p-8 rounded-none md:rounded-[2rem] max-w-4xl mx-auto shadow-sm border border-gray-200 relative overflow-hidden box-border ${dir === 'rtl' ? 'text-right' : 'text-left'}`} dir={dir}>
                 
                 {/* Formal Header */}
                 <div className="flex justify-between items-start mb-8 border-b-2 border-black pb-6">
-                    <div className="text-center w-1/3">
-                        <p className="font-bold text-sm mb-1 text-black">سلطنة عمان</p>
-                        <p className="font-bold text-sm mb-1 text-black">وزارة التعليم</p>
-                        <p className="font-bold text-sm mb-1 text-black">المديرية العامة لتعليم لمحافظة {teacherInfo?.governorate || '.........'}</p>
-                        <p className="font-bold text-sm text-black">مدرسة {teacherInfo?.school || '................'}</p>
+                    <div className={`w-1/3 ${dir === 'rtl' ? 'text-right' : 'text-left'}`}>
+                        <p className="font-bold text-sm mb-1 text-black">{t('sultanateOfOman')}</p>
+                        <p className="font-bold text-sm mb-1 text-black">{t('ministryOfEducation')}</p>
+                        <p className="font-bold text-sm mb-1 text-black">{t('eduDirectoratePrefix')} {teacherInfo?.governorate || '.........'}</p>
+                        <p className="font-bold text-sm text-black">{t('schoolPrefix')} {teacherInfo?.school || '................'}</p>
                     </div>
                     <div className="flex flex-col items-center justify-center w-1/3">
                          {teacherInfo?.ministryLogo ? (
@@ -180,13 +168,13 @@ const StudentReport: React.FC<StudentReportProps> = ({ student, onUpdateStudent,
                                  <FileText className="w-10 h-10 text-slate-300" />
                              </div>
                          )}
-                         <h1 className="text-xl font-black mt-4 underline decoration-black decoration-2 underline-offset-4 text-black">تقرير مستوى طالب</h1>
+                         <h1 className="text-xl font-black mt-4 underline decoration-black decoration-2 underline-offset-4 text-black">{t('studentLevelReport')}</h1>
                     </div>
                     <div className="text-center w-1/3 flex flex-col items-end">
-                        <div className="text-right">
-                             <p className="font-bold text-sm mb-1 text-black">العام الدراسي: {teacherInfo?.academicYear || `${new Date().getFullYear()} / ${new Date().getFullYear() + 1}`}</p>
-                             <p className="font-bold text-sm mb-1 text-black">الفصل الدراسي: {currentSemester === '1' ? 'الأول' : 'الثاني'}</p>
-                             <p className="font-bold text-sm text-black">تاريخ التقرير: {new Date().toLocaleDateString('en-GB')}</p>
+                        <div className={`${dir === 'rtl' ? 'text-right' : 'text-left'}`}>
+                             <p className="font-bold text-sm mb-1 text-black">{t('academicYearPrefix')} {teacherInfo?.academicYear || `${new Date().getFullYear()} / ${new Date().getFullYear() + 1}`}</p>
+                             <p className="font-bold text-sm mb-1 text-black">{t('semesterPrefix')} {currentSemester === '1' ? t('firstSemesterWord') : t('secondSemesterWord')}</p>
+                             <p className="font-bold text-sm text-black">{t('reportDatePrefix')} {new Date().toLocaleDateString(language === 'ar' ? 'ar-EG' : 'en-US')}</p>
                         </div>
                     </div>
                 </div>
@@ -196,23 +184,23 @@ const StudentReport: React.FC<StudentReportProps> = ({ student, onUpdateStudent,
                     <div>
                         <div className="flex items-center gap-6 mb-4">
                             <div>
-                                <span className="text-xs font-bold text-black block mb-1">اسم الطالب</span>
+                                <span className="text-xs font-bold text-black block mb-1">{t('studentNameLabel')}</span>
                                 <h3 className="text-xl font-black text-black">{student.name}</h3>
                             </div>
                             <div className="w-px h-10 bg-black"></div>
                             <div>
-                                <span className="text-xs font-bold text-black block mb-1">الصف</span>
+                                <span className="text-xs font-bold text-black block mb-1">{t('classLabelShort')}</span>
                                 <h3 className="text-xl font-black text-black">{student.classes[0]}</h3>
                             </div>
                             <div className="w-px h-10 bg-black"></div>
                             <div>
-                                <span className="text-xs font-bold text-black block mb-1">رقم ولي الأمر</span>
+                                <span className="text-xs font-bold text-black block mb-1">{t('parentPhoneLabel')}</span>
                                 <h3 className="text-lg font-black text-black font-mono" dir="ltr">{student.parentPhone || '-'}</h3>
                             </div>
                         </div>
                         <div className="flex gap-4">
-                            <div className="bg-emerald-100 border border-black text-emerald-900 px-3 py-1 rounded-lg text-xs font-bold">نقاط إيجابية: {totalPositivePoints}</div>
-                            <div className="bg-rose-100 border border-black text-rose-900 px-3 py-1 rounded-lg text-xs font-bold">نقاط سلبية: {totalNegativePoints}</div>
+                            <div className="bg-emerald-100 border border-black text-emerald-900 px-3 py-1 rounded-lg text-xs font-bold">{t('positivePointsLabel')} {totalPositivePoints}</div>
+                            <div className="bg-rose-100 border border-black text-rose-900 px-3 py-1 rounded-lg text-xs font-bold">{t('negativePointsLabel')} {totalNegativePoints}</div>
                         </div>
                     </div>
                     <div className="w-24 h-24 bg-white rounded-2xl border-2 border-black p-1 shadow-sm">
@@ -223,14 +211,14 @@ const StudentReport: React.FC<StudentReportProps> = ({ student, onUpdateStudent,
                 {/* Grades Section */}
                 <div className="mb-8">
                     <h3 className="font-black text-lg mb-3 border-b-2 border-black inline-block text-black">
-                        التحصيل الدراسي
+                        {t('academicAchievementTitle')}
                     </h3>
                     <table className="w-full border-collapse border border-black">
                         <thead>
                             <tr className="bg-slate-100">
-                                <th className="border border-black p-3 text-sm font-bold text-right text-black">المادة</th>
-                                <th className="border border-black p-3 text-sm font-bold text-center text-black">أداة التقويم</th>
-                                <th className="border border-black p-3 text-sm font-bold text-center text-black">الدرجة</th>
+                                <th className={`border border-black p-3 text-sm font-bold ${dir === 'rtl' ? 'text-right' : 'text-left'} text-black`}>{t('subjectCol')}</th>
+                                <th className="border border-black p-3 text-sm font-bold text-center text-black">{t('assessmentToolCol')}</th>
+                                <th className="border border-black p-3 text-sm font-bold text-center text-black">{t('scoreCol')}</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -241,7 +229,7 @@ const StudentReport: React.FC<StudentReportProps> = ({ student, onUpdateStudent,
                                         const grade = currentSemesterGrades.find(g => g.category.trim() === tool.name.trim());
                                         return (
                                             <tr key={tool.id}>
-                                                <td className="border border-black p-3 text-sm font-bold text-right text-black">{teacherInfo?.subject || 'المادة'}</td>
+                                                <td className={`border border-black p-3 text-sm font-bold ${dir === 'rtl' ? 'text-right' : 'text-left'} text-black`}>{teacherInfo?.subject || t('subjectCol')}</td>
                                                 <td className="border border-black p-3 text-sm text-center bg-[#ffedd5] text-black">{tool.name}</td>
                                                 <td className="border border-black p-3 text-sm text-center font-bold font-mono text-black">{grade ? grade.score : '-'}</td>
                                             </tr>
@@ -250,14 +238,14 @@ const StudentReport: React.FC<StudentReportProps> = ({ student, onUpdateStudent,
                                     
                                     {/* 2. Continuous Sum Row */}
                                     <tr className="bg-blue-50 font-bold">
-                                        <td colSpan={2} className="border border-black p-3 text-sm text-center text-black border-t-2 border-black">المجموع ({maxContinuous})</td>
+                                        <td colSpan={2} className="border border-black p-3 text-sm text-center text-black border-t-2 border-black">{t('totalParentheses')} ({maxContinuous})</td>
                                         <td className="border border-black p-3 text-sm text-center font-mono text-black border-t-2 border-black">{continuousSum}</td>
                                     </tr>
 
                                     {/* 3. Final Exam Row */}
                                     {finalToolName && (
                                         <tr key="final">
-                                            <td className="border border-black p-3 text-sm font-bold text-right text-black">{teacherInfo?.subject || 'المادة'}</td>
+                                            <td className={`border border-black p-3 text-sm font-bold ${dir === 'rtl' ? 'text-right' : 'text-left'} text-black`}>{teacherInfo?.subject || t('subjectCol')}</td>
                                             <td className="border border-black p-3 text-sm text-center bg-[#fce7f3] text-black">{finalToolName} ({maxFinal})</td>
                                             <td className="border border-black p-3 text-sm text-center font-bold font-mono text-black">{finalScore || '-'}</td>
                                         </tr>
@@ -273,14 +261,14 @@ const StudentReport: React.FC<StudentReportProps> = ({ student, onUpdateStudent,
                                     </tr>
                                 )) : (
                                     <tr>
-                                        <td colSpan={3} className="border border-black p-4 text-center text-sm text-black">لا توجد درجات مرصودة لهذا الفصل</td>
+                                        <td colSpan={3} className="border border-black p-4 text-center text-sm text-black">{t('noGradesForSemester')}</td>
                                     </tr>
                                 )
                             )}
                         </tbody>
                         <tfoot>
                             <tr className="bg-slate-100">
-                                <td colSpan={2} className="border border-black p-3 text-sm font-black text-right border-t-2 border-black text-black">المجموع الكلي ({maxTotal})</td>
+                                <td colSpan={2} className={`border border-black p-3 text-sm font-black ${dir === 'rtl' ? 'text-right' : 'text-left'} border-t-2 border-black text-black`}>{t('grandTotalParentheses')} ({maxTotal})</td>
                                 <td className="border border-black p-3 text-sm font-black text-center font-mono text-lg border-t-2 border-black text-black">
                                     {totalScore}
                                 </td>
@@ -292,19 +280,19 @@ const StudentReport: React.FC<StudentReportProps> = ({ student, onUpdateStudent,
                 {/* Attendance Summary and Details */}
                 <div className="mb-8">
                      <h3 className="font-black text-lg mb-3 border-b-2 border-black inline-block text-black">
-                        ملخص الحضور والغياب
+                        {t('attendanceSummaryTitle')}
                     </h3>
                     <div className="grid grid-cols-3 gap-4 mb-4">
                         <div className="p-4 rounded-xl bg-slate-50 border-2 border-black text-center text-black">
-                            <span className="text-xs font-bold text-black block mb-1">أيام الغياب</span>
+                            <span className="text-xs font-bold text-black block mb-1">{t('absenceDaysCount')}</span>
                             <span className="text-2xl font-black text-rose-600">{absenceRecords.length}</span>
                         </div>
                         <div className="p-4 rounded-xl bg-slate-50 border-2 border-black text-center text-black">
-                            <span className="text-xs font-bold text-black block mb-1">الهروب (التسرب)</span>
+                            <span className="text-xs font-bold text-black block mb-1">{t('truancyCount')}</span>
                             <span className="text-2xl font-black text-purple-600">{truantRecords.length}</span>
                         </div>
                          <div className="p-4 rounded-xl bg-slate-50 border-2 border-black text-center text-black">
-                            <span className="text-xs font-bold text-black block mb-1">الحضور</span>
+                            <span className="text-xs font-bold text-black block mb-1">{t('presenceCount')}</span>
                             <span className="text-2xl font-black text-emerald-600">{student.attendance.filter(a => a.status === 'present').length}</span>
                         </div>
                     </div>
@@ -314,9 +302,9 @@ const StudentReport: React.FC<StudentReportProps> = ({ student, onUpdateStudent,
                         <table className="w-full border-collapse border border-black mt-2">
                             <thead>
                                 <tr className="bg-slate-100">
-                                    <th className="border border-black p-2 text-xs font-bold text-right w-1/3 text-black">التاريخ</th>
-                                    <th className="border border-black p-2 text-xs font-bold text-center text-black">الحالة</th>
-                                    <th className="border border-black p-2 text-xs font-bold text-center text-black">الملاحظات</th>
+                                    <th className={`border border-black p-2 text-xs font-bold ${dir === 'rtl' ? 'text-right' : 'text-left'} w-1/3 text-black`}>{t('dateCol')}</th>
+                                    <th className="border border-black p-2 text-xs font-bold text-center text-black">{t('statusCol')}</th>
+                                    <th className="border border-black p-2 text-xs font-bold text-center text-black">{t('notesCol')}</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -324,9 +312,9 @@ const StudentReport: React.FC<StudentReportProps> = ({ student, onUpdateStudent,
                                     .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
                                     .map((rec, idx) => (
                                     <tr key={idx}>
-                                        <td className="border border-black p-2 text-xs font-mono text-black">{new Date(rec.date).toLocaleDateString('en-GB')}</td>
+                                        <td className="border border-black p-2 text-xs font-mono text-black">{new Date(rec.date).toLocaleDateString(language === 'ar' ? 'en-GB' : 'en-US')}</td>
                                         <td className={`border border-black p-2 text-xs font-bold text-center ${rec.status === 'absent' ? 'text-rose-600' : 'text-purple-600'}`}>
-                                            {rec.status === 'absent' ? 'غياب' : 'تسرب'}
+                                            {rec.status === 'absent' ? t('absentStatus') : t('truantStatus')}
                                         </td>
                                         <td className="border border-black p-2 text-xs text-center text-black">-</td>
                                     </tr>
@@ -336,26 +324,25 @@ const StudentReport: React.FC<StudentReportProps> = ({ student, onUpdateStudent,
                     )}
                 </div>
 
-                {/* ✅ سجل السلوك والمواظبة (باستخدام الفلتر الجديد) */}
+                {/* سجل السلوك والمواظبة */}
                 <div className="mb-12">
-                    <h3 className="font-black text-lg mb-3 border-b-2 border-black inline-block text-black">سجل السلوك والمواظبة</h3>
+                    <h3 className="font-black text-lg mb-3 border-b-2 border-black inline-block text-black">{t('behaviorRecordTitle')}</h3>
                     <div className="flex gap-4 items-start">
                         
-                        {/* العمود الأيمن: السلوكيات الإيجابية */}
+                        {/* العمود الأول: السلوكيات الإيجابية */}
                         <div className="flex-1 border-2 border-black rounded-xl overflow-hidden min-h-[150px]">
                             <div className="bg-green-100 p-2 text-center font-bold border-b-2 border-black text-green-900 text-sm">
-                                سلوكيات إيجابية بارزة ({displayPosBehaviors.length})
+                                {t('notablePositiveBehaviorsTitle')} ({displayPosBehaviors.length})
                             </div>
                             <div className="p-2 space-y-2">
                                 {displayPosBehaviors.length > 0 ? displayPosBehaviors.map((b: any, idx: number) => (
                                     <div key={idx} className="flex justify-between items-center border-b border-black/50 pb-1 last:border-0 text-sm">
                                         <span className="font-bold text-black">{b.description}</span>
-                                        <div className="text-left text-[10px] font-bold text-black flex items-center gap-2">
-                                            <div className="flex flex-col items-end">
-                                                <span>{new Date(b.date).toLocaleDateString('en-GB')}</span>
-                                                {b.session && <span>حصة: {b.session}</span>}
+                                        <div className="text-[10px] font-bold text-black flex items-center gap-2">
+                                            <div className={`flex flex-col ${dir === 'rtl' ? 'items-end text-left' : 'items-start text-right'}`}>
+                                                <span>{new Date(b.date).toLocaleDateString(language === 'ar' ? 'en-GB' : 'en-US')}</span>
+                                                {b.session && <span>{t('sessionPrefix')} {b.session}</span>}
                                             </div>
-                                            {/* الزر يظهر في الشاشة فقط ويختفي عند الطباعة */}
                                             {onUpdateStudent && (
                                                 <button onClick={() => handleDeleteBehavior(b.id)} className="p-1 text-slate-400 hover:text-rose-500 print:hidden">
                                                     <Trash2 className="w-4 h-4" />
@@ -363,25 +350,24 @@ const StudentReport: React.FC<StudentReportProps> = ({ student, onUpdateStudent,
                                             )}
                                         </div>
                                     </div>
-                                )) : <div className="text-center text-xs text-gray-500 py-4">- لا يوجد -</div>}
+                                )) : <div className="text-center text-xs text-gray-500 py-4">{t('noBehaviors')}</div>}
                             </div>
                         </div>
 
-                        {/* العمود الأيسر: السلوكيات السلبية */}
+                        {/* العمود الثاني: السلوكيات السلبية */}
                         <div className="flex-1 border-2 border-black rounded-xl overflow-hidden min-h-[150px]">
                             <div className="bg-red-100 p-2 text-center font-bold border-b-2 border-black text-red-900 text-sm">
-                                سلوكيات سلبية ({negBehaviors.length})
+                                {t('negativeBehaviorsTitle')} ({negBehaviors.length})
                             </div>
                             <div className="p-2 space-y-2">
                                 {negBehaviors.length > 0 ? negBehaviors.map((b: any, idx: number) => (
                                     <div key={idx} className="flex justify-between items-center border-b border-black/50 pb-1 last:border-0 text-sm">
                                         <span className="font-bold text-black">{b.description}</span>
-                                        <div className="text-left text-[10px] font-bold text-black flex items-center gap-2">
-                                            <div className="flex flex-col items-end">
-                                                <span>{new Date(b.date).toLocaleDateString('en-GB')}</span>
-                                                {b.session && <span>حصة: {b.session}</span>}
+                                        <div className="text-[10px] font-bold text-black flex items-center gap-2">
+                                            <div className={`flex flex-col ${dir === 'rtl' ? 'items-end text-left' : 'items-start text-right'}`}>
+                                                <span>{new Date(b.date).toLocaleDateString(language === 'ar' ? 'en-GB' : 'en-US')}</span>
+                                                {b.session && <span>{t('sessionPrefix')} {b.session}</span>}
                                             </div>
-                                            {/* الزر يظهر في الشاشة فقط ويختفي عند الطباعة */}
                                             {onUpdateStudent && (
                                                 <button onClick={() => handleDeleteBehavior(b.id)} className="p-1 text-slate-400 hover:text-rose-500 print:hidden">
                                                     <Trash2 className="w-4 h-4" />
@@ -389,7 +375,7 @@ const StudentReport: React.FC<StudentReportProps> = ({ student, onUpdateStudent,
                                             )}
                                         </div>
                                     </div>
-                                )) : <div className="text-center text-xs text-gray-500 py-4">- لا يوجد -</div>}
+                                )) : <div className="text-center text-xs text-gray-500 py-4">{t('noBehaviors')}</div>}
                             </div>
                         </div>
 
@@ -398,8 +384,8 @@ const StudentReport: React.FC<StudentReportProps> = ({ student, onUpdateStudent,
 
                 {/* Signatures */}
                 <div className="flex justify-between items-end pt-8 border-t-2 border-black relative">
-                     <div className="text-center w-1/3">
-                        <p className="font-bold text-sm mb-8 text-black">معلم المادة</p>
+                     <div className={`text-center w-1/3`}>
+                        <p className="font-bold text-sm mb-8 text-black">{t('subjectTeacherLabel')}</p>
                         <p className="font-black text-lg text-black">{teacherInfo?.name || '....................'}</p>
                      </div>
                      
@@ -410,8 +396,8 @@ const StudentReport: React.FC<StudentReportProps> = ({ student, onUpdateStudent,
                          </div>
                      )}
 
-                     <div className="text-center w-1/3">
-                        <p className="font-bold text-sm mb-8 text-black">مدير المدرسة</p>
+                     <div className={`text-center w-1/3`}>
+                        <p className="font-bold text-sm mb-8 text-black">{t('schoolPrincipalLabel')}</p>
                         <p className="font-black text-lg text-black">....................</p>
                      </div>
                 </div>
