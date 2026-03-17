@@ -1,6 +1,51 @@
 // ملف القاموس المركزي لجميع نصوص التطبيق
 export const translations = {
-  ar: {
+ar: {
+  // ---------------- App Navigation & Layout ----------------
+    loadingData: "جاري استعادة البيانات المحلية...",
+    navDashboard: "الرئيسية",
+    navAttendance: "الحضور",
+    navStudents: "الطلاب",
+    navGroups: "المجموعات",
+    navGrades: "الدرجات",
+    navKnights: "فرسان الشهر",
+    navReports: "التقارير",
+    navGuide: "دليل المستخدم",
+    navSettings: "الإعدادات",
+    navAbout: "حول التطبيق",
+    appNameMain: "راصد",
+    appSubtitleMain: "نسخة المعلم المستقلة",
+    welcomeUser: "مرحباً بك",
+    schoolFallbackMain: "المدرسة",
+    devLabel: "تطوير وإعداد",
+    devName: "أ. محمد الزعابي",
+    versionLabel: "الإصدار",
+    moreBtn: "المزيد",
+    navGuideShort: "الدليل",
+
+    // ==================================================
+    // في قسم الـ (en) أضف التالي:
+    // ---------------- App Navigation & Layout ----------------
+    loadingData: "Restoring local data...",
+    navDashboard: "Dashboard",
+    navAttendance: "Attendance",
+    navStudents: "Students",
+    navGroups: "Groups",
+    navGrades: "Grades",
+    navKnights: "Leaderboard",
+    navReports: "Reports",
+    navGuide: "User Guide",
+    navSettings: "Settings",
+    navAbout: "About App",
+    appNameMain: "Rased",
+    appSubtitleMain: "Independent Teacher Edition",
+    welcomeUser: "Welcome",
+    schoolFallbackMain: "School",
+    devLabel: "Developed By",
+    devName: "Mr. Mohammed Alzaabi",
+    versionLabel: "Version",
+    moreBtn: "More",
+    navGuideShort: "Guide",
     // ---------------- Settings Page ----------------
     settingsTitle: "الإعدادات",
     settingsSubtitle: "تخصيص الهوية وإدارة البيانات السحابية والمحلية",
