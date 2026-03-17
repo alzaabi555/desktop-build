@@ -444,3 +444,32 @@ export const translations = {
     previewAndIssueCert: "Preview & Issue Certificate",
     saveAndExportPdf: "Save & Export Certificate (PDF)",
     defaultTeacherNameLine: "..........",
+    // ---------------- Parent Cards Page ----------------
+    cannotGenerateCards: "لا يمكن توليد البطاقات",
+    noStudentsWithCivilId: "لا يوجد طلاب في هذا الفصل لديهم (رقم مدني) مسجل.",
+    parentLoginCardsTitle: "بطاقات الدخول لولي الأمر (بواسطة الرقم المدني)",
+    parentCardsSubtitle: "قص هذه البطاقات ووزعها على الطلاب لتسليمها لأولياء أمورهم",
+    defaultSchoolName: "مدرسة الإبداع",
+    rasedParentsPortal: "بوابة راصد للآباء",
+    classLabel: "الصف:",
+    undefinedClass: "غير محدد",
+    civilIdLabelCard: "الرقم المدني:",
+    teacherLabel: "المعلم:",
+    scanQrCodeLine1: "امسح الرمز بكاميرا",
+    scanQrCodeLine2: "هاتفك للدخول",
+
+    // ==================================================
+    // في قسم الـ (en) أضف التالي:
+    // ---------------- Parent Cards Page ----------------
+    cannotGenerateCards: "Cannot Generate Cards",
+    noStudentsWithCivilId: "No students in this class have a registered (Civil ID).",
+    parentLoginCardsTitle: "Parent Login Cards (via Civil ID)",
+    parentCardsSubtitle: "Cut out these cards and distribute them to students for their parents",
+    defaultSchoolName: "Al Ebdaa School",
+    rasedParentsPortal: "Rased Parents Portal",
+    classLabel: "Class:",
+    undefinedClass: "Undefined",
+    civilIdLabelCard: "Civil ID:",
+    teacherLabel: "Teacher:",
+    scanQrCodeLine1: "Scan the code with",
+    scanQrCodeLine2: "your phone to log in",
