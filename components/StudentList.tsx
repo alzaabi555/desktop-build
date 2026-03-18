@@ -970,7 +970,9 @@ const StudentList: React.FC<StudentListProps> = ({
                     </h3>
                     <button onClick={() => setShowPositiveModal(false)} className={`p-2 rounded-full transition-colors ${isRamadan ? 'bg-white/10 text-slate-300 hover:bg-white/20' : 'bg-gray-100 text-gray-500 hover:bg-gray-200'}`}><X className="w-4 h-4"/></button>
                 </div>
-                <p className={`text-xs font-bold mb-4 ${isRamadan ? 'text-slate-300' : 'text-gray-500'}`}>{t('chooseExcellenceType')} <span className={isRamadan ? 'text-amber-400' : 'text-indigo-600'}>{selectedStudentForBehavior?.name}</span></p>
+                <p className={`text-xs font-bold mb<p className={`text-xs font-bold mb-4 ${isRamadan ? 'text-slate-300' : 'text-gray-500'}`}>
+    {t('chooseExcellenceType')} <bdi className={isRamadan ? 'text-amber-400' : 'text-indigo-600'}>{selectedStudentForBehavior?.name}</bdi>
+</p>
                 
                 <div className="grid grid-cols-2 gap-2 mb-4">
                     {POSITIVE_BEHAVIORS.map(b => (
@@ -1019,7 +1021,9 @@ const StudentList: React.FC<StudentListProps> = ({
                     </h3>
                     <button onClick={() => setShowNegativeModal(false)} className={`p-2 rounded-full transition-colors ${isRamadan ? 'bg-white/10 text-slate-300 hover:bg-white/20' : 'bg-gray-100 text-gray-500 hover:bg-gray-200'}`}><X className="w-4 h-4"/></button>
                 </div>
-                <p className={`text-xs font-bold mb-4 ${isRamadan ? 'text-slate-300' : 'text-gray-500'}`}>{t('chooseNoteType')} <span className={isRamadan ? 'text-amber-400' : 'text-indigo-600'}>{selectedStudentForBehavior?.name}</span></p>
+               <p className={`text-xs font-bold mb-4 ${isRamadan ? 'text-slate-300' : 'text-gray-500'}`}>
+    {t('chooseNoteType')} <bdi className={isRamadan ? 'text-amber-400' : 'text-indigo-600'}>{selectedStudentForBehavior?.name}</bdi>
+</p>
                 
                 <div className="grid grid-cols-2 gap-2 mb-4">
                     {NEGATIVE_BEHAVIORS.map(b => (
