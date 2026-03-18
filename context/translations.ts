@@ -1323,7 +1323,7 @@ export const translations = {
   }
 };
 // ---------------- Excel Import Component ----------------
-    downloadExcelTemplateWithCivilId: "تحميل قالب الإكسل (متضمن الرقم المدني)",
+    downloadExcelTemplateWithCivilId:"تحميل قالب الإكسل (متضمن الرقم المدني)",
     assignStudentsToClass: "توزيع الطلاب على فصل",
     newClassBtnPlus: "فصل جديد +",
     uploadExcelFileTitle: "ارفع ملف الإكسل",
@@ -1336,6 +1336,7 @@ export const translations = {
     // ==================================================
     // في قسم الـ (en) أضف التالي:
     // ---------------- Excel Import Component ----------------
+   alertNoValidDataExcel: "No valid data found. Ensure you are using the correct template.", // <-- تأكد من وجود فاصلة هنا
     downloadExcelTemplateWithCivilId: "Download Excel Template (includes Civil ID)",
     assignStudentsToClass: "Assign students to class",
     newClassBtnPlus: "New Class +",
