@@ -297,6 +297,7 @@ const GradesTemplate = ({ students, tools, teacherInfo, semester, gradeClass }: 
 
   const settings = getGradingSettings() || { totalScore: 100, finalExamWeight: 40, finalExamName: '' };
   
+  // 🌟 فلترة ذكية لاسم الامتحان النهائي القادم من الذاكرة
   const savedFinalExamName = settings.finalExamName?.trim() || '';
   const isDefaultExamName = savedFinalExamName === 'الامتحان النهائي' || savedFinalExamName === 'Final Exam' || savedFinalExamName === '';
   const finalExamName = isDefaultExamName ? t('finalExamNameDefault') : savedFinalExamName;
@@ -1096,4 +1097,298 @@ const Reports: React.FC<ReportsProps> = ({ initialTab }) => {
       <div className="flex-1 h-full overflow-y-auto custom-scrollbar px-4 pt-4 pb-24 relative z-10">
         <div className="w-full h-[190px] shrink-0 block md:hidden"></div>
 
-        <div className={`rounded-[2rem] p-6 shadow-sm border min-h
+        <div className={`rounded-[2rem] p-6 shadow-sm border min-h-[400px] transition-colors ${isRamadan ? 'bg-white/5 backdrop-blur-2xl border-white/10' : 'bg-white border-slate-100'}`}>
+          
+          {activeTab === 'student_report' && (
+            <div className="space-y-6">
+              <div className={`flex items-center gap-3 border-b pb-4 mb-2 ${isRamadan ? 'border-white/10' : 'border-slate-50'}`}>
+                <div className={`p-2 rounded-xl ${isRamadan ? 'bg-indigo-500/20 text-indigo-300' : 'bg-indigo-50 text-indigo-600'}`}><Icon3DStudent className="w-5 h-5" /></div>
+                <h3 className={`font-black text-lg ${isRamadan ? 'text-white' : 'text-slate-800'}`}>{t('comprehensiveStudentReport')}</h3>
+              </div>
+
+              <div className="space-y-4">
+                <div className="flex gap-2 overflow-x-auto pb-1 no-scrollbar">
+                  {availableGrades.map(g => (
+                    <button
+                      key={g}
+                      onClick={() => setStGrade(g)}
+                      className={`px-4 py-2 text-xs font-bold rounded-xl border transition-all ${stGrade === g ? (isRamadan ? 'bg-indigo-500/40 text-indigo-200 border-indigo-400/50' : 'bg-indigo-600 text-white border-transparent') : (isRamadan ? 'bg-white/5 text-slate-300 border-white/10 hover:bg-white/10' : 'bg-slate-50 text-slate-600 border-slate-200')}`}
+                    >
+                      {t('gradePrefix')} {g}
+                    </button>
+                  ))}
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <select value={stClass} onChange={(e) => setStClass(e.target.value)} className={`w-full p-4 border rounded-2xl font-bold outline-none transition-colors text-sm ${isRamadan ? 'bg-[#0f172a]/50 border-white/20 text-white focus:border-indigo-400' : 'bg-slate-50 border-slate-200 text-slate-700 focus:border-indigo-500'}`}>
+                    {getClassesForGrade(stGrade).map(c => <option key={c} value={c} className={isRamadan ? 'bg-slate-900 text-white' : ''}>{c}</option>)}
+                  </select>
+
+                  <select value={selectedStudentId} onChange={(e) => setSelectedStudentId(e.target.value)} className={`w-full p-4 border rounded-2xl font-bold outline-none transition-colors text-sm ${isRamadan ? 'bg-[#0f172a]/50 border-white/20 text-white focus:border-indigo-400' : 'bg-slate-50 border-slate-200 text-slate-700 focus:border-indigo-500'}`}>
+                    <option value="" className={isRamadan ? 'text-slate-500 bg-slate-900' : ''}>{t('selectStudentPlaceholder')}</option>
+                    {filteredStudentsForStudentTab.map(s => <option key={s.id} value={s.id} className={isRamadan ? 'bg-slate-900 text-white' : ''}>{s.name}</option>)}
+                  </select>
+                </div>
+              </div>
+
+              <div className="flex gap-3 justify-end pt-4 mt-4 flex-wrap">
+                <button
+                  onClick={openClassReportsPreview}
+                  disabled={!stClass || filteredStudentsForStudentTab.length === 0}
+                  className={`px-5 py-3.5 rounded-xl font-black text-xs shadow-lg flex items-center gap-2 active:scale-95 transition-all flex-1 justify-center disabled:opacity-50 ${isRamadan ? 'bg-white/10 text-white hover:bg-white/20 border border-white/20' : 'bg-slate-800 text-white hover:bg-slate-700'}`}
+                >
+                  <Icon3DLayers className="w-4 h-4" /> {t('printEntireClass')}
+                </button>
+
+                <button
+                  onClick={() => {
+                    if (selectedStudentId) {
+                      const s = students.find(st => st.id === selectedStudentId);
+                      if (s) setViewingStudent(s);
+                    }
+                  }}
+                  disabled={!selectedStudentId}
+                  className={`disabled:opacity-50 px-6 py-3.5 rounded-xl font-black text-xs shadow-lg flex items-center gap-2 active:scale-95 transition-all flex-1 justify-center ${isRamadan ? 'bg-indigo-600 text-white hover:bg-indigo-500' : 'bg-indigo-600 text-white hover:bg-indigo-700'}`}
+                >
+                  <Icon3DDocument className="w-4 h-4" /> {t('individualPreview')}
+                </button>
+              </div>
+            </div>
+          )}
+
+          {activeTab === 'grades_record' && (
+            <div className="space-y-6">
+              <div className={`flex items-center gap-3 border-b pb-4 mb-2 ${isRamadan ? 'border-white/10' : 'border-slate-50'}`}>
+                <div className={`p-2 rounded-xl ${isRamadan ? 'bg-amber-500/20 text-amber-400' : 'bg-amber-50 text-amber-600'}`}><Icon3DGrades className="w-5 h-5" /></div>
+                <h3 className={`font-black text-lg ${isRamadan ? 'text-white' : 'text-slate-800'}`}>{t('gradesRecordTab')}</h3>
+              </div>
+
+              <div className="space-y-4">
+                <div className="flex gap-2 overflow-x-auto pb-1 no-scrollbar">
+                  {availableGrades.map(g => (
+                    <button
+                      key={g}
+                      onClick={() => { setGradesGrade(g); setGradesClass('all'); }}
+                      className={`px-4 py-2 text-xs font-bold rounded-xl border transition-all ${gradesGrade === g ? (isRamadan ? 'bg-amber-500/40 text-amber-200 border-amber-400/50' : 'bg-amber-600 text-white border-transparent') : (isRamadan ? 'bg-white/5 text-slate-300 border-white/10 hover:bg-white/10' : 'bg-slate-50 text-slate-600 border-slate-200')}`}
+                    >
+                      {t('gradePrefix')} {g}
+                    </button>
+                  ))}
+                </div>
+
+                <select value={gradesClass} onChange={(e) => setGradesClass(e.target.value)} className={`w-full p-4 border rounded-2xl font-bold outline-none transition-colors text-sm ${isRamadan ? 'bg-[#0f172a]/50 border-white/20 text-white focus:border-amber-400' : 'bg-slate-50 border-slate-200 text-slate-700 focus:border-amber-500'}`}>
+                  <option value="all" className={isRamadan ? 'bg-slate-900 text-white' : ''}>{t('allClassesInGrade').split(' ')[0]}</option>
+                  {getClassesForGrade(gradesGrade).map(c => <option key={c} value={c} className={isRamadan ? 'bg-slate-900 text-white' : ''}>{c}</option>)}
+                </select>
+              </div>
+
+              <div className="flex justify-end pt-4">
+                <button onClick={openGradesPreview} className={`w-full text-white px-6 py-4 rounded-xl font-black text-xs flex items-center justify-center gap-2 shadow-lg active:scale-95 transition-all ${isRamadan ? 'bg-amber-600 hover:bg-amber-500' : 'bg-amber-500 hover:bg-amber-600'}`}>
+                  <Icon3DPrint className="w-5 h-5" /> {t('previewAndPrintRecord')}
+                </button>
+              </div>
+            </div>
+          )}
+
+          {activeTab === 'certificates' && (
+            <div className="space-y-6">
+              <div className={`flex justify-between items-center pb-4 border-b mb-2 ${isRamadan ? 'border-white/10' : 'border-slate-50'}`}>
+                <div className="flex items-center gap-3">
+                  <div className={`p-2 rounded-xl ${isRamadan ? 'bg-emerald-500/20 text-emerald-400' : 'bg-emerald-50 text-emerald-600'}`}><Icon3DCertificate className="w-5 h-5" /></div>
+                  <h3 className={`font-black text-lg ${isRamadan ? 'text-white' : 'text-slate-800'}`}>{t('certificatesTab')}</h3>
+                </div>
+                <button onClick={() => setShowCertSettingsModal(true)} className={`p-2 rounded-xl transition-colors ${isRamadan ? 'bg-white/10 text-slate-300 hover:bg-white/20' : 'bg-slate-50 text-slate-500 hover:bg-slate-100'}`}>
+                  <Icon3DSettings className="w-5 h-5" />
+                </button>
+              </div>
+
+              <div className="space-y-4">
+                <div className="flex gap-2 overflow-x-auto pb-1 no-scrollbar">
+                  {availableGrades.map(g => (
+                    <button
+                      key={g}
+                      onClick={() => setCertGrade(g)}
+                      className={`px-4 py-2 text-xs font-bold rounded-xl border transition-all ${certGrade === g ? (isRamadan ? 'bg-emerald-500/40 text-emerald-200 border-emerald-400/50' : 'bg-emerald-600 text-white border-transparent') : (isRamadan ? 'bg-white/5 text-slate-300 border-white/10 hover:bg-white/10' : 'bg-slate-50 text-slate-600 border-slate-200')}`}
+                    >
+                      {t('gradePrefix')} {g}
+                    </button>
+                  ))}
+                </div>
+
+                <select value={certClass} onChange={(e) => { setCertClass(e.target.value); setSelectedCertStudents([]); }} className={`w-full p-4 border rounded-2xl font-bold outline-none transition-colors text-sm ${isRamadan ? 'bg-[#0f172a]/50 border-white/20 text-white focus:border-emerald-400' : 'bg-slate-50 border-slate-200 text-slate-700 focus:border-emerald-500'}`}>
+                  <option value="" disabled className={isRamadan ? 'text-slate-500 bg-slate-900' : ''}>{t('selectClassPlaceholder')}</option>
+                  {getClassesForGrade(certGrade).map(c => <option key={c} value={c} className={isRamadan ? 'bg-slate-900 text-white' : ''}>{c}</option>)}
+                </select>
+              </div>
+
+              <div className="space-y-2">
+                <div className="flex justify-between px-2">
+                  <label className={`text-xs font-bold ${isRamadan ? 'text-slate-400' : 'text-slate-500'}`}>{t('studentsLabel')} ({selectedCertStudents.length})</label>
+                  <button onClick={selectAllCertStudents} className={`text-xs font-bold transition-colors ${isRamadan ? 'text-emerald-400 hover:text-emerald-300' : 'text-emerald-600 hover:text-emerald-700'}`}>{t('selectAll')}</button>
+                </div>
+
+                <div className="grid grid-cols-2 gap-2 max-h-52 overflow-y-auto p-1 custom-scrollbar">
+                  {filteredStudentsForCert.map(s => (
+                    <button
+                      key={s.id}
+                      onClick={() => toggleCertStudent(s.id)}
+                      className={`p-3 rounded-xl border text-xs font-bold flex justify-between transition-all ${selectedCertStudents.includes(s.id) ? (isRamadan ? 'bg-emerald-600 text-white border-emerald-500 shadow-md' : 'bg-emerald-600 text-white border-emerald-600 shadow-md') : (isRamadan ? 'bg-[#0f172a]/50 border-white/10 text-slate-300 hover:bg-white/10' : 'bg-white border-slate-200 text-slate-600 hover:bg-slate-50')}`}
+                    >
+                      {s.name} {selectedCertStudents.includes(s.id) && <Check size={14} />}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              <div className="flex justify-end pt-4">
+                <button
+                  onClick={openCertificatesPreview}
+                  disabled={selectedCertStudents.length === 0}
+                  className={`w-full disabled:opacity-50 text-white px-6 py-4 rounded-xl font-black text-xs flex items-center justify-center gap-2 shadow-lg active:scale-95 transition-all ${isRamadan ? 'bg-emerald-600 hover:bg-emerald-500' : 'bg-emerald-600 hover:bg-emerald-700'}`}
+                >
+                  <Icon3DPrint className="w-5 h-5" /> {t('previewAndPrintCertificates')}
+                </button>
+              </div>
+            </div>
+          )}
+
+          {activeTab === 'parent_cards' && (
+            <div className="space-y-6">
+              <div className={`flex items-center gap-3 border-b pb-4 mb-2 ${isRamadan ? 'border-white/10' : 'border-slate-50'}`}>
+                <div className={`p-2 rounded-xl ${isRamadan ? 'bg-amber-500/20 text-amber-400' : 'bg-amber-50 text-amber-600'}`}><Icon3DParentCard className="w-5 h-5" /></div>
+                <h3 className={`font-black text-lg ${isRamadan ? 'text-white' : 'text-slate-800'}`}>{t('parentLoginCards')}</h3>
+              </div>
+
+              <div className="space-y-4">
+                <div className="flex gap-2 overflow-x-auto pb-1 no-scrollbar">
+                  {availableGrades.map(g => (
+                    <button
+                      key={g}
+                      onClick={() => { setCardsGrade(g); setCardsClass('all'); }}
+                      className={`px-4 py-2 text-xs font-bold rounded-xl border transition-all ${cardsGrade === g ? (isRamadan ? 'bg-amber-500/40 text-amber-200 border-amber-400/50' : 'bg-amber-600 text-white border-transparent') : (isRamadan ? 'bg-white/5 text-slate-300 border-white/10 hover:bg-white/10' : 'bg-slate-50 text-slate-600 border-slate-200')}`}
+                    >
+                      {t('gradePrefix')} {g}
+                    </button>
+                  ))}
+                </div>
+
+                <select value={cardsClass} onChange={(e) => setCardsClass(e.target.value)} className={`w-full p-4 border rounded-2xl font-bold outline-none transition-colors text-sm ${isRamadan ? 'bg-[#0f172a]/50 border-white/20 text-white focus:border-amber-400' : 'bg-slate-50 border-slate-200 text-slate-700 focus:border-amber-500'}`}>
+                  <option value="all" className={isRamadan ? 'bg-slate-900 text-white' : ''}>{t('allClassesInGrade')}</option>
+                  {getClassesForGrade(cardsGrade).map(c => <option key={c} value={c} className={isRamadan ? 'bg-slate-900 text-white' : ''}>{c}</option>)}
+                </select>
+              </div>
+
+              <div className="flex justify-end pt-4">
+                <button onClick={openParentCardsPreview} className={`w-full text-white px-6 py-4 rounded-xl font-black text-xs flex items-center justify-center gap-2 shadow-lg active:scale-95 transition-all ${isRamadan ? 'bg-amber-600 hover:bg-amber-500' : 'bg-amber-500 hover:bg-amber-600'}`}>
+                  <Icon3DPrint className="w-5 h-5" /> {t('previewAndPrintCards')}
+                </button>
+              </div>
+            </div>
+          )}
+
+          {activeTab === 'summon' && (
+            <div className="space-y-6">
+              <div className={`flex items-center gap-3 border-b pb-4 mb-2 ${isRamadan ? 'border-white/10' : 'border-slate-50'}`}>
+                <div className={`p-2 rounded-xl ${isRamadan ? 'bg-rose-500/20 text-rose-400' : 'bg-rose-50 text-rose-600'}`}><Icon3DSummon className="w-5 h-5" /></div>
+                <h3 className={`font-black text-lg ${isRamadan ? 'text-white' : 'text-slate-800'}`}>{t('summonTab')}</h3>
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <select value={summonClass} onChange={(e) => setSummonClass(e.target.value)} className={`p-4 border rounded-2xl font-bold outline-none transition-colors text-sm ${isRamadan ? 'bg-[#0f172a]/50 border-white/20 text-white focus:border-rose-400' : 'bg-slate-50 border-slate-200 text-slate-700 focus:border-rose-500'}`}>
+                  <option value="" disabled className={isRamadan ? 'text-slate-500 bg-slate-900' : ''}>{t('selectClassPlaceholder')}</option>
+                  {getClassesForGrade(summonGrade).map(c => <option key={c} value={c} className={isRamadan ? 'bg-slate-900 text-white' : ''}>{c}</option>)}
+                </select>
+
+                <select value={summonStudentId} onChange={(e) => setSummonStudentId(e.target.value)} className={`p-4 border rounded-2xl font-bold outline-none transition-colors text-sm ${isRamadan ? 'bg-[#0f172a]/50 border-white/20 text-white focus:border-rose-400' : 'bg-slate-50 border-slate-200 text-slate-700 focus:border-rose-500'}`}>
+                  <option value="" className={isRamadan ? 'text-slate-500 bg-slate-900' : ''}>{t('studentPlaceholder')}</option>
+                  {availableStudentsForSummon.map(s => <option key={s.id} value={s.id} className={isRamadan ? 'bg-slate-900 text-white' : ''}>{s.name}</option>)}
+                </select>
+              </div>
+
+              <div className="space-y-2">
+                <div className="flex flex-wrap gap-2">
+                  {[
+                    { id: 'absence', label: t('absenceReason') },
+                    { id: 'truant', label: t('truantReason') },
+                    { id: 'behavior', label: t('behaviorReason') },
+                    { id: 'level', label: t('levelReason') },
+                    { id: 'other', label: t('otherReason') }
+                  ].map((r) => (
+                    <button
+                      key={r.id}
+                      onClick={() => setSummonData({ ...summonData, reasonType: r.id })}
+                      className={`px-4 py-2 rounded-xl text-xs font-bold border transition-all ${summonData.reasonType === r.id ? (isRamadan ? 'bg-rose-600 text-white border-rose-500 shadow-md' : 'bg-rose-600 text-white border-rose-600 shadow-md') : (isRamadan ? 'bg-[#0f172a]/50 text-slate-300 border-white/20 hover:bg-white/10' : 'bg-slate-50 text-slate-600 border-slate-200 hover:bg-slate-100')}`}
+                    >
+                      {r.label}
+                    </button>
+                  ))}
+                </div>
+
+                {summonData.reasonType === 'other' && (
+                  <textarea
+                    value={summonData.customReason}
+                    onChange={(e) => setSummonData({ ...summonData, customReason: e.target.value })}
+                    placeholder={t('writeSummonReasonHere')}
+                    className={`w-full p-4 border rounded-2xl font-bold mt-2 h-20 resize-none outline-none transition-colors text-sm ${isRamadan ? 'bg-[#0f172a]/50 border-white/20 text-white focus:border-rose-400 placeholder:text-slate-600' : 'bg-slate-50 border-slate-300 text-slate-800 focus:border-rose-500'}`}
+                  />
+                )}
+              </div>
+
+              <div className="grid grid-cols-2 gap-2">
+                {availableProceduresList.map(p => (
+                  <button
+                    key={p.id}
+                    onClick={() => toggleProcedure(p.id)}
+                    className={`p-2 rounded-lg text-[10px] font-bold border transition-all ${takenProcedures.includes(p.id) ? (isRamadan ? 'bg-indigo-500/30 border-indigo-400 text-indigo-200' : 'bg-indigo-100 border-indigo-500 text-indigo-700') : (isRamadan ? 'bg-white/5 border-white/10 text-slate-400 hover:bg-white/10' : 'bg-white border-slate-200 text-slate-500 hover:bg-slate-50')}`}
+                  >
+                    {p.label}
+                  </button>
+                ))}
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div className="space-y-1">
+                  <label className={`text-[10px] font-bold ${isRamadan ? 'text-slate-400' : 'text-slate-500'}`}>{t('issueDateLabel')}</label>
+                  <input type="date" value={summonData.issueDate} onChange={(e) => setSummonData({ ...summonData, issueDate: e.target.value })} className={`w-full p-3 border rounded-xl text-xs font-bold outline-none ${isRamadan ? 'bg-[#0f172a]/50 border-white/20 text-white focus:border-rose-400' : 'bg-slate-50 border-slate-200 focus:border-rose-500'}`} />
+                </div>
+
+                <div className="space-y-1">
+                  <label className={`text-[10px] font-bold ${isRamadan ? 'text-slate-400' : 'text-slate-500'}`}>{t('attendanceDateLabel')}</label>
+                  <input type="date" value={summonData.date} onChange={(e) => setSummonData({ ...summonData, date: e.target.value })} className={`w-full p-3 border rounded-xl text-xs font-bold outline-none ${isRamadan ? 'bg-[#0f172a]/50 border-white/20 text-white focus:border-rose-400' : 'bg-slate-50 border-slate-200 focus:border-rose-500'}`} />
+                </div>
+
+                <div className="space-y-1">
+                  <label className={`text-[10px] font-bold ${isRamadan ? 'text-slate-400' : 'text-slate-500'}`}>{t('timeLabel')}</label>
+                  <input type="time" value={summonData.time} onChange={(e) => setSummonData({ ...summonData, time: e.target.value })} className={`w-full p-3 border rounded-xl text-xs font-bold outline-none ${isRamadan ? 'bg-[#0f172a]/50 border-white/20 text-white focus:border-rose-400' : 'bg-slate-50 border-slate-200 focus:border-rose-500'}`} />
+                </div>
+              </div>
+
+              <div className="flex justify-end pt-4">
+                <button
+                  onClick={openSummonPreview}
+                  disabled={!summonStudentId}
+                  className={`w-full disabled:opacity-50 text-white px-6 py-4 rounded-xl font-black text-xs flex items-center justify-center gap-2 shadow-lg active:scale-95 transition-all ${isRamadan ? 'bg-rose-600 hover:bg-rose-500' : 'bg-rose-600 hover:bg-rose-700'}`}
+                >
+                  <Icon3DEye className="w-5 h-5" /> {t('previewLetter')}
+                </button>
+              </div>
+            </div>
+          )}
+        </div>
+      </div>
+
+      <Modal isOpen={showCertSettingsModal} onClose={() => setShowCertSettingsModal(false)} className={`max-w-md rounded-[2rem] ${isRamadan ? 'bg-transparent' : ''}`}>
+        <div className={`text-center p-6 rounded-[2rem] border transition-colors ${isRamadan ? 'bg-[#0f172a]/95 backdrop-blur-2xl border-white/10 text-white shadow-[0_0_40px_rgba(0,0,0,0.5)]' : 'bg-white border-transparent text-slate-800'}`}>
+          <h3 className="font-black text-lg mb-4">{t('certificateSettingsTitle')}</h3>
+          <div className="space-y-3">
+            <input type="text" value={tempCertSettings.title} onChange={(e) => setTempCertSettings({ ...tempCertSettings, title: e.target.value })} className={`w-full p-3 border rounded-xl font-bold outline-none transition-colors ${isRamadan ? 'bg-[#1e1b4b]/50 border-indigo-500/30 text-white focus:border-indigo-400' : 'bg-slate-50 border-slate-200 text-slate-800 focus:border-indigo-500'}`} placeholder={t('certificateTitlePlaceholder')} />
+            <textarea value={tempCertSettings.bodyText} onChange={(e) => setTempCertSettings({ ...tempCertSettings, bodyText: e.target.value })} className={`w-full p-3 border rounded-xl font-bold h-24 outline-none transition-colors resize-none ${isRamadan ? 'bg-[#1e1b4b]/50 border-indigo-500/30 text-white focus:border-indigo-400' : 'bg-slate-50 border-slate-200 text-slate-800 focus:border-indigo-500'}`} placeholder={t('certificateBodyPlaceholder')} />
+            <button onClick={() => { setCertificateSettings(tempCertSettings); setShowCertSettingsModal(false); }} className={`w-full py-3 rounded-xl font-black shadow-lg active:scale-95 transition-all ${isRamadan ? 'bg-indigo-600 hover:bg-indigo-500 text-white' : 'bg-indigo-600 hover:bg-indigo-700 text-white'}`}>{t('saveBtn')}</button>
+          </div>
+        </div>
+      </Modal>
+    </div>
+  );
+};
+
+export default Reports;
