@@ -1322,8 +1322,8 @@ export const translations = {
     knightAppreciationText: ", in appreciation of his great efforts and topping the knights of this month. Wishing him continued brilliance and success.",
   }
 };
-// ---------------- Excel Import Component ----------------
-   downloadExcelTemplateWithCivilId: "تحميل قالب الإكسل (متضمن الرقم المدني)",
+   // ---------------- Excel Import Component ----------------
+    downloadExcelTemplateWithCivilId: "تحميل قالب الإكسل (متضمن الرقم المدني)",
     assignStudentsToClass: "توزيع الطلاب على فصل",
     newClassBtnPlus: "فصل جديد +",
     uploadExcelFileTitle: "ارفع ملف الإكسل",
@@ -1335,8 +1335,7 @@ export const translations = {
 
     // ==================================================
     // في قسم الـ (en) أضف التالي:
-    // ---------------- Excel Import Component ----------------
-   alertNoValidDataExcel: "No valid data found. Ensure you are using the correct template.", // <-- تأكد من وجود فاصلة هنا
+  // ---------------- Excel Import Component ----------------
     downloadExcelTemplateWithCivilId: "Download Excel Template (includes Civil ID)",
     assignStudentsToClass: "Assign students to class",
     newClassBtnPlus: "New Class +",
