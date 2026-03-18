@@ -1322,3 +1322,26 @@ export const translations = {
     knightAppreciationText: ", in appreciation of his great efforts and topping the knights of this month. Wishing him continued brilliance and success.",
   }
 };
+// ---------------- Excel Import Component ----------------
+    downloadExcelTemplateWithCivilId: "تحميل قالب الإكسل (متضمن الرقم المدني)",
+    assignStudentsToClass: "توزيع الطلاب على فصل",
+    newClassBtnPlus: "فصل جديد +",
+    uploadExcelFileTitle: "ارفع ملف الإكسل",
+    mustSelectClassFirst: "يجب اختيار الفصل أولاً لتفعيل الزر",
+    chooseFileNow: "اختر الملف الآن",
+    excelTipBestResults: "لأفضل النتائج، قم بتحميل واستخدام القالب الجاهز أعلاه (يحتوي على الرقم المدني، الاسم، ورقم الهاتف).",
+    alertSelectClassExcel: "الرجاء اختيار الفصل أولاً",
+    alertNoValidDataExcel: "لم يتم العثور على بيانات صالحة. تأكد من استخدام القالب الصحيح.",
+
+    // ==================================================
+    // في قسم الـ (en) أضف التالي:
+    // ---------------- Excel Import Component ----------------
+    downloadExcelTemplateWithCivilId: "Download Excel Template (includes Civil ID)",
+    assignStudentsToClass: "Assign students to class",
+    newClassBtnPlus: "New Class +",
+    uploadExcelFileTitle: "Upload Excel File",
+    mustSelectClassFirst: "You must select a class first to enable the button",
+    chooseFileNow: "Choose file now",
+    excelTipBestResults: "For best results, download and use the ready template above (contains Civil ID, Name, and Phone).",
+    alertSelectClassExcel: "Please select a class first",
+    alertNoValidDataExcel: "No valid data found. Ensure you are using the correct template.",
