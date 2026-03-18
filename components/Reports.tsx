@@ -247,6 +247,7 @@ const getGradingSettings = () => {
 };
 
 // --- نافذة المعاينة (Print Preview Modal) المحدثة ---
+// --- نافذة المعاينة (Print Preview Modal) المحدثة ---
 const PrintPreviewModal: React.FC<{
   isOpen: boolean;
   onClose: () => void;
@@ -299,7 +300,8 @@ const PrintPreviewModal: React.FC<{
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-[99999] bg-slate-900/95 backdrop-blur-sm md:pr-[18rem] flex flex-col" dir={dir}>
+    // 🌟 التعديل السحري هنا: جعل الإزاحة ديناميكية حسب لغة التطبيق
+    <div className={`fixed inset-0 z-[99999] bg-slate-900/95 backdrop-blur-sm ${dir === 'rtl' ? 'md:pr-[18rem]' : 'md:pl-[18rem]'} flex flex-col`} dir={dir}>
       <div id="preview-scroll-container" className="h-full overflow-auto p-4 md:p-8 custom-scrollbar">
         
         <div className="sticky top-0 z-50 bg-slate-800 text-white p-4 flex justify-between items-center border border-white/10 shadow-2xl rounded-2xl mb-6">
@@ -334,7 +336,7 @@ const PrintPreviewModal: React.FC<{
               width: landscape ? '297mm' : '210mm',
               minHeight: landscape ? '210mm' : '297mm',
               padding: '0',
-              direction: dir, // 🌍 تطبيق الاتجاه تلقائياً للطباعة
+              direction: dir,
               fontFamily: 'Tajawal, sans-serif',
               backgroundColor: '#ffffff',
               color: '#000000',
