@@ -820,8 +820,8 @@ const Dashboard: React.FC<DashboardProps> = ({
                             <div className="space-y-4">
                                 <div className="flex gap-2 overflow-x-auto pb-2 no-scrollbar">
                                     {tempSchedule.map((day, idx) => (
-                                        {/* 🌟 تعديل الترجمة الديناميكية هنا لأزرار الأيام */}
-                                        <button key={idx} onClick={() => setEditingDayIndex(idx)} className={`px-4 py-2 rounded-xl text-xs font-bold whitespace-nowrap border transition-all ${editingDayIndex === idx ? (isRamadan ? 'bg-indigo-600 text-white border-transparent' : 'bg-indigo-600 text-white border-indigo-600') : (isRamadan ? 'bg-[#1e293b] text-slate-300 border-white/10' : 'bg-white text-slate-500 border-slate-200')}`}>{t(weekDayKeys[idx]) || day.dayName}</button>
+    <button key={idx} onClick={() => setEditingDayIndex(idx)} className={`px-4 py-2 rounded-xl text-xs font-bold whitespace-nowrap border transition-all ${editingDayIndex === idx ? (isRamadan ? 'bg-indigo-600 text-white border-transparent' : 'bg-indigo-600 text-white border-indigo-600') : (isRamadan ? 'bg-[#1e293b] text-slate-300 border-white/10' : 'bg-white text-slate-500 border-slate-200')}`}>{t(weekDayKeys[idx]) || day.dayName}</button>
+))}
                                     ))}
                                 </div>
                                 <div className="space-y-2">
