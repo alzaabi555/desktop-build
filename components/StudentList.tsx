@@ -38,24 +38,23 @@ const SOUNDS = {
     alarm: alarmSound
 }
 
-// ✅ ملاحظة: السلوكيات الثابتة هنا تم تركها بالعربية لأنها بيانات قابلة للحذف والتعديل لاحقاً من قبل المستخدم، 
-// والأفضل أن تبقى بلغة التطبيق الأصلية المدخلة لتجنب تعقيد قاعدة البيانات.
+// ✅ تم ربط مفاتيح الترجمة مع المصطلحات الأصلية لتجنب تكرار البيانات
 const NEGATIVE_BEHAVIORS = [
-    { id: '1', title: 'إزعاج في الحصة', points: -2 },
-    { id: '2', title: 'عدم حل الواجب', points: -2 },
-    { id: '3', title: 'نسيان الكتاب والدفتر', points: -1 },
-    { id: '4', title: 'تأخر عن الحصة', points: -1 },
-    { id: '5', title: 'سلوك غير لائق', points: -3 },
-    { id: '6', title: 'النوم في الفصل', points: -2 },
+    { id: '1', original: 'إزعاج في الحصة', transKey: 'behNeg1', points: -2 },
+    { id: '2', original: 'عدم حل الواجب', transKey: 'behNeg2', points: -2 },
+    { id: '3', original: 'نسيان الكتاب والدفتر', transKey: 'behNeg3', points: -1 },
+    { id: '4', original: 'تأخر عن الحصة', transKey: 'behNeg4', points: -1 },
+    { id: '5', original: 'سلوك غير لائق', transKey: 'behNeg5', points: -3 },
+    { id: '6', original: 'النوم في الفصل', transKey: 'behNeg6', points: -2 },
 ];
 
 const POSITIVE_BEHAVIORS = [
-    { id: 'p1', title: 'إجابة متميزة', points: 2 },
-    { id: 'p2', title: 'إجابة صحيحة', points: 1 },
-    { id: 'p3', title: 'واجب مميز', points: 2 },
-    { id: 'p4', title: 'مساعدة الزملاء', points: 2 },
-    { id: 'p5', title: 'مشاركة صفية متميزة', points: 5 },
-    { id: 'p6', title: 'إبداع وتميز', points: 3 },
+    { id: 'p1', original: 'إجابة متميزة', transKey: 'behPos1', points: 2 },
+    { id: 'p2', original: 'إجابة صحيحة', transKey: 'behPos2', points: 1 },
+    { id: 'p3', original: 'واجب مميز', transKey: 'behPos3', points: 2 },
+    { id: 'p4', original: 'مساعدة الزملاء', transKey: 'behPos4', points: 2 },
+    { id: 'p5', original: 'مشاركة صفية متميزة', transKey: 'behPos5', points: 5 },
+    { id: 'p6', original: 'إبداع وتميز', transKey: 'behPos6', points: 3 },
 ];
 
 const GOOGLE_WEB_APP_URL = "https://script.google.com/macros/s/AKfycbzKPPsQsM_dIttcYSxRLs6LQuvXhT6Qia5TwJ1Tw4ObQ-eZFZeJhV6epXXjxA9_SwWk/exec"; 
@@ -457,14 +456,15 @@ const StudentList: React.FC<StudentListProps> = ({
         }
     };
 
-    const confirmPositiveBehavior = (title: string, points: number) => {
+    // ✅ حفظ البيانات بالمصطلح الأصلي (العربي) لضمان استقرار قاعدة البيانات والإحصائيات
+    const confirmPositiveBehavior = (originalTitle: string, points: number) => {
         if (!selectedStudentForBehavior) return;
         playSound('positive');
         const newBehavior = {
             id: Math.random().toString(36).substr(2, 9),
             date: new Date().toISOString(),
             type: 'positive' as const,
-            description: title,
+            description: originalTitle, // ✅ تم حفظه بالعربية
             points: points,
             semester: currentSemester
         };
@@ -476,14 +476,15 @@ const StudentList: React.FC<StudentListProps> = ({
         setSelectedStudentForBehavior(null);
     };
 
-    const confirmNegativeBehavior = (title: string, points: number) => {
+    // ✅ حفظ البيانات بالمصطلح الأصلي (العربي) 
+    const confirmNegativeBehavior = (originalTitle: string, points: number) => {
         if (!selectedStudentForBehavior) return;
         playSound('negative');
         const newBehavior = {
             id: Math.random().toString(36).substr(2, 9),
             date: new Date().toISOString(),
             type: 'negative' as const,
-            description: title,
+            description: originalTitle, // ✅ تم حفظه بالعربية
             points: points,
             semester: currentSemester
         };
@@ -529,7 +530,7 @@ const StudentList: React.FC<StudentListProps> = ({
                     id: Math.random().toString(36).substr(2, 9),
                     date: new Date().toISOString(),
                     type: 'positive' as const,
-                    description: t('rewardDiscipline'),
+                    description: 'هدوء وانضباط', // مصطلح ثابت للمكافأة الجماعية
                     points: 2,
                     semester: currentSemester
                 };
@@ -975,10 +976,10 @@ const StudentList: React.FC<StudentListProps> = ({
                     {POSITIVE_BEHAVIORS.map(b => (
                         <button 
                             key={b.id}
-                            onClick={() => confirmPositiveBehavior(b.title, b.points)}
+                            onClick={() => confirmPositiveBehavior(b.original, b.points)}
                             className={`p-3 border rounded-xl text-xs font-bold active:scale-95 transition-all flex flex-col items-center gap-1 ${isRamadan ? 'bg-[#1e293b] border-emerald-400/30 text-emerald-300 hover:bg-emerald-500/30' : 'bg-emerald-50 border-emerald-100 text-emerald-700 hover:bg-emerald-100'}`}
                         >
-                            <span>{b.title}</span>
+                            <span>{t(b.transKey)}</span>
                             <span className={`text-[10px] px-2 py-0.5 rounded-full shadow-sm ${isRamadan ? 'bg-emerald-500/30 text-emerald-200' : 'bg-white text-emerald-600'}`}>+{b.points}</span>
                         </button>
                     ))}
@@ -1024,10 +1025,10 @@ const StudentList: React.FC<StudentListProps> = ({
                     {NEGATIVE_BEHAVIORS.map(b => (
                         <button 
                             key={b.id}
-                            onClick={() => confirmNegativeBehavior(b.title, b.points)}
+                            onClick={() => confirmNegativeBehavior(b.original, b.points)}
                             className={`p-3 border rounded-xl text-xs font-bold active:scale-95 transition-all flex flex-col items-center gap-1 ${isRamadan ? 'bg-[#1e293b] border-rose-400/30 text-rose-300 hover:bg-rose-500/30' : 'bg-rose-50 border-rose-100 text-rose-700 hover:bg-rose-100'}`}
                         >
-                            <span>{b.title}</span>
+                            <span>{t(b.transKey)}</span>
                             <span className={`text-[10px] px-2 py-0.5 rounded-full shadow-sm ${isRamadan ? 'bg-rose-500/30 text-rose-200' : 'bg-white text-rose-600'}`}>{b.points}</span>
                         </button>
                     ))}
