@@ -99,6 +99,9 @@ const Dashboard: React.FC<DashboardProps> = ({
     const [occasionGreeting, setOccasionGreeting] = useState<'ramadan' | 'eid' | 'teacher' | null>(null);
     const [cloudMessage, setCloudMessage] = useState<any>(null);
 
+    // ✅ مصفوفة أيام الأسبوع للترجمة الديناميكية
+    const weekDayKeys = ['sunday', 'monday', 'tuesday', 'wednesday', 'thursday'] as const;
+
     const [isRamadan] = useState(() => {
         try {
             const parts = new Intl.DateTimeFormat('en-TN-u-ca-islamic', { month: 'numeric' }).formatToParts(new Date());
@@ -201,7 +204,6 @@ const Dashboard: React.FC<DashboardProps> = ({
     useEffect(() => {
         if (showScheduleModal) {
             setTempPeriodTimes(JSON.parse(JSON.stringify(periodTimes || [])));
-            // ترجمة الأيام الافتراضية إذا لزم الأمر
             const currentSchedule = schedule && schedule.length ? schedule : [
                 { dayName: t('sunday'), periods: Array(8).fill('') },
                 { dayName: t('monday'), periods: Array(8).fill('') },
@@ -536,7 +538,8 @@ const Dashboard: React.FC<DashboardProps> = ({
             <div className="px-4 mt-6 relative z-10">
                 <div className="flex justify-between items-center mb-4">
                     <h2 className={`text-lg font-black flex items-center gap-2 ${isRamadan ? 'text-white' : 'text-slate-800'}`}>
-                        {t('todaySchedule')} <span className={`text-xs font-bold px-2 py-1 rounded-lg ${isRamadan ? 'bg-white/10 text-indigo-200' : 'bg-slate-100 text-slate-400'}`}>{todaySchedule.dayName}</span>
+                        {/* 🌟 تعديل الترجمة الذكية لعرض اسم اليوم */}
+                        {t('todaySchedule')} <span className={`text-xs font-bold px-2 py-1 rounded-lg ${isRamadan ? 'bg-white/10 text-indigo-200' : 'bg-slate-100 text-slate-400'}`}>{t(weekDayKeys[dayIndex]) || todaySchedule.dayName}</span>
                     </h2>
                     <button onClick={() => setShowScheduleModal(true)} className={`p-2.5 rounded-xl shadow-sm border active:scale-95 transition-transform ${isRamadan ? 'bg-white/5 border-white/10 text-indigo-200 hover:bg-white/10' : 'bg-white text-slate-600 border-slate-200 hover:bg-slate-50'}`}>
                         <Clock size={20} />
@@ -817,7 +820,8 @@ const Dashboard: React.FC<DashboardProps> = ({
                             <div className="space-y-4">
                                 <div className="flex gap-2 overflow-x-auto pb-2 no-scrollbar">
                                     {tempSchedule.map((day, idx) => (
-                                        <button key={idx} onClick={() => setEditingDayIndex(idx)} className={`px-4 py-2 rounded-xl text-xs font-bold whitespace-nowrap border transition-all ${editingDayIndex === idx ? (isRamadan ? 'bg-indigo-600 text-white border-transparent' : 'bg-indigo-600 text-white border-indigo-600') : (isRamadan ? 'bg-[#1e293b] text-slate-300 border-white/10' : 'bg-white text-slate-500 border-slate-200')}`}>{day.dayName}</button>
+                                        {/* 🌟 تعديل الترجمة الديناميكية هنا لأزرار الأيام */}
+                                        <button key={idx} onClick={() => setEditingDayIndex(idx)} className={`px-4 py-2 rounded-xl text-xs font-bold whitespace-nowrap border transition-all ${editingDayIndex === idx ? (isRamadan ? 'bg-indigo-600 text-white border-transparent' : 'bg-indigo-600 text-white border-indigo-600') : (isRamadan ? 'bg-[#1e293b] text-slate-300 border-white/10' : 'bg-white text-slate-500 border-slate-200')}`}>{t(weekDayKeys[idx]) || day.dayName}</button>
                                     ))}
                                 </div>
                                 <div className="space-y-2">
