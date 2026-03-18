@@ -1323,7 +1323,7 @@ export const translations = {
   }
 };
 // ---------------- Excel Import Component ----------------
-    downloadExcelTemplateWithCivilId:"تحميل قالب الإكسل (متضمن الرقم المدني)",
+   downloadExcelTemplateWithCivilId: "تحميل قالب الإكسل (متضمن الرقم المدني)",
     assignStudentsToClass: "توزيع الطلاب على فصل",
     newClassBtnPlus: "فصل جديد +",
     uploadExcelFileTitle: "ارفع ملف الإكسل",
