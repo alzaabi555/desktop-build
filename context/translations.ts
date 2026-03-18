@@ -480,7 +480,37 @@ export const translations = {
     whatsappNegMsg1: "السلام عليكم، ولي أمر الطالب *",
     whatsappNegMsg2: "* المحترم.\nتحية طيبة،\nنود إشعاركم بتقرير بالملاحظات السلوكية المسجلة على الطالب مؤخراً:\n\n",
     whatsappNegMsg3: "\nنأمل منكم التكرم بمتابعة الطالب وتوجيهه.\nشكراً لتعاونكم.\n*إدارة المدرسة*",
+// ---------------- Behaviors Translation ----------------
+    behPos1: "إجابة متميزة",
+    behPos2: "إجابة صحيحة",
+    behPos3: "واجب مميز",
+    behPos4: "مساعدة الزملاء",
+    behPos5: "مشاركة صفية متميزة",
+    behPos6: "إبداع وتميز",
+    
+    behNeg1: "إزعاج في الحصة",
+    behNeg2: "عدم حل الواجب",
+    behNeg3: "نسيان الكتاب والدفتر",
+    behNeg4: "تأخر عن الحصة",
+    behNeg5: "سلوك غير لائق",
+    behNeg6: "النوم في الفصل",
 
+    // ==================================================
+    // في قسم الـ (en) أضف التالي:
+    // ---------------- Behaviors Translation ----------------
+    behPos1: "Excellent Answer",
+    behPos2: "Correct Answer",
+    behPos3: "Outstanding Homework",
+    behPos4: "Helping Classmates",
+    behPos5: "Great Class Participation",
+    behPos6: "Creativity & Excellence",
+
+    behNeg1: "Disturbing the Class",
+    behNeg2: "Not Doing Homework",
+    behNeg3: "Forgot Book/Notebook",
+    behNeg4: "Late for Class",
+    behNeg5: "Inappropriate Behavior",
+    behNeg6: "Sleeping in Class",
     // User Guide
     rasedGuideTitle: "دليل راصد",
     dashboardMenu: "1. لوحة القيادة",
