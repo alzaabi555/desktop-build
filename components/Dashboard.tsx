@@ -805,7 +805,7 @@ const Dashboard: React.FC<DashboardProps> = ({
                     </div>
 
                     <div className="flex-1 overflow-y-auto custom-scrollbar p-1">
-                        {scheduleTab === 'timing' ? (
+                      {scheduleTab === 'timing' ? (
                             <div className="space-y-2">
                                 {tempPeriodTimes.map((pt, idx) => (
                                     <div key={idx} className={`flex items-center gap-2 p-2 rounded-xl border ${isRamadan ? 'bg-[#1e293b] border-white/10' : 'bg-slate-50 border-slate-100'}`}>
@@ -820,8 +820,9 @@ const Dashboard: React.FC<DashboardProps> = ({
                             <div className="space-y-4">
                                 <div className="flex gap-2 overflow-x-auto pb-2 no-scrollbar">
                                     {tempSchedule.map((day, idx) => (
-    <button key={idx} onClick={() => setEditingDayIndex(idx)} className={`px-4 py-2 rounded-xl text-xs font-bold whitespace-nowrap border transition-all ${editingDayIndex === idx ? (isRamadan ? 'bg-indigo-600 text-white border-transparent' : 'bg-indigo-600 text-white border-indigo-600') : (isRamadan ? 'bg-[#1e293b] text-slate-300 border-white/10' : 'bg-white text-slate-500 border-slate-200')}`}>{t(weekDayKeys[idx]) || day.dayName}</button>
-))}
+                                        <button key={idx} onClick={() => setEditingDayIndex(idx)} className={`px-4 py-2 rounded-xl text-xs font-bold whitespace-nowrap border transition-all ${editingDayIndex === idx ? (isRamadan ? 'bg-indigo-600 text-white border-transparent' : 'bg-indigo-600 text-white border-indigo-600') : (isRamadan ? 'bg-[#1e293b] text-slate-300 border-white/10' : 'bg-white text-slate-500 border-slate-200')}`}>
+                                            {t(weekDayKeys[idx]) || day.dayName}
+                                        </button>
                                     ))}
                                 </div>
                                 <div className="space-y-2">
