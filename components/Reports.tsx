@@ -13,7 +13,7 @@ import html2pdf from 'html2pdf.js';
 import ParentCardsTemplate from './ParentCardsTemplate';
 
 // =================================================================================
-// ✅ أيقونات 3D (بما فيها أيقونة البطاقات الجديدة)
+// ✅ أيقونات 3D 
 // =================================================================================
 
 const Icon3DParentCard = ({ className }: { className?: string }) => (
@@ -23,13 +23,8 @@ const Icon3DParentCard = ({ className }: { className?: string }) => (
         <stop offset="0%" stopColor="#f59e0b" />
         <stop offset="100%" stopColor="#d97706" />
       </linearGradient>
-      <filter id="shadowCard" x="-20%" y="-20%" width="140%" height="140%">
-        <feGaussianBlur in="SourceAlpha" stdDeviation="1.5" />
-        <feOffset dx="1" dy="2" result="offsetblur" />
-        <feMerge><feMergeNode /><feMergeNode in="SourceGraphic" /></feMerge>
-      </filter>
     </defs>
-    <rect x="15" y="30" width="70" height="40" rx="6" fill="url(#gradCard)" filter="url(#shadowCard)" />
+    <rect x="15" y="30" width="70" height="40" rx="6" fill="url(#gradCard)" />
     <circle cx="30" cy="50" r="8" fill="white" opacity="0.9" />
     <rect x="45" y="45" width="30" height="4" rx="2" fill="white" opacity="0.9" />
     <rect x="45" y="55" width="20" height="4" rx="2" fill="white" opacity="0.9" />
@@ -44,13 +39,8 @@ const Icon3DReportCenter = ({ className }: { className?: string }) => (
         <stop offset="0%" stopColor="#60a5fa" />
         <stop offset="100%" stopColor="#2563eb" />
       </linearGradient>
-      <filter id="shadowRep" x="-20%" y="-20%" width="140%" height="140%">
-        <feGaussianBlur in="SourceAlpha" stdDeviation="2" />
-        <feOffset dx="1" dy="2" result="offsetblur" />
-        <feMerge><feMergeNode /><feMergeNode in="SourceGraphic" /></feMerge>
-      </filter>
     </defs>
-    <rect x="20" y="15" width="60" height="70" rx="8" fill="url(#gradRep)" filter="url(#shadowRep)" />
+    <rect x="20" y="15" width="60" height="70" rx="8" fill="url(#gradRep)" />
     <rect x="30" y="30" width="40" height="5" rx="2" fill="white" opacity="0.8" />
     <rect x="30" y="45" width="40" height="5" rx="2" fill="white" opacity="0.8" />
     <rect x="30" y="60" width="25" height="5" rx="2" fill="white" opacity="0.8" />
@@ -65,14 +55,9 @@ const Icon3DStudent = ({ className }: { className?: string }) => (
         <stop offset="0%" stopColor="#818cf8" />
         <stop offset="100%" stopColor="#4f46e5" />
       </linearGradient>
-      <filter id="shadowUser" x="-20%" y="-20%" width="140%" height="140%">
-        <feGaussianBlur in="SourceAlpha" stdDeviation="2" />
-        <feOffset dx="1" dy="2" result="offsetblur" />
-        <feMerge><feMergeNode /><feMergeNode in="SourceGraphic" /></feMerge>
-      </filter>
     </defs>
-    <circle cx="50" cy="35" r="18" fill="url(#gradUser)" filter="url(#shadowUser)" />
-    <path d="M20 85 Q50 55 80 85" fill="url(#gradUser)" filter="url(#shadowUser)" />
+    <circle cx="50" cy="35" r="18" fill="url(#gradUser)" />
+    <path d="M20 85 Q50 55 80 85" fill="url(#gradUser)" />
   </svg>
 );
 
@@ -83,15 +68,10 @@ const Icon3DGrades = ({ className }: { className?: string }) => (
         <stop offset="0%" stopColor="#fbbf24" />
         <stop offset="100%" stopColor="#d97706" />
       </linearGradient>
-      <filter id="shadowChart" x="-20%" y="-20%" width="140%" height="140%">
-        <feGaussianBlur in="SourceAlpha" stdDeviation="1.5" />
-        <feOffset dx="1" dy="1" result="offsetblur" />
-        <feMerge><feMergeNode /><feMergeNode in="SourceGraphic" /></feMerge>
-      </filter>
     </defs>
-    <rect x="20" y="50" width="15" height="30" rx="3" fill="url(#gradChart)" filter="url(#shadowChart)" />
-    <rect x="42" y="30" width="15" height="50" rx="3" fill="url(#gradChart)" filter="url(#shadowChart)" />
-    <rect x="64" y="15" width="15" height="65" rx="3" fill="url(#gradChart)" filter="url(#shadowChart)" />
+    <rect x="20" y="50" width="15" height="30" rx="3" fill="url(#gradChart)" />
+    <rect x="42" y="30" width="15" height="50" rx="3" fill="url(#gradChart)" />
+    <rect x="64" y="15" width="15" height="65" rx="3" fill="url(#gradChart)" />
     <path d="M10 85 H90" stroke="#cbd5e1" strokeWidth="4" strokeLinecap="round" />
   </svg>
 );
@@ -103,13 +83,8 @@ const Icon3DCertificate = ({ className }: { className?: string }) => (
         <stop offset="0%" stopColor="#34d399" />
         <stop offset="100%" stopColor="#059669" />
       </linearGradient>
-      <filter id="shadowCert" x="-20%" y="-20%" width="140%" height="140%">
-        <feGaussianBlur in="SourceAlpha" stdDeviation="2" />
-        <feOffset dx="1" dy="2" result="offsetblur" />
-        <feMerge><feMergeNode /><feMergeNode in="SourceGraphic" /></feMerge>
-      </filter>
     </defs>
-    <circle cx="50" cy="40" r="25" fill="url(#gradCert)" filter="url(#shadowCert)" />
+    <circle cx="50" cy="40" r="25" fill="url(#gradCert)" />
     <circle cx="50" cy="40" r="18" fill="none" stroke="white" strokeWidth="3" strokeDasharray="4 2" />
     <path d="M35 60 L25 85 L40 75 L55 85 L45 60" fill="#f59e0b" stroke="white" strokeWidth="1" />
     <path d="M65 60 L75 85 L60 75 L45 85 L55 60" fill="#f59e0b" stroke="white" strokeWidth="1" />
@@ -123,13 +98,8 @@ const Icon3DSummon = ({ className }: { className?: string }) => (
         <stop offset="0%" stopColor="#f87171" />
         <stop offset="100%" stopColor="#dc2626" />
       </linearGradient>
-      <filter id="shadowWarn" x="-20%" y="-20%" width="140%" height="140%">
-        <feGaussianBlur in="SourceAlpha" stdDeviation="2" />
-        <feOffset dx="1" dy="2" result="offsetblur" />
-        <feMerge><feMergeNode /><feMergeNode in="SourceGraphic" /></feMerge>
-      </filter>
     </defs>
-    <path d="M50 15 L85 80 H15 Z" fill="url(#gradWarn)" filter="url(#shadowWarn)" stroke="white" strokeWidth="3" strokeLinejoin="round" />
+    <path d="M50 15 L85 80 H15 Z" fill="url(#gradWarn)" stroke="white" strokeWidth="3" strokeLinejoin="round" />
     <path d="M50 35 V60" stroke="white" strokeWidth="6" strokeLinecap="round" />
     <circle cx="50" cy="70" r="4" fill="white" />
   </svg>
@@ -142,13 +112,8 @@ const Icon3DPrint = ({ className }: { className?: string }) => (
         <stop offset="0%" stopColor="#94a3b8" />
         <stop offset="100%" stopColor="#475569" />
       </linearGradient>
-      <filter id="shadowPrint" x="-20%" y="-20%" width="140%" height="140%">
-        <feGaussianBlur in="SourceAlpha" stdDeviation="2" />
-        <feOffset dx="1" dy="2" result="offsetblur" />
-        <feMerge><feMergeNode /><feMergeNode in="SourceGraphic" /></feMerge>
-      </filter>
     </defs>
-    <rect x="25" y="40" width="50" height="30" rx="4" fill="url(#gradPrint)" filter="url(#shadowPrint)" />
+    <rect x="25" y="40" width="50" height="30" rx="4" fill="url(#gradPrint)" />
     <path d="M35 40 V25 H65 V40" fill="white" opacity="0.9" />
     <path d="M35 60 V75 H65 V60" fill="white" />
     <rect x="60" y="48" width="5" height="5" rx="1" fill="#4ade80" />
@@ -162,13 +127,8 @@ const Icon3DSettings = ({ className }: { className?: string }) => (
         <stop offset="0%" stopColor="#e2e8f0" />
         <stop offset="100%" stopColor="#94a3b8" />
       </linearGradient>
-      <filter id="shadowSet" x="-20%" y="-20%" width="140%" height="140%">
-        <feGaussianBlur in="SourceAlpha" stdDeviation="1.5" />
-        <feOffset dx="1" dy="1" result="offsetblur" />
-        <feMerge><feMergeNode /><feMergeNode in="SourceGraphic" /></feMerge>
-      </filter>
     </defs>
-    <circle cx="50" cy="50" r="25" fill="none" stroke="url(#gradSet)" strokeWidth="15" strokeDasharray="12 8" filter="url(#shadowSet)" />
+    <circle cx="50" cy="50" r="25" fill="none" stroke="url(#gradSet)" strokeWidth="15" strokeDasharray="12 8" />
     <circle cx="50" cy="50" r="12" fill="#64748b" />
   </svg>
 );
@@ -180,13 +140,8 @@ const Icon3DLayers = ({ className }: { className?: string }) => (
         <stop offset="0%" stopColor="#a78bfa" />
         <stop offset="100%" stopColor="#7c3aed" />
       </linearGradient>
-      <filter id="shadowLay" x="-20%" y="-20%" width="140%" height="140%">
-        <feGaussianBlur in="SourceAlpha" stdDeviation="1.5" />
-        <feOffset dx="1" dy="2" result="offsetblur" />
-        <feMerge><feMergeNode /><feMergeNode in="SourceGraphic" /></feMerge>
-      </filter>
     </defs>
-    <path d="M15 40 L50 20 L85 40 L50 60 Z" fill="url(#gradLay)" filter="url(#shadowLay)" />
+    <path d="M15 40 L50 20 L85 40 L50 60 Z" fill="url(#gradLay)" />
     <path d="M15 55 L50 75 L85 55" fill="none" stroke="url(#gradLay)" strokeWidth="5" strokeLinecap="round" />
   </svg>
 );
@@ -198,13 +153,8 @@ const Icon3DDocument = ({ className }: { className?: string }) => (
         <stop offset="0%" stopColor="#f472b6" />
         <stop offset="100%" stopColor="#db2777" />
       </linearGradient>
-      <filter id="shadowDoc" x="-20%" y="-20%" width="140%" height="140%">
-        <feGaussianBlur in="SourceAlpha" stdDeviation="1.5" />
-        <feOffset dx="1" dy="2" result="offsetblur" />
-        <feMerge><feMergeNode /><feMergeNode in="SourceGraphic" /></feMerge>
-      </filter>
     </defs>
-    <rect x="25" y="20" width="50" height="60" rx="5" fill="url(#gradDoc)" filter="url(#shadowDoc)" />
+    <rect x="25" y="20" width="50" height="60" rx="5" fill="url(#gradDoc)" />
     <path d="M35 35 H65 M35 45 H65 M35 55 H50" stroke="white" strokeWidth="4" strokeLinecap="round" />
   </svg>
 );
@@ -216,13 +166,8 @@ const Icon3DEye = ({ className }: { className?: string }) => (
         <stop offset="0%" stopColor="#38bdf8" />
         <stop offset="100%" stopColor="#0284c7" />
       </linearGradient>
-      <filter id="shadowEye" x="-20%" y="-20%" width="140%" height="140%">
-        <feGaussianBlur in="SourceAlpha" stdDeviation="1.5" />
-        <feOffset dx="1" dy="2" result="offsetblur" />
-        <feMerge><feMergeNode /><feMergeNode in="SourceGraphic" /></feMerge>
-      </filter>
     </defs>
-    <path d="M15 50 Q50 15 85 50 Q50 85 15 50" fill="white" filter="url(#shadowEye)" />
+    <path d="M15 50 Q50 15 85 50 Q50 85 15 50" fill="white" />
     <circle cx="50" cy="50" r="18" fill="url(#gradEye)" />
     <circle cx="55" cy="45" r="5" fill="white" opacity="0.6" />
   </svg>
@@ -234,20 +179,12 @@ interface ReportsProps {
   initialTab?: 'student_report' | 'grades_record' | 'certificates' | 'parent_cards' | 'summon';
 }
 
-const DEFAULT_CERT_SETTINGS = {
-  title: 'شهادة تقدير',
-  bodyText: 'وذلك لتميزه الدراسي وجهوده الواضحة ومشاركته الفعالة في الحصص الدراسية',
-  showDefaultDesign: true,
-  backgroundImage: ''
-};
-
 const getGradingSettings = () => {
   const saved = localStorage.getItem('rased_grading_settings');
-  return saved ? JSON.parse(saved) : { totalScore: 100, finalExamWeight: 40, finalExamName: 'الامتحان النهائي' };
+  return saved ? JSON.parse(saved) : null; 
 };
 
-// --- نافذة المعاينة (Print Preview Modal) المحدثة ---
-// --- نافذة المعاينة (Print Preview Modal) المحدثة ---
+// --- نافذة المعاينة (Print Preview Modal) ---
 const PrintPreviewModal: React.FC<{
   isOpen: boolean;
   onClose: () => void;
@@ -255,7 +192,7 @@ const PrintPreviewModal: React.FC<{
   content: React.ReactNode;
   landscape?: boolean;
 }> = ({ isOpen, onClose, title, content, landscape }) => {
-  const { t, dir } = useApp(); // 🌍 ربط اللغات بالنافذة
+  const { t, dir } = useApp(); 
   const [isPrinting, setIsPrinting] = useState(false);
 
   const handlePrint = async () => {
@@ -300,7 +237,7 @@ const PrintPreviewModal: React.FC<{
   if (!isOpen) return null;
 
   return (
-    // 🌟 التعديل السحري هنا: جعل الإزاحة ديناميكية حسب لغة التطبيق
+    // 🌟 الإزاحة الديناميكية لضمان عدم اختفاء زر الإغلاق تحت القائمة الجانبية
     <div className={`fixed inset-0 z-[99999] bg-slate-900/95 backdrop-blur-sm ${dir === 'rtl' ? 'md:pr-[18rem]' : 'md:pl-[18rem]'} flex flex-col`} dir={dir}>
       <div id="preview-scroll-container" className="h-full overflow-auto p-4 md:p-8 custom-scrollbar">
         
@@ -336,7 +273,7 @@ const PrintPreviewModal: React.FC<{
               width: landscape ? '297mm' : '210mm',
               minHeight: landscape ? '210mm' : '297mm',
               padding: '0',
-              direction: dir,
+              direction: dir, 
               fontFamily: 'Tajawal, sans-serif',
               backgroundColor: '#ffffff',
               color: '#000000',
@@ -352,14 +289,18 @@ const PrintPreviewModal: React.FC<{
 };
 
 // =================================================================================
-// ✅ القوالب (TEMPLATES) - ربط اللغات والاتجاه
+// ✅ القوالب المحدثة (مترجمة ديناميكياً)
 // =================================================================================
 
 const GradesTemplate = ({ students, tools, teacherInfo, semester, gradeClass }: any) => {
   const { t, dir } = useApp(); // 🌍 محرك اللغات
 
-  const settings = getGradingSettings();
-  const finalExamName = settings.finalExamName.trim();
+  const settings = getGradingSettings() || { totalScore: 100, finalExamWeight: 40, finalExamName: '' };
+  
+  const savedFinalExamName = settings.finalExamName?.trim() || '';
+  const isDefaultExamName = savedFinalExamName === 'الامتحان النهائي' || savedFinalExamName === 'Final Exam' || savedFinalExamName === '';
+  const finalExamName = isDefaultExamName ? t('finalExamNameDefault') : savedFinalExamName;
+
   const finalWeight = settings.finalExamWeight;
   const continuousWeight = settings.totalScore - finalWeight;
   const continuousTools = tools.filter((t: any) => t.name.trim() !== finalExamName);
@@ -485,17 +426,23 @@ const GradesTemplate = ({ students, tools, teacherInfo, semester, gradeClass }: 
 };
 
 const CertificatesTemplate = ({ students, settings, teacherInfo }: any) => {
-  const { t, dir } = useApp(); // 🌍 محرك اللغات
+  const { t, dir, language } = useApp(); // 🌍 محرك اللغات
 
-  const safeSettings = settings || DEFAULT_CERT_SETTINGS;
-  const title = safeSettings.title || t('studentMeritMedal');
-  const rawBody = safeSettings.bodyText || t('thanksAndAppreciationToStudent');
+  const safeSettings = settings || {};
+  const titleRaw = safeSettings.title;
+  const bodyRaw = safeSettings.bodyText;
 
-  if (!students || students.length === 0) return <div className="p-10 text-center text-black">{t('noStudentsFound')}</div>;
+  const isDefaultTitle = !titleRaw || titleRaw === 'شهادة تقدير' || titleRaw === 'شهادة تميز' || titleRaw === 'Certificate of Excellence';
+  const isDefaultBody = !bodyRaw || bodyRaw.includes('وذلك لتميزه الدراسي') || bodyRaw.includes('تقديراً لجهوده العظيمة') || bodyRaw.includes('in appreciation of his great efforts');
 
-  const date = new Date().toLocaleDateString(dir === 'rtl' ? 'ar-EG' : 'en-US');
-  const subject = teacherInfo?.subject || "المادة";
-  const schoolName = teacherInfo?.school || "مدرسة الابداع للبنين (5-8)";
+  const title = isDefaultTitle ? t('certificateOfExcellence') : titleRaw;
+  const rawBody = isDefaultBody ? t('knightAppreciationText') : bodyRaw;
+
+  if (!students || students.length === 0) return <div className="p-10 text-center text-black">{t('noStudentDataToDisplay')}</div>;
+
+  const date = new Date().toLocaleDateString(language === 'ar' ? 'ar-EG' : 'en-US');
+  const subject = teacherInfo?.subject || t('subjectCol');
+  const schoolName = teacherInfo?.school || t('schoolPrefix');
 
   return (
     <div className="w-full text-black bg-white" dir={dir}>
@@ -525,7 +472,7 @@ const CertificatesTemplate = ({ students, settings, teacherInfo }: any) => {
                   <div className={`text-${dir === 'rtl' ? 'right' : 'left'} space-y-1`}>
                     <h3 className="font-black text-[18px] text-[#1e3a8a]">{t('sultanateOfOman')}</h3>
                     <h3 className="font-bold text-[16px] text-[#1e3a8a]">{t('ministryOfEducation')}</h3>
-                    <h3 className="font-bold text-[16px] text-[#1e3a8a]">{teacherInfo?.governorate || t('generalDirectorateOfEducation')}</h3>
+                    <h3 className="font-bold text-[16px] text-[#1e3a8a]">{teacherInfo?.governorate || t('eduDirectoratePrefix')}</h3>
                     <h3 className="font-bold text-[16px] text-amber-600">{schoolName}</h3>
                   </div>
 
@@ -533,7 +480,7 @@ const CertificatesTemplate = ({ students, settings, teacherInfo }: any) => {
                     {teacherInfo?.ministryLogo ? (
                       <img src={teacherInfo.ministryLogo} alt="Logo" className="w-24 h-24 object-contain" />
                     ) : (
-                      <div className="w-24 h-24 rounded-full border-2 border-dashed border-[#1e3a8a] flex items-center justify-center text-xs font-bold text-[#1e3a8a] bg-white">{t('officialLogo')}</div>
+                      <div className="w-24 h-24 rounded-full border-2 border-dashed border-[#1e3a8a] flex items-center justify-center text-xs font-bold text-[#1e3a8a] bg-white">Logo</div>
                     )}
                   </div>
 
@@ -543,7 +490,7 @@ const CertificatesTemplate = ({ students, settings, teacherInfo }: any) => {
                       <span className="font-black text-[18px] text-[#1e3a8a]" dir="ltr">{date}</span>
                     </div>
                     <div className={`flex items-center justify-${dir === 'rtl' ? 'end' : 'start'} gap-2`}>
-                      <span className="font-bold text-[16px] text-gray-500">{t('subjectLabel')}</span>
+                      <span className="font-bold text-[16px] text-gray-500">{t('subjectLabel').replace(':', '')}</span>
                       <span className="font-black text-[18px] text-[#1e3a8a]">{subject}</span>
                     </div>
                   </div>
@@ -569,14 +516,14 @@ const CertificatesTemplate = ({ students, settings, teacherInfo }: any) => {
                   </div>
 
                   <p className="text-xl font-bold text-gray-700 leading-relaxed max-w-3xl">
-                    {t('enrolledInClass')} <span className="text-amber-600 font-black text-2xl mx-2">({s.classes?.[0] || '-'})</span>، 
+                    {t('enrolledInClass')} <span className="text-amber-600 font-black text-2xl mx-2">({s.classes?.[0] || '-'})</span>
                     {rawBody}
                   </p>
                 </div>
 
                 <div className="w-full grid grid-cols-3 items-end relative z-10 pt-2 mt-auto">
                   <div className={`text-center justify-self-${dir === 'rtl' ? 'start' : 'end'} w-64`}>
-                    <h4 className="font-bold text-lg text-[#1e3a8a] mb-4">{t('subjectTeacher')}</h4>
+                    <h4 className="font-bold text-lg text-[#1e3a8a] mb-4">{t('subjectTeacherLabel')}</h4>
                     <div className="border-b-2 border-gray-400 mx-8 mb-2"></div>
                     <h3 className="font-black text-lg text-gray-700">{teacherInfo?.name || '..........'}</h3>
                   </div>
@@ -585,12 +532,12 @@ const CertificatesTemplate = ({ students, settings, teacherInfo }: any) => {
                     {teacherInfo?.stamp ? (
                       <img src={teacherInfo.stamp} alt="Stamp" className="w-32 h-32 object-contain opacity-90 mix-blend-multiply" />
                     ) : (
-                      <div className="w-32 h-32 rounded-full border-2 border-dashed border-red-500 flex items-center justify-center text-xs font-bold text-red-500 opacity-50 rotate-[-15deg] bg-white">{t('schoolStamp')}</div>
+                      <div className="w-32 h-32 rounded-full border-2 border-dashed border-red-500 flex items-center justify-center text-xs font-bold text-red-500 opacity-50 rotate-[-15deg] bg-white">Stamp</div>
                     )}
                   </div>
 
                   <div className={`text-center justify-self-${dir === 'rtl' ? 'end' : 'start'} w-64`}>
-                    <h4 className="font-bold text-lg text-[#1e3a8a] mb-4">{t('schoolPrincipal')}</h4>
+                    <h4 className="font-bold text-lg text-[#1e3a8a] mb-4">{t('schoolPrincipalLabel')}</h4>
                     <div className="border-b-2 border-gray-400 mx-8 mb-2"></div>
                     <h3 className="font-black text-xl text-gray-400 italic">..........................</h3>
                   </div>
@@ -616,6 +563,23 @@ const SummonTemplate = ({ student, teacherInfo, data }: any) => {
 
   const safeData = data || {};
   const safeProcedures = Array.isArray(safeData.procedures) ? safeData.procedures : [];
+
+  // 🌟 فلترة ذكية للإجراءات المحفوظة
+  const getProcLabel = (procId: string) => {
+    const map: any = {
+        'procVerbalWarning': t('procVerbalWarning'),
+        'procWrittenPledge': t('procWrittenPledge'),
+        'procPhoneCall': t('procPhoneCall'),
+        'procWhatsappNotice': t('procWhatsappNotice'),
+        'procReferToSpecialist': t('procReferToSpecialist'),
+        'تنبيه شفوي': t('procVerbalWarning'),
+        'تعهد خطي': t('procWrittenPledge'),
+        'اتصال هاتفي': t('procPhoneCall'),
+        'إشعار واتساب': t('procWhatsappNotice'),
+        'تحويل أخصائي': t('procReferToSpecialist'),
+    };
+    return map[procId] || procId;
+  };
 
   return (
     <div className={`w-full text-black bg-white p-16 font-serif text-${dir === 'rtl' ? 'right' : 'left'} h-full`} dir={dir}>
@@ -655,7 +619,7 @@ const SummonTemplate = ({ student, teacherInfo, data }: any) => {
         <div className="mb-12 border border-dashed border-gray-400 p-6 rounded-xl bg-slate-50">
           <p className="font-bold underline mb-4 text-xl">{t('previouslyTakenProcedures')}</p>
           <ul className={`list-disc ${dir === 'rtl' ? 'pr-8' : 'pl-8'} text-xl space-y-2`}>
-            {safeProcedures.map((p: any, i: number) => <li key={i}>{p}</li>)}
+            {safeProcedures.map((p: any, i: number) => <li key={i}>{getProcLabel(p)}</li>)}
           </ul>
         </div>
       )}
@@ -664,7 +628,7 @@ const SummonTemplate = ({ student, teacherInfo, data }: any) => {
 
       <div className="flex justify-between items-end px-10 mt-auto">
         <div className="text-center">
-          <p className="font-bold text-xl mb-8">{t('subjectTeacher')}</p>
+          <p className="font-bold text-xl mb-8">{t('subjectTeacherLabel')}</p>
           <p className="text-2xl font-black">{teacherInfo?.name}</p>
         </div>
 
@@ -682,16 +646,38 @@ const SummonTemplate = ({ student, teacherInfo, data }: any) => {
 };
 
 const ClassReportsTemplate = ({ students, teacherInfo, semester, assessmentTools }: any) => {
-  const { t, dir } = useApp(); // 🌍 محرك اللغات
+  const { t, dir, language } = useApp(); // 🌍 محرك اللغات
 
   const settings = getGradingSettings();
-  const finalExamName = settings.finalExamName?.trim() || 'الامتحان النهائي';
+  const finalExamNameRaw = settings?.finalExamName?.trim() || '';
+  const isDefaultExamName = finalExamNameRaw === 'الامتحان النهائي' || finalExamNameRaw === 'Final Exam' || finalExamNameRaw === '';
+  const finalExamName = isDefaultExamName ? t('finalExamNameDefault') : finalExamNameRaw;
 
   if (!students || students.length === 0) return <div className="text-black text-center p-10">{t('noStudentDataToDisplay')}</div>;
 
   const safeTools = Array.isArray(assessmentTools) ? assessmentTools : [];
   const continuousTools = safeTools.filter((t: any) => t.name.trim() !== finalExamName);
   const finalTool = safeTools.find((t: any) => t.name.trim() === finalExamName);
+
+  // 🌟 فلترة ذكية للسلوكيات المحفوظة لكي تعود إنجليزية
+  const translateBehavior = (desc: string) => {
+    const map: any = {
+        'إجابة متميزة': t('behPos1'),
+        'إجابة صحيحة': t('behPos2'),
+        'واجب مميز': t('behPos3'),
+        'مساعدة الزملاء': t('behPos4'),
+        'مشاركة صفية متميزة': t('behPos5'),
+        'إبداع وتميز': t('behPos6'),
+        'إزعاج في الحصة': t('behNeg1'),
+        'عدم حل الواجب': t('behNeg2'),
+        'نسيان الكتاب والدفتر': t('behNeg3'),
+        'تأخر عن الحصة': t('behNeg4'),
+        'سلوك غير لائق': t('behNeg5'),
+        'النوم في الفصل': t('behNeg6'),
+        'هدوء وانضباط': t('rewardDiscipline'),
+    };
+    return map[desc] || desc; 
+  };
 
   return (
     <div className="w-full text-black bg-white" dir={dir}>
@@ -757,7 +743,7 @@ const ClassReportsTemplate = ({ students, teacherInfo, semester, assessmentTools
             <table className="w-full border-collapse border border-black text-sm mb-8">
               <thead>
                 <tr className="bg-gray-100">
-                  <th className={`border border-black p-3 text-${dir === 'rtl' ? 'right' : 'left'}`}>{t('subjectLabel').replace(':', '')}</th>
+                  <th className={`border border-black p-3 text-${dir === 'rtl' ? 'right' : 'left'}`}>{t('subjectCol')}</th>
                   <th className="border border-black p-3 text-center">{t('assessmentTool')}</th>
                   <th className="border border-black p-3 text-center w-24">{t('degreeLabel')}</th>
                 </tr>
@@ -767,7 +753,7 @@ const ClassReportsTemplate = ({ students, teacherInfo, semester, assessmentTools
                   const g = grades.find((r: any) => r.category.trim() === t.name.trim());
                   return (
                     <tr key={t.id}>
-                      <td className="border border-black p-3 font-bold">{teacherInfo?.subject}</td>
+                      <td className={`border border-black p-3 font-bold text-${dir === 'rtl' ? 'right' : 'left'}`}>{teacherInfo?.subject || t('subjectCol')}</td>
                       <td className="border border-black p-3 text-center">{t.name}</td>
                       <td className="border border-black p-3 text-center font-bold">{g ? g.score : '-'}</td>
                     </tr>
@@ -777,7 +763,7 @@ const ClassReportsTemplate = ({ students, teacherInfo, semester, assessmentTools
                   const g = grades.find((r: any) => r.category.trim() === finalTool.name.trim());
                   return (
                     <tr>
-                      <td className="border border-black p-3 font-bold">{teacherInfo?.subject}</td>
+                      <td className={`border border-black p-3 font-bold text-${dir === 'rtl' ? 'right' : 'left'}`}>{teacherInfo?.subject || t('subjectCol')}</td>
                       <td className="border border-black p-3 text-center bg-pink-50 font-bold">{finalTool.name}</td>
                       <td className="border border-black p-3 text-center font-black">{g ? g.score : '-'}</td>
                     </tr>
@@ -812,9 +798,10 @@ const ClassReportsTemplate = ({ students, teacherInfo, semester, assessmentTools
                         <div className="p-2 space-y-2">
                             {displayPosBehaviors.length > 0 ? displayPosBehaviors.map((b: any, idx: number) => (
                                 <div key={idx} className="flex justify-between items-center border-b border-black/50 pb-1 last:border-0 text-sm">
-                                    <span className="font-bold text-black">{b.description}</span>
+                                    {/* 🌟 ترجمة السلوك المحفوظ */}
+                                    <span className="font-bold text-black">{translateBehavior(b.description)}</span>
                                     <div className={`text-${dir === 'rtl' ? 'left' : 'right'} text-[10px] font-bold text-black flex flex-col items-${dir === 'rtl' ? 'end' : 'start'}`}>
-                                        <span>{new Date(b.date).toLocaleDateString('en-GB')}</span>
+                                        <span>{new Date(b.date).toLocaleDateString(language === 'ar' ? 'en-GB' : 'en-US')}</span>
                                         {b.session && <span>{t('sessionLabel')} {b.session}</span>}
                                     </div>
                                 </div>
@@ -829,9 +816,10 @@ const ClassReportsTemplate = ({ students, teacherInfo, semester, assessmentTools
                         <div className="p-2 space-y-2">
                             {negBehaviors.length > 0 ? negBehaviors.map((b: any, idx: number) => (
                                 <div key={idx} className="flex justify-between items-center border-b border-black/50 pb-1 last:border-0 text-sm">
-                                    <span className="font-bold text-black">{b.description}</span>
+                                    {/* 🌟 ترجمة السلوك المحفوظ */}
+                                    <span className="font-bold text-black">{translateBehavior(b.description)}</span>
                                     <div className={`text-${dir === 'rtl' ? 'left' : 'right'} text-[10px] font-bold text-black flex flex-col items-${dir === 'rtl' ? 'end' : 'start'}`}>
-                                        <span>{new Date(b.date).toLocaleDateString('en-GB')}</span>
+                                        <span>{new Date(b.date).toLocaleDateString(language === 'ar' ? 'en-GB' : 'en-US')}</span>
                                         {b.session && <span>{t('sessionLabel')} {b.session}</span>}
                                     </div>
                                 </div>
@@ -844,7 +832,7 @@ const ClassReportsTemplate = ({ students, teacherInfo, semester, assessmentTools
 
             <div className="flex justify-between items-end px-12 mt-auto">
               <div className="text-center">
-                <p className="font-bold text-base mb-8 text-black">{t('subjectTeacher')}</p>
+                <p className="font-bold text-base mb-8 text-black">{t('subjectTeacherLabel')}</p>
                 <p className="text-2xl font-bold text-black">{teacherInfo?.name}</p>
               </div>
               <div className="text-center">
@@ -882,7 +870,7 @@ const Reports: React.FC<ReportsProps> = ({ initialTab }) => {
   const [selectedCertStudents, setSelectedCertStudents] = useState<string[]>([]);
   const [showCertSettingsModal, setShowCertSettingsModal] = useState(false);
 
-  const [tempCertSettings, setTempCertSettings] = useState(certificateSettings || DEFAULT_CERT_SETTINGS);
+  const [tempCertSettings, setTempCertSettings] = useState(certificateSettings || { title: '', bodyText: '' });
 
   const [summonGrade, setSummonGrade] = useState<string>('all');
   const [summonClass, setSummonClass] = useState<string>('');
@@ -971,15 +959,16 @@ const Reports: React.FC<ReportsProps> = ({ initialTab }) => {
     }
   };
 
+  // 🌟 استخدام ID بدلاً من النص
   const availableProceduresList = [
-    t('procVerbalWarning'), 
-    t('procWrittenPledge'), 
-    t('procPhoneCall'), 
-    t('procWhatsappNotice'), 
-    t('procReferToSpecialist')
+    { id: 'procVerbalWarning', label: t('procVerbalWarning') }, 
+    { id: 'procWrittenPledge', label: t('procWrittenPledge') }, 
+    { id: 'procPhoneCall', label: t('procPhoneCall') }, 
+    { id: 'procWhatsappNotice', label: t('procWhatsappNotice') }, 
+    { id: 'procReferToSpecialist', label: t('procReferToSpecialist') }
   ];
   
-  const toggleProcedure = (proc: string) => setTakenProcedures(prev => prev.includes(proc) ? prev.filter(p => p !== proc) : [...prev, proc]);
+  const toggleProcedure = (procId: string) => setTakenProcedures(prev => prev.includes(procId) ? prev.filter(p => p !== procId) : [...prev, procId]);
 
   const openGradesPreview = () => {
     if (filteredStudentsForGrades.length === 0) return alert(t('noStudentsFound'));
@@ -998,7 +987,7 @@ const Reports: React.FC<ReportsProps> = ({ initialTab }) => {
       isOpen: true,
       title: t('certificatesTab'),
       landscape: true,
-      content: <CertificatesTemplate students={targets} settings={certificateSettings || DEFAULT_CERT_SETTINGS} teacherInfo={teacherInfo} />
+      content: <CertificatesTemplate students={targets} settings={certificateSettings} teacherInfo={teacherInfo} />
     });
   };
 
@@ -1107,298 +1096,4 @@ const Reports: React.FC<ReportsProps> = ({ initialTab }) => {
       <div className="flex-1 h-full overflow-y-auto custom-scrollbar px-4 pt-4 pb-24 relative z-10">
         <div className="w-full h-[190px] shrink-0 block md:hidden"></div>
 
-        <div className={`rounded-[2rem] p-6 shadow-sm border min-h-[400px] transition-colors ${isRamadan ? 'bg-white/5 backdrop-blur-2xl border-white/10' : 'bg-white border-slate-100'}`}>
-          
-          {activeTab === 'student_report' && (
-            <div className="space-y-6">
-              <div className={`flex items-center gap-3 border-b pb-4 mb-2 ${isRamadan ? 'border-white/10' : 'border-slate-50'}`}>
-                <div className={`p-2 rounded-xl ${isRamadan ? 'bg-indigo-500/20 text-indigo-300' : 'bg-indigo-50 text-indigo-600'}`}><Icon3DStudent className="w-5 h-5" /></div>
-                <h3 className={`font-black text-lg ${isRamadan ? 'text-white' : 'text-slate-800'}`}>{t('comprehensiveStudentReport')}</h3>
-              </div>
-
-              <div className="space-y-4">
-                <div className="flex gap-2 overflow-x-auto pb-1 no-scrollbar">
-                  {availableGrades.map(g => (
-                    <button
-                      key={g}
-                      onClick={() => setStGrade(g)}
-                      className={`px-4 py-2 text-xs font-bold rounded-xl border transition-all ${stGrade === g ? (isRamadan ? 'bg-indigo-500/40 text-indigo-200 border-indigo-400/50' : 'bg-indigo-600 text-white border-transparent') : (isRamadan ? 'bg-white/5 text-slate-300 border-white/10 hover:bg-white/10' : 'bg-slate-50 text-slate-600 border-slate-200')}`}
-                    >
-                      {t('gradePrefix')} {g}
-                    </button>
-                  ))}
-                </div>
-
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <select value={stClass} onChange={(e) => setStClass(e.target.value)} className={`w-full p-4 border rounded-2xl font-bold outline-none transition-colors text-sm ${isRamadan ? 'bg-[#0f172a]/50 border-white/20 text-white focus:border-indigo-400' : 'bg-slate-50 border-slate-200 text-slate-700 focus:border-indigo-500'}`}>
-                    {getClassesForGrade(stGrade).map(c => <option key={c} value={c} className={isRamadan ? 'bg-slate-900 text-white' : ''}>{c}</option>)}
-                  </select>
-
-                  <select value={selectedStudentId} onChange={(e) => setSelectedStudentId(e.target.value)} className={`w-full p-4 border rounded-2xl font-bold outline-none transition-colors text-sm ${isRamadan ? 'bg-[#0f172a]/50 border-white/20 text-white focus:border-indigo-400' : 'bg-slate-50 border-slate-200 text-slate-700 focus:border-indigo-500'}`}>
-                    <option value="" className={isRamadan ? 'text-slate-500 bg-slate-900' : ''}>{t('selectStudentPlaceholder')}</option>
-                    {filteredStudentsForStudentTab.map(s => <option key={s.id} value={s.id} className={isRamadan ? 'bg-slate-900 text-white' : ''}>{s.name}</option>)}
-                  </select>
-                </div>
-              </div>
-
-              <div className="flex gap-3 justify-end pt-4 mt-4 flex-wrap">
-                <button
-                  onClick={openClassReportsPreview}
-                  disabled={!stClass || filteredStudentsForStudentTab.length === 0}
-                  className={`px-5 py-3.5 rounded-xl font-black text-xs shadow-lg flex items-center gap-2 active:scale-95 transition-all flex-1 justify-center disabled:opacity-50 ${isRamadan ? 'bg-white/10 text-white hover:bg-white/20 border border-white/20' : 'bg-slate-800 text-white hover:bg-slate-700'}`}
-                >
-                  <Icon3DLayers className="w-4 h-4" /> {t('printEntireClass')}
-                </button>
-
-                <button
-                  onClick={() => {
-                    if (selectedStudentId) {
-                      const s = students.find(st => st.id === selectedStudentId);
-                      if (s) setViewingStudent(s);
-                    }
-                  }}
-                  disabled={!selectedStudentId}
-                  className={`disabled:opacity-50 px-6 py-3.5 rounded-xl font-black text-xs shadow-lg flex items-center gap-2 active:scale-95 transition-all flex-1 justify-center ${isRamadan ? 'bg-indigo-600 text-white hover:bg-indigo-500' : 'bg-indigo-600 text-white hover:bg-indigo-700'}`}
-                >
-                  <Icon3DDocument className="w-4 h-4" /> {t('individualPreview')}
-                </button>
-              </div>
-            </div>
-          )}
-
-          {activeTab === 'grades_record' && (
-            <div className="space-y-6">
-              <div className={`flex items-center gap-3 border-b pb-4 mb-2 ${isRamadan ? 'border-white/10' : 'border-slate-50'}`}>
-                <div className={`p-2 rounded-xl ${isRamadan ? 'bg-amber-500/20 text-amber-400' : 'bg-amber-50 text-amber-600'}`}><Icon3DGrades className="w-5 h-5" /></div>
-                <h3 className={`font-black text-lg ${isRamadan ? 'text-white' : 'text-slate-800'}`}>{t('gradesRecordTab')}</h3>
-              </div>
-
-              <div className="space-y-4">
-                <div className="flex gap-2 overflow-x-auto pb-1 no-scrollbar">
-                  {availableGrades.map(g => (
-                    <button
-                      key={g}
-                      onClick={() => { setGradesGrade(g); setGradesClass('all'); }}
-                      className={`px-4 py-2 text-xs font-bold rounded-xl border transition-all ${gradesGrade === g ? (isRamadan ? 'bg-amber-500/40 text-amber-200 border-amber-400/50' : 'bg-amber-600 text-white border-transparent') : (isRamadan ? 'bg-white/5 text-slate-300 border-white/10 hover:bg-white/10' : 'bg-slate-50 text-slate-600 border-slate-200')}`}
-                    >
-                      {t('gradePrefix')} {g}
-                    </button>
-                  ))}
-                </div>
-
-                <select value={gradesClass} onChange={(e) => setGradesClass(e.target.value)} className={`w-full p-4 border rounded-2xl font-bold outline-none transition-colors text-sm ${isRamadan ? 'bg-[#0f172a]/50 border-white/20 text-white focus:border-amber-400' : 'bg-slate-50 border-slate-200 text-slate-700 focus:border-amber-500'}`}>
-                  <option value="all" className={isRamadan ? 'bg-slate-900 text-white' : ''}>{t('allClassesInGrade').split(' ')[0]}</option>
-                  {getClassesForGrade(gradesGrade).map(c => <option key={c} value={c} className={isRamadan ? 'bg-slate-900 text-white' : ''}>{c}</option>)}
-                </select>
-              </div>
-
-              <div className="flex justify-end pt-4">
-                <button onClick={openGradesPreview} className={`w-full text-white px-6 py-4 rounded-xl font-black text-xs flex items-center justify-center gap-2 shadow-lg active:scale-95 transition-all ${isRamadan ? 'bg-amber-600 hover:bg-amber-500' : 'bg-amber-500 hover:bg-amber-600'}`}>
-                  <Icon3DPrint className="w-5 h-5" /> {t('previewAndPrintRecord')}
-                </button>
-              </div>
-            </div>
-          )}
-
-          {activeTab === 'certificates' && (
-            <div className="space-y-6">
-              <div className={`flex justify-between items-center pb-4 border-b mb-2 ${isRamadan ? 'border-white/10' : 'border-slate-50'}`}>
-                <div className="flex items-center gap-3">
-                  <div className={`p-2 rounded-xl ${isRamadan ? 'bg-emerald-500/20 text-emerald-400' : 'bg-emerald-50 text-emerald-600'}`}><Icon3DCertificate className="w-5 h-5" /></div>
-                  <h3 className={`font-black text-lg ${isRamadan ? 'text-white' : 'text-slate-800'}`}>{t('certificatesTab')}</h3>
-                </div>
-                <button onClick={() => setShowCertSettingsModal(true)} className={`p-2 rounded-xl transition-colors ${isRamadan ? 'bg-white/10 text-slate-300 hover:bg-white/20' : 'bg-slate-50 text-slate-500 hover:bg-slate-100'}`}>
-                  <Icon3DSettings className="w-5 h-5" />
-                </button>
-              </div>
-
-              <div className="space-y-4">
-                <div className="flex gap-2 overflow-x-auto pb-1 no-scrollbar">
-                  {availableGrades.map(g => (
-                    <button
-                      key={g}
-                      onClick={() => setCertGrade(g)}
-                      className={`px-4 py-2 text-xs font-bold rounded-xl border transition-all ${certGrade === g ? (isRamadan ? 'bg-emerald-500/40 text-emerald-200 border-emerald-400/50' : 'bg-emerald-600 text-white border-transparent') : (isRamadan ? 'bg-white/5 text-slate-300 border-white/10 hover:bg-white/10' : 'bg-slate-50 text-slate-600 border-slate-200')}`}
-                    >
-                      {t('gradePrefix')} {g}
-                    </button>
-                  ))}
-                </div>
-
-                <select value={certClass} onChange={(e) => { setCertClass(e.target.value); setSelectedCertStudents([]); }} className={`w-full p-4 border rounded-2xl font-bold outline-none transition-colors text-sm ${isRamadan ? 'bg-[#0f172a]/50 border-white/20 text-white focus:border-emerald-400' : 'bg-slate-50 border-slate-200 text-slate-700 focus:border-emerald-500'}`}>
-                  <option value="" disabled className={isRamadan ? 'text-slate-500 bg-slate-900' : ''}>{t('selectClassPlaceholder')}</option>
-                  {getClassesForGrade(certGrade).map(c => <option key={c} value={c} className={isRamadan ? 'bg-slate-900 text-white' : ''}>{c}</option>)}
-                </select>
-              </div>
-
-              <div className="space-y-2">
-                <div className="flex justify-between px-2">
-                  <label className={`text-xs font-bold ${isRamadan ? 'text-slate-400' : 'text-slate-500'}`}>{t('studentsLabel')} ({selectedCertStudents.length})</label>
-                  <button onClick={selectAllCertStudents} className={`text-xs font-bold transition-colors ${isRamadan ? 'text-emerald-400 hover:text-emerald-300' : 'text-emerald-600 hover:text-emerald-700'}`}>{t('selectAll')}</button>
-                </div>
-
-                <div className="grid grid-cols-2 gap-2 max-h-52 overflow-y-auto p-1 custom-scrollbar">
-                  {filteredStudentsForCert.map(s => (
-                    <button
-                      key={s.id}
-                      onClick={() => toggleCertStudent(s.id)}
-                      className={`p-3 rounded-xl border text-xs font-bold flex justify-between transition-all ${selectedCertStudents.includes(s.id) ? (isRamadan ? 'bg-emerald-600 text-white border-emerald-500 shadow-md' : 'bg-emerald-600 text-white border-emerald-600 shadow-md') : (isRamadan ? 'bg-[#0f172a]/50 border-white/10 text-slate-300 hover:bg-white/10' : 'bg-white border-slate-200 text-slate-600 hover:bg-slate-50')}`}
-                    >
-                      {s.name} {selectedCertStudents.includes(s.id) && <Check size={14} />}
-                    </button>
-                  ))}
-                </div>
-              </div>
-
-              <div className="flex justify-end pt-4">
-                <button
-                  onClick={openCertificatesPreview}
-                  disabled={selectedCertStudents.length === 0}
-                  className={`w-full disabled:opacity-50 text-white px-6 py-4 rounded-xl font-black text-xs flex items-center justify-center gap-2 shadow-lg active:scale-95 transition-all ${isRamadan ? 'bg-emerald-600 hover:bg-emerald-500' : 'bg-emerald-600 hover:bg-emerald-700'}`}
-                >
-                  <Icon3DPrint className="w-5 h-5" /> {t('previewAndPrintCertificates')}
-                </button>
-              </div>
-            </div>
-          )}
-
-          {activeTab === 'parent_cards' && (
-            <div className="space-y-6">
-              <div className={`flex items-center gap-3 border-b pb-4 mb-2 ${isRamadan ? 'border-white/10' : 'border-slate-50'}`}>
-                <div className={`p-2 rounded-xl ${isRamadan ? 'bg-amber-500/20 text-amber-400' : 'bg-amber-50 text-amber-600'}`}><Icon3DParentCard className="w-5 h-5" /></div>
-                <h3 className={`font-black text-lg ${isRamadan ? 'text-white' : 'text-slate-800'}`}>{t('parentLoginCards')}</h3>
-              </div>
-
-              <div className="space-y-4">
-                <div className="flex gap-2 overflow-x-auto pb-1 no-scrollbar">
-                  {availableGrades.map(g => (
-                    <button
-                      key={g}
-                      onClick={() => { setCardsGrade(g); setCardsClass('all'); }}
-                      className={`px-4 py-2 text-xs font-bold rounded-xl border transition-all ${cardsGrade === g ? (isRamadan ? 'bg-amber-500/40 text-amber-200 border-amber-400/50' : 'bg-amber-600 text-white border-transparent') : (isRamadan ? 'bg-white/5 text-slate-300 border-white/10 hover:bg-white/10' : 'bg-slate-50 text-slate-600 border-slate-200')}`}
-                    >
-                      {t('gradePrefix')} {g}
-                    </button>
-                  ))}
-                </div>
-
-                <select value={cardsClass} onChange={(e) => setCardsClass(e.target.value)} className={`w-full p-4 border rounded-2xl font-bold outline-none transition-colors text-sm ${isRamadan ? 'bg-[#0f172a]/50 border-white/20 text-white focus:border-amber-400' : 'bg-slate-50 border-slate-200 text-slate-700 focus:border-amber-500'}`}>
-                  <option value="all" className={isRamadan ? 'bg-slate-900 text-white' : ''}>{t('allClassesInGrade')}</option>
-                  {getClassesForGrade(cardsGrade).map(c => <option key={c} value={c} className={isRamadan ? 'bg-slate-900 text-white' : ''}>{c}</option>)}
-                </select>
-              </div>
-
-              <div className="flex justify-end pt-4">
-                <button onClick={openParentCardsPreview} className={`w-full text-white px-6 py-4 rounded-xl font-black text-xs flex items-center justify-center gap-2 shadow-lg active:scale-95 transition-all ${isRamadan ? 'bg-amber-600 hover:bg-amber-500' : 'bg-amber-500 hover:bg-amber-600'}`}>
-                  <Icon3DPrint className="w-5 h-5" /> {t('previewAndPrintCards')}
-                </button>
-              </div>
-            </div>
-          )}
-
-          {activeTab === 'summon' && (
-            <div className="space-y-6">
-              <div className={`flex items-center gap-3 border-b pb-4 mb-2 ${isRamadan ? 'border-white/10' : 'border-slate-50'}`}>
-                <div className={`p-2 rounded-xl ${isRamadan ? 'bg-rose-500/20 text-rose-400' : 'bg-rose-50 text-rose-600'}`}><Icon3DSummon className="w-5 h-5" /></div>
-                <h3 className={`font-black text-lg ${isRamadan ? 'text-white' : 'text-slate-800'}`}>{t('summonTab')}</h3>
-              </div>
-
-              <div className="grid grid-cols-2 gap-4">
-                <select value={summonClass} onChange={(e) => setSummonClass(e.target.value)} className={`p-4 border rounded-2xl font-bold outline-none transition-colors text-sm ${isRamadan ? 'bg-[#0f172a]/50 border-white/20 text-white focus:border-rose-400' : 'bg-slate-50 border-slate-200 text-slate-700 focus:border-rose-500'}`}>
-                  <option value="" disabled className={isRamadan ? 'text-slate-500 bg-slate-900' : ''}>{t('selectClassPlaceholder')}</option>
-                  {getClassesForGrade(summonGrade).map(c => <option key={c} value={c} className={isRamadan ? 'bg-slate-900 text-white' : ''}>{c}</option>)}
-                </select>
-
-                <select value={summonStudentId} onChange={(e) => setSummonStudentId(e.target.value)} className={`p-4 border rounded-2xl font-bold outline-none transition-colors text-sm ${isRamadan ? 'bg-[#0f172a]/50 border-white/20 text-white focus:border-rose-400' : 'bg-slate-50 border-slate-200 text-slate-700 focus:border-rose-500'}`}>
-                  <option value="" className={isRamadan ? 'text-slate-500 bg-slate-900' : ''}>{t('studentPlaceholder')}</option>
-                  {availableStudentsForSummon.map(s => <option key={s.id} value={s.id} className={isRamadan ? 'bg-slate-900 text-white' : ''}>{s.name}</option>)}
-                </select>
-              </div>
-
-              <div className="space-y-2">
-                <div className="flex flex-wrap gap-2">
-                  {[
-                    { id: 'absence', label: t('absenceReason') },
-                    { id: 'truant', label: t('truantReason') },
-                    { id: 'behavior', label: t('behaviorReason') },
-                    { id: 'level', label: t('levelReason') },
-                    { id: 'other', label: t('otherReason') }
-                  ].map((r) => (
-                    <button
-                      key={r.id}
-                      onClick={() => setSummonData({ ...summonData, reasonType: r.id })}
-                      className={`px-4 py-2 rounded-xl text-xs font-bold border transition-all ${summonData.reasonType === r.id ? (isRamadan ? 'bg-rose-600 text-white border-rose-500 shadow-md' : 'bg-rose-600 text-white border-rose-600 shadow-md') : (isRamadan ? 'bg-[#0f172a]/50 text-slate-300 border-white/20 hover:bg-white/10' : 'bg-slate-50 text-slate-600 border-slate-200 hover:bg-slate-100')}`}
-                    >
-                      {r.label}
-                    </button>
-                  ))}
-                </div>
-
-                {summonData.reasonType === 'other' && (
-                  <textarea
-                    value={summonData.customReason}
-                    onChange={(e) => setSummonData({ ...summonData, customReason: e.target.value })}
-                    placeholder={t('writeSummonReasonHere')}
-                    className={`w-full p-4 border rounded-2xl font-bold mt-2 h-20 resize-none outline-none transition-colors text-sm ${isRamadan ? 'bg-[#0f172a]/50 border-white/20 text-white focus:border-rose-400 placeholder:text-slate-600' : 'bg-slate-50 border-slate-300 text-slate-800 focus:border-rose-500'}`}
-                  />
-                )}
-              </div>
-
-              <div className="grid grid-cols-2 gap-2">
-                {availableProceduresList.map(p => (
-                  <button
-                    key={p}
-                    onClick={() => toggleProcedure(p)}
-                    className={`p-2 rounded-lg text-[10px] font-bold border transition-all ${takenProcedures.includes(p) ? (isRamadan ? 'bg-indigo-500/30 border-indigo-400 text-indigo-200' : 'bg-indigo-100 border-indigo-500 text-indigo-700') : (isRamadan ? 'bg-white/5 border-white/10 text-slate-400 hover:bg-white/10' : 'bg-white border-slate-200 text-slate-500 hover:bg-slate-50')}`}
-                  >
-                    {p}
-                  </button>
-                ))}
-              </div>
-
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <div className="space-y-1">
-                  <label className={`text-[10px] font-bold ${isRamadan ? 'text-slate-400' : 'text-slate-500'}`}>{t('issueDateLabel')}</label>
-                  <input type="date" value={summonData.issueDate} onChange={(e) => setSummonData({ ...summonData, issueDate: e.target.value })} className={`w-full p-3 border rounded-xl text-xs font-bold outline-none ${isRamadan ? 'bg-[#0f172a]/50 border-white/20 text-white focus:border-rose-400' : 'bg-slate-50 border-slate-200 focus:border-rose-500'}`} />
-                </div>
-
-                <div className="space-y-1">
-                  <label className={`text-[10px] font-bold ${isRamadan ? 'text-slate-400' : 'text-slate-500'}`}>{t('attendanceDateLabel')}</label>
-                  <input type="date" value={summonData.date} onChange={(e) => setSummonData({ ...summonData, date: e.target.value })} className={`w-full p-3 border rounded-xl text-xs font-bold outline-none ${isRamadan ? 'bg-[#0f172a]/50 border-white/20 text-white focus:border-rose-400' : 'bg-slate-50 border-slate-200 focus:border-rose-500'}`} />
-                </div>
-
-                <div className="space-y-1">
-                  <label className={`text-[10px] font-bold ${isRamadan ? 'text-slate-400' : 'text-slate-500'}`}>{t('timeLabel')}</label>
-                  <input type="time" value={summonData.time} onChange={(e) => setSummonData({ ...summonData, time: e.target.value })} className={`w-full p-3 border rounded-xl text-xs font-bold outline-none ${isRamadan ? 'bg-[#0f172a]/50 border-white/20 text-white focus:border-rose-400' : 'bg-slate-50 border-slate-200 focus:border-rose-500'}`} />
-                </div>
-              </div>
-
-              <div className="flex justify-end pt-4">
-                <button
-                  onClick={openSummonPreview}
-                  disabled={!summonStudentId}
-                  className={`w-full disabled:opacity-50 text-white px-6 py-4 rounded-xl font-black text-xs flex items-center justify-center gap-2 shadow-lg active:scale-95 transition-all ${isRamadan ? 'bg-rose-600 hover:bg-rose-500' : 'bg-rose-600 hover:bg-rose-700'}`}
-                >
-                  <Icon3DEye className="w-5 h-5" /> {t('previewLetter')}
-                </button>
-              </div>
-            </div>
-          )}
-        </div>
-      </div>
-
-      <Modal isOpen={showCertSettingsModal} onClose={() => setShowCertSettingsModal(false)} className={`max-w-md rounded-[2rem] ${isRamadan ? 'bg-transparent' : ''}`}>
-        <div className={`text-center p-6 rounded-[2rem] border transition-colors ${isRamadan ? 'bg-[#0f172a]/95 backdrop-blur-2xl border-white/10 text-white shadow-[0_0_40px_rgba(0,0,0,0.5)]' : 'bg-white border-transparent text-slate-800'}`}>
-          <h3 className="font-black text-lg mb-4">{t('certificateSettingsTitle')}</h3>
-          <div className="space-y-3">
-            <input type="text" value={tempCertSettings.title} onChange={(e) => setTempCertSettings({ ...tempCertSettings, title: e.target.value })} className={`w-full p-3 border rounded-xl font-bold outline-none transition-colors ${isRamadan ? 'bg-[#1e1b4b]/50 border-indigo-500/30 text-white focus:border-indigo-400' : 'bg-slate-50 border-slate-200 text-slate-800 focus:border-indigo-500'}`} placeholder={t('certificateTitlePlaceholder')} />
-            <textarea value={tempCertSettings.bodyText} onChange={(e) => setTempCertSettings({ ...tempCertSettings, bodyText: e.target.value })} className={`w-full p-3 border rounded-xl font-bold h-24 outline-none transition-colors resize-none ${isRamadan ? 'bg-[#1e1b4b]/50 border-indigo-500/30 text-white focus:border-indigo-400' : 'bg-slate-50 border-slate-200 text-slate-800 focus:border-indigo-500'}`} placeholder={t('certificateBodyPlaceholder')} />
-            <button onClick={() => { setCertificateSettings(tempCertSettings); setShowCertSettingsModal(false); }} className={`w-full py-3 rounded-xl font-black shadow-lg active:scale-95 transition-all ${isRamadan ? 'bg-indigo-600 hover:bg-indigo-500 text-white' : 'bg-indigo-600 hover:bg-indigo-700 text-white'}`}>{t('saveBtn')}</button>
-          </div>
-        </div>
-      </Modal>
-    </div>
-  );
-};
-
-export default Reports;
+        <div className={`rounded-[2rem] p-6 shadow-sm border min-h
