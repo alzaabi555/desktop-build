@@ -253,7 +253,7 @@ export const translations = {
     scanQrCodeLine1: "امسح الرمز بكاميرا",
     scanQrCodeLine2: "هاتفك للدخول",
 
-    // Reports
+    // Reports - Arabic Keys
     closeAndReturn: "إغلاق والعودة",
     processingPrint: "جاري المعالجة...",
     exportToPrint: "تصدير للطباعة",
@@ -353,11 +353,39 @@ export const translations = {
     noBehaviors: "- لا يوجد -",
     negativeBehaviorsTitle: "سلوكيات سلبية",
     subjectTeacherLabel: "معلم المادة",
-    schoolPrincipalLabel: "مدير المدرسة",
+    schoolPrincipalLabel: "مدير/ة المدرسة",
     confirmDeleteBehavior: "هل أنت متأكد من حذف هذا السلوك؟",
     errorPrinting: "حدث خطأ أثناء الطباعة",
     semesterReportText: "تقرير الفصل",
     printReportBtn: "طباعة التقرير",
+    schoolWord: "مدرسة",
+    subjectLabel: "المادة:",
+    classLabelTemplate: "الصف:",
+    studentGradesRecord: "سجل درجات الطلاب",
+    numLabel: "م",
+    nameLabel: "الاسم",
+    totalLabel: "المجموع",
+    overallLabel: "الكلي",
+    gradeSymbolLabel: "الرمز",
+    pageWord: "صفحة",
+    ofWord: "من",
+    dateLabel: "التاريخ:",
+    certificateOfExcellence: "شهادة تميز",
+    studentMeritMedal: "وسام الاستحقاق الطلابي",
+    thanksAndAppreciationToStudent: "تتقدم إدارة المدرسة ومعلم المادة بجزيل الشكر والتقدير للطالب:",
+    enrolledInClass: "المقيد بالصف",
+    knightAppreciationText: "، تقديراً لجهوده العظيمة واعتلاءه صدارة فرسان هذا الشهر. متمنين له دوام التألق والنجاح.",
+    errorStudentDataUnavailable: "خطأ: بيانات الطالب غير متوفرة",
+    toTheRespectedParentOfStudent: "إلى الفاضل ولي أمر الطالب:",
+    summonParentTitle: "استدعاء ولي أمر",
+    greetingsText: "السلام عليكم ورحمة الله وبركاته،،،",
+    pleaseAttendSchoolOnDay: "نود إفادتكم بضرورة الحضور إلى المدرسة يوم",
+    atTime: "الساعة",
+    toDiscussTheFollowingMatter: "وذلك لمناقشة الأمر التالي:",
+    previouslyTakenProcedures: "الإجراءات المتخذة مسبقاً:",
+    thanksForCooperation: "شاكرين لكم حسن تعاونكم واهتمامكم بمصلحة الطالب.",
+    schoolPrincipalMale: "مدير المدرسة",
+    noStudentDataToDisplay: "لا توجد بيانات طلاب لعرضها",
 
     // Student Groups
     noClassesAdded: "لا توجد فصول مضافة",
@@ -666,7 +694,7 @@ export const translations = {
     chooseFileNow: "اختر الملف الآن",
     excelTipBestResults: "لأفضل النتائج، قم بتحميل واستخدام القالب الجاهز أعلاه (يحتوي على الرقم المدني، الاسم، ورقم الهاتف).",
     alertSelectClassExcel: "الرجاء اختيار الفصل أولاً",
-    alertNoValidDataExcel: "لم يتم العثور على بيانات صالحة. تأكد من استخدام القالب الصحيح.",
+    alertNoValidDataExcel: "لم يتم العثور على بيانات صالحة. تأكد من استخدام القالب الصحيح."
   },
   en: {
     // App Navigation
@@ -913,7 +941,7 @@ export const translations = {
     noStudentsWithCivilId: "No students in this class have a registered (Civil ID).",
     parentLoginCardsTitle: "Parent Login Cards (via Civil ID)",
     parentCardsSubtitle: "Cut out these cards and distribute them to students for their parents",
-    defaultSchoolName: "Al Ebdaa School",
+    defaultSchoolName: "Al Eb স্কুল",
     rasedParentsPortal: "Rased Parents Portal",
     classLabel: "Class:",
     undefinedClass: "Undefined",
@@ -922,7 +950,7 @@ export const translations = {
     scanQrCodeLine1: "Scan the code with",
     scanQrCodeLine2: "your phone to log in",
 
-    // Reports
+    // Reports - English Keys
     closeAndReturn: "Close & Return",
     processingPrint: "Processing...",
     exportToPrint: "Export for Printing",
@@ -956,7 +984,6 @@ export const translations = {
     parentCardsTab: "Parent Cards",
     summonTab: "Summon",
     comprehensiveStudentReport: "Comprehensive Student Report",
-    selectStudentPlaceholder: "Select a student...",
     printEntireClass: "Print Entire Class",
     individualPreview: "Individual Preview",
     previewAndPrintRecord: "Preview & Print Record",
@@ -1365,6 +1392,6 @@ export const translations = {
     chooseFileNow: "Choose file now",
     excelTipBestResults: "For best results, download and use the ready template above (contains Civil ID, Name, and Phone).",
     alertSelectClassExcel: "Please select a class first",
-    alertNoValidDataExcel: "No valid data found. Ensure you are using the correct template.",
+    alertNoValidDataExcel: "No valid data found. Ensure you are using the correct template."
   }
 };
