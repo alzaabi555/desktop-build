@@ -970,9 +970,9 @@ const StudentList: React.FC<StudentListProps> = ({
                     </h3>
                     <button onClick={() => setShowPositiveModal(false)} className={`p-2 rounded-full transition-colors ${isRamadan ? 'bg-white/10 text-slate-300 hover:bg-white/20' : 'bg-gray-100 text-gray-500 hover:bg-gray-200'}`}><X className="w-4 h-4"/></button>
                 </div>
-                <p className={`text-xs font-bold mb<p className={`text-xs font-bold mb-4 ${isRamadan ? 'text-slate-300' : 'text-gray-500'}`}>
-    {t('chooseExcellenceType')} <bdi className={isRamadan ? 'text-amber-400' : 'text-indigo-600'}>{selectedStudentForBehavior?.name}</bdi>
-</p>
+                <p className={`text-xs font-bold mb-4 ${isRamadan ? 'text-slate-300' : 'text-gray-500'}`}>
+                    {t('chooseExcellenceType')} <bdi className={isRamadan ? 'text-amber-400' : 'text-indigo-600'}>{selectedStudentForBehavior?.name}</bdi>
+                </p>
                 
                 <div className="grid grid-cols-2 gap-2 mb-4">
                     {POSITIVE_BEHAVIORS.map(b => (
@@ -1012,6 +1012,56 @@ const StudentList: React.FC<StudentListProps> = ({
             </div>
         </Modal>
 
+        <Modal isOpen={showNegativeModal} onClose={() => { setShowNegativeModal(false); setSelectedStudentForBehavior(null); }} className={`max-w-sm rounded-[2rem] ${isRamadan ? 'bg-transparent' : ''}`}>
+            <div className={`text-center p-6 rounded-[2rem] border transition-colors ${isRamadan ? 'bg-[#0f172a] border-white/10 text-white shadow-2xl' : 'bg-white border-transparent text-slate-800 shadow-2xl'}`}>
+                <div className="flex justify-between items-center mb-4">
+                    <h3 className="font-black text-lg flex items-center gap-2">
+                        <AlertCircle className={`w-5 h-5 ${isRamadan ? 'text-rose-400' : 'text-rose-500'}`} />
+                        {t('behavioralAlert')}
+                    </h3>
+                    <button onClick={() => setShowNegativeModal(false)} className={`p-2 rounded-full transition-colors ${isRamadan ? 'bg-white/10 text-slate-300 hover:bg-white/20' : 'bg-gray-100 text-gray-500 hover:bg-gray-200'}`}><X className="w-4 h-4"/></button>
+                </div>
+                <p className={`text-xs font-bold mb-4 ${isRamadan ? 'text-slate-300' : 'text-gray-500'}`}>
+                    {t('chooseNoteType')} <bdi className={isRamadan ? 'text-amber-400' : 'text-indigo-600'}>{selectedStudentForBehavior?.name}</bdi>
+                </p>
+                
+                <div className="grid grid-cols-2 gap-2 mb-4">
+                    {NEGATIVE_BEHAVIORS.map(b => (
+                        <button 
+                            key={b.id}
+                            onClick={() => confirmNegativeBehavior(b.original, b.points)}
+                            className={`p-3 border rounded-xl text-xs font-bold active:scale-95 transition-all flex flex-col items-center gap-1 ${isRamadan ? 'bg-[#1e293b] border-rose-400/30 text-rose-300 hover:bg-rose-500/30' : 'bg-rose-50 border-rose-100 text-rose-700 hover:bg-rose-100'}`}
+                        >
+                            <span>{t(b.transKey)}</span>
+                            <span className={`text-[10px] px-2 py-0.5 rounded-full shadow-sm ${isRamadan ? 'bg-rose-500/30 text-rose-200' : 'bg-white text-rose-600'}`}>{b.points}</span>
+                        </button>
+                    ))}
+                </div>
+
+                <div className={`pt-3 border-t ${isRamadan ? 'border-white/10' : 'border-slate-100'}`}>
+                    <p className={`text-[10px] font-bold mb-2 ${dir === 'rtl' ? 'text-right' : 'text-left'} ${isRamadan ? 'text-slate-400' : 'text-slate-400'}`}>{t('orAddCustomNote')}</p>
+                    <div className="flex gap-2">
+                        <input 
+                            type="text" 
+                            value={customNegativeReason}
+                            onChange={(e) => setCustomNegativeReason(e.target.value)}
+                            placeholder={t('otherReasonPlaceholder')} 
+                            className={`flex-1 border rounded-lg px-3 py-2 text-xs font-bold outline-none transition-colors ${isRamadan ? 'bg-[#1e293b] border-indigo-500/30 focus:border-rose-400 text-white placeholder:text-indigo-200/40' : 'bg-slate-50 border-slate-200 focus:border-rose-500 text-slate-800'}`}
+                        />
+                        <button 
+                            onClick={() => {
+                                if(customNegativeReason.trim()) {
+                                    confirmNegativeBehavior(customNegativeReason, -1);
+                                }
+                            }}
+                            className={`px-4 py-2 rounded-lg text-xs font-bold active:scale-95 flex items-center gap-1 transition-colors ${isRamadan ? 'bg-rose-500 hover:bg-rose-400 text-white' : 'bg-rose-500 text-white hover:bg-rose-600'}`}
+                        >
+                            <Plus size={14} /> {t('addBtnSmall')}
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </Modal>
         <Modal isOpen={showNegativeModal} onClose={() => { setShowNegativeModal(false); setSelectedStudentForBehavior(null); }} className={`max-w-sm rounded-[2rem] ${isRamadan ? 'bg-transparent' : ''}`}>
             <div className={`text-center p-6 rounded-[2rem] border transition-colors ${isRamadan ? 'bg-[#0f172a] border-white/10 text-white shadow-2xl' : 'bg-white border-transparent text-slate-800 shadow-2xl'}`}>
                 <div className="flex justify-between items-center mb-4">
