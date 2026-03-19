@@ -78,9 +78,7 @@ const StudentList: React.FC<StudentListProps> = ({
     const [selectedClass, setSelectedClass] = useState<string>(() => sessionStorage.getItem('rased_class') || 'all');
 
     const isRamadan = true;
-      }
-    });
-
+      
     useEffect(() => {
         sessionStorage.setItem('rased_grade', selectedGrade);
         sessionStorage.setItem('rased_class', selectedClass);
