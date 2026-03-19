@@ -4,8 +4,8 @@ import {
   Bell, Clock, Settings, Edit3,
   School, Download, Loader2, 
   PlayCircle, AlarmClock, ChevronLeft, User, Check, Camera,
-  X, Calendar, BellOff, Save, CalendarDays, CheckCircle2,
-  AlertTriangle, Moon, Award, Heart, Plus, Trash2, RefreshCcw
+  X, CalendarDays, CheckCircle2,
+  AlertTriangle, Award, Heart, Plus, Trash2, RefreshCcw, Save, BellOff
 } from 'lucide-react';
 import Modal from './Modal';
 import { useApp } from '../context/AppContext';
@@ -64,7 +64,7 @@ const Dashboard: React.FC<DashboardProps> = ({
     // 🌍 استدعاء محرك الترجمة والاتجاه
     const { classes, setSelectedClass, t, dir } = useApp();
 
-    if (!teacherInfo) return <div className="flex items-center justify-center h-screen">{t('dashboardLoading')}</div>;
+    if (!teacherInfo) return <div className="flex items-center justify-center h-screen text-white">{t('dashboardLoading')}</div>;
     
     const fileInputRef = useRef<HTMLInputElement>(null);
     const stampInputRef = useRef<HTMLInputElement>(null); 
@@ -96,20 +96,11 @@ const Dashboard: React.FC<DashboardProps> = ({
     const [tempSchedule, setTempSchedule] = useState<ScheduleDay[]>([]);
 
     const [showAlertBar, setShowAlertBar] = useState(true);
-    const [occasionGreeting, setOccasionGreeting] = useState<'ramadan' | 'eid' | 'teacher' | null>(null);
+    const [occasionGreeting, setOccasionGreeting] = useState<'teacher' | null>(null);
     const [cloudMessage, setCloudMessage] = useState<any>(null);
 
     // ✅ مصفوفة أيام الأسبوع للترجمة الديناميكية
     const weekDayKeys = ['sunday', 'monday', 'tuesday', 'wednesday', 'thursday'] as const;
-
-    const [isRamadan] = useState(() => {
-        try {
-            const parts = new Intl.DateTimeFormat('en-TN-u-ca-islamic', { month: 'numeric' }).formatToParts(new Date());
-            return parseInt(parts.find(p => p.type === 'month')?.value || '0') === 9;
-        } catch(e) {
-            return false;
-        }
-    });
 
     const [assessmentPlan, setAssessmentPlan] = useState<AssessmentMonth[]>(() => {
         try {
@@ -157,24 +148,6 @@ const Dashboard: React.FC<DashboardProps> = ({
                 localStorage.setItem(storageKey, 'true');
                 return;
             }
-
-            try {
-                const hijriFormatter = new Intl.DateTimeFormat('en-TN-u-ca-islamic', { day: 'numeric', month: 'numeric' });
-                const parts = hijriFormatter.formatToParts(today);
-                const hMonth = parseInt(parts.find(p => p.type === 'month')?.value || '0');
-                const hDay = parseInt(parts.find(p => p.type === 'day')?.value || '0');
-
-                if (hMonth === 9 && hDay <= 3) {
-                    setOccasionGreeting('ramadan');
-                    localStorage.setItem(storageKey, 'true');
-                    return;
-                }
-                if (hMonth === 10 && hDay <= 3) {
-                    setOccasionGreeting('eid');
-                    localStorage.setItem(storageKey, 'true');
-                    return;
-                }
-            } catch (e) {}
         };
 
         const timer = setTimeout(checkAnnouncements, 1500);
@@ -194,7 +167,7 @@ const Dashboard: React.FC<DashboardProps> = ({
             setEditGender(teacherInfo.gender || 'male');
             setEditSemester(currentSemester);
         }
-    }, [showEditModal, teacherInfo]); 
+    }, [showEditModal, teacherInfo, currentSemester]); 
 
     useEffect(() => {
         const timer = setInterval(() => setCurrentTime(new Date()), 60000);
@@ -433,9 +406,10 @@ const Dashboard: React.FC<DashboardProps> = ({
     const monthNames = [t('jan'), t('feb'), t('mar'), t('apr'), t('may'), t('jun'), t('jul'), t('aug'), t('sep'), t('oct'), t('nov'), t('dec')];
 
     return (
-        <div className="space-y-6 pb-28 animate-in fade-in duration-500 relative min-h-screen">
+        <div className="space-y-6 pb-28 animate-in fade-in duration-500 relative min-h-screen text-white">
+            {/* Header (Glass Theme) */}
             <header 
-                className={`pt-10 pb-8 px-4 md:pt-16 md:pb-12 md:px-6 md:pl-40 shadow-xl relative z-20 -mx-4 -mt-4 transition-all duration-500 ${isRamadan ? 'bg-white/5 border-b border-white/10 text-white' : 'bg-[#446A8D] text-white'}`}
+                className="pt-10 pb-8 px-4 md:pt-16 md:pb-12 md:px-6 md:pl-40 shadow-xl relative z-20 -mx-4 -mt-4 transition-all duration-500 bg-white/5 border-b border-white/10 backdrop-blur-md"
                 style={{ WebkitAppRegion: 'drag' } as any}
             >
                 <div className="flex justify-between items-center mb-2">
@@ -446,17 +420,17 @@ const Dashboard: React.FC<DashboardProps> = ({
                                     <img src={teacherInfo.avatar} className="w-full h-full object-cover" alt="Teacher" onError={(e) => e.currentTarget.style.display='none'} />
                                 ) : <DefaultAvatarSVG gender={teacherInfo?.gender || 'male'} />}
                             </div>
-                            <button onClick={() => setShowEditModal(true)} className={`absolute -bottom-2 ${dir === 'rtl' ? '-right-2' : '-left-2'} p-1.5 md:p-2 rounded-full shadow-lg border-2 hover:scale-110 transition-transform ${isRamadan ? 'bg-indigo-900 text-white border-indigo-500' : 'bg-white text-[#446A8D] border-[#446A8D]'}`} title={t('editIdentity')}>
+                            <button onClick={() => setShowEditModal(true)} className={`absolute -bottom-2 ${dir === 'rtl' ? '-right-2' : '-left-2'} p-1.5 md:p-2 rounded-full shadow-lg border-2 border-indigo-500 hover:scale-110 transition-transform bg-indigo-900 text-white`} title={t('editIdentity')}>
                                 <Edit3 size={12} className="md:w-3.5 md:h-3.5" strokeWidth={3} />
                             </button>
                         </div>
                         <div className="flex flex-col gap-0.5 md:gap-1">
                             <h1 className="text-xl md:text-3xl font-black tracking-wide">{teacherInfo?.name || t('welcome')}</h1>
-                            <div className="flex items-center gap-2 text-blue-100/90">
+                            <div className="flex items-center gap-2 text-indigo-100/90">
                                 <p className="text-xs md:text-sm font-bold flex items-center gap-1">
                                     <School size={12} className="md:w-3.5 md:h-3.5" /> {teacherInfo?.school || t('schoolFallback')}
                                 </p>
-                                <span className={`text-[9px] md:text-[10px] px-2 md:px-3 py-0.5 md:py-1 rounded-full font-bold border ${isRamadan ? 'bg-amber-500/20 border-amber-500/30 text-amber-200' : 'bg-white/20 border-white/10'}`}>
+                                <span className="text-[9px] md:text-[10px] px-2 md:px-3 py-0.5 md:py-1 rounded-full font-bold border bg-indigo-500/20 border-indigo-500/30 text-indigo-200">
                                     {currentSemester === '1' ? t('semester1') : t('semester2')}
                                 </span>
                             </div>
@@ -465,41 +439,41 @@ const Dashboard: React.FC<DashboardProps> = ({
                     
                     <div className="flex gap-2 md:gap-3" style={{ WebkitAppRegion: 'no-drag' } as any}>
                         <div className="relative z-[9999]">
-                            <button onClick={() => setShowSettingsDropdown(!showSettingsDropdown)} className={`w-10 h-10 md:w-12 md:h-12 bg-white/10 hover:bg-white/20 border border-white/10 rounded-2xl flex items-center justify-center transition-all ${showSettingsDropdown ? (isRamadan ? 'bg-amber-500/30 text-white' : 'bg-white text-[#446A8D]') : ''}`}>
+                            <button onClick={() => setShowSettingsDropdown(!showSettingsDropdown)} className={`w-10 h-10 md:w-12 md:h-12 bg-white/10 hover:bg-white/20 border border-white/10 rounded-2xl flex items-center justify-center transition-all ${showSettingsDropdown ? 'bg-indigo-500/30 text-white' : ''}`}>
                                 <Settings size={20} className="md:w-6 md:h-6" />
                             </button>
                             {showSettingsDropdown && (
                                 <>
                                     <div className="fixed inset-0 z-40" onClick={() => setShowSettingsDropdown(false)}></div>
-                                    <div className={`absolute ${dir === 'rtl' ? 'left-0' : 'right-0'} top-full mt-3 w-60 rounded-2xl shadow-2xl border z-50 overflow-hidden animate-in zoom-in-95 origin-top-left ${isRamadan ? 'bg-[#0f172a] border-white/10 text-white' : 'bg-white border-slate-100 text-slate-800'}`}>
-                                        <button onClick={() => { setShowEditModal(true); setShowSettingsDropdown(false); }} className={`flex items-center gap-3 px-4 py-4 w-full ${dir === 'rtl' ? 'text-right' : 'text-left'} border-b transition-colors ${isRamadan ? 'hover:bg-white/5 border-white/10' : 'hover:bg-slate-50 border-slate-50'}`}>
-                                            <div className={`p-2 rounded-lg ${isRamadan ? 'bg-white/10' : 'bg-indigo-50'}`}><User size={18} className={isRamadan ? 'text-indigo-300' : 'text-indigo-600'}/></div>
+                                    <div className={`absolute ${dir === 'rtl' ? 'left-0' : 'right-0'} top-full mt-3 w-60 rounded-2xl shadow-2xl border z-50 overflow-hidden animate-in zoom-in-95 origin-top-left bg-[#0f172a] border-white/10 text-white`}>
+                                        <button onClick={() => { setShowEditModal(true); setShowSettingsDropdown(false); }} className={`flex items-center gap-3 px-4 py-4 w-full ${dir === 'rtl' ? 'text-right' : 'text-left'} border-b transition-colors hover:bg-white/5 border-white/10`}>
+                                            <div className="p-2 rounded-lg bg-white/10"><User size={18} className="text-indigo-300"/></div>
                                             <span className="text-sm font-bold">{t('editIdentity')}</span>
                                         </button>
-                                        <button onClick={onToggleNotifications} className={`flex items-center gap-3 px-4 py-4 w-full ${dir === 'rtl' ? 'text-right' : 'text-left'} border-b transition-colors ${isRamadan ? 'hover:bg-white/5 border-white/10' : 'hover:bg-slate-50 border-slate-50'}`}>
-                                            <div className={`p-2 rounded-lg ${notificationsEnabled ? (isRamadan ? 'bg-emerald-500/20' : 'bg-emerald-50') : (isRamadan ? 'bg-rose-500/20' : 'bg-rose-50')}`}>
-                                                <AlarmClock size={18} className={notificationsEnabled ? (isRamadan ? 'text-emerald-400' : 'text-emerald-600') : (isRamadan ? 'text-rose-400' : 'text-rose-600')}/> 
+                                        <button onClick={onToggleNotifications} className={`flex items-center gap-3 px-4 py-4 w-full ${dir === 'rtl' ? 'text-right' : 'text-left'} border-b transition-colors hover:bg-white/5 border-white/10`}>
+                                            <div className={`p-2 rounded-lg ${notificationsEnabled ? 'bg-emerald-500/20' : 'bg-rose-500/20'}`}>
+                                                <AlarmClock size={18} className={notificationsEnabled ? 'text-emerald-400' : 'text-rose-400'}/> 
                                             </div>
                                             <div className="flex flex-col">
                                                 <span className="text-sm font-bold">{t('notifications')}</span>
-                                                <span className={`text-[10px] font-bold ${notificationsEnabled ? (isRamadan ? 'text-emerald-400' : 'text-emerald-500') : 'text-slate-400'}`}>{notificationsEnabled ? t('enabled') : t('disabled')}</span>
+                                                <span className={`text-[10px] font-bold ${notificationsEnabled ? 'text-emerald-400' : 'text-slate-400'}`}>{notificationsEnabled ? t('enabled') : t('disabled')}</span>
                                             </div>
                                         </button>
-                                        <button onClick={handleTestNotification} className={`flex items-center gap-3 px-4 py-4 w-full ${dir === 'rtl' ? 'text-right' : 'text-left'} transition-colors ${isRamadan ? 'hover:bg-white/5' : 'hover:bg-slate-50'}`}>
-                                            <div className={`p-2 rounded-lg ${isRamadan ? 'bg-amber-500/20' : 'bg-amber-50'}`}><PlayCircle size={18} className={isRamadan ? 'text-amber-400' : 'text-amber-600'}/></div>
+                                        <button onClick={handleTestNotification} className={`flex items-center gap-3 px-4 py-4 w-full ${dir === 'rtl' ? 'text-right' : 'text-left'} transition-colors hover:bg-white/5`}>
+                                            <div className="p-2 rounded-lg bg-amber-500/20"><PlayCircle size={18} className="text-amber-400"/></div>
                                             <span className="text-sm font-bold">{t('testBell')}</span>
                                         </button>
-                                        <button onClick={() => scheduleFileInputRef.current?.click()} style={{ WebkitAppRegion: 'no-drag' } as any} className={`cursor-pointer relative z-50 flex items-center gap-3 px-4 py-4 w-full ${dir === 'rtl' ? 'text-right' : 'text-left'} border-t ${isRamadan ? 'hover:bg-white/10 border-white/10 bg-white/5' : 'hover:bg-slate-50 border-slate-50 bg-slate-50/50'}`}>
-                                            <div className={`p-2 rounded-lg ${isRamadan ? 'bg-blue-500/20' : 'bg-blue-50'}`}><Download size={18} className={isRamadan ? 'text-blue-400' : 'text-blue-600'}/></div>
+                                        <button onClick={() => scheduleFileInputRef.current?.click()} style={{ WebkitAppRegion: 'no-drag' } as any} className={`cursor-pointer relative z-50 flex items-center gap-3 px-4 py-4 w-full ${dir === 'rtl' ? 'text-right' : 'text-left'} border-t hover:bg-white/10 border-white/10 bg-white/5`}>
+                                            <div className="p-2 rounded-lg bg-blue-500/20"><Download size={18} className="text-blue-400"/></div>
                                             <span className="text-sm font-bold">{t('importSchedule')}</span>
-                                            {isImportingSchedule && <Loader2 size={16} className={`${dir === 'rtl' ? 'mr-auto' : 'ml-auto'} animate-spin ${isRamadan ? 'text-blue-400' : 'text-blue-600'}`} />}
+                                            {isImportingSchedule && <Loader2 size={16} className={`${dir === 'rtl' ? 'mr-auto' : 'ml-auto'} animate-spin text-blue-400`} />}
                                         </button>
                                         <input type="file" ref={scheduleFileInputRef} onChange={handleImportSchedule} accept=".xlsx,.xls" className="hidden" />
                                     </div>
                                 </>
                             )}
                         </div>
-                        <button onClick={onToggleNotifications} className={`w-10 h-10 md:w-12 md:h-12 rounded-2xl flex items-center justify-center border transition-all ${notificationsEnabled ? 'bg-amber-400/20 border-amber-400/50 text-amber-300 shadow-lg' : 'bg-white/10 border-white/10 text-white/60 hover:bg-white/20'}`}>
+                        <button onClick={onToggleNotifications} className={`w-10 h-10 md:w-12 md:h-12 rounded-2xl flex items-center justify-center border transition-all ${notificationsEnabled ? 'bg-indigo-500/20 border-indigo-400/50 text-indigo-300 shadow-lg' : 'bg-white/10 border-white/10 text-white/60 hover:bg-white/20'}`}>
                             {notificationsEnabled ? <Bell size={20} className="md:w-6 md:h-6 animate-pulse" /> : <BellOff size={20} className="md:w-6 md:h-6" />}
                         </button>
                     </div>
@@ -509,25 +483,25 @@ const Dashboard: React.FC<DashboardProps> = ({
             {cloudMessage && (
                 <div className="px-4 mt-4 relative z-10 animate-in fade-in slide-in-from-top-4">
                     <div className={`relative p-4 rounded-2xl border shadow-md overflow-hidden ${
-                        cloudMessage.type === 'warning' ? (isRamadan ? 'bg-rose-900/40 border-rose-500/30' : 'bg-rose-50 border-rose-200') :
-                        cloudMessage.type === 'success' ? (isRamadan ? 'bg-emerald-900/40 border-emerald-500/30' : 'bg-emerald-50 border-emerald-200') :
-                        (isRamadan ? 'bg-blue-900/40 border-blue-500/30' : 'bg-blue-50 border-blue-200')
+                        cloudMessage.type === 'warning' ? 'bg-rose-900/40 border-rose-500/30' :
+                        cloudMessage.type === 'success' ? 'bg-emerald-900/40 border-emerald-500/30' :
+                        'bg-blue-900/40 border-blue-500/30'
                     }`}>
                         <div className="flex justify-between items-start">
                             <div className="flex items-start gap-3">
                                 <div className={`p-2 rounded-xl mt-0.5 ${
-                                    cloudMessage.type === 'warning' ? (isRamadan ? 'bg-rose-500/20 text-rose-400' : 'bg-rose-500/20 text-rose-600') :
-                                    cloudMessage.type === 'success' ? (isRamadan ? 'bg-emerald-500/20 text-emerald-400' : 'bg-emerald-500/20 text-emerald-600') :
-                                    (isRamadan ? 'bg-blue-500/20 text-blue-400' : 'bg-blue-500/20 text-blue-600')
+                                    cloudMessage.type === 'warning' ? 'bg-rose-500/20 text-rose-400' :
+                                    cloudMessage.type === 'success' ? 'bg-emerald-500/20 text-emerald-400' :
+                                    'bg-blue-500/20 text-blue-400'
                                 }`}>
                                     <Bell size={20} className="animate-pulse" />
                                 </div>
                                 <div>
-                                    <h3 className={`font-black text-sm ${isRamadan ? 'text-white' : 'text-slate-800'}`}>{cloudMessage.title}</h3>
-                                    <p className={`text-xs font-bold mt-1 leading-relaxed ${isRamadan ? 'text-indigo-200/90' : 'text-slate-600'}`}>{cloudMessage.body}</p>
+                                    <h3 className="font-black text-sm text-white">{cloudMessage.title}</h3>
+                                    <p className="text-xs font-bold mt-1 leading-relaxed text-indigo-200/90">{cloudMessage.body}</p>
                                 </div>
                             </div>
-                            <button onClick={handleCloseCloudMessage} className={`p-1.5 rounded-lg transition-colors shrink-0 ${isRamadan ? 'text-white/50 hover:bg-white/10 hover:text-white' : 'text-slate-400 hover:bg-slate-200 hover:text-slate-600'}`}>
+                            <button onClick={handleCloseCloudMessage} className="p-1.5 rounded-lg transition-colors shrink-0 text-white/50 hover:bg-white/10 hover:text-white">
                                 <X size={16} />
                             </button>
                         </div>
@@ -537,11 +511,10 @@ const Dashboard: React.FC<DashboardProps> = ({
 
             <div className="px-4 mt-6 relative z-10">
                 <div className="flex justify-between items-center mb-4">
-                    <h2 className={`text-lg font-black flex items-center gap-2 ${isRamadan ? 'text-white' : 'text-slate-800'}`}>
-                        {/* 🌟 تعديل الترجمة الذكية لعرض اسم اليوم */}
-                        {t('todaySchedule')} <span className={`text-xs font-bold px-2 py-1 rounded-lg ${isRamadan ? 'bg-white/10 text-indigo-200' : 'bg-slate-100 text-slate-400'}`}>{t(weekDayKeys[dayIndex]) || todaySchedule.dayName}</span>
+                    <h2 className="text-lg font-black flex items-center gap-2 text-white">
+                        {t('todaySchedule')} <span className="text-xs font-bold px-2 py-1 rounded-lg bg-white/10 text-indigo-200 backdrop-blur-md">{t(weekDayKeys[dayIndex]) || todaySchedule.dayName}</span>
                     </h2>
-                    <button onClick={() => setShowScheduleModal(true)} className={`p-2.5 rounded-xl shadow-sm border active:scale-95 transition-transform ${isRamadan ? 'bg-white/5 border-white/10 text-indigo-200 hover:bg-white/10' : 'bg-white text-slate-600 border-slate-200 hover:bg-slate-50'}`}>
+                    <button onClick={() => setShowScheduleModal(true)} className="p-2.5 rounded-xl shadow-sm border active:scale-95 transition-transform bg-white/5 border-white/10 text-indigo-200 hover:bg-white/10 backdrop-blur-md">
                         <Clock size={20} />
                     </button>
                 </div>
@@ -553,26 +526,21 @@ const Dashboard: React.FC<DashboardProps> = ({
                         const isActive = isToday && checkActivePeriod(time.startTime, time.endTime);
                         const displaySubject = teacherInfo?.subject && teacherInfo.subject.trim().length > 0 ? teacherInfo.subject : subject;
 
-                        const activeClass = isRamadan 
-                            ? 'bg-amber-600/90 text-white border-amber-500 shadow-lg scale-105 z-10' 
-                            : 'bg-[#446A8D] text-white border-[#446A8D] shadow-xl scale-105 z-10';
-                            
-                        const inactiveClass = isRamadan 
-                            ? 'bg-white/5 border-white/10 hover:bg-white/10' 
-                            : 'bg-white border-slate-100 hover:shadow-md';
+                        const activeClass = 'bg-indigo-600/90 text-white border-indigo-500 shadow-lg scale-105 z-10 backdrop-blur-md';
+                        const inactiveClass = 'bg-white/5 border-white/10 hover:bg-white/10 backdrop-blur-md';
 
                         return (
                             <div key={idx} className={`relative flex items-center justify-between p-4 rounded-2xl border transition-all ${isActive ? activeClass : inactiveClass}`}>
                                 <div className="flex items-center gap-4">
-                                    <div className={`w-12 h-12 rounded-xl flex items-center justify-center font-black text-xl shrink-0 ${isActive ? 'bg-white/20 text-white' : (isRamadan ? 'bg-white/10 text-indigo-300' : 'bg-indigo-50 text-indigo-600')}`}>
+                                    <div className={`w-12 h-12 rounded-xl flex items-center justify-center font-black text-xl shrink-0 ${isActive ? 'bg-white/20 text-white' : 'bg-white/10 text-indigo-300'}`}>
                                         {getSubjectIcon(displaySubject) || getSubjectIcon(subject) || (idx + 1)}
                                     </div>
                                     <div>
                                         <div className="flex items-center gap-2">
-                                            <h4 className={`font-black text-sm ${isActive ? 'text-white' : (isRamadan ? 'text-white' : 'text-slate-800')}`}>{subject}</h4>
+                                            <h4 className="font-black text-sm text-white">{subject}</h4>
                                             {isActive && <span className="text-[9px] bg-emerald-400 text-white px-2 py-0.5 rounded-full font-bold animate-pulse">{t('now')}</span>}
                                         </div>
-                                        <span className={`text-[10px] font-bold ${isActive ? 'text-white/80' : (isRamadan ? 'text-indigo-200/60' : 'text-slate-400')}`}>
+                                        <span className={`text-[10px] font-bold ${isActive ? 'text-white/80' : 'text-indigo-200/60'}`}>
                                             {t('period')} {idx + 1} • {time.startTime} - {time.endTime}
                                         </span>
                                     </div>
@@ -583,12 +551,12 @@ const Dashboard: React.FC<DashboardProps> = ({
                                             if (setSelectedClass) setSelectedClass(subject);
                                             onNavigate('attendance');
                                         }} 
-                                        className={`px-3 py-2 rounded-lg font-bold text-xs shadow-lg flex items-center gap-1 active:scale-95 ${isRamadan ? 'bg-white text-amber-700' : 'bg-white text-[#446A8D]'}`}
+                                        className="px-3 py-2 rounded-lg font-bold text-xs shadow-lg flex items-center gap-1 active:scale-95 bg-white text-indigo-700"
                                     >
                                         {t('takeAttendance')} <ChevronLeft size={14} className={dir === 'ltr' ? 'rotate-180' : ''} />
                                     </button>
                                 ) : (
-                                    <div className={`w-1.5 h-1.5 rounded-full ${isRamadan ? 'bg-white/20' : 'bg-slate-200'}`}></div>
+                                    <div className="w-1.5 h-1.5 rounded-full bg-white/20"></div>
                                 )}
                             </div>
                         );
@@ -597,13 +565,13 @@ const Dashboard: React.FC<DashboardProps> = ({
             </div>
 
             <div className="px-4 mt-6 relative z-10">
-                <div className={`rounded-[1.5rem] p-5 shadow-sm border ${isRamadan ? 'bg-white/5 border-white/10' : 'bg-white border-slate-100'}`}>
+                <div className="rounded-[1.5rem] p-5 shadow-sm border bg-white/5 border-white/10 backdrop-blur-md">
                     <div className="flex justify-between items-center mb-4">
                         <div className="flex items-center gap-3">
-                            <div className={`p-2 rounded-xl ${isRamadan ? 'bg-amber-500/20 text-amber-400' : 'bg-amber-50 text-amber-500'}`}><CalendarDays size={18}/></div>
-                            <h2 className={`text-base font-black ${isRamadan ? 'text-white' : 'text-slate-800'}`}>{t('continuousAssessmentPlan')}</h2>
+                            <div className="p-2 rounded-xl bg-indigo-500/20 text-indigo-400"><CalendarDays size={18}/></div>
+                            <h2 className="text-base font-black text-white">{t('continuousAssessmentPlan')}</h2>
                         </div>
-                        <button onClick={() => setShowPlanSettingsModal(true)} className={`p-2 rounded-xl transition-colors ${isRamadan ? 'bg-white/5 text-indigo-200 hover:bg-white/10' : 'bg-slate-50 text-slate-500 hover:bg-slate-100'}`}>
+                        <button onClick={() => setShowPlanSettingsModal(true)} className="p-2 rounded-xl transition-colors bg-white/5 text-indigo-200 hover:bg-white/10">
                             <Settings size={18} />
                         </button>
                     </div>
@@ -612,21 +580,21 @@ const Dashboard: React.FC<DashboardProps> = ({
                             const isCurrent = currentMonthIndex === plan.monthIndex;
                             const isPast = currentMonthIndex > plan.monthIndex;
                             
-                            let monthBg = isRamadan ? 'bg-white/5 border-white/10' : 'bg-white border-slate-100';
-                            if(isCurrent) monthBg = isRamadan ? 'bg-indigo-500/20 border-indigo-400/50' : 'bg-indigo-50/50 border-indigo-200';
-                            if(isPast) monthBg = isRamadan ? 'bg-white/5 border-transparent opacity-40' : 'bg-gray-50 border-gray-100 opacity-60';
+                            let monthBg = 'bg-white/5 border-white/10';
+                            if(isCurrent) monthBg = 'bg-indigo-500/20 border-indigo-400/50';
+                            if(isPast) monthBg = 'bg-white/5 border-transparent opacity-40';
 
                             return (
                                 <div key={plan.id} className={`p-4 rounded-2xl border transition-all ${monthBg}`}>
                                     <div className="flex justify-between items-center mb-2">
-                                        <span className={`text-xs font-black ${isCurrent ? (isRamadan ? 'text-indigo-300' : 'text-indigo-700') : (isRamadan ? 'text-indigo-100' : 'text-slate-600')}`}>{t('monthPrefix')} {plan.monthName}</span>
-                                        {isCurrent && <span className={`text-[8px] font-bold px-2 py-0.5 rounded-lg animate-pulse ${isRamadan ? 'bg-indigo-500 text-white' : 'bg-indigo-600 text-white'}`}>{t('currentMonthLabel')}</span>}
-                                        {isPast && <CheckCircle2 className={`w-3.5 h-3.5 ${isRamadan ? 'text-emerald-400' : 'text-emerald-500'}`} />}
+                                        <span className={`text-xs font-black ${isCurrent ? 'text-indigo-300' : 'text-indigo-100'}`}>{t('monthPrefix')} {plan.monthName}</span>
+                                        {isCurrent && <span className="text-[8px] font-bold px-2 py-0.5 rounded-lg animate-pulse bg-indigo-500 text-white">{t('currentMonthLabel')}</span>}
+                                        {isPast && <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400" />}
                                     </div>
                                     <ul className="space-y-1.5">
                                         {plan.tasks.map((task, idx) => (
-                                            <li key={idx} className={`flex items-start gap-2 text-[10px] font-bold ${isRamadan ? 'text-indigo-200/70' : 'text-slate-500'}`}>
-                                                <div className={`w-1 h-1 rounded-full mt-1.5 shrink-0 ${isCurrent ? (isRamadan ? 'bg-indigo-400' : 'bg-indigo-400') : (isRamadan ? 'bg-white/30' : 'bg-slate-300')}`}></div>
+                                            <li key={idx} className="flex items-start gap-2 text-[10px] font-bold text-indigo-200/70">
+                                                <div className={`w-1 h-1 rounded-full mt-1.5 shrink-0 ${isCurrent ? 'bg-indigo-400' : 'bg-white/30'}`}></div>
                                                 <span className={isPast ? 'line-through' : ''}>{task}</span>
                                             </li>
                                         ))}
@@ -638,9 +606,9 @@ const Dashboard: React.FC<DashboardProps> = ({
                 </div>
             </div>
 
-            <Modal isOpen={showPlanSettingsModal} onClose={() => setShowPlanSettingsModal(false)} className={`max-w-md rounded-[2rem] h-[80vh] ${isRamadan ? 'bg-transparent' : ''}`}>
-                <div className={`flex flex-col h-full p-2 rounded-[2rem] border ${isRamadan ? 'bg-[#0f172a] border-white/10 text-white shadow-2xl' : 'bg-white border-transparent text-slate-800'}`}>
-                    <div className={`flex justify-between items-center mb-4 pb-2 border-b ${isRamadan ? 'border-white/10' : 'border-slate-50'}`}>
+            <Modal isOpen={showPlanSettingsModal} onClose={() => setShowPlanSettingsModal(false)} className="max-w-md rounded-[2rem] h-[80vh] bg-transparent">
+                <div className="flex flex-col h-full p-2 rounded-[2rem] border bg-[#0f172a] border-white/10 text-white shadow-2xl">
+                    <div className="flex justify-between items-center mb-4 pb-2 border-b border-white/10">
                         <h3 className="font-black text-lg">{t('customizeAssessmentPlan')}</h3>
                         <div className="flex gap-2">
                             <button 
@@ -653,14 +621,14 @@ const Dashboard: React.FC<DashboardProps> = ({
                                         ]);
                                     }
                                 }}
-                                className={`p-2 rounded-lg transition-colors ${isRamadan ? 'bg-white/10 text-slate-300 hover:bg-white/20' : 'bg-slate-100 text-slate-500 hover:text-slate-800'}`}
+                                className="p-2 rounded-lg transition-colors bg-white/10 text-slate-300 hover:bg-white/20"
                                 title={t('restoreDefault')}
                             >
                                 <RefreshCcw size={16} />
                             </button>
                             <button 
                                 onClick={() => setTempPlan([...tempPlan, { id: `new_${Date.now()}`, monthIndex: new Date().getMonth(), monthName: t('newMonth'), tasks: [] }])}
-                                className={`flex items-center gap-1 px-3 py-1.5 rounded-lg text-[10px] font-bold transition-colors ${isRamadan ? 'bg-indigo-500/30 text-indigo-300 hover:bg-indigo-500/50' : 'bg-indigo-50 text-indigo-600 hover:bg-indigo-100'}`}
+                                className="flex items-center gap-1 px-3 py-1.5 rounded-lg text-[10px] font-bold transition-colors bg-indigo-500/30 text-indigo-300 hover:bg-indigo-500/50"
                             >
                                 <Plus size={14}/> {t('addMonth')}
                             </button>
@@ -669,7 +637,7 @@ const Dashboard: React.FC<DashboardProps> = ({
 
                     <div className="flex-1 overflow-y-auto custom-scrollbar space-y-4 p-1">
                         {tempPlan.map((month, idx) => (
-                            <div key={month.id} className={`rounded-xl p-3 border ${isRamadan ? 'bg-[#1e293b] border-white/10' : 'bg-slate-50 border-slate-100'}`}>
+                            <div key={month.id} className="rounded-xl p-3 border bg-[#1e293b] border-white/10">
                                 <div className="flex gap-2 mb-3">
                                     <select 
                                         value={month.monthIndex} 
@@ -679,9 +647,9 @@ const Dashboard: React.FC<DashboardProps> = ({
                                             n[idx].monthName = monthNames[parseInt(e.target.value)];
                                             setTempPlan(n);
                                         }}
-                                        className={`rounded-lg text-xs font-bold p-2 outline-none flex-1 border transition-colors ${isRamadan ? 'bg-[#0f172a] border-indigo-500/30 text-white' : 'bg-white border-slate-200 text-slate-800'}`}
+                                        className="rounded-lg text-xs font-bold p-2 outline-none flex-1 border transition-colors bg-[#0f172a] border-indigo-500/30 text-white"
                                     >
-                                        {monthNames.map((m, i) => <option key={i} value={i} className={isRamadan ? 'bg-slate-900 text-white' : ''}>{m}</option>)}
+                                        {monthNames.map((m, i) => <option key={i} value={i} className="bg-slate-900 text-white">{m}</option>)}
                                     </select>
                                     <button 
                                         onClick={() => {
@@ -689,7 +657,7 @@ const Dashboard: React.FC<DashboardProps> = ({
                                                 setTempPlan(tempPlan.filter((_, i) => i !== idx));
                                             }
                                         }}
-                                        className={`p-2 rounded-lg transition-colors ${isRamadan ? 'bg-rose-500/20 text-rose-400' : 'bg-rose-100 text-rose-500'}`}
+                                        className="p-2 rounded-lg transition-colors bg-rose-500/20 text-rose-400"
                                     >
                                         <Trash2 size={16} />
                                     </button>
@@ -705,7 +673,7 @@ const Dashboard: React.FC<DashboardProps> = ({
                                                     n[idx].tasks[tIdx] = e.target.value;
                                                     setTempPlan(n);
                                                 }}
-                                                className={`flex-1 border rounded-lg px-3 py-2 text-xs font-bold outline-none transition-colors ${isRamadan ? 'bg-[#0f172a] border-indigo-500/30 text-white focus:border-indigo-400' : 'bg-white border-slate-200 text-slate-800 focus:border-indigo-500'}`}
+                                                className="flex-1 border rounded-lg px-3 py-2 text-xs font-bold outline-none transition-colors bg-[#0f172a] border-indigo-500/30 text-white focus:border-indigo-400"
                                             />
                                             <button 
                                                 onClick={() => {
@@ -713,7 +681,7 @@ const Dashboard: React.FC<DashboardProps> = ({
                                                     n[idx].tasks = n[idx].tasks.filter((_, ti) => ti !== tIdx);
                                                     setTempPlan(n);
                                                 }}
-                                                className={`transition-colors ${isRamadan ? 'text-rose-400 hover:text-rose-300' : 'text-rose-400 hover:text-rose-600'}`}
+                                                className="transition-colors text-rose-400 hover:text-rose-300"
                                             >
                                                 <X size={14} />
                                             </button>
@@ -725,7 +693,7 @@ const Dashboard: React.FC<DashboardProps> = ({
                                             n[idx].tasks.push(t('newTask'));
                                             setTempPlan(n);
                                         }}
-                                        className={`w-full py-2 border border-dashed rounded-lg text-xs font-bold transition-colors ${isRamadan ? 'bg-transparent border-white/20 text-slate-400 hover:bg-white/5 hover:text-white' : 'bg-white border-slate-300 text-slate-400 hover:bg-slate-50 hover:text-indigo-500'}`}
+                                        className="w-full py-2 border border-dashed rounded-lg text-xs font-bold transition-colors bg-transparent border-white/20 text-slate-400 hover:bg-white/5 hover:text-white"
                                     >
                                         {t('addTask')}
                                     </button>
@@ -734,85 +702,85 @@ const Dashboard: React.FC<DashboardProps> = ({
                         ))}
                     </div>
 
-                    <div className={`pt-4 mt-auto border-t ${isRamadan ? 'border-white/10' : 'border-slate-100'}`}>
-                        <button onClick={handleSavePlanSettings} className={`w-full py-3 text-white rounded-xl font-bold text-xs shadow-lg flex items-center justify-center gap-2 active:scale-95 transition-all ${isRamadan ? 'bg-indigo-600 hover:bg-indigo-500' : 'bg-slate-900 hover:bg-slate-800'}`}><Save size={16} /> {t('saveChanges')}</button>
+                    <div className="pt-4 mt-auto border-t border-white/10">
+                        <button onClick={handleSavePlanSettings} className="w-full py-3 text-white rounded-xl font-bold text-xs shadow-lg flex items-center justify-center gap-2 active:scale-95 transition-all bg-indigo-600 hover:bg-indigo-500"><Save size={16} /> {t('saveChanges')}</button>
                     </div>
                 </div>
             </Modal>
 
-            <Modal isOpen={showEditModal} onClose={() => setShowEditModal(false)} className={`max-w-md rounded-[2rem] ${isRamadan ? 'bg-transparent' : ''}`}>
-                <div className={`text-center p-4 rounded-[2rem] border transition-colors ${isRamadan ? 'bg-[#0f172a] border-white/10 text-white shadow-2xl' : 'bg-white border-transparent text-slate-800'}`}>
+            <Modal isOpen={showEditModal} onClose={() => setShowEditModal(false)} className="max-w-md rounded-[2rem] bg-transparent">
+                <div className="text-center p-4 rounded-[2rem] border transition-colors bg-[#0f172a] border-white/10 text-white shadow-2xl">
                     <h3 className="font-black text-lg mb-4">{t('officialIdentity')}</h3>
                     <div className="w-24 h-24 mx-auto mb-4 relative group">
                         {editAvatar ? (
-                            <img src={editAvatar} className={`w-full h-full rounded-2xl object-cover border-4 shadow-md ${isRamadan ? 'border-white/10' : 'border-slate-50'}`} alt="Profile" onError={(e) => { e.currentTarget.style.display='none'; }}/>
+                            <img src={editAvatar} className="w-full h-full rounded-2xl object-cover border-4 shadow-md border-white/10" alt="Profile" onError={(e) => { e.currentTarget.style.display='none'; }}/>
                         ) : (
-                            <div className={`w-full h-full rounded-2xl border-4 flex items-center justify-center ${isRamadan ? 'bg-[#1e293b] border-white/10' : 'bg-indigo-50 border-slate-50'}`}><DefaultAvatarSVG gender={editGender}/></div>
+                            <div className="w-full h-full rounded-2xl border-4 flex items-center justify-center bg-[#1e293b] border-white/10"><DefaultAvatarSVG gender={editGender}/></div>
                         )}
-                        <button onClick={() => setEditAvatar(undefined)} className={`absolute -bottom-2 ${dir === 'rtl' ? '-right-2' : '-left-2'} bg-rose-500 text-white p-1.5 rounded-full shadow-lg border-2 border-white hover:bg-rose-600 transition-colors`}>
+                        <button onClick={() => setEditAvatar(undefined)} className={`absolute -bottom-2 ${dir === 'rtl' ? '-right-2' : '-left-2'} bg-rose-500 text-white p-1.5 rounded-full shadow-lg border-2 border-[#0f172a] hover:bg-rose-600 transition-colors`}>
                             <X size={14}/>
                         </button>
                     </div>
 
                     <div className={`space-y-3 ${dir === 'rtl' ? 'text-right' : 'text-left'}`}>
                         <div className="grid grid-cols-2 gap-3">
-                            <input value={editName} onChange={e => setEditName(e.target.value)} placeholder={t('namePlaceholder')} className={`p-3 border rounded-xl text-xs font-bold w-full outline-none transition-colors ${isRamadan ? 'bg-[#1e293b] border-white/10 focus:border-indigo-400 text-white' : 'bg-slate-50 border-slate-200 focus:border-indigo-500 text-slate-800'}`} />
-                            <input value={editSchool} onChange={e => setEditSchool(e.target.value)} placeholder={t('schoolPlaceholder')} className={`p-3 border rounded-xl text-xs font-bold w-full outline-none transition-colors ${isRamadan ? 'bg-[#1e293b] border-white/10 focus:border-indigo-400 text-white' : 'bg-slate-50 border-slate-200 focus:border-indigo-500 text-slate-800'}`} />
+                            <input value={editName} onChange={e => setEditName(e.target.value)} placeholder={t('namePlaceholder')} className="p-3 border rounded-xl text-xs font-bold w-full outline-none transition-colors bg-[#1e293b] border-white/10 focus:border-indigo-400 text-white" />
+                            <input value={editSchool} onChange={e => setEditSchool(e.target.value)} placeholder={t('schoolPlaceholder')} className="p-3 border rounded-xl text-xs font-bold w-full outline-none transition-colors bg-[#1e293b] border-white/10 focus:border-indigo-400 text-white" />
                         </div>
-                        <input value={editSubject} onChange={e => setEditSubject(e.target.value)} placeholder={t('subjectExample')} className={`p-3 border rounded-xl text-xs font-bold w-full outline-none transition-colors ${isRamadan ? 'bg-[#1e293b] border-white/10 focus:border-indigo-400 text-white' : 'bg-slate-50 border-slate-200 focus:border-indigo-500 text-slate-800'}`} />
+                        <input value={editSubject} onChange={e => setEditSubject(e.target.value)} placeholder={t('subjectExample')} className="p-3 border rounded-xl text-xs font-bold w-full outline-none transition-colors bg-[#1e293b] border-white/10 focus:border-indigo-400 text-white" />
                         <div className="grid grid-cols-2 gap-3">
-                            <input value={editGovernorate} onChange={e => setEditGovernorate(e.target.value)} placeholder={t('governoratePlaceholder')} className={`p-3 border rounded-xl text-xs font-bold w-full outline-none transition-colors ${isRamadan ? 'bg-[#1e293b] border-white/10 focus:border-indigo-400 text-white' : 'bg-slate-50 border-slate-200 focus:border-indigo-500 text-slate-800'}`} />
-                            <input value={editAcademicYear} onChange={e => setEditAcademicYear(e.target.value)} placeholder={t('academicYearPlaceholder')} className={`p-3 border rounded-xl text-xs font-bold w-full outline-none transition-colors ${isRamadan ? 'bg-[#1e293b] border-white/10 focus:border-indigo-400 text-white' : 'bg-slate-50 border-slate-200 focus:border-indigo-500 text-slate-800'}`} />
+                            <input value={editGovernorate} onChange={e => setEditGovernorate(e.target.value)} placeholder={t('governoratePlaceholder')} className="p-3 border rounded-xl text-xs font-bold w-full outline-none transition-colors bg-[#1e293b] border-white/10 focus:border-indigo-400 text-white" />
+                            <input value={editAcademicYear} onChange={e => setEditAcademicYear(e.target.value)} placeholder={t('academicYearPlaceholder')} className="p-3 border rounded-xl text-xs font-bold w-full outline-none transition-colors bg-[#1e293b] border-white/10 focus:border-indigo-400 text-white" />
                         </div>
 
-                        <div className={`p-1 rounded-xl flex gap-1 ${isRamadan ? 'bg-white/5' : 'bg-slate-50'}`}>
-                            <button onClick={() => setEditSemester('1')} className={`flex-1 py-2 rounded-lg text-xs font-bold transition-all ${editSemester === '1' ? (isRamadan ? 'bg-indigo-600 text-white shadow' : 'bg-white shadow text-indigo-600') : (isRamadan ? 'text-slate-400' : 'text-slate-400')}`}>{t('sem1')}</button>
-                            <button onClick={() => setEditSemester('2')} className={`flex-1 py-2 rounded-lg text-xs font-bold transition-all ${editSemester === '2' ? (isRamadan ? 'bg-indigo-600 text-white shadow' : 'bg-white shadow text-indigo-600') : (isRamadan ? 'text-slate-400' : 'text-slate-400')}`}>{t('sem2')}</button>
+                        <div className="p-1 rounded-xl flex gap-1 bg-white/5">
+                            <button onClick={() => setEditSemester('1')} className={`flex-1 py-2 rounded-lg text-xs font-bold transition-all ${editSemester === '1' ? 'bg-indigo-600 text-white shadow' : 'text-slate-400 hover:text-white'}`}>{t('sem1')}</button>
+                            <button onClick={() => setEditSemester('2')} className={`flex-1 py-2 rounded-lg text-xs font-bold transition-all ${editSemester === '2' ? 'bg-indigo-600 text-white shadow' : 'text-slate-400 hover:text-white'}`}>{t('sem2')}</button>
                         </div>
 
                         <div className="flex gap-2 pt-2">
-                            <button onClick={() => fileInputRef.current?.click()} className={`flex-1 py-3 rounded-xl text-[10px] font-bold flex flex-col items-center gap-1 border transition-colors ${isRamadan ? 'bg-[#1e293b] text-indigo-300 border-indigo-500/30 hover:bg-indigo-900/50' : 'bg-indigo-50 text-indigo-600 border-indigo-100 hover:bg-indigo-100'}`}><Camera size={16}/> {t('yourPhoto')}</button>
-                            <button onClick={() => stampInputRef.current?.click()} className={`flex-1 py-3 rounded-xl text-[10px] font-bold flex flex-col items-center gap-1 border transition-colors ${isRamadan ? 'bg-[#1e293b] text-blue-300 border-blue-500/30 hover:bg-blue-900/50' : 'bg-blue-50 text-blue-600 border-blue-100 hover:bg-blue-100'}`}><Check size={16}/> {t('stamp')}</button>
-                            <button onClick={() => ministryLogoInputRef.current?.click()} className={`flex-1 py-3 rounded-xl text-[10px] font-bold flex flex-col items-center gap-1 border transition-colors ${isRamadan ? 'bg-[#1e293b] text-amber-300 border-amber-500/30 hover:bg-amber-900/50' : 'bg-amber-50 text-amber-600 border-amber-100 hover:bg-amber-100'}`}><School size={16}/> {t('logo')}</button>
+                            <button onClick={() => fileInputRef.current?.click()} className="flex-1 py-3 rounded-xl text-[10px] font-bold flex flex-col items-center gap-1 border transition-colors bg-[#1e293b] text-indigo-300 border-indigo-500/30 hover:bg-indigo-900/50"><Camera size={16}/> {t('yourPhoto')}</button>
+                            <button onClick={() => stampInputRef.current?.click()} className="flex-1 py-3 rounded-xl text-[10px] font-bold flex flex-col items-center gap-1 border transition-colors bg-[#1e293b] text-blue-300 border-blue-500/30 hover:bg-blue-900/50"><Check size={16}/> {t('stamp')}</button>
+                            <button onClick={() => ministryLogoInputRef.current?.click()} className="flex-1 py-3 rounded-xl text-[10px] font-bold flex flex-col items-center gap-1 border transition-colors bg-[#1e293b] text-amber-300 border-amber-500/30 hover:bg-amber-900/50"><School size={16}/> {t('logo')}</button>
                         </div>
                         <input type="file" ref={fileInputRef} onChange={(e) => handleFileUpload(e, setEditAvatar)} className="hidden" accept="image/*"/>
                         <input type="file" ref={stampInputRef} onChange={(e) => handleFileUpload(e, setEditStamp)} className="hidden" accept="image/*"/>
                         <input type="file" ref={ministryLogoInputRef} onChange={(e) => handleFileUpload(e, setEditMinistryLogo)} className="hidden" accept="image/*"/>
 
-                        <button onClick={handleSaveInfo} className={`w-full py-3 text-white rounded-xl font-bold text-xs mt-2 shadow-lg active:scale-95 transition-all ${isRamadan ? 'bg-indigo-600 hover:bg-indigo-500' : 'bg-slate-900 hover:bg-slate-800'}`}>{t('saveChanges')}</button>
+                        <button onClick={handleSaveInfo} className="w-full py-3 text-white rounded-xl font-bold text-xs mt-2 shadow-lg active:scale-95 transition-all bg-indigo-600 hover:bg-indigo-500">{t('saveChanges')}</button>
                     </div>
                 </div>
             </Modal>
 
-            <Modal isOpen={showScheduleModal} onClose={() => setShowScheduleModal(false)} className={`max-w-md rounded-[2rem] h-[80vh] ${isRamadan ? 'bg-transparent' : ''}`}>
-                <div className={`flex flex-col h-full p-2 rounded-[2rem] border transition-colors ${isRamadan ? 'bg-[#0f172a] border-white/10 text-white shadow-2xl' : 'bg-white border-transparent text-slate-800'}`}>
+            <Modal isOpen={showScheduleModal} onClose={() => setShowScheduleModal(false)} className="max-w-md rounded-[2rem] h-[80vh] bg-transparent">
+                <div className="flex flex-col h-full p-2 rounded-[2rem] border transition-colors bg-[#0f172a] border-white/10 text-white shadow-2xl">
                     
-                    <div className={`flex justify-between items-center mb-4 pb-2 border-b ${isRamadan ? 'border-white/10' : 'border-slate-50'}`}>
+                    <div className="flex justify-between items-center mb-4 pb-2 border-b border-white/10">
                         <h3 className="font-black text-lg">{t('manageSchedule')}</h3>
                         <button 
                             onClick={() => modalScheduleFileInputRef.current?.click()} 
                             style={{ WebkitAppRegion: 'no-drag' } as any}
-                            className={`cursor-pointer relative z-50 flex items-center gap-1 px-3 py-1.5 rounded-lg text-[10px] font-bold transition-colors ${isRamadan ? 'bg-emerald-500/20 text-emerald-400 hover:bg-emerald-500/30' : 'bg-emerald-50 text-emerald-600 hover:bg-emerald-100'}`}
+                            className="cursor-pointer relative z-50 flex items-center gap-1 px-3 py-1.5 rounded-lg text-[10px] font-bold transition-colors bg-emerald-500/20 text-emerald-400 hover:bg-emerald-500/30"
                         >
                             <Download size={14}/> {isImportingPeriods ? '...' : t('importExcel')}
                         </button>
                         <input type="file" ref={modalScheduleFileInputRef} onChange={handleImportPeriodTimes} accept=".xlsx,.xls" className="hidden" />
                     </div>
 
-                    <div className={`flex p-1 rounded-xl mb-4 shrink-0 ${isRamadan ? 'bg-[#1e293b]' : 'bg-slate-100'}`}>
-                        <button onClick={() => setScheduleTab('timing')} className={`flex-1 py-2 rounded-lg text-xs font-bold transition-all ${scheduleTab === 'timing' ? (isRamadan ? 'bg-[#0f172a] shadow text-white' : 'bg-white shadow text-slate-800') : (isRamadan ? 'text-slate-400' : 'text-slate-400')}`}>{t('timing')}</button>
-                        <button onClick={() => setScheduleTab('classes')} className={`flex-1 py-2 rounded-lg text-xs font-bold transition-all ${scheduleTab === 'classes' ? (isRamadan ? 'bg-[#0f172a] shadow text-white' : 'bg-white shadow text-slate-800') : (isRamadan ? 'text-slate-400' : 'text-slate-400')}`}>{t('classesTab')}</button>
+                    <div className="flex p-1 rounded-xl mb-4 shrink-0 bg-[#1e293b]">
+                        <button onClick={() => setScheduleTab('timing')} className={`flex-1 py-2 rounded-lg text-xs font-bold transition-all ${scheduleTab === 'timing' ? 'bg-[#0f172a] shadow text-white' : 'text-slate-400 hover:text-white'}`}>{t('timing')}</button>
+                        <button onClick={() => setScheduleTab('classes')} className={`flex-1 py-2 rounded-lg text-xs font-bold transition-all ${scheduleTab === 'classes' ? 'bg-[#0f172a] shadow text-white' : 'text-slate-400 hover:text-white'}`}>{t('classesTab')}</button>
                     </div>
 
                     <div className="flex-1 overflow-y-auto custom-scrollbar p-1">
                       {scheduleTab === 'timing' ? (
                             <div className="space-y-2">
                                 {tempPeriodTimes.map((pt, idx) => (
-                                    <div key={idx} className={`flex items-center gap-2 p-2 rounded-xl border ${isRamadan ? 'bg-[#1e293b] border-white/10' : 'bg-slate-50 border-slate-100'}`}>
-                                        <span className={`text-[10px] font-bold w-8 text-center ${isRamadan ? 'text-slate-400' : 'text-slate-400'}`}>{idx+1}</span>
-                                        <input type="time" value={pt.startTime} onChange={(e) => {const n=[...tempPeriodTimes]; if(n[idx]) n[idx].startTime=e.target.value; setTempPeriodTimes(n)}} className={`flex-1 rounded-lg px-2 py-1 text-xs font-bold border text-center transition-colors ${isRamadan ? 'bg-[#0f172a] border-white/20 text-white' : 'bg-white border-slate-200 text-slate-800'}`}/>
-                                        <span className={isRamadan ? 'text-slate-500' : 'text-slate-300'}>-</span>
-                                        <input type="time" value={pt.endTime} onChange={(e) => {const n=[...tempPeriodTimes]; if(n[idx]) n[idx].endTime=e.target.value; setTempPeriodTimes(n)}} className={`flex-1 rounded-lg px-2 py-1 text-xs font-bold border text-center transition-colors ${isRamadan ? 'bg-[#0f172a] border-white/20 text-white' : 'bg-white border-slate-200 text-slate-800'}`}/>
+                                    <div key={idx} className="flex items-center gap-2 p-2 rounded-xl border bg-[#1e293b] border-white/10">
+                                        <span className="text-[10px] font-bold w-8 text-center text-slate-400">{idx+1}</span>
+                                        <input type="time" value={pt.startTime} onChange={(e) => {const n=[...tempPeriodTimes]; if(n[idx]) n[idx].startTime=e.target.value; setTempPeriodTimes(n)}} className="flex-1 rounded-lg px-2 py-1 text-xs font-bold border text-center transition-colors bg-[#0f172a] border-white/20 text-white"/>
+                                        <span className="text-slate-500">-</span>
+                                        <input type="time" value={pt.endTime} onChange={(e) => {const n=[...tempPeriodTimes]; if(n[idx]) n[idx].endTime=e.target.value; setTempPeriodTimes(n)}} className="flex-1 rounded-lg px-2 py-1 text-xs font-bold border text-center transition-colors bg-[#0f172a] border-white/20 text-white"/>
                                     </div>
                                 ))}
                             </div>
@@ -820,16 +788,16 @@ const Dashboard: React.FC<DashboardProps> = ({
                             <div className="space-y-4">
                                 <div className="flex gap-2 overflow-x-auto pb-2 no-scrollbar">
                                     {tempSchedule.map((day, idx) => (
-                                        <button key={idx} onClick={() => setEditingDayIndex(idx)} className={`px-4 py-2 rounded-xl text-xs font-bold whitespace-nowrap border transition-all ${editingDayIndex === idx ? (isRamadan ? 'bg-indigo-600 text-white border-transparent' : 'bg-indigo-600 text-white border-indigo-600') : (isRamadan ? 'bg-[#1e293b] text-slate-300 border-white/10' : 'bg-white text-slate-500 border-slate-200')}`}>
+                                        <button key={idx} onClick={() => setEditingDayIndex(idx)} className={`px-4 py-2 rounded-xl text-xs font-bold whitespace-nowrap border transition-all ${editingDayIndex === idx ? 'bg-indigo-600 text-white border-transparent' : 'bg-[#1e293b] text-slate-300 border-white/10 hover:bg-[#2e3b4e]'}`}>
                                             {t(weekDayKeys[idx]) || day.dayName}
                                         </button>
                                     ))}
                                 </div>
                                 <div className="space-y-2">
                                     {tempSchedule[editingDayIndex]?.periods.map((cls: string, pIdx: number) => (
-                                        <div key={pIdx} className={`flex items-center gap-3 p-2 rounded-xl border ${isRamadan ? 'bg-[#1e293b] border-white/10' : 'bg-slate-50 border-slate-100'}`}>
-                                            <span className={`text-[10px] font-bold w-8 text-center ${isRamadan ? 'text-slate-400' : 'text-slate-400'}`}>{pIdx + 1}</span>
-                                            <input value={cls} onChange={(e) => {const n=[...tempSchedule]; if(n[editingDayIndex]?.periods) n[editingDayIndex].periods[pIdx]=e.target.value; setTempSchedule(n)}} placeholder={t('subjectNamePlaceholder')} className={`flex-1 border rounded-lg px-3 py-2 text-xs font-bold outline-none transition-colors ${isRamadan ? 'bg-[#0f172a] border-white/20 text-white focus:border-indigo-400 placeholder:text-slate-500' : 'bg-white border-slate-200 focus:border-indigo-500 text-slate-800'}`} />
+                                        <div key={pIdx} className="flex items-center gap-3 p-2 rounded-xl border bg-[#1e293b] border-white/10">
+                                            <span className="text-[10px] font-bold w-8 text-center text-slate-400">{pIdx + 1}</span>
+                                            <input value={cls} onChange={(e) => {const n=[...tempSchedule]; if(n[editingDayIndex]?.periods) n[editingDayIndex].periods[pIdx]=e.target.value; setTempSchedule(n)}} placeholder={t('subjectNamePlaceholder')} className="flex-1 border rounded-lg px-3 py-2 text-xs font-bold outline-none transition-colors bg-[#0f172a] border-white/20 text-white focus:border-indigo-400 placeholder:text-slate-500" />
                                         </div>
                                     ))}
                                 </div>
@@ -837,8 +805,8 @@ const Dashboard: React.FC<DashboardProps> = ({
                         )}
                     </div>
 
-                    <div className={`pt-4 mt-auto border-t ${isRamadan ? 'border-white/10' : 'border-slate-100'}`}>
-                        <button onClick={handleSaveScheduleSettings} className={`w-full py-3 text-white rounded-xl font-bold text-xs shadow-lg flex items-center justify-center gap-2 active:scale-95 transition-all ${isRamadan ? 'bg-indigo-600 hover:bg-indigo-500' : 'bg-slate-900 hover:bg-slate-800'}`}><Save size={16} /> {t('saveChanges')}</button>
+                    <div className="pt-4 mt-auto border-t border-white/10">
+                        <button onClick={handleSaveScheduleSettings} className="w-full py-3 text-white rounded-xl font-bold text-xs shadow-lg flex items-center justify-center gap-2 active:scale-95 transition-all bg-indigo-600 hover:bg-indigo-500"><Save size={16} /> {t('saveChanges')}</button>
                     </div>
                 </div>
             </Modal>
