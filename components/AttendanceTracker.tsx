@@ -31,9 +31,7 @@ const AttendanceTracker: React.FC<AttendanceTrackerProps> = ({ students, classes
   const [notificationTarget, setNotificationTarget] = useState<{student: Student, type: 'absent' | 'late' | 'truant'} | null>(null);
   
   const isRamadan = true;
-      }
-  });
-
+    
   useEffect(() => {
       sessionStorage.setItem('rased_grade', selectedGrade);
       sessionStorage.setItem('rased_class', classFilter);
