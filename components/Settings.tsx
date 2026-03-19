@@ -72,9 +72,8 @@ const Settings = () => {
   const [isUploading, setIsUploading] = useState(false);
   const [isDownloading, setIsDownloading] = useState(false);
 
-  const isRamadan = true; }
-  });
-
+  const isRamadan = true; 
+ 
   useEffect(() => {
       setName(teacherInfo?.name || '');
       setSchool(teacherInfo?.school || '');
