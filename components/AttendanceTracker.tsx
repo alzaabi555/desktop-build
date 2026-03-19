@@ -30,12 +30,7 @@ const AttendanceTracker: React.FC<AttendanceTrackerProps> = ({ students, classes
   const [isExportingExcel, setIsExportingExcel] = useState(false);
   const [notificationTarget, setNotificationTarget] = useState<{student: Student, type: 'absent' | 'late' | 'truant'} | null>(null);
   
-  const [isRamadan] = useState(() => {
-      try {
-          const parts = new Intl.DateTimeFormat('en-TN-u-ca-islamic', { month: 'numeric' }).formatToParts(new Date());
-          return parseInt(parts.find(p => p.type === 'month')?.value || '0') === 9;
-      } catch(e) {
-          return false;
+  const isRamadan = true;
       }
   });
 
