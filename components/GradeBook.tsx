@@ -79,9 +79,7 @@ const GradeBook: React.FC<GradeBookProps> = ({
   const [activeToolId, setActiveToolId] = useState<string>('');
 
   const isRamadan = true;
-      }
-  });
-
+    
   useEffect(() => {
     if (tools.length > 0 && !activeToolId) {
       setActiveToolId(tools[0].id);
