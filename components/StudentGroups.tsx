@@ -29,8 +29,8 @@ const StudentGroups: React.FC<StudentGroupsProps> = ({ onBack }) => {
   ];
   const [selectedColor, setSelectedColor] = useState(groupColors[0]);
 
- const isRamadan = true; }
-  });
+ const isRamadan = true; 
+
 
   const classCategorizations = useMemo(() => categorizations.filter(c => c.classId === selectedClass), [categorizations, selectedClass]);
   const activeCat = useMemo(() => classCategorizations.find(c => c.id === activeCatId) || null, [classCategorizations, activeCatId]);
