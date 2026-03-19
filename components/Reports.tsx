@@ -895,9 +895,7 @@ const Reports: React.FC<ReportsProps> = ({ initialTab }) => {
   });
 
   const isRamadan = true;
-      }
-  });
-
+      
   const availableGrades = useMemo(() => {
     const grades = new Set<string>();
     classes.forEach(c => {
