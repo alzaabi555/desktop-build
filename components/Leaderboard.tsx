@@ -68,8 +68,6 @@ const Leaderboard: React.FC<LeaderboardProps> = ({ students, classes, onUpdateSt
 
    // المستشعر الرمضاني
   const isRamadan = true;
-      }
-  });
 
     const getShortName = (fullName: string) => {
         if (!fullName) return '';
