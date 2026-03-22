@@ -4,7 +4,7 @@ import {
     Search, ThumbsUp, ThumbsDown, Edit2, Trash2, LayoutGrid, UserPlus, 
     FileSpreadsheet, MoreVertical, Settings, Users, AlertCircle, X, 
     Dices, Timer, Play, Pause, RotateCcw, CheckCircle2, MessageCircle, Plus,
-    Sparkles, Phone, Send, Star, CloudUpload, Loader2, Mail, RefreshCcw 
+    Sparkles, Phone, Send, Star, Loader2, Mail, RefreshCcw 
 } from 'lucide-react';
 import Modal from './Modal';
 import ExcelImport from './ExcelImport';
@@ -57,6 +57,7 @@ const POSITIVE_BEHAVIORS = [
     { id: 'p6', original: 'إبداع وتميز', transKey: 'behPos6', points: 3 },
 ];
 
+// ⚠️ تم الحفاظ على الرابط لأنه يستخدم في جلب رسائل الآباء (Inbox)
 const GOOGLE_WEB_APP_URL = "https://script.google.com/macros/s/AKfycbzKPPsQsM_dIttcYSxRLs6LQuvXhT6Qia5TwJ1Tw4ObQ-eZFZeJhV6epXXjxA9_SwWk/exec"; 
 
 const StudentList: React.FC<StudentListProps> = ({ 
@@ -77,8 +78,8 @@ const StudentList: React.FC<StudentListProps> = ({
     const [selectedGrade, setSelectedGrade] = useState<string>(() => sessionStorage.getItem('rased_grade') || 'all');
     const [selectedClass, setSelectedClass] = useState<string>(() => sessionStorage.getItem('rased_class') || 'all');
 
-    const isRamadan = true;
-      
+   const isRamadan = true;
+
     useEffect(() => {
         sessionStorage.setItem('rased_grade', selectedGrade);
         sessionStorage.setItem('rased_class', selectedClass);
@@ -113,8 +114,6 @@ const StudentList: React.FC<StudentListProps> = ({
     const [timerSeconds, setTimerSeconds] = useState(0);
     const [isTimerRunning, setIsTimerRunning] = useState(false);
     const [timerInput, setTimerInput] = useState('5');
-    
-    const [isSyncing, setIsSyncing] = useState(false);
 
     const [messages, setMessages] = useState<any[]>([]);
     const [isMessagesModalOpen, setIsMessagesModalOpen] = useState(false);
@@ -284,49 +283,6 @@ const StudentList: React.FC<StudentListProps> = ({
             })
             .reduce((acc, b) => acc + b.points, 0); 
         return monthlyPoints;
-    };
-
-    const handleCloudSync = async () => {
-        const payload = students
-            .filter(s => s.parentCode && s.parentCode.trim() !== "")
-            .map(s => {
-                return {
-                    parentCode: s.parentCode,
-                    name: s.name,
-                    className: s.classes[0] || "",
-                    subject: teacherInfo?.subject || t('unspecified'), 
-                    schoolName: teacherInfo?.school || t('unspecified'),
-                    totalPoints: calculateTotalPoints(s),
-                    behaviors: s.behaviors || [],
-                    grades: s.grades || [],
-                    attendance: s.attendance || [] 
-                };
-            });
-
-        if (payload.length === 0) {
-            alert(t('alertNoCivilIdToSync'));
-            return;
-        }
-
-        try {
-            setIsSyncing(true);
-            const response = await fetch(GOOGLE_WEB_APP_URL, {
-                method: 'POST',
-                headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-                body: JSON.stringify(payload)
-            });
-            const result = await response.json();
-            if (result.status === "success") {
-                playSound('tada');
-                alert(`${t('alertSyncSuccess1')} ${payload.length} ${t('alertSyncSuccess2')}`);
-            } else {
-                throw new Error(result.message);
-            }
-        } catch (error) {
-            alert(t('alertSyncError'));
-        } finally {
-            setIsSyncing(false);
-        }
     };
 
     const handleRandomPick = () => {
@@ -577,13 +533,12 @@ const StudentList: React.FC<StudentListProps> = ({
     };
 
     return (
-    <div className={`flex flex-col h-full overflow-hidden ${isRamadan ? 'text-white' : 'text-slate-800'} ${dir === 'rtl' ? 'text-right' : 'text-left'}`} dir={dir}>
-        
-        {/* ================= FIXED HEADER ================= */}
-        <header 
-            className={`fixed md:sticky top-0 z-40 md:z-30 shadow-lg px-4 pt-[env(safe-area-inset-top)] pb-6 md:pl-40 transition-all duration-500 md:rounded-none md:shadow-md w-full md:w-auto left-0 right-0 md:left-auto md:right-auto ${isRamadan ? 'bg-white/5 border-b border-white/10 text-white' : 'bg-[#446A8D] text-white'}`}
-            style={{ WebkitAppRegion: 'drag' } as any}
-        >
+   <div className={`flex flex-col h-full space-y-6 pb-24 md:pb-8 overflow-hidden relative ${isRamadan ? 'text-white' : 'text-slate-800'} ${dir === 'rtl' ? 'text-right' : 'text-left'}`} dir={dir}>
+            
+<header 
+    className={`shrink-0 z-40 px-4 pt-[env(safe-area-inset-top)] w-full transition-all duration-300 bg-transparent ${isRamadan ? 'text-white' : 'text-slate-800'}`}
+    style={{ WebkitAppRegion: 'drag' } as any}
+>
             <div className="flex justify-between items-center mb-6">
                 <div className="flex items-center gap-3">
                     <div className="bg-white/10 p-2 rounded-xl border border-white/20">
@@ -610,17 +565,6 @@ const StudentList: React.FC<StudentListProps> = ({
                                 {messages.length - readMessagesCount}
                             </span>
                         )}
-                    </button>
-
-                    {/* ☁️ زر المزامنة السحابية */}
-                    <button 
-                        onClick={handleCloudSync} 
-                        disabled={isSyncing}
-                        className={`p-2.5 rounded-xl border active:scale-95 transition-all flex items-center gap-2 ${isSyncing ? 'opacity-70 cursor-not-allowed' : ''} ${isRamadan ? 'bg-indigo-600/80 border-indigo-400 text-white shadow-[0_0_15px_rgba(79,70,229,0.5)]' : 'bg-indigo-600 border-indigo-500 text-white shadow-lg hover:bg-indigo-700'}`}
-                        title={t('syncParents')}
-                    >
-                        {isSyncing ? <Loader2 className="w-5 h-5 animate-spin" /> : <CloudUpload className="w-5 h-5" />}
-                        <span className="text-xs font-black hidden md:inline">{t('syncParents')}</span>
                     </button>
 
                     <div className="relative">
@@ -702,7 +646,7 @@ const StudentList: React.FC<StudentListProps> = ({
         </header>
 
         {/* List */}
-        <div className="flex-1 overflow-y-auto px-2 pb-20 custom-scrollbar pt-64 md:pt-2 relative z-10">
+      <div className="flex-1 overflow-y-auto px-2 pt-2 pb-28 custom-scrollbar relative z-10">
             <div className="grid grid-cols-2 lg:grid-cols-3 gap-3">
                 {filteredStudents.length > 0 ? filteredStudents.map(student => {
                     const totalPoints = calculateTotalPoints(student);
@@ -1017,56 +961,6 @@ const StudentList: React.FC<StudentListProps> = ({
                 <p className={`text-xs font-bold mb-4 ${isRamadan ? 'text-slate-300' : 'text-gray-500'}`}>
                     {t('chooseNoteType')} <bdi className={isRamadan ? 'text-amber-400' : 'text-indigo-600'}>{selectedStudentForBehavior?.name}</bdi>
                 </p>
-                
-                <div className="grid grid-cols-2 gap-2 mb-4">
-                    {NEGATIVE_BEHAVIORS.map(b => (
-                        <button 
-                            key={b.id}
-                            onClick={() => confirmNegativeBehavior(b.original, b.points)}
-                            className={`p-3 border rounded-xl text-xs font-bold active:scale-95 transition-all flex flex-col items-center gap-1 ${isRamadan ? 'bg-[#1e293b] border-rose-400/30 text-rose-300 hover:bg-rose-500/30' : 'bg-rose-50 border-rose-100 text-rose-700 hover:bg-rose-100'}`}
-                        >
-                            <span>{t(b.transKey)}</span>
-                            <span className={`text-[10px] px-2 py-0.5 rounded-full shadow-sm ${isRamadan ? 'bg-rose-500/30 text-rose-200' : 'bg-white text-rose-600'}`}>{b.points}</span>
-                        </button>
-                    ))}
-                </div>
-
-                <div className={`pt-3 border-t ${isRamadan ? 'border-white/10' : 'border-slate-100'}`}>
-                    <p className={`text-[10px] font-bold mb-2 ${dir === 'rtl' ? 'text-right' : 'text-left'} ${isRamadan ? 'text-slate-400' : 'text-slate-400'}`}>{t('orAddCustomNote')}</p>
-                    <div className="flex gap-2">
-                        <input 
-                            type="text" 
-                            value={customNegativeReason}
-                            onChange={(e) => setCustomNegativeReason(e.target.value)}
-                            placeholder={t('otherReasonPlaceholder')} 
-                            className={`flex-1 border rounded-lg px-3 py-2 text-xs font-bold outline-none transition-colors ${isRamadan ? 'bg-[#1e293b] border-indigo-500/30 focus:border-rose-400 text-white placeholder:text-indigo-200/40' : 'bg-slate-50 border-slate-200 focus:border-rose-500 text-slate-800'}`}
-                        />
-                        <button 
-                            onClick={() => {
-                                if(customNegativeReason.trim()) {
-                                    confirmNegativeBehavior(customNegativeReason, -1);
-                                }
-                            }}
-                            className={`px-4 py-2 rounded-lg text-xs font-bold active:scale-95 flex items-center gap-1 transition-colors ${isRamadan ? 'bg-rose-500 hover:bg-rose-400 text-white' : 'bg-rose-500 text-white hover:bg-rose-600'}`}
-                        >
-                            <Plus size={14} /> {t('addBtnSmall')}
-                        </button>
-                    </div>
-                </div>
-            </div>
-        </Modal>
-        <Modal isOpen={showNegativeModal} onClose={() => { setShowNegativeModal(false); setSelectedStudentForBehavior(null); }} className={`max-w-sm rounded-[2rem] ${isRamadan ? 'bg-transparent' : ''}`}>
-            <div className={`text-center p-6 rounded-[2rem] border transition-colors ${isRamadan ? 'bg-[#0f172a] border-white/10 text-white shadow-2xl' : 'bg-white border-transparent text-slate-800 shadow-2xl'}`}>
-                <div className="flex justify-between items-center mb-4">
-                    <h3 className="font-black text-lg flex items-center gap-2">
-                        <AlertCircle className={`w-5 h-5 ${isRamadan ? 'text-rose-400' : 'text-rose-500'}`} />
-                        {t('behavioralAlert')}
-                    </h3>
-                    <button onClick={() => setShowNegativeModal(false)} className={`p-2 rounded-full transition-colors ${isRamadan ? 'bg-white/10 text-slate-300 hover:bg-white/20' : 'bg-gray-100 text-gray-500 hover:bg-gray-200'}`}><X className="w-4 h-4"/></button>
-                </div>
-               <p className={`text-xs font-bold mb-4 ${isRamadan ? 'text-slate-300' : 'text-gray-500'}`}>
-    {t('chooseNoteType')} <bdi className={isRamadan ? 'text-amber-400' : 'text-indigo-600'}>{selectedStudentForBehavior?.name}</bdi>
-</p>
                 
                 <div className="grid grid-cols-2 gap-2 mb-4">
                     {NEGATIVE_BEHAVIORS.map(b => (

@@ -1,15 +1,12 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { 
   Save, AlertTriangle, FileJson, Trash2, 
-  Download, RefreshCw, Loader2, Zap, Database, ArrowRight, Cloud, CloudUpload, CloudDownload, CheckCircle, XCircle, Globe 
+  Download, RefreshCw, Loader2, Zap, Database, ArrowRight, Globe, Settings as SettingsIcon 
 } from 'lucide-react';
 import { useApp } from '../context/AppContext';
 import { Filesystem, Directory, Encoding } from '@capacitor/filesystem';
 import { Share } from '@capacitor/share';
 import { Capacitor } from '@capacitor/core';
-
-// ⚠️ الرابط السري الخاص بك
-const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxXUII_Q_6K6TuewJ0k44mi8mCB-6LQNbDo9rhVdaVOvYCyKFRNCBuddLe_PyLorCdT/exec";
 
 // ✅ أيقونات 3D فخمة
 const Icon3DProfile = ({ isRamadan }: { isRamadan?: boolean }) => (
@@ -39,19 +36,6 @@ const Icon3DDatabase = ({ isRamadan }: { isRamadan?: boolean }) => (
   </svg>
 );
 
-const Icon3DSync = ({ isRamadan }: { isRamadan?: boolean }) => (
-  <svg viewBox="0 0 100 100" className="w-12 h-12">
-    <defs>
-      <linearGradient id="gradS" x1="0%" y1="0%" x2="100%" y2="100%">
-        <stop offset="0%" stopColor={isRamadan ? "#c084fc" : "#8b5cf6"} />
-        <stop offset="100%" stopColor={isRamadan ? "#581c87" : "#4c1d95"} />
-      </linearGradient>
-    </defs>
-    <path d="M10 50 Q30 20 50 30 T90 50 Q70 80 50 70 T10 50 Z" fill="url(#gradS)" filter="url(#glow)" />
-    <circle cx="50" cy="50" r="15" fill="#fff" fillOpacity="0.2" />
-  </svg>
-);
-
 const Settings = () => {
   const { 
     teacherInfo, setTeacherInfo, students, setStudents, 
@@ -59,7 +43,7 @@ const Settings = () => {
     periodTimes, setPeriodTimes, assessmentTools, setAssessmentTools,
     certificateSettings, setCertificateSettings, hiddenClasses, setHiddenClasses,
     groups, setGroups, categorizations, setCategorizations, gradeSettings, setGradeSettings,
-    language, setLanguage, t, dir // 🌍 جلب محرك اللغات
+    language, setLanguage, t, dir 
   } = useApp();
 
   const [name, setName] = useState(teacherInfo?.name || '');
@@ -69,11 +53,8 @@ const Settings = () => {
   const [loading, setLoading] = useState<'backup' | 'restore' | 'reset' | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  const [isUploading, setIsUploading] = useState(false);
-  const [isDownloading, setIsDownloading] = useState(false);
+  const isRamadan = true;
 
-  const isRamadan = true; 
- 
   useEffect(() => {
       setName(teacherInfo?.name || '');
       setSchool(teacherInfo?.school || '');
@@ -85,186 +66,7 @@ const Settings = () => {
     setLanguage(language === 'ar' ? 'en' : 'ar');
   };
 
-  // ==========================================
-  // 🚀 1. زر الرفع المباشر للسحابة
-  // ==========================================
-  const handleUploadToCloud = async () => {
-    if (!teacherInfo.civilId) return alert(t('alertEnterCivilId'));
-    if (!confirm(t('alertConfirmPush'))) return;
-    
-    setIsUploading(true);
-    try {
-      const cleanId = teacherInfo.civilId.trim();
-      const teacherUniqueId = "id_" + cleanId;
-      const forceTimestamp = Date.now(); 
-
-      const recordsToSync = [
-        { id: "tools_data", type: "Tools", data: JSON.stringify(assessmentTools), lastUpdated: forceTimestamp },
-        { id: "groups_data", type: "Groups", data: JSON.stringify(groups || []), lastUpdated: forceTimestamp },
-        { id: "categorizations_data", type: "Categorizations", data: JSON.stringify(categorizations || []), lastUpdated: forceTimestamp },
-        { id: "gradeSettings_data", type: "GradeSettings", data: JSON.stringify(gradeSettings), lastUpdated: forceTimestamp },
-        { id: "classes_data", type: "Classes", data: JSON.stringify(classes), lastUpdated: forceTimestamp },
-        { id: "teacher_info_data", type: "TeacherInfo", data: JSON.stringify(teacherInfo), lastUpdated: forceTimestamp },
-        { id: "schedule_data", type: "Schedule", data: JSON.stringify(schedule || {}), lastUpdated: forceTimestamp },
-        { id: "periodTimes_data", type: "PeriodTimes", data: JSON.stringify(periodTimes || []), lastUpdated: forceTimestamp },
-        { id: "certSettings_data", type: "CertSettings", data: JSON.stringify(certificateSettings || {}), lastUpdated: forceTimestamp },
-        { id: "hiddenClasses_data", type: "HiddenClasses", data: JSON.stringify(hiddenClasses || []), lastUpdated: forceTimestamp },
-      ];
-
-      if (!students || students.length === 0) {
-          recordsToSync.push({ id: "students_chunk_0", type: "StudentsChunk", data: "[]", lastUpdated: forceTimestamp });
-      } else {
-          const CHUNK_SIZE = 100;
-          for (let i = 0; i < students.length; i += CHUNK_SIZE) {
-            recordsToSync.push({
-              id: `students_chunk_${i}`, 
-              type: "StudentsChunk", 
-              data: JSON.stringify(students.slice(i, i + CHUNK_SIZE)), 
-              lastUpdated: forceTimestamp 
-            });
-          }
-      }
-
-      const response = await fetch(SCRIPT_URL, {
-        method: 'POST',
-        headers: { 'Content-Type': 'text/plain' },
-        body: JSON.stringify({ action: 'sync', teacherPhone: teacherUniqueId, records: recordsToSync })
-      });
-
-      const result = await response.json();
-      if (result.status === 'success') {
-        alert(t('alertPushSuccess'));
-      } else { throw new Error("Server Error"); }
-    } catch (error) {
-      alert(t('alertSyncError'));
-    } finally {
-      setIsUploading(false);
-    }
-  };
-
-  // ==========================================
-  // 📥 2. زر الجلب المباشر
-  // ==========================================
-  const handleDownloadFromCloud = async () => {
-    if (!teacherInfo.civilId) return alert(t('alertEnterCivilId'));
-    if (!confirm(t('alertConfirmPull'))) return;
-
-    setIsDownloading(true);
-    try {
-      const cleanId = teacherInfo.civilId.trim();
-      const teacherUniqueId = "id_" + cleanId;
-
-      const response = await fetch(SCRIPT_URL, {
-        method: 'POST',
-        headers: { 'Content-Type': 'text/plain' },
-        body: JSON.stringify({ action: 'sync', teacherPhone: teacherUniqueId, records: [] }) 
-      });
-
-      const result = await response.json();
-
-      if (result.status === 'success' && result.records && result.records.length > 0) {
-        let incomingChunks: any[] = [];
-        let hasData = false;
-
-        let newAssessmentTools = assessmentTools;
-        let newGroups = groups;
-        let newCategorizations = categorizations;
-        let newGradeSettings = gradeSettings;
-        let newClasses = classes;
-        let newTeacherInfo = teacherInfo;
-        let newSchedule = schedule;
-        let newPeriodTimes = periodTimes;
-        let newCertificateSettings = certificateSettings;
-        let newHiddenClasses = hiddenClasses;
-        let newStudents = students;
-
-        result.records.forEach((serverRec: any) => {
-            hasData = true;
-            try {
-                const parsedData = JSON.parse(serverRec.data);
-                
-                if (serverRec.id === "tools_data") newAssessmentTools = parsedData;
-                if (serverRec.id === "groups_data") newGroups = parsedData;
-                if (serverRec.id === "categorizations_data") newCategorizations = parsedData;
-                if (serverRec.id === "gradeSettings_data") newGradeSettings = parsedData;
-                if (serverRec.id === "classes_data") newClasses = parsedData;
-                if (serverRec.id === "teacher_info_data") newTeacherInfo = parsedData;
-                
-                if (serverRec.id === "schedule_data") newSchedule = parsedData;
-                if (serverRec.id === "periodTimes_data") newPeriodTimes = parsedData;
-                if (serverRec.id === "certSettings_data") newCertificateSettings = parsedData;
-                if (serverRec.id === "hiddenClasses_data") newHiddenClasses = parsedData;
-
-                if (serverRec.type === "StudentsChunk") {
-                  incomingChunks.push({id: serverRec.id, data: parsedData});
-                }
-            } catch (e) { console.error("Error parsing", e); }
-        });
-
-        if (incomingChunks.length > 0) {
-            incomingChunks.sort((a, b) => {
-                const numA = parseInt(a.id.replace('students_chunk_', ''));
-                const numB = parseInt(b.id.replace('students_chunk_', ''));
-                return numA - numB;
-            });
-            newStudents = incomingChunks.reduce((acc, chunk) => acc.concat(chunk.data), []);
-            
-            const uniqueStudentsMap = new Map();
-            newStudents.forEach((student: any) => {
-                if (student && student.id) {
-                    uniqueStudentsMap.set(student.id, student);
-                }
-            });
-            newStudents = Array.from(uniqueStudentsMap.values());
-            
-        } else if (hasData) {
-            newStudents = []; 
-        }
-
-        if (hasData) {
-            const dataToSave = {
-              version: '3.8.7',
-              timestamp: new Date().toISOString(),
-              students: newStudents,
-              classes: newClasses,
-              hiddenClasses: newHiddenClasses,
-              groups: newGroups,
-              schedule: newSchedule,
-              periodTimes: newPeriodTimes,
-              teacherInfo: newTeacherInfo,
-              assessmentTools: newAssessmentTools,
-              certificateSettings: newCertificateSettings,
-              categorizations: newCategorizations,
-              gradeSettings: newGradeSettings 
-            };
-
-            const jsonString = JSON.stringify(dataToSave, null, 2);
-
-            if (Capacitor.isNativePlatform() || (window as any).electron !== undefined) {
-                await Filesystem.writeFile({ path: 'raseddatabasev2.json', data: jsonString, directory: Directory.Data, encoding: Encoding.UTF8 });
-            }
-
-            setStudents(newStudents);
-            setClasses(newClasses);
-            setAssessmentTools(newAssessmentTools);
-            setTeacherInfo(newTeacherInfo);
-
-            alert(t('alertPullSuccess'));
-            setTimeout(() => window.location.reload(), 1500);
-        } else {
-            alert(t('alertNoDataForId'));
-        }
-      } else { 
-        alert(t('alertNoDataInCloud')); 
-      }
-    } catch (error) {
-      alert(t('alertSyncError'));
-    } finally {
-      setIsDownloading(false);
-    }
-  };
-
-  // ✅ الدوال الأساسية للنسخ الاحتياطي
+  // ✅ الدوال الأساسية للنسخ الاحتياطي (محلياً Local Backup)
   const handleBackup = async () => {
     setLoading('backup');
     try {
@@ -333,128 +135,101 @@ const Settings = () => {
       } catch (e) { alert('Error'); } finally { setLoading(null); }
   };
 
-  // 🌍 لاحظ تغيير dir ليقرأ من محرك اللغات
   return (
-    <div className={`flex flex-col h-full pb-24 px-6 pt-12 transition-colors duration-500 relative z-10 ${language === 'ar' ? 'text-right' : 'text-left'} ${isRamadan ? 'text-white' : 'bg-[#fcfdfe] text-slate-800'}`} dir={dir}>
+    <div className={`flex flex-col h-full overflow-hidden transition-colors duration-500 relative z-10 ${language === 'ar' ? 'text-right' : 'text-left'} ${isRamadan ? 'text-white' : 'bg-[#fcfdfe] text-slate-800'}`} dir={dir}>
       
-      {/* العنوان + زر تبديل اللغة */}
-      <div className="mb-10 flex justify-between items-start animate-in fade-in slide-in-from-top-4 duration-700 md:px-40" style={{ WebkitAppRegion: 'drag' } as any}>
-        <div style={{ WebkitAppRegion: 'no-drag' } as any}>
-            <h1 className={`text-4xl font-black tracking-tight ${isRamadan ? 'text-white' : 'text-slate-900'}`}>{t('settingsTitle')}</h1>
-            <p className={`text-sm font-bold mt-2 flex items-center gap-2 ${isRamadan ? 'text-indigo-200/70' : 'text-slate-400'}`}>
-                <span className={`w-8 h-1 rounded-full inline-block ${isRamadan ? 'bg-amber-500' : 'bg-blue-500'}`}></span>
-                {t('settingsSubtitle')}
-            </p>
-        </div>
-        
-        {/* 🌍 زر التبديل */}
-        <button 
-          onClick={toggleLanguage} 
-          style={{ WebkitAppRegion: 'no-drag' } as any}
-          className={`flex items-center gap-2 px-4 py-2 rounded-xl font-black text-sm transition-all active:scale-95 shadow-sm ${isRamadan ? 'bg-indigo-900/50 text-indigo-200 hover:bg-indigo-800/50 border border-indigo-500/30' : 'bg-white text-indigo-600 hover:bg-indigo-50 border border-indigo-100'}`}
-        >
-          <Globe size={18} />
-          {language === 'ar' ? 'English' : 'العربية'}
-        </button>
-      </div>
-
-      <div className="space-y-8 max-w-4xl relative z-10 pb-10 mx-auto w-full">
-        
-        {/* بطاقة الملف الشخصي */}
-        <div className={`rounded-[2.5rem] p-8 transition-all duration-300 border ${isRamadan ? 'bg-[#0f172a]/60 backdrop-blur-2xl border-white/10' : 'bg-white border-slate-50 shadow-[0_10px_40px_-15px_rgba(0,0,0,0.05)]'}`}>
-          <div className="flex items-center gap-5 mb-6">
-            <Icon3DProfile isRamadan={isRamadan} />
-            <div>
-                <h2 className={`text-xl font-black ${isRamadan ? 'text-white' : 'text-slate-800'}`}>{t('profileTitle')}</h2>
-                <p className={`text-xs font-bold ${isRamadan ? 'text-indigo-200/70' : 'text-slate-400'}`}>{t('profileSubtitle')}</p>
+      {/* ================= 🩺 الهيدر القياسي الممتد للنوتش ================= */}
+   <header 
+    className={`shrink-0 z-40 px-4 pt-[env(safe-area-inset-top)] w-full transition-all duration-300 bg-transparent ${isRamadan ? 'text-white' : 'text-slate-800'}`}
+    style={{ WebkitAppRegion: 'drag' } as any}
+>
+        <div className="flex justify-between items-center max-w-4xl mx-auto w-full">
+            <div className="flex items-center gap-3">
+                <div className="bg-white/10 p-2 rounded-xl border border-white/20">
+                    <SettingsIcon className="w-5 h-5 text-white" />
+                </div>
+                <div style={{ WebkitAppRegion: 'no-drag' } as any}>
+                    <h1 className="text-xl md:text-2xl font-black tracking-wide">{t('settingsTitle')}</h1>
+                    <p className={`text-[10px] font-bold opacity-80 ${isRamadan ? 'text-indigo-200' : 'text-blue-200'}`}>
+                        {t('settingsSubtitle')}
+                    </p>
+                </div>
             </div>
-          </div>
+            
+            {/* 🌍 زر التبديل */}
+            <button 
+              onClick={toggleLanguage} 
+              style={{ WebkitAppRegion: 'no-drag' } as any}
+              className={`flex items-center gap-2 px-4 py-2 rounded-xl font-black text-sm transition-all active:scale-95 shadow-sm ${isRamadan ? 'bg-indigo-900/50 text-indigo-200 hover:bg-indigo-800/50 border border-indigo-500/30' : 'bg-white text-indigo-600 hover:bg-indigo-50 border border-indigo-100'}`}
+            >
+              <Globe size={18} />
+              {language === 'ar' ? 'English' : 'العربية'}
+            </button>
+        </div>
+      </header>
+
+      {/* ================= 📝 محتوى الصفحة داخل حاوية تمرير مستقلة ================= */}
+      <div className="flex-1 overflow-y-auto px-4 pt-2 pb-28 custom-scrollbar relative z-10">
+        <div className="space-y-8 max-w-4xl relative z-10 mx-auto w-full">
           
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <div className="space-y-2">
-                <label className={`text-[10px] font-black mx-2 uppercase ${isRamadan ? 'text-indigo-300' : 'text-slate-400'}`}>{t('civilIdLabel')}</label>
-                <input type="text" value={civilId} onChange={e => setCivilId(e.target.value)} className={`w-full rounded-2xl px-5 py-4 border outline-none text-sm font-black transition-all ${isRamadan ? 'bg-indigo-900/50 border-indigo-500/50 text-white placeholder:text-indigo-300 focus:border-amber-400' : 'bg-indigo-50 border-indigo-200 text-indigo-900 focus:ring-4 focus:ring-indigo-500/10'}`} placeholder={t('civilIdPlaceholder')} />
-            </div>
-            <div className="space-y-2">
-                <label className={`text-[10px] font-black mx-2 uppercase ${isRamadan ? 'text-indigo-300' : 'text-slate-400'}`}>{t('teacherNameLabel')}</label>
-                <input value={name} onChange={e => setName(e.target.value)} className={`w-full rounded-2xl px-5 py-4 border outline-none text-sm font-bold transition-all ${isRamadan ? 'bg-white/5 border-white/10 text-white' : 'bg-slate-50 border-slate-100 text-slate-800'}`} placeholder={t('teacherNamePlaceholder')} />
-            </div>
-            <div className="space-y-2">
-                <label className={`text-[10px] font-black mx-2 uppercase ${isRamadan ? 'text-indigo-300' : 'text-slate-400'}`}>{t('schoolNameLabel')}</label>
-                <input value={school} onChange={e => setSchool(e.target.value)} className={`w-full rounded-2xl px-5 py-4 border outline-none text-sm font-bold transition-all ${isRamadan ? 'bg-white/5 border-white/10 text-white' : 'bg-slate-50 border-slate-100 text-slate-800'}`} placeholder={t('schoolNamePlaceholder')} />
-            </div>
-          </div>
-
-          <button onClick={() => setTeacherInfo({ ...teacherInfo, name, school, civilId })} className={`mt-6 w-full py-4 rounded-2xl font-black text-sm transition-all flex items-center justify-center gap-2 ${isRamadan ? 'bg-amber-600 text-white shadow-lg' : 'bg-blue-600 text-white shadow-xl shadow-blue-200'}`}>
-            <Save size={18} /> {t('saveProfileBtn')}
-          </button>
-        </div>
-
-        {/* 🚀 بطاقة المزامنة السحابية */}
-        <div className={`rounded-[2.5rem] p-8 relative overflow-hidden border transition-colors ${isRamadan ? 'bg-[#1e1b4b]/80 border-indigo-500/30 shadow-[0_0_50px_rgba(79,70,229,0.2)]' : 'bg-gradient-to-br from-indigo-50 to-purple-50 border-indigo-100 shadow-[0_10px_40px_-15px_rgba(79,70,229,0.15)]'}`}>
-          <div className={`absolute top-0 right-0 w-40 h-40 rounded-full -mr-20 -mt-20 blur-3xl ${isRamadan ? 'bg-indigo-500/20' : 'bg-indigo-400/20'}`}></div>
-          <div className="flex flex-col items-start gap-6 relative z-10">
-            <div className="flex items-center gap-5">
-              <Icon3DSync isRamadan={isRamadan} />
+          {/* بطاقة الملف الشخصي */}
+          <div className={`rounded-[2.5rem] p-8 transition-all duration-300 border ${isRamadan ? 'bg-[#0f172a]/60 backdrop-blur-2xl border-white/10' : 'bg-white border-slate-50 shadow-[0_10px_40px_-15px_rgba(0,0,0,0.05)]'}`}>
+            <div className="flex items-center gap-5 mb-6">
+              <Icon3DProfile isRamadan={isRamadan} />
               <div>
-                <h2 className={`text-xl font-black ${isRamadan ? 'text-white' : 'text-indigo-900'}`}>{t('syncTitle')}</h2>
-                <p className={`text-xs font-bold mt-1 ${isRamadan ? 'text-indigo-200' : 'text-indigo-600/70'}`}>{t('syncSubtitle')}</p>
+                  <h2 className={`text-xl font-black ${isRamadan ? 'text-white' : 'text-slate-800'}`}>{t('profileTitle')}</h2>
+                  <p className={`text-xs font-bold ${isRamadan ? 'text-indigo-200/70' : 'text-slate-400'}`}>{t('profileSubtitle')}</p>
               </div>
             </div>
             
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 w-full">
-              <button 
-                onClick={handleUploadToCloud} 
-                disabled={isUploading || isDownloading} 
-                className={`w-full px-6 py-5 rounded-2xl font-black text-sm shadow-lg transition-all active:scale-95 flex items-center justify-center gap-3 ${isRamadan ? 'bg-indigo-600 hover:bg-indigo-500 text-white' : 'bg-indigo-600 hover:bg-indigo-700 text-white shadow-indigo-200'}`}
-              >
-                {isUploading ? <Loader2 className="animate-spin w-5 h-5" /> : <CloudUpload className="w-5 h-5" />}
-                {isUploading ? t('pushingBtn') : t('pushBtn')}
-              </button>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div className="space-y-2">
+                  <label className={`text-[10px] font-black mx-2 uppercase ${isRamadan ? 'text-indigo-300' : 'text-slate-400'}`}>{t('civilIdLabel')}</label>
+                  <input type="text" value={civilId} onChange={e => setCivilId(e.target.value)} className={`w-full rounded-2xl px-5 py-4 border outline-none text-sm font-black transition-all ${isRamadan ? 'bg-indigo-900/50 border-indigo-500/50 text-white placeholder:text-indigo-300 focus:border-amber-400' : 'bg-indigo-50 border-indigo-200 text-indigo-900 focus:ring-4 focus:ring-indigo-500/10'}`} placeholder={t('civilIdPlaceholder')} />
+              </div>
+              <div className="space-y-2">
+                  <label className={`text-[10px] font-black mx-2 uppercase ${isRamadan ? 'text-indigo-300' : 'text-slate-400'}`}>{t('teacherNameLabel')}</label>
+                  <input value={name} onChange={e => setName(e.target.value)} className={`w-full rounded-2xl px-5 py-4 border outline-none text-sm font-bold transition-all ${isRamadan ? 'bg-white/5 border-white/10 text-white' : 'bg-slate-50 border-slate-100 text-slate-800'}`} placeholder={t('teacherNamePlaceholder')} />
+              </div>
+              <div className="space-y-2">
+                  <label className={`text-[10px] font-black mx-2 uppercase ${isRamadan ? 'text-indigo-300' : 'text-slate-400'}`}>{t('schoolNameLabel')}</label>
+                  <input value={school} onChange={e => setSchool(e.target.value)} className={`w-full rounded-2xl px-5 py-4 border outline-none text-sm font-bold transition-all ${isRamadan ? 'bg-white/5 border-white/10 text-white' : 'bg-slate-50 border-slate-100 text-slate-800'}`} placeholder={t('schoolNamePlaceholder')} />
+              </div>
+            </div>
 
-              <button 
-                onClick={handleDownloadFromCloud} 
-                disabled={isUploading || isDownloading} 
-                className={`w-full px-6 py-5 rounded-2xl font-black text-sm shadow-lg transition-all active:scale-95 flex items-center justify-center gap-3 ${isRamadan ? 'bg-emerald-600 hover:bg-emerald-500 text-white' : 'bg-emerald-500 hover:bg-emerald-600 text-white shadow-emerald-200'}`}
-              >
-                {isDownloading ? <Loader2 className="animate-spin w-5 h-5" /> : <CloudDownload className="w-5 h-5" />}
-                {isDownloading ? t('pullingBtn') : t('pullBtn')}
-              </button>
-            </div>
-            <div className={`text-[10px] font-bold px-2 ${isRamadan ? 'text-indigo-300' : 'text-indigo-700/60'}`}>
-              {t('syncNote1')}<br/>
-              {t('syncNote2')}
-            </div>
-          </div>
-        </div>
-
-        {/* بطاقة النسخ المحلي */}
-        <div className={`rounded-[2.5rem] p-8 border ${isRamadan ? 'bg-[#0f172a]/60 border-white/10' : 'bg-white border-emerald-50 shadow-[0_10px_40px_-15px_rgba(0,0,0,0.05)]'}`}>
-          <div className="flex items-center gap-5 mb-8">
-            <Icon3DDatabase isRamadan={isRamadan} />
-            <div>
-              <h2 className={`text-xl font-black ${isRamadan ? 'text-white' : 'text-slate-800'}`}>{t('backupTitle')}</h2>
-              <p className={`text-xs font-bold px-2 py-1 rounded-lg mt-1 inline-block ${isRamadan ? 'bg-emerald-500/20 text-emerald-300' : 'bg-emerald-50 text-emerald-600'}`}>{t('backupSubtitle')}</p>
-            </div>
-          </div>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-            <button onClick={handleBackup} className="group flex flex-col items-center justify-center p-7 rounded-[2.2rem] bg-gradient-to-br from-emerald-500 to-emerald-700 text-white font-black shadow-lg">
-              <Database className="w-9 h-9 mb-3" /> {t('createBackupBtn')}
-            </button>
-            <button onClick={() => fileInputRef.current?.click()} className="group flex flex-col items-center justify-center p-7 rounded-[2.2rem] border-2 border-emerald-100 text-emerald-700 font-black hover:bg-emerald-50 transition-all">
-              <RefreshCw className="w-9 h-9 mb-3" /> {t('importBackupBtn')}
+            <button onClick={() => setTeacherInfo({ ...teacherInfo, name, school, civilId })} className={`mt-6 w-full py-4 rounded-2xl font-black text-sm transition-all flex items-center justify-center gap-2 ${isRamadan ? 'bg-amber-600 text-white shadow-lg' : 'bg-blue-600 text-white shadow-xl shadow-blue-200'}`}>
+              <Save size={18} /> {t('saveProfileBtn')}
             </button>
           </div>
-          <input type="file" ref={fileInputRef} className="hidden" accept=".json" onChange={handleRestore} />
-        </div>
 
-        {/* منطقة الخطر */}
-        <div className={`rounded-[2.5rem] p-8 border ${isRamadan ? 'bg-rose-950/20 border-rose-900/50' : 'bg-rose-50/30 border-rose-100'}`}>
-          <button onClick={handleFactoryReset} className="w-full py-4 border-2 border-rose-100 text-rose-500 rounded-2xl font-black hover:bg-rose-50 shadow-sm transition-all flex items-center justify-center gap-2">
-            <Trash2 size={16} /> {t('dangerZoneBtn')}
-          </button>
-        </div>
+          {/* بطاقة النسخ المحلي */}
+          <div className={`rounded-[2.5rem] p-8 border ${isRamadan ? 'bg-[#0f172a]/60 border-white/10' : 'bg-white border-emerald-50 shadow-[0_10px_40px_-15px_rgba(0,0,0,0.05)]'}`}>
+            <div className="flex items-center gap-5 mb-8">
+              <Icon3DDatabase isRamadan={isRamadan} />
+              <div>
+                <h2 className={`text-xl font-black ${isRamadan ? 'text-white' : 'text-slate-800'}`}>{t('backupTitle')}</h2>
+                <p className={`text-xs font-bold px-2 py-1 rounded-lg mt-1 inline-block ${isRamadan ? 'bg-emerald-500/20 text-emerald-300' : 'bg-emerald-50 text-emerald-600'}`}>{t('backupSubtitle')}</p>
+              </div>
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+              <button onClick={handleBackup} className="group flex flex-col items-center justify-center p-7 rounded-[2.2rem] bg-gradient-to-br from-emerald-500 to-emerald-700 text-white font-black shadow-lg">
+                <Database className="w-9 h-9 mb-3" /> {t('createBackupBtn')}
+              </button>
+              <button onClick={() => fileInputRef.current?.click()} className="group flex flex-col items-center justify-center p-7 rounded-[2.2rem] border-2 border-emerald-100 text-emerald-700 font-black hover:bg-emerald-50 transition-all">
+                <RefreshCw className="w-9 h-9 mb-3" /> {t('importBackupBtn')}
+              </button>
+            </div>
+            <input type="file" ref={fileInputRef} className="hidden" accept=".json" onChange={handleRestore} />
+          </div>
 
+          {/* منطقة الخطر */}
+          <div className={`rounded-[2.5rem] p-8 border ${isRamadan ? 'bg-rose-950/20 border-rose-900/50' : 'bg-rose-50/30 border-rose-100'}`}>
+            <button onClick={handleFactoryReset} className="w-full py-4 border-2 border-rose-100 text-rose-500 rounded-2xl font-black hover:bg-rose-50 shadow-sm transition-all flex items-center justify-center gap-2">
+              <Trash2 size={16} /> {t('dangerZoneBtn')}
+            </button>
+          </div>
+
+        </div>
       </div>
     </div>
   );

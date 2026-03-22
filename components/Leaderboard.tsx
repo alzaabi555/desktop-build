@@ -196,10 +196,10 @@ const Leaderboard: React.FC<LeaderboardProps> = ({ students, classes, onUpdateSt
     return (
         <div className={`flex flex-col h-full space-y-6 pb-24 md:pb-8 overflow-hidden relative ${isRamadan ? 'text-white' : 'text-slate-800'} ${dir === 'rtl' ? 'text-right' : 'text-left'}`} dir={dir}>
             
-            <header 
-                className={`fixed md:sticky top-0 z-40 shadow-lg px-4 md:pl-40 pt-8 pb-4 transition-all duration-500 w-full ${isRamadan ? 'bg-white/5 border-b border-white/10 text-white' : 'bg-[#446A8D] text-white'}`}
-                style={{ WebkitAppRegion: 'drag' } as any}
-            >
+ <header 
+    className={`shrink-0 z-40 px-4 pt-[env(safe-area-inset-top)] w-full transition-all duration-300 bg-transparent ${isRamadan ? 'text-white' : 'text-slate-800'}`}
+    style={{ WebkitAppRegion: 'drag' } as any}
+>
                 <div className="flex flex-col items-center text-center relative">
                     <div className={`absolute ${dir === 'rtl' ? 'left-0' : 'right-0'} top-0 flex gap-2`} style={{ WebkitAppRegion: 'no-drag' } as any}>
                         <select 
@@ -246,7 +246,7 @@ const Leaderboard: React.FC<LeaderboardProps> = ({ students, classes, onUpdateSt
                 </div>
             </header>
 
-            <div className="flex-1 overflow-y-auto px-4 custom-scrollbar pt-64 md:pt-2 relative z-10">
+            <div className="flex-1 overflow-y-auto px-2 pt-2 pb-28 custom-scrollbar relative z-10">
                 {topThree.length > 0 && (
                     <div className="flex justify-center items-end gap-2 md:gap-6 py-4">
                         {[topThree[1], topThree[0], topThree[2]].map((s, i) => s && (

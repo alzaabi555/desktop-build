@@ -895,7 +895,7 @@ const Reports: React.FC<ReportsProps> = ({ initialTab }) => {
   });
 
   const isRamadan = true;
-      
+
   const availableGrades = useMemo(() => {
     const grades = new Set<string>();
     classes.forEach(c => {
@@ -1058,7 +1058,10 @@ const Reports: React.FC<ReportsProps> = ({ initialTab }) => {
       />
 
       {/* ================= HEADER ================= */}
-      <div className={`fixed md:sticky top-0 z-40 md:z-30 shadow-lg px-4 pt-[env(safe-area-inset-top)] pb-6 transition-all duration-500 rounded-b-[2.5rem] md:rounded-none md:shadow-md w-full md:w-auto left-0 right-0 md:left-auto md:right-auto ${isRamadan ? 'bg-white/5 backdrop-blur-3xl border-b border-white/10 text-white' : 'bg-[#446A8D] text-white'}`}>
+    <header 
+    className={`shrink-0 z-40 px-4 pt-[env(safe-area-inset-top)] w-full transition-all duration-300 bg-transparent ${isRamadan ? 'text-white' : 'text-slate-800'}`}
+    style={{ WebkitAppRegion: 'drag' } as any}
+>
         <div className="flex items-center gap-3 mb-6 mt-4 px-2">
           <div className={`p-2.5 rounded-xl border ${isRamadan ? 'bg-white/10 backdrop-blur-md border-white/20' : 'bg-white/10 backdrop-blur-md border-white/20'}`}>
             <Icon3DReportCenter className="w-6 h-6" />
@@ -1084,11 +1087,11 @@ const Reports: React.FC<ReportsProps> = ({ initialTab }) => {
             );
           })}
         </div>
-      </div>
+      </header>
 
-      {/* ================= CONTENT AREA ================= */}
-      <div className="flex-1 h-full overflow-y-auto custom-scrollbar px-4 pt-4 pb-24 relative z-10">
-        <div className="w-full h-[190px] shrink-0 block md:hidden"></div>
+     {/* ================= CONTENT AREA ================= */}
+<div className="flex-1 overflow-y-auto px-2 pt-2 pb-28 custom-scrollbar relative z-10">
+    {/* تم حذف الحاجز الوهمي من هنا، ضع محتوى التقارير مباشرة */}
 
         <div className={`rounded-[2rem] p-6 shadow-sm border min-h-[400px] transition-colors ${isRamadan ? 'bg-white/5 backdrop-blur-2xl border-white/10' : 'bg-white border-slate-100'}`}>
           
