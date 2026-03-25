@@ -74,7 +74,8 @@ function createWindow() {
 
   mainWindow.webContents.session.clearCache();
   mainWindow.loadFile(path.join(__dirname, '../www/index.html'));
-  mainWindow.setMenuBarVisibility(false);
+ mainWindow.autoHideMenuBar = true;
+mainWindow.removeMenu();
 
   mainWindow.webContents.setWindowOpenHandler(({ url }) => {
     try {
