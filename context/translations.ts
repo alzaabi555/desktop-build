@@ -56,7 +56,8 @@ export const translations = {
   activeTasks: "المهام النشطة",
   noTasksAdded: "لا توجد مهام حالياً. أضف مهمة لطلابك لتصلهم في المزامنة!",
   confirmDeleteTask: "هل أنت متأكد من حذف هذه المهمة؟",
-  targetPrefix: "مستهدف",  
+  targetPrefix: "مستهدف",
+  sendSuccess: "تم الإرسال للطلاب بنجاح",
     // App Navigation
     loadingData: "جاري استعادة البيانات المحلية...",
     navDashboard: "الرئيسية",
