@@ -1,19 +1,18 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { ScheduleDay, PeriodTime } from '../types';
 import { 
-  Bell, Clock, Settings, Edit3,
-  School, Download, Loader2, 
-  PlayCircle, AlarmClock, ChevronLeft, User, Check, Camera,
-  X, Calendar, BellOff, Save, CalendarDays, CheckCircle2,
-  AlertTriangle, Moon, Award, Heart, Plus, Trash2, RefreshCcw
+    Bell, Clock, Settings, Edit3,
+    School, Download, Loader2, 
+    PlayCircle, AlarmClock, ChevronLeft, User, Check, Camera,
+    X, Calendar, BellOff, Save, CalendarDays, CheckCircle2,
+    AlertTriangle, Moon, Award, Heart, Plus, Trash2, RefreshCcw
 } from 'lucide-react';
-import Modal from './Modal';
 import { useApp } from '../context/AppContext';
 import * as XLSX from 'xlsx';
 import { LocalNotifications } from '@capacitor/local-notifications';
 import { Capacitor } from '@capacitor/core';
 import alarmSound from '../assets/alarm.mp3';
-
+import DrawerSheet from './DrawerSheet';
 // رسمة افتراضية
 const DefaultAvatarSVG = ({ gender }: { gender: string }) => (
     <svg viewBox="0 0 100 100" className="w-full h-full bg-indigo-50" xmlns="http://www.w3.org/2000/svg">
@@ -21,6 +20,7 @@ const DefaultAvatarSVG = ({ gender }: { gender: string }) => (
         <path d="M20 90 C20 70 35 60 50 60 C65 60 80 70 80 90" fill={gender === 'female' ? '#f472b6' : '#60a5fa'} opacity="0.6"/>
     </svg>
 );
+
 
 interface DashboardProps {
     students: any[];
@@ -458,7 +458,7 @@ const Dashboard: React.FC<DashboardProps> = ({
                     </div>
                     
                     <div className="flex gap-2 md:gap-3" style={{ WebkitAppRegion: 'no-drag' } as any}>
-                        <div className="relative z-[9999]">
+                        <div className="relative z-[50]">
                             <button onClick={() => setShowSettingsDropdown(!showSettingsDropdown)} className={`w-10 h-10 md:w-12 md:h-12 bg-white/10 hover:bg-white/20 border border-white/10 rounded-2xl flex items-center justify-center transition-all ${showSettingsDropdown ? (isRamadan ? 'bg-amber-500/30 text-white' : 'bg-white text-[#446A8D]') : ''}`}>
                                 <Settings size={20} className="md:w-6 md:h-6" />
                             </button>
@@ -632,8 +632,9 @@ const Dashboard: React.FC<DashboardProps> = ({
                 </div>
             </div>
 
-            <Modal isOpen={showPlanSettingsModal} onClose={() => setShowPlanSettingsModal(false)} className={`max-w-md rounded-[2rem] h-[80vh] ${isRamadan ? 'bg-transparent' : ''}`}>
-                <div className={`flex flex-col h-full p-2 rounded-[2rem] border ${isRamadan ? 'bg-[#0f172a] border-white/10 text-white shadow-2xl' : 'bg-white border-transparent text-slate-800'}`}>
+            {/* 🌟 1. اللوحة الجانبية / السفلية لـ: خطة التقييم المستمر */}
+            <DrawerSheet isOpen={showPlanSettingsModal} onClose={() => setShowPlanSettingsModal(false)} isRamadan={isRamadan} dir={dir}>
+                <div className="flex flex-col h-full w-full">
                     <div className={`flex justify-between items-center mb-4 pb-2 border-b ${isRamadan ? 'border-white/10' : 'border-slate-50'}`}>
                         <h3 className="font-black text-lg">{t('customizeAssessmentPlan')}</h3>
                         <div className="flex gap-2">
@@ -732,12 +733,13 @@ const Dashboard: React.FC<DashboardProps> = ({
                         <button onClick={handleSavePlanSettings} className={`w-full py-3 text-white rounded-xl font-bold text-xs shadow-lg flex items-center justify-center gap-2 active:scale-95 transition-all ${isRamadan ? 'bg-indigo-600 hover:bg-indigo-500' : 'bg-slate-900 hover:bg-slate-800'}`}><Save size={16} /> {t('saveChanges')}</button>
                     </div>
                 </div>
-            </Modal>
+            </DrawerSheet>
 
-            <Modal isOpen={showEditModal} onClose={() => setShowEditModal(false)} className={`max-w-md rounded-[2rem] ${isRamadan ? 'bg-transparent' : ''}`}>
-                <div className={`text-center p-4 rounded-[2rem] border transition-colors ${isRamadan ? 'bg-[#0f172a] border-white/10 text-white shadow-2xl' : 'bg-white border-transparent text-slate-800'}`}>
+            {/* 🌟 2. اللوحة الجانبية / السفلية لـ: الهوية الرسمية للمعلم */}
+            <DrawerSheet isOpen={showEditModal} onClose={() => setShowEditModal(false)} isRamadan={isRamadan} dir={dir}>
+                <div className="flex flex-col h-full w-full text-center">
                     <h3 className="font-black text-lg mb-4">{t('officialIdentity')}</h3>
-                    <div className="w-24 h-24 mx-auto mb-4 relative group">
+                    <div className="w-24 h-24 mx-auto mb-4 relative group shrink-0">
                         {editAvatar ? (
                             <img src={editAvatar} className={`w-full h-full rounded-2xl object-cover border-4 shadow-md ${isRamadan ? 'border-white/10' : 'border-slate-50'}`} alt="Profile" onError={(e) => { e.currentTarget.style.display='none'; }}/>
                         ) : (
@@ -772,16 +774,19 @@ const Dashboard: React.FC<DashboardProps> = ({
                         <input type="file" ref={fileInputRef} onChange={(e) => handleFileUpload(e, setEditAvatar)} className="hidden" accept="image/*"/>
                         <input type="file" ref={stampInputRef} onChange={(e) => handleFileUpload(e, setEditStamp)} className="hidden" accept="image/*"/>
                         <input type="file" ref={ministryLogoInputRef} onChange={(e) => handleFileUpload(e, setEditMinistryLogo)} className="hidden" accept="image/*"/>
+                    </div>
 
-                        <button onClick={handleSaveInfo} className={`w-full py-3 text-white rounded-xl font-bold text-xs mt-2 shadow-lg active:scale-95 transition-all ${isRamadan ? 'bg-indigo-600 hover:bg-indigo-500' : 'bg-slate-900 hover:bg-slate-800'}`}>{t('saveChanges')}</button>
+                    <div className="pt-4 mt-auto">
+                        <button onClick={handleSaveInfo} className={`w-full py-3 text-white rounded-xl font-bold text-xs shadow-lg active:scale-95 transition-all ${isRamadan ? 'bg-indigo-600 hover:bg-indigo-500' : 'bg-slate-900 hover:bg-slate-800'}`}>{t('saveChanges')}</button>
                     </div>
                 </div>
-            </Modal>
+            </DrawerSheet>
 
-            <Modal isOpen={showScheduleModal} onClose={() => setShowScheduleModal(false)} className={`max-w-md rounded-[2rem] h-[80vh] ${isRamadan ? 'bg-transparent' : ''}`}>
-                <div className={`flex flex-col h-full p-2 rounded-[2rem] border transition-colors ${isRamadan ? 'bg-[#0f172a] border-white/10 text-white shadow-2xl' : 'bg-white border-transparent text-slate-800'}`}>
+            {/* 🌟 3. اللوحة الجانبية / السفلية لـ: إدارة الجدول الدراسي */}
+            <DrawerSheet isOpen={showScheduleModal} onClose={() => setShowScheduleModal(false)} isRamadan={isRamadan} dir={dir}>
+                <div className="flex flex-col h-full w-full">
                     
-                    <div className={`flex justify-between items-center mb-4 pb-2 border-b ${isRamadan ? 'border-white/10' : 'border-slate-50'}`}>
+                    <div className={`flex justify-between items-center mb-4 pb-2 border-b shrink-0 ${isRamadan ? 'border-white/10' : 'border-slate-50'}`}>
                         <h3 className="font-black text-lg">{t('manageSchedule')}</h3>
                         <button 
                             onClick={() => modalScheduleFileInputRef.current?.click()} 
@@ -831,11 +836,11 @@ const Dashboard: React.FC<DashboardProps> = ({
                         )}
                     </div>
 
-                    <div className={`pt-4 mt-auto border-t ${isRamadan ? 'border-white/10' : 'border-slate-100'}`}>
+                    <div className={`pt-4 mt-auto border-t shrink-0 ${isRamadan ? 'border-white/10' : 'border-slate-100'}`}>
                         <button onClick={handleSaveScheduleSettings} className={`w-full py-3 text-white rounded-xl font-bold text-xs shadow-lg flex items-center justify-center gap-2 active:scale-95 transition-all ${isRamadan ? 'bg-indigo-600 hover:bg-indigo-500' : 'bg-slate-900 hover:bg-slate-800'}`}><Save size={16} /> {t('saveChanges')}</button>
                     </div>
                 </div>
-            </Modal>
+            </DrawerSheet>
         </div>
     );
 };
