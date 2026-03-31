@@ -28,39 +28,47 @@ const RamadanTheme: React.FC = () => {
     <>
       <style>
         {`
-          /* === ستايل شريط التمرير الذهبي === */
-          ::-webkit-scrollbar { width: 8px; height: 8px; }
-          ::-webkit-scrollbar-track { background: transparent !important; }
-          ::-webkit-scrollbar-thumb { background: rgba(251, 191, 36, 0.25) !important; border-radius: 10px; border: 2px solid transparent; background-clip: padding-box; }
+          /* 🌟 تفتيح خلفية التطبيق بالكامل لتكون مشرقّة (تدرج لوني فخم بدل اللون الكئيب الموحد) */
+          body, #root {
+              background: linear-gradient(135deg, #1e1b4b 0%, #3b0764 50%, #0f172a 100%) !important;
+              background-attachment: fixed !important;
+          }
+
+          /* 🌟 توحيد شكل شريط التمرير ليكون مضيئاً */
+          ::-webkit-scrollbar { width: 6px; height: 6px; }
+          ::-webkit-scrollbar-track { background: rgba(255,255,255,0.02) !important; }
+          ::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.2) !important; border-radius: 10px; }
           ::-webkit-scrollbar-thumb:hover { background: rgba(251, 191, 36, 0.8) !important; }
 
-          .custom-scrollbar::-webkit-scrollbar-track { background: transparent !important; }
-          .custom-scrollbar::-webkit-scrollbar-thumb { background: rgba(251, 191, 36, 0.3) !important; }
-          .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: rgba(251, 191, 36, 0.9) !important; }
+          /* 🚫 إبادة اللون الأخضر وأي ألوان شاذة في الحاويات والمربعات وتحويلها لزجاج شفاف */
+          .bg-green-50, .bg-green-100, .bg-green-200, .bg-emerald-50, .bg-emerald-100 { 
+              background-color: rgba(255, 255, 255, 0.05) !important; 
+              backdrop-filter: blur(10px) !important;
+              border: 1px solid rgba(255, 255, 255, 0.1) !important;
+          }
+          .border-green-500, .border-green-200, .border-green-400, .border-emerald-500 { 
+              border-color: rgba(251, 191, 36, 0.4) !important; /* حدود ذهبية ناعمة بدلاً من الأخضر */
+          }
+          .text-green-700, .text-green-600, .text-green-500, .text-emerald-600 { 
+              color: #fbbf24 !important; /* نص ذهبي مشرق بدلاً من الأخضر */
+          }
 
-          /* ===================================================== */
-          /* 🔮 السحر هنا: توحيد شكل جميع مربعات الإدخال في التطبيق */
-          /* ===================================================== */
+          /* ✨ تحويل جميع مربعات الإدخال (Inputs & Selects) في كل التطبيق إلى زجاج مشرق */
           input, textarea, select {
-              background-color: rgba(255, 255, 255, 0.05) !important; /* خلفية زجاجية شبه شفافة */
-              border: 1px solid rgba(255, 255, 255, 0.1) !important; /* حدود بيضاء خفيفة جداً */
-              color: white !important; /* لون النص أبيض ناصع */
-              border-radius: 1rem !important; /* حواف دائرية ناعمة (16px) */
-              transition: all 0.3s ease !important; /* حركة ناعمة */
+              background-color: rgba(255, 255, 255, 0.08) !important;
+              border: 1px solid rgba(255, 255, 255, 0.15) !important;
+              color: white !important;
+              border-radius: 1rem !important;
+              transition: all 0.3s ease !important;
           }
-          
-          /* شكل المربع عند الضغط عليه (الكتابة داخله) - توهج ذهبي فخم */
           input:focus, textarea:focus, select:focus {
-              border-color: #fbbf24 !important; /* حدود ذهبية (Amber-400) */
-              box-shadow: 0 0 0 3px rgba(251, 191, 36, 0.15) !important; /* هالة ذهبية شفافة حول المربع */
-              outline: none !important; /* إخفاء الخط الأسود/الأزرق الافتراضي للمتصفح */
-              background-color: rgba(255, 255, 255, 0.08) !important; /* زيادة الشفافية قليلاً عند الكتابة */
+              border-color: #fbbf24 !important;
+              box-shadow: 0 0 15px rgba(251, 191, 36, 0.25) !important;
+              outline: none !important;
+              background-color: rgba(255, 255, 255, 0.15) !important;
           }
-
-          /* لون النص الإرشادي (Placeholder) */
           input::placeholder, textarea::placeholder {
-              color: rgba(255, 255, 255, 0.3) !important; /* لون فضي هادئ */
-              font-weight: 600 !important;
+              color: rgba(255, 255, 255, 0.4) !important; /* لون إرشادي أفتح وأوضح */
           }
         `}
       </style>
