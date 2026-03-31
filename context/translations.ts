@@ -443,9 +443,11 @@ export const translations = {
     thanksForCooperation: "شاكرين لكم حسن تعاونكم واهتمامكم بمصلحة الطالب.",
     schoolPrincipalMale: "مدير المدرسة",
     noStudentDataToDisplay: "لا توجد بيانات طلاب لعرضها",
+    selectStudentPlaceholder : " اختيار طالب ",
 
     // Student Groups
     noClassesAdded: "لا توجد فصول مضافة",
+    addBtn : " إضافة ",
     manageGroupsTitle: "إدارة المجموعات",
     groupsSubtitle: "هندسة التوزيع للتعلم التعاوني",
     classCategorizations: "تقسيمات الصف",
@@ -1067,6 +1069,7 @@ navMore: "More",
 
     // Reports - English Keys
     closeAndReturn: "Close & Return",
+    selectStudentPlaceholder : :"Student selection ",
     processingPrint: "Processing...",
     exportToPrint: "Export for Printing",
     pdfGenerationError: "Error generating PDF.",
@@ -1201,6 +1204,7 @@ navMore: "More",
 
     // Student Groups
     noClassesAdded: "No classes added",
+    addBtn : " addition ",
     manageGroupsTitle: "Group Management",
     groupsSubtitle: "Distribution engineering for cooperative learning",
     classCategorizations: "Class Categorizations",
