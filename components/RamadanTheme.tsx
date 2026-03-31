@@ -16,8 +16,12 @@ const RamadanTheme: React.FC = () => {
     metaThemeColor.setAttribute("content", "#2e1a65"); 
     document.body.style.backgroundColor = "#2e1a65";
 
+    // 💡 إضافة كلاس للـ body لتسهيل استهداف الأنماط
+    document.body.classList.add('ramadan-active');
+
     return () => {
       document.body.style.backgroundColor = "#f3f4f6";
+      document.body.classList.remove('ramadan-active');
     };
   }, []);
 
@@ -26,7 +30,7 @@ const RamadanTheme: React.FC = () => {
       <style>
         {`
           /* 🌟 إضاءة شاملة للتطبيق (تدرج لوني مشرق) */
-          body, #root {
+          body.ramadan-active, body.ramadan-active #root {
               background: linear-gradient(135deg, #3b1c7a 0%, #22104c 50%, #130733 100%) !important;
               background-attachment: fixed !important;
           }
@@ -37,42 +41,63 @@ const RamadanTheme: React.FC = () => {
           ::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.3) !important; border-radius: 10px; }
           ::-webkit-scrollbar-thumb:hover { background: rgba(251, 191, 36, 0.8) !important; }
 
-          /* 🚀 السلاح الشامل: استهداف أي كلاس يحتوي على كلمة green أو emerald مهما كانت شفافيته */
-          [class*="bg-green-"], [class*="bg-emerald-"] { 
+          /* 🚀 السلاح الشامل (المحسن): تجاوز متغيرات Tailwind */
+          body.ramadan-active [class*="bg-green-"], 
+          body.ramadan-active [class*="bg-emerald-"] { 
               background-color: rgba(255, 255, 255, 0.08) !important; 
               backdrop-filter: blur(12px) !important;
               border: 1px solid rgba(255, 255, 255, 0.15) !important;
+              /* تجاوز متغيرات Tailwind إذا كانت موجودة */
+              --tw-bg-opacity: 1 !important; 
           }
-          [class*="border-green-"], [class*="border-emerald-"] { 
+          
+          body.ramadan-active [class*="border-green-"], 
+          body.ramadan-active [class*="border-emerald-"] { 
               border-color: rgba(251, 191, 36, 0.5) !important; 
+              --tw-border-opacity: 1 !important;
           }
-          [class*="text-green-"], [class*="text-emerald-"] { 
+          
+          body.ramadan-active [class*="text-green-"], 
+          body.ramadan-active [class*="text-emerald-"] { 
               color: #fbbf24 !important; 
+              --tw-text-opacity: 1 !important;
           }
-          [class*="fill-green-"], [class*="fill-emerald-"] { 
-              fill: #fbbf24 !important; 
+
+          body.ramadan-active [class*="ring-green-"],
+          body.ramadan-active [class*="ring-emerald-"] {
+              --tw-ring-color: rgba(251, 191, 36, 0.5) !important;
           }
 
           /* ✨ مربعات الإدخال الزجاجية المضيئة */
-          input, textarea, select {
+          body.ramadan-active input, 
+          body.ramadan-active textarea, 
+          body.ramadan-active select {
               background-color: rgba(255, 255, 255, 0.12) !important;
               border: 1px solid rgba(255, 255, 255, 0.2) !important;
               color: white !important;
               border-radius: 1rem !important;
               transition: all 0.3s ease !important;
           }
-          input:focus, textarea:focus, select:focus {
+          
+          body.ramadan-active input:focus, 
+          body.ramadan-active textarea:focus, 
+          body.ramadan-active select:focus {
               border-color: #fbbf24 !important;
               box-shadow: 0 0 20px rgba(251, 191, 36, 0.3) !important;
               outline: none !important;
               background-color: rgba(255, 255, 255, 0.2) !important;
+              /* إجبار لون الـ Ring في Tailwind */
+              --tw-ring-color: #fbbf24 !important; 
+              --tw-ring-shadow: var(--tw-ring-inset) 0 0 0 calc(2px + var(--tw-ring-offset-width)) var(--tw-ring-color) !important;
           }
-          input::placeholder, textarea::placeholder {
+          
+          body.ramadan-active input::placeholder, 
+          body.ramadan-active textarea::placeholder {
               color: rgba(255, 255, 255, 0.6) !important;
           }
           
           /* 🔮 إجبار النوافذ المنزلقة (DrawerSheet) على الشفافية المشرقة (Glassmorphism) */
-          .z-\\[99999\\] {
+          body.ramadan-active .z-\\[99999\\] {
               background-color: rgba(30, 27, 75, 0.4) !important;
               backdrop-filter: blur(24px) !important;
               border: 1px solid rgba(255, 255, 255, 0.1) !important;
@@ -84,7 +109,7 @@ const RamadanTheme: React.FC = () => {
       {/* ===================================================== */}
       {/* 🌌 الطبقة الخلفية - تم تفتيحها وإضافة مصابيح إضاءة */}
       {/* ===================================================== */}
-      <div className="absolute inset-0 z-0 pointer-events-none overflow-hidden select-none">
+      <div className="fixed inset-0 z-[-1] pointer-events-none overflow-hidden select-none">
         
         {/* سماء مضيئة (استبدال الألوان القاتمة بألوان بنفسجية حيوية وشفافة) */}
         <div className="absolute inset-0 bg-gradient-to-br from-[#3b1c7a] via-[#22104c] to-[#130733] opacity-70"></div>
