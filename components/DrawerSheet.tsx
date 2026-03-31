@@ -24,8 +24,15 @@ const DrawerSheet: React.FC<DrawerSheetProps> = ({
     let transformStyles = '';
 
     if (mode === 'full') {
-        positioningStyles = 'inset-0 w-full h-full rounded-none';
-        transformStyles = isOpen ? 'translate-y-0' : 'translate-y-full';
+        // 📱 جوال: ملء الشاشة بالكامل | 💻 كمبيوتر: نافذة عائمة "عريضة" في المنتصف
+        positioningStyles = `
+            max-md:inset-0 max-md:w-full max-md:h-full max-md:rounded-none
+            md:top-1/2 md:left-1/2 md:w-[90vw] md:max-w-[850px] md:h-auto md:max-h-[90vh] md:rounded-[2rem] md:border
+        `;
+        transformStyles = isOpen 
+            ? 'max-md:translate-y-0 max-md:opacity-100 md:-translate-x-1/2 md:-translate-y-1/2 md:scale-100 md:opacity-100' 
+            : 'max-md:translate-y-full max-md:opacity-0 md:-translate-x-1/2 md:-translate-y-1/2 md:scale-95 md:opacity-0';
+    }
     } 
     else if (mode === 'side') {
         positioningStyles = `top-0 bottom-0 h-full w-[85%] max-w-[450px] ${dir === 'rtl' ? 'left-0 rounded-r-[2.5rem] border-r' : 'right-0 rounded-l-[2.5rem] border-l'}`;
