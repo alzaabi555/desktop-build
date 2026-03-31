@@ -21,7 +21,7 @@ export const translations = {
   syncDeviceTitle: "مزامنة الأجهزة",
   syncBackupBtn: "رفع احتياطي",
   syncRestoreBtn: "جلب البيانات",
-
+    navSync: " مركز المزامنة",
   // 📚 Library & Tasks (المفاتيح المفقودة في الصور)
   libraryTitle: "إدارة المكتبة والمصادر",
   librarySubtitle: "أرسل شروحات الفيديو والملفات لطلابك بضغطة زر 🚀",
@@ -788,6 +788,7 @@ navMore: "More",
   syncDeviceTitle: "Device Sync",
   syncBackupBtn: "Cloud Backup",
   syncRestoreBtn: "Restore Data",
+   navSync: "Cloud Sync",
   
   // 📚 Library & Tasks (المفاتيح المفقودة في الصور)
   libraryTitle: "Library & Resources",
