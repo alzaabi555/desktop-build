@@ -1069,7 +1069,7 @@ navMore: "More",
 
     // Reports - English Keys
     closeAndReturn: "Close & Return",
-    selectStudentPlaceholder : :"Student selection ",
+    selectStudentPlaceholder :"Student selection ",
     processingPrint: "Processing...",
     exportToPrint: "Export for Printing",
     pdfGenerationError: "Error generating PDF.",
