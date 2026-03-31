@@ -21,7 +21,6 @@ export const translations = {
   syncDeviceTitle: "مزامنة الأجهزة",
   syncBackupBtn: "رفع احتياطي",
   syncRestoreBtn: "جلب البيانات",
-  navCloudSync: "مركز المزامنة",
 
   // 📚 Library & Tasks (المفاتيح المفقودة في الصور)
   libraryTitle: "إدارة المكتبة والمصادر",
@@ -312,9 +311,7 @@ export const translations = {
     scanQrCodeLine2: "هاتفك للدخول",
 
     // Reports - Arabic Keys
-    closeBtn: "إغلاق وعودة",
-    summonReason: "سبب الإستدعاء",
-    selectStudentPlaceholder: "إختيار طالب",
+    closeAndReturn: "إغلاق والعودة",
     processingPrint: "جاري المعالجة...",
     exportToPrint: "تصدير للطباعة",
     pdfGenerationError: "حدث خطأ أثناء إنشاء ملف PDF.",
@@ -472,7 +469,6 @@ export const translations = {
     groupLabel: "المجموعة:",
     assignedToGroupLabel: "موزع في:",
     confirmAndAssignBtn: "اعتماد وتوزيع",
-    addBtn: "إضافة",
 
     // Students Page (Home)
     studentsTitle: "الطلاب",
@@ -792,7 +788,6 @@ navMore: "More",
   syncDeviceTitle: "Device Sync",
   syncBackupBtn: "Cloud Backup",
   syncRestoreBtn: "Restore Data",
-  navCloudSync:" Cloud Sync",
   
   // 📚 Library & Tasks (المفاتيح المفقودة في الصور)
   libraryTitle: "Library & Resources",
@@ -1070,7 +1065,7 @@ navMore: "More",
     scanQrCodeLine2: "your phone to log in",
 
     // Reports - English Keys
-    closeBtn: "Close & Return",
+    closeAndReturn: "Close & Return",
     processingPrint: "Processing...",
     exportToPrint: "Export for Printing",
     pdfGenerationError: "Error generating PDF.",
@@ -1202,7 +1197,6 @@ navMore: "More",
     thanksForCooperation: "Thank you for your cooperation and interest in the student's well-being.",
     schoolPrincipalMale: "School Principal",
     noStudentDataToDisplay: "No student data to display",
-    selectStudentPlaceholder: "selectStudent",
 
     // Student Groups
     noClassesAdded: "No classes added",
@@ -1229,7 +1223,6 @@ navMore: "More",
     groupLabel: "Group:",
     assignedToGroupLabel: "Assigned to:",
     confirmAndAssignBtn: "Confirm & Assign",
-    addBtn: "Add",
 
     // Students Page (Home)
     studentsTitle: "Students",
