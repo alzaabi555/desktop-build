@@ -1,7 +1,7 @@
 import React, { useEffect } from 'react';
 
 // =========================================================================
-// 🌌 الثيم الليلي الفاخر (Midnight Elegance) - النسخة المباشرة
+// 🔮 ثيم الفخامة التقنية (Glowing Midnight Blue Theme) - فرض السيطرة
 // =========================================================================
 
 const RamadanTheme: React.FC = () => {
@@ -13,9 +13,9 @@ const RamadanTheme: React.FC = () => {
       metaThemeColor.setAttribute("name", "theme-color");
       document.head.appendChild(metaThemeColor);
     }
-    // لون شريط المتصفح/الجوال (مطابق لـ bgMain)
-    metaThemeColor.setAttribute("content", "#0B0F1A"); 
-    document.body.style.backgroundColor = "#0B0F1A";
+    // لون شريط المتصفح/الجوال متوافق مع الكحلي العميق
+    metaThemeColor.setAttribute("content", "#0f172a"); 
+    document.body.style.backgroundColor = "#0f172a";
 
     document.body.classList.add('ramadan-active');
 
@@ -29,75 +29,63 @@ const RamadanTheme: React.FC = () => {
     <>
       <style>
         {`
-          /* 🌟 خلفية التطبيق (لون bgMain) */
+          /* 🌟 1. فرض التدرج الكحلي المضيء على الخلفية بأكملها (لن يكون أسود!) */
           body.ramadan-active, body.ramadan-active #root {
-              background-color: #0B0F1A !important;
-              background-image: none !important; 
+              background: radial-gradient(circle at 10% 20%, rgb(18, 28, 54) 0%, rgb(10, 15, 30) 90.2%) !important;
+              background-attachment: fixed !important;
           }
 
-          /* 🌟 توحيد شكل شريط التمرير */
-          ::-webkit-scrollbar { width: 6px; height: 6px; }
-          ::-webkit-scrollbar-track { background: rgba(255,255,255,0.02) !important; }
-          ::-webkit-scrollbar-thumb { background: #1A2035 !important; border-radius: 10px; } /* لون bgSoft */
-          ::-webkit-scrollbar-thumb:hover { background: #2563EB !important; } /* لون primary */
-
-          /* 🚀 السلاح الشامل: تحييد الألوان القديمة تماماً */
+          /* 🌟 2. تلوين الكروت والخلفيات القديمة (تأثير زجاجي نيلي) */
           body.ramadan-active [class*="bg-green-"], 
-          body.ramadan-active [class*="bg-emerald-"] { 
-              background-color: #141A2D !important; /* لون bgCard */
-              border: 1px solid #1A2035 !important; /* لون bgSoft */
-              box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2) !important;
+          body.ramadan-active [class*="bg-emerald-"],
+          body.ramadan-active [class*="bg-slate-800"],
+          body.ramadan-active aside,
+          body.ramadan-active header { 
+              background-color: rgba(99, 102, 241, 0.03) !important; /* Indigo شفاف جداً */
+              backdrop-filter: blur(20px) !important;
+              border: 1px solid rgba(255, 255, 255, 0.05) !important;
+              box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.3) !important;
               --tw-bg-opacity: 1 !important; 
           }
           
-          body.ramadan-active [class*="border-green-"], 
-          body.ramadan-active [class*="border-emerald-"] { 
-              border-color: rgba(37, 99, 235, 0.3) !important; /* لون primary */
-              --tw-border-opacity: 1 !important;
-          }
-          
-          body.ramadan-active [class*="text-green-"], 
-          body.ramadan-active [class*="text-emerald-"] { 
-              color: #06B6D4 !important; /* لون info */
-              --tw-text-opacity: 1 !important;
-          }
-
-          /* ✨ مربعات الإدخال (Inputs) - تصميم ناعم ومتناسق */
+          /* ✨ 3. تعديل مربعات الإدخال (Inputs) - تصميم زجاجي ناعم */
           body.ramadan-active input, 
           body.ramadan-active textarea, 
           body.ramadan-active select {
-              background-color: #0B0F1A !important; 
-              border: 1px solid #1A2035 !important; 
+              background-color: rgba(255, 255, 255, 0.02) !important; 
+              border: 1px solid rgba(255, 255, 255, 0.08) !important;
               color: white !important;
-              border-radius: 1rem !important;
               transition: all 0.3s ease !important;
           }
           
-          body.ramadan-active input:focus, 
-          body.ramadan-active textarea:focus, 
-          body.ramadan-active select:focus {
-              border-color: #2563EB !important; 
-              box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.2) !important;
+          body.ramadan-active input:focus {
+              border-color: rgba(99, 102, 241, 0.4) !important; 
+              box-shadow: 0 0 15px rgba(99, 102, 241, 0.2) !important;
               outline: none !important;
-              background-color: #141A2D !important;
           }
-          
-          /* 🔮 النوافذ المنزلقة (DrawerSheet) */
+
+          /* ✨ 4. تعديل النوافذ المنزلقة (DrawerSheet) - زجاج ناعم */
           body.ramadan-active .z-\\[99999\\], 
           body.ramadan-active .z-\\[100001\\] {
-              background-color: rgba(20, 26, 45, 0.95) !important; /* bgCard بشفافية */
-              backdrop-filter: blur(20px) !important;
+              background-color: rgba(15, 23, 42, 0.7) !important; /* لون slate-900 بشفافية */
+              backdrop-filter: blur(25px) !important;
               border: 1px solid rgba(255, 255, 255, 0.05) !important;
-              border-top: 1px solid rgba(255, 255, 255, 0.1) !important; 
               box-shadow: -10px 0 40px rgba(0, 0, 0, 0.6) !important;
           }
         `}
       </style>
 
-      {/* 🌌 الطبقة الخلفية - هادئة جداً */}
-      <div className="fixed inset-0 z-[-1] pointer-events-none overflow-hidden select-none bg-[#0B0F1A]">
-        <div className="absolute top-0 right-1/4 w-[600px] h-[600px] bg-[#2563EB]/5 rounded-full blur-[100px] -translate-y-1/2"></div>
-        <div className="absolute bottom-0 left-0 w-[500px] h-[500px] bg-[#06B6D4]/5 rounded-full blur-[120px] translate-y-1/3 -translate-x-1/4"></div>
+      {/* ===================================================== */}
+      {/* 🌌 الطبقة الخلفية: تأثير السديم النيلي المضيء (Nebula Glow) */}
+      {/* ===================================================== */}
+      <div className="fixed inset-0 z-[-1] pointer-events-none overflow-hidden select-none bg-transparent">
+        
+        {/* توهج علوي يمين: نيلي (Indigo) */}
+        <div className="absolute top-0 right-0 w-[900px] h-[900px] bg-indigo-600/10 rounded-full blur-[140px] -translate-y-1/3 translate-x-1/4"></div>
+        
+        {/* توهج سفلي يسار: سماوي (Cyan) لمحاكاة الإضاءة الحيوية */}
+        <div className="absolute bottom-0 left-0 w-[800px] h-[800px] bg-cyan-500/10 rounded-full blur-[130px] translate-y-1/3 -translate-x-1/4"></div>
+
       </div>
     </>
   );
