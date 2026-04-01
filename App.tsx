@@ -247,8 +247,8 @@ const AppContent: React.FC = () => {
   };
 
   return (
-    // 💉 الجراحة الأهم: إزالة اللون الصلب `bg-[#0f172a]` واستبداله بـ `bg-transparent` ليظهر الثيم الزجاجي!
-    <div className={`flex flex-col h-screen font-sans overflow-hidden relative transition-colors duration-1000 ${isRamadan ? 'bg-transparent text-white' : 'bg-[#f3f4f6] text-slate-900'} ${dir === 'rtl' ? 'text-right' : 'text-left'}`} dir={dir}>
+   // جعلنا الخلفية bg-transparent ليظهر الثيم الزجاجي الفاخر
+<div className={`flex flex-col h-screen font-sans overflow-hidden relative transition-colors duration-1000 ${isRamadan ? 'bg-transparent text-textPrimary' : 'bg-[#f3f4f6] text-slate-900'} ${dir === 'rtl' ? 'text-right' : 'text-left'}`} dir={dir}>
   
       <RamadanTheme />
 
