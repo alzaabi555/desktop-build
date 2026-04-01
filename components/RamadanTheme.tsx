@@ -1,10 +1,29 @@
-import React, { useEffect } from 'react';
-
-// =========================================================================
-// 🔮 ثيم الفخامة التقنية (Glowing Midnight Blue Theme) - فرض السيطرة
-// =========================================================================
+import React, { useEffect, useState } from 'react';
 
 const RamadanTheme: React.FC = () => {
+  const [theme, setTheme] = useState<'dark' | 'light'>(() => {
+    return (localStorage.getItem('rased_theme') as 'dark' | 'light') || 'dark';
+  });
+
+  useEffect(() => {
+    // تحديث الثيم عند التخزين
+    const handleStorageChange = () => {
+      setTheme((localStorage.getItem('rased_theme') as 'dark' | 'light') || 'dark');
+    };
+    
+    // التحديث عند الضغط على الزر
+    const handleManualChange = () => {
+        setTheme((localStorage.getItem('rased_theme') as 'dark' | 'light') || 'dark');
+    };
+
+    window.addEventListener('storage', handleStorageChange);
+    window.addEventListener('theme_changed', handleManualChange);
+
+    return () => {
+        window.removeEventListener('storage', handleStorageChange);
+        window.removeEventListener('theme_changed', handleManualChange);
+    };
+  }, []);
 
   useEffect(() => {
     let metaThemeColor = document.querySelector("meta[name=theme-color]");
@@ -13,79 +32,105 @@ const RamadanTheme: React.FC = () => {
       metaThemeColor.setAttribute("name", "theme-color");
       document.head.appendChild(metaThemeColor);
     }
-    // لون شريط المتصفح/الجوال متوافق مع الكحلي العميق
-    metaThemeColor.setAttribute("content", "#0f172a"); 
-    document.body.style.backgroundColor = "#0f172a";
-
-    document.body.classList.add('ramadan-active');
-
-    return () => {
-      document.body.style.backgroundColor = "#f3f4f6";
-      document.body.classList.remove('ramadan-active');
-    };
-  }, []);
+    metaThemeColor.setAttribute("content", theme === 'dark' ? '#080C17' : '#F4F7F9');
+    
+    // وضع الكلاس على الـ body ليعمل الـ CSS
+    document.body.className = theme === 'dark' ? 'theme-dark' : 'theme-light';
+  }, [theme]);
 
   return (
     <>
       <style>
         {`
-          /* 🌟 1. فرض التدرج الكحلي المضيء على الخلفية بأكملها (لن يكون أسود!) */
-          body.ramadan-active, body.ramadan-active #root {
-              background: radial-gradient(circle at 10% 20%, rgb(18, 28, 54) 0%, rgb(10, 15, 30) 90.2%) !important;
+          /* ==================================================================== */
+          /* 🌙 الثيم الداكن (الزجاج المضيء) */
+          /* ==================================================================== */
+          
+          body.theme-dark, body.theme-dark #root {
+              background: radial-gradient(circle at 10% 20%, #1A2345 0%, #080C17 100%) !important;
+              color: #FFFFFF !important;
               background-attachment: fixed !important;
           }
 
-          /* 🌟 2. تلوين الكروت والخلفيات القديمة (تأثير زجاجي نيلي) */
-          body.ramadan-active [class*="bg-green-"], 
-          body.ramadan-active [class*="bg-emerald-"],
-          body.ramadan-active [class*="bg-slate-800"],
-          body.ramadan-active aside,
-          body.ramadan-active header { 
-              background-color: rgba(99, 102, 241, 0.03) !important; /* Indigo شفاف جداً */
-              backdrop-filter: blur(20px) !important;
+          /* استهداف آمن للكروت الداكنة والرمادية وتحويلها لزجاج فخم */
+          body.theme-dark [class*="bg-slate-800"], 
+          body.theme-dark [class*="bg-[#1e293b]"], 
+          body.theme-dark [class*="bg-[#0f1123]"],
+          body.theme-dark [class*="bg-[#0B1120]"],
+          body.theme-dark [class*="bg-white/5"] {
+              background: linear-gradient(160deg, rgba(30, 43, 77, 0.6) 0%, rgba(12, 18, 36, 0.9) 100%) !important;
+              backdrop-filter: blur(16px) !important;
+              -webkit-backdrop-filter: blur(16px) !important;
               border: 1px solid rgba(255, 255, 255, 0.05) !important;
-              box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.3) !important;
-              --tw-bg-opacity: 1 !important; 
-          }
-          
-          /* ✨ 3. تعديل مربعات الإدخال (Inputs) - تصميم زجاجي ناعم */
-          body.ramadan-active input, 
-          body.ramadan-active textarea, 
-          body.ramadan-active select {
-              background-color: rgba(255, 255, 255, 0.02) !important; 
-              border: 1px solid rgba(255, 255, 255, 0.08) !important;
-              color: white !important;
-              transition: all 0.3s ease !important;
-          }
-          
-          body.ramadan-active input:focus {
-              border-color: rgba(99, 102, 241, 0.4) !important; 
-              box-shadow: 0 0 15px rgba(99, 102, 241, 0.2) !important;
-              outline: none !important;
+              border-top: 1px solid rgba(100, 140, 255, 0.3) !important; 
+              box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5) !important;
           }
 
-          /* ✨ 4. تعديل النوافذ المنزلقة (DrawerSheet) - زجاج ناعم */
-          body.ramadan-active .z-\\[99999\\], 
-          body.ramadan-active .z-\\[100001\\] {
-              background-color: rgba(15, 23, 42, 0.7) !important; /* لون slate-900 بشفافية */
-              backdrop-filter: blur(25px) !important;
-              border: 1px solid rgba(255, 255, 255, 0.05) !important;
-              box-shadow: -10px 0 40px rgba(0, 0, 0, 0.6) !important;
+          /* مربعات الإدخال */
+          body.theme-dark input, 
+          body.theme-dark select,
+          body.theme-dark [class*="bg-slate-700"] {
+              background: rgba(0, 0, 0, 0.25) !important;
+              border: 1px solid rgba(255, 255, 255, 0.1) !important;
+              color: #FFFFFF !important;
+          }
+
+          /* تفتيح النصوص */
+          body.theme-dark .text-slate-800,
+          body.theme-dark .text-slate-900,
+          body.theme-dark .text-gray-800 {
+              color: #FFFFFF !important;
+          }
+          body.theme-dark .text-slate-500,
+          body.theme-dark .text-slate-600 {
+              color: #94A3B8 !important;
+          }
+
+          /* ==================================================================== */
+          /* ☀️ الثيم الفاتح (نظيف ويحترم كودك الأصلي) */
+          /* ==================================================================== */
+          
+          body.theme-light, body.theme-light #root {
+              background: #F4F7F9 !important;
+              color: #1E293B !important;
+              background-image: none !important;
+          }
+
+          body.theme-light [class*="bg-slate-800"], 
+          body.theme-light [class*="bg-[#1e293b]"], 
+          body.theme-light [class*="bg-[#0f1123]"],
+          body.theme-light [class*="bg-[#0B1120]"],
+          body.theme-light [class*="bg-white/5"] {
+              background: #FFFFFF !important;
+              backdrop-filter: none !important;
+              -webkit-backdrop-filter: none !important;
+              border: 1px solid #E2E8F0 !important;
+              border-top: 1px solid #FFFFFF !important;
+              box-shadow: 0 4px 15px rgba(0, 0, 0, 0.03) !important;
+          }
+
+          body.theme-light input, 
+          body.theme-light select {
+              background: #F8FAFC !important;
+              border: 1px solid #CBD5E1 !important;
+              color: #0F172A !important;
+          }
+
+          body.theme-light .text-white {
+              color: #1E293B !important;
+          }
+
+          /* إخفاء التوهج في الثيم الفاتح */
+          body.theme-light .neon-glow {
+              display: none !important;
           }
         `}
       </style>
 
-      {/* ===================================================== */}
-      {/* 🌌 الطبقة الخلفية: تأثير السديم النيلي المضيء (Nebula Glow) */}
-      {/* ===================================================== */}
-      <div className="fixed inset-0 z-[-1] pointer-events-none overflow-hidden select-none bg-transparent">
-        
-        {/* توهج علوي يمين: نيلي (Indigo) */}
-        <div className="absolute top-0 right-0 w-[900px] h-[900px] bg-indigo-600/10 rounded-full blur-[140px] -translate-y-1/3 translate-x-1/4"></div>
-        
-        {/* توهج سفلي يسار: سماوي (Cyan) لمحاكاة الإضاءة الحيوية */}
-        <div className="absolute bottom-0 left-0 w-[800px] h-[800px] bg-cyan-500/10 rounded-full blur-[130px] translate-y-1/3 -translate-x-1/4"></div>
-
+      {/* התوهج الخلفي يظهر فقط في الثيم الداكن */}
+      <div className="neon-glow fixed inset-0 z-[-1] pointer-events-none overflow-hidden select-none bg-transparent">
+        <div className="absolute top-[-10%] right-[-10%] w-[800px] h-[800px] bg-blue-600 rounded-full blur-[160px] opacity-[0.15]"></div>
+        <div className="absolute bottom-[-10%] left-[-10%] w-[600px] h-[600px] bg-cyan-400 rounded-full blur-[140px] opacity-[0.1]"></div>
       </div>
     </>
   );
