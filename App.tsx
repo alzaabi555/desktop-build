@@ -23,10 +23,10 @@ import WelcomeScreen from './components/WelcomeScreen';
 import StudentGroups from './components/StudentGroups';
 import TeacherLibrary from './components/TeacherLibrary';
 import { useSchoolBell } from './hooks/useSchoolBell';
-import ThemeManager from './components/ThemeManager';
+// 🚀 استدعاء RamadanTheme كما طلبنا، وتم إزالة ThemeManager
+import RamadanTheme from './components/RamadanTheme';
 import GlobalSyncManager from './components/GlobalSyncManager'; 
 
-// 🌟 المكون الجراحي الجديد (تم إصلاح مشكلة الظل العملاق!)
 const DrawerSheet: React.FC<{
     isOpen: boolean;
     onClose: () => void;
@@ -49,10 +49,10 @@ const DrawerSheet: React.FC<{
             <div
                 className={`fixed z-[10001] flex flex-col transition-transform duration-500 ease-[cubic-bezier(0.32,0.72,0,1)]
                     max-md:inset-x-0 max-md:bottom-0 max-md:max-h-[85vh] max-md:rounded-t-[2.5rem]
-                    md:inset-y-0 ${dir === 'rtl' ? 'md:left-0 md:rounded-r-[2.5rem] border-r border-bgSoft' : 'md:right-0 md:rounded-l-[2.5rem] border-l border-bgSoft'} md:w-[450px] md:h-full
+                    md:inset-y-0 ${dir === 'rtl' ? 'md:left-0 md:rounded-r-[2.5rem]' : 'md:right-0 md:rounded-l-[2.5rem]'} md:w-[450px] md:h-full
                     ${isRamadan ? 'bg-[#0B1120]/95 backdrop-blur-2xl text-white' : 'bg-white border-slate-200 text-slate-800'}
                     ${isOpen
-                        ? `translate-y-0 md:translate-x-0 ${isRamadan ? 'shadow-[10px_0_40px_rgba(0,0,0,0.5)]' : 'shadow-2xl'}`
+                        ? `translate-y-0 md:translate-x-0`
                         : `max-md:translate-y-full ${dir === 'rtl' ? 'md:-translate-x-[150%]' : 'md:translate-x-[150%]'} shadow-none` 
                     }
                 `}
@@ -74,7 +74,6 @@ const DrawerSheet: React.FC<{
     );
 };
 
-// --- ✨ GLASS GLOW ICONS ---
 const NavIconWrapper = ({ active, isRamadan, children }: any) => (
   <div className={`w-full h-full flex flex-col items-center justify-center transition-all duration-500 ${active ? 'scale-110' : 'opacity-50'}`}>
     <div className={`relative p-2 rounded-2xl transition-all duration-500 ${active ? (isRamadan ? 'bg-blue-500/20 shadow-[0_0_20px_rgba(59,130,246,0.3)]' : 'bg-blue-500/10 shadow-[0_0_10px_rgba(59,130,246,0.1)]') : ''}`}>
@@ -135,18 +134,20 @@ const AppContent: React.FC = () => {
   const [showMoreMenu, setShowMoreMenu] = useState(false);
   const [appVersion, setAppVersion] = useState('4.4.1');
   
-  // 🚀 حالة الثيم (يتم حفظها في المتصفح)
+  // 🚀 حالة الثيم، محفوظة في المتصفح
   const [appTheme, setAppTheme] = useState<'dark' | 'light'>(() => {
     return (localStorage.getItem('rased_theme') as 'dark' | 'light') || 'dark';
   });
 
-  // نستخدم appTheme للتحكم في isRamadan لتتغير كل الألوان بضغطة زر
+  // التحكم بـ isRamadan القديمة بناءً على الثيم
   const isRamadan = appTheme === 'dark';
 
   const toggleTheme = () => {
     setAppTheme(prev => {
       const newTheme = prev === 'dark' ? 'light' : 'dark';
       localStorage.setItem('rased_theme', newTheme);
+      // إرسال حدث يدوي ليسمعه RamadanTheme
+      window.dispatchEvent(new Event('theme_changed'));
       return newTheme;
     });
   };
@@ -262,20 +263,20 @@ const AppContent: React.FC = () => {
   return (
     <div className={`flex flex-col h-screen font-sans overflow-hidden relative transition-colors duration-1000 bg-transparent ${dir === 'rtl' ? 'text-right' : 'text-left'}`} dir={dir}>
   
-      <ThemeManager theme={appTheme} />
+      {/* 🚀 استدعاء RamadanTheme */}
+      <RamadanTheme />
 
       {/* 🖥️ الشريط العلوي للديسكتوب */}
       <div 
-        className={`hidden md:flex w-full h-12 shrink-0 items-center justify-between px-4 relative z-[99999] shadow-sm transition-colors ${isRamadan ? 'bg-white/5 backdrop-blur-md border-b border-white/10' : 'bg-white border-b border-slate-200'}`}
+        className={`hidden md:flex w-full h-12 shrink-0 items-center justify-between px-4 relative z-[99999] shadow-sm transition-colors ${isRamadan ? 'bg-[#0B1120]/50 backdrop-blur-md' : 'bg-white border-b border-slate-200'}`}
         style={{ WebkitAppRegion: 'drag' as any }}
       >
-        <div className="w-20"></div> {/* فراغ للتوازن */}
+        <div className="w-20"></div> 
         
         <span className={`text-xs font-black tracking-widest uppercase opacity-90 ${isRamadan ? 'text-blue-400' : 'text-slate-800'}`}>
           {t('appNameMain') || 'راصد'} - {t('appSubtitleMain') || 'نسخة المعلم'}
         </span>
         
-        {/* 🌟 زر تبديل الثيم للديسكتوب 🌟 */}
         <div className="w-20 flex justify-end" style={{ WebkitAppRegion: 'no-drag' as any }}>
             <button 
                 onClick={toggleTheme}
@@ -287,11 +288,10 @@ const AppContent: React.FC = () => {
         </div>
       </div>
 
-      {/* محتوى التطبيق الأساسي */}
       <div className="flex flex-1 overflow-hidden relative z-10 w-full bg-transparent">
         
         {/* Sidebar (Desktop) */}
-        <aside className={`hidden md:flex w-72 flex-col z-50 h-full relative transition-colors ${dir === 'rtl' ? 'border-l' : 'border-r'} ${isRamadan ? 'bg-[#0B1120]/70 backdrop-blur-2xl border-white/5 shadow-[2px_0_20px_rgba(0,0,0,0.3)]' : 'bg-white border-slate-200 shadow-[2px_0_15px_rgba(0,0,0,0.05)]'}`}>
+        <aside className={`hidden md:flex w-72 flex-col z-50 h-full relative transition-colors ${dir === 'rtl' ? 'border-l' : 'border-r'} ${isRamadan ? 'bg-[#0B1120]/70 backdrop-blur-2xl border-white/5' : 'bg-white border-slate-200'}`}>
           <div className="p-8 flex items-center gap-4 relative z-10" style={{ WebkitAppRegion: 'no-drag' as any }}>
             <div className="shrink-0" style={{ width: '48px', height: '48px', minWidth: '48px' }}>
                 <BrandLogo style={{ width: '100%', height: '100%', objectFit: 'contain' }} showText={false} />
@@ -321,7 +321,7 @@ const AppContent: React.FC = () => {
       {/* Bottom Nav (Mobile) */}
       <div className={`md:hidden fixed bottom-0 left-0 right-0 z-[9999] flex justify-around items-end border-t transition-colors duration-500 
           pt-3 pb-[calc(env(safe-area-inset-bottom)+1rem)] 
-          ${isRamadan ? 'bg-[#0B1120]/95 backdrop-blur-2xl border-white/10 shadow-[0_-10px_30px_rgba(0,0,0,0.5)]' : 'bg-white/95 backdrop-blur-xl border-slate-200 shadow-[0_-5px_20px_rgba(0,0,0,0.05)]'}
+          ${isRamadan ? 'bg-[#0B1120]/95 backdrop-blur-2xl border-white/10' : 'bg-white/95 backdrop-blur-xl border-slate-200'}
       `}>
         {mobileNavItems.map((item) => {
           const isActive = activeTab === item.id;
@@ -340,14 +340,12 @@ const AppContent: React.FC = () => {
         </button>
       </div>
 
-      {/* 🌟 نافذة "المزيد" الجديدة (DrawerSheet) للجوال */}
       <DrawerSheet isOpen={showMoreMenu} onClose={() => setShowMoreMenu(false)} isRamadan={isRamadan} dir={dir}>
          <div className="flex flex-col h-full w-full">
             <div className="px-6 pb-4 shrink-0 text-center flex items-center justify-between">
                <div className="w-10"></div>
                <h2 className={`text-xl font-black ${isRamadan ? 'text-white' : 'text-slate-800'}`}>{t('navMore') || (dir === 'rtl' ? 'المزيد' : 'More')}</h2>
                
-               {/* 🌟 زر التبديل للجوال 🌟 */}
                <button 
                    onClick={toggleTheme}
                    className={`w-10 h-10 rounded-full flex items-center justify-center border transition-all active:scale-95 ${isRamadan ? 'border-white/10 bg-white/5 text-yellow-400' : 'border-slate-200 bg-slate-50 text-slate-700'}`}
