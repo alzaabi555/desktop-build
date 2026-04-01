@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { AppProvider, useApp } from './context/AppContext';
-import { ThemeProvider } from './context/ThemeContext';
+// ❌ تم إزالة استيراد ThemeProvider القديم
+// import { ThemeProvider } from './context/ThemeContext';
 import {
   LayoutDashboard, Users, CalendarCheck, BarChart3,
   Settings as SettingsIcon, Info, FileText, BookOpen, Medal, Loader2, CheckSquare, Library, CloudSync, X, Sun, Moon
@@ -23,8 +24,10 @@ import WelcomeScreen from './components/WelcomeScreen';
 import StudentGroups from './components/StudentGroups';
 import TeacherLibrary from './components/TeacherLibrary';
 import { useSchoolBell } from './hooks/useSchoolBell';
-// 🚀 استدعاء RamadanTheme كما طلبنا، وتم إزالة ThemeManager
-import RamadanTheme from './components/RamadanTheme';
+
+// 🚀 استدعاء المكونين المنفصلين للثيمين
+import RamadanTheme from './components/RamadanTheme'; // الثيم الداكن الزجاجي
+import LightTheme from './components/LightTheme';     // الثيم الفاتح النظيف
 import GlobalSyncManager from './components/GlobalSyncManager'; 
 
 const DrawerSheet: React.FC<{
@@ -139,14 +142,13 @@ const AppContent: React.FC = () => {
     return (localStorage.getItem('rased_theme') as 'dark' | 'light') || 'dark';
   });
 
-  // التحكم بـ isRamadan القديمة بناءً على الثيم
   const isRamadan = appTheme === 'dark';
 
   const toggleTheme = () => {
     setAppTheme(prev => {
       const newTheme = prev === 'dark' ? 'light' : 'dark';
       localStorage.setItem('rased_theme', newTheme);
-      // إرسال حدث يدوي ليسمعه RamadanTheme
+      // إرسال حدث يدوي ليتجاوب المكون الآخر
       window.dispatchEvent(new Event('theme_changed'));
       return newTheme;
     });
@@ -263,15 +265,14 @@ const AppContent: React.FC = () => {
   return (
     <div className={`flex flex-col h-screen font-sans overflow-hidden relative transition-colors duration-1000 bg-transparent ${dir === 'rtl' ? 'text-right' : 'text-left'}`} dir={dir}>
   
-      {/* 🚀 استدعاء RamadanTheme */}
-      <RamadanTheme />
+      {/* 🚀 تطبيق فكرتك الذكية: استدعاء ثيم واحد فقط بناءً على الاختيار */}
+      {appTheme === 'dark' ? <RamadanTheme /> : <LightTheme />}
 
       {/* 🖥️ الشريط العلوي للديسكتوب */}
       <div 
         className={`hidden md:flex w-full h-12 shrink-0 items-center justify-between px-4 relative z-[99999] shadow-sm transition-colors ${isRamadan ? 'bg-[#0B1120]/50 backdrop-blur-md' : 'bg-white border-b border-slate-200'}`}
         style={{ WebkitAppRegion: 'drag' as any }}
       >
-        {/* 🌟 تم نقل الزر إلى بداية الشريط (اليمين في النسخة العربية) بعيداً عن أزرار الإغلاق 🌟 */}
         <div className="w-20 flex justify-start" style={{ WebkitAppRegion: 'no-drag' as any }}>
             <button 
                 onClick={toggleTheme}
@@ -286,7 +287,6 @@ const AppContent: React.FC = () => {
           {t('appNameMain') || 'راصد'} - {t('appSubtitleMain') || 'نسخة المعلم'}
         </span>
         
-        {/* فراغ للتوازن في الجهة المعاكسة (حيث توجد أزرار إغلاق النافذة) */}
         <div className="w-20"></div> 
       </div>
 
@@ -424,12 +424,11 @@ const AppContent: React.FC = () => {
   );
 };
 
+// ❌ تم إزالة ThemeProvider من التغليف الرئيسي
 const App: React.FC = () => (
-  <ThemeProvider>
     <AppProvider>
       <AppContent />
     </AppProvider>
-  </ThemeProvider>
 );
 
 export default App;
