@@ -66,7 +66,7 @@ const Leaderboard: React.FC<LeaderboardProps> = ({ students, classes, onUpdateSt
     const [isGeneratingPdf, setIsGeneratingPdf] = useState(false);
     const certificateRef = useRef<HTMLDivElement>(null);
 
-   // المستشعر الرمضاني
+   // المستشعر الرمضاني / الثيم الداكن
   const isRamadan = true;
 
     const getShortName = (fullName: string) => {
@@ -76,7 +76,7 @@ const Leaderboard: React.FC<LeaderboardProps> = ({ students, classes, onUpdateSt
         return `${nameParts[0]} ${nameParts[nameParts.length - 1]}`;
     };
     
-    // 📢 خوارزمية الشريط الإخباري الذكي
+    // 📢 خوارزمية الشريط الإخباري الذكي (تمت معالجة الانهيار هنا)
     const tickerText = useMemo(() => {
         let baseStudents = students;
         if (selectedClass !== 'all') {
@@ -99,14 +99,14 @@ const Leaderboard: React.FC<LeaderboardProps> = ({ students, classes, onUpdateSt
         if (selectedClass === 'all') {
             const classTopMap = new Map<string, typeof studentsWithPoints[0]>();
             studentsWithPoints.forEach(s => {
-                const sClass = s.classes[0];
+                const sClass = s.classes?.[0]; // حماية من الانهيار هنا
                 if (sClass && !classTopMap.has(sClass)) {
                     classTopMap.set(sClass, s);
                 }
             });
 
             return Array.from(classTopMap.values())
-                .map(s => `👑 ${t('championOf')} (${s.classes[0]}): ${getShortName(s.name)} [${s.monthlyPoints} ${t('pointsWord')}]`)
+                .map(s => `👑 ${t('championOf')} (${s.classes?.[0] || ''}): ${getShortName(s.name)} [${s.monthlyPoints} ${t('pointsWord')}]`) // حماية هنا أيضاً
                 .join(' 🌟 | 🌟 ');
         } else {
             const top3 = studentsWithPoints.slice(0, 3);
@@ -202,10 +202,11 @@ const Leaderboard: React.FC<LeaderboardProps> = ({ students, classes, onUpdateSt
 >
                 <div className="flex flex-col items-center text-center relative">
                     <div className={`absolute ${dir === 'rtl' ? 'left-0' : 'right-0'} top-0 flex gap-2`} style={{ WebkitAppRegion: 'no-drag' } as any}>
+                        {/* تم تعديل ألوان القائمة في الثيم الفاتح لتكون واضحة */}
                         <select 
                             value={schoolType} 
                             onChange={(e) => setSchoolType(e.target.value as any)}
-                            className={`border rounded-lg text-[10px] p-1 outline-none font-bold cursor-pointer transition-colors ${isRamadan ? 'bg-transparent border-indigo-500/30 text-indigo-100' : 'bg-white/10 border-white/20 hover:bg-white/20'}`}
+                            className={`border rounded-lg text-[10px] p-1 outline-none font-bold cursor-pointer transition-colors ${isRamadan ? 'bg-transparent border-indigo-500/30 text-indigo-100' : 'bg-white border-slate-300 text-slate-800 hover:bg-slate-50'}`}
                         >
                             <option value="mixed" className={isRamadan ? 'bg-slate-900 text-white' : 'text-slate-800'}>{t('mixedSchool')}</option>
                             <option value="boys" className={isRamadan ? 'bg-slate-900 text-white' : 'text-slate-800'}>{t('boysSchool')}</option>
@@ -213,38 +214,39 @@ const Leaderboard: React.FC<LeaderboardProps> = ({ students, classes, onUpdateSt
                         </select>
                     </div>
 
-                    <div className="bg-white/10 p-3 rounded-2xl border border-white/20 mb-3 shadow-inner">
+                    <div className={`p-3 rounded-2xl border mb-3 shadow-inner ${isRamadan ? 'bg-white/10 border-white/20 backdrop-blur-md' : 'bg-slate-100 border-slate-200'}`}>
                         <Crown className="w-8 h-8 text-amber-400 fill-amber-400 animate-bounce" />
                     </div>
                     <h1 className="text-2xl font-black tracking-wide mb-1">{getPageTitle()}</h1>
 
-                    {/* 📢 الشريط الإخباري الذكي */}
-                    <div className={`w-full max-w-2xl mt-3 mb-2 flex items-center rounded-xl border overflow-hidden shadow-sm ${isRamadan ? 'bg-[#1e1b4b]/80 border-indigo-500/30' : 'bg-white/20 border-white/30 backdrop-blur-md'}`} style={{ WebkitAppRegion: 'no-drag' } as any}>
+                    {/* 📢 الشريط الإخباري الذكي (تم تفعيل الشفافية الزجاجية وإصلاح ألوان الثيم الفاتح) */}
+                    <div className={`w-full max-w-2xl mt-3 mb-2 flex items-center rounded-xl border overflow-hidden shadow-sm ${isRamadan ? 'bg-[#1e1b4b]/40 border-indigo-500/30 backdrop-blur-md' : 'bg-white/80 border-slate-200 backdrop-blur-md'}`} style={{ WebkitAppRegion: 'no-drag' } as any}>
                         <div className={`px-4 py-2 flex items-center gap-1 font-black text-[11px] shrink-0 z-10 ${isRamadan ? 'bg-amber-600 text-white' : 'bg-amber-400 text-[#1e3a8a]'}`}>
                             <Sparkles size={14} className="animate-pulse" />
                             {t('newsTickerTitle')}
                         </div>
                         <div className="flex-1 overflow-hidden relative flex items-center">
                             {/* @ts-ignore */}
-                            <marquee direction={dir === 'rtl' ? 'right' : 'left'} scrollamount="4" className={`font-bold text-xs pt-1 tracking-wide ${isRamadan ? 'text-amber-300' : 'text-white'}`}>
+                            <marquee direction={dir === 'rtl' ? 'right' : 'left'} scrollamount="4" className={`font-bold text-xs pt-1 tracking-wide ${isRamadan ? 'text-amber-300' : 'text-slate-800'}`}>
                                 {tickerText}
                             </marquee>
                         </div>
                     </div>
                     
+                    {/* مربع البحث (تم إصلاح تباين الألوان في الثيم الفاتح وتفعيل الزجاج في الداكن) */}
                     <div className="relative w-full max-w-sm my-2" style={{ WebkitAppRegion: 'no-drag' } as any}>
-                        <Search className={`absolute ${dir === 'rtl' ? 'right-3' : 'left-3'} top-1/2 -translate-y-1/2 w-4 h-4 text-blue-300`} />
-                        <input type="text" placeholder={t('searchPlaceholder')} value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} className={`w-full border rounded-xl py-2 ${dir === 'rtl' ? 'pr-10' : 'pl-10'} text-xs font-bold outline-none transition-all ${isRamadan ? 'bg-white/10 border-white/20 text-white placeholder:text-blue-200/50 focus:bg-white/20' : 'bg-white/20 border-white/30 text-white placeholder:text-blue-100 focus:bg-white/30'}`} />
+                        <Search className={`absolute ${dir === 'rtl' ? 'right-3' : 'left-3'} top-1/2 -translate-y-1/2 w-4 h-4 ${isRamadan ? 'text-blue-300' : 'text-slate-400'}`} />
+                        <input type="text" placeholder={t('searchPlaceholder')} value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} className={`w-full border rounded-xl py-2 ${dir === 'rtl' ? 'pr-10' : 'pl-10'} text-xs font-bold outline-none transition-all ${isRamadan ? 'bg-white/10 border-white/20 text-white placeholder:text-blue-200/50 focus:bg-white/20 backdrop-blur-md' : 'bg-slate-50 border-slate-300 text-slate-800 placeholder:text-slate-400 focus:bg-white focus:border-indigo-400'}`} />
                     </div>
 
-                    {/* ================= شريط اختيار الفصول (الكبسولة الزجاجية الفخمة) ================= */}
+                    {/* ================= شريط اختيار الفصول ================= */}
                     <div className="w-full overflow-x-auto no-scrollbar pb-2 mt-1" style={{ WebkitAppRegion: 'no-drag' } as any}>
-                        <div className={`inline-flex items-center p-1.5 rounded-full border backdrop-blur-md transition-all ${isRamadan ? 'bg-white/5 border-white/10' : 'bg-slate-100 border-slate-200'}`}>
+                        <div className={`inline-flex items-center p-1.5 rounded-full border transition-all ${isRamadan ? 'bg-white/5 border-white/10 backdrop-blur-md' : 'bg-slate-100 border-slate-200'}`}>
                             
                             {/* زر (الكل) */}
                             <button 
                                 onClick={() => setSelectedClass('all')} 
-                                className={`relative px-6 py-2.5 rounded-full text-xs font-bold whitespace-nowrap transition-all duration-300 ${selectedClass === 'all' ? (isRamadan ? 'bg-white/15 text-white shadow-lg' : 'bg-white text-indigo-600 shadow-sm') : (isRamadan ? 'text-white/50 hover:text-white hover:bg-white/5' : 'text-slate-500 hover:text-slate-800')}`}
+                                className={`relative px-6 py-2.5 rounded-full text-xs font-bold whitespace-nowrap transition-all duration-300 ${selectedClass === 'all' ? (isRamadan ? 'bg-white/15 text-white shadow-lg backdrop-blur-md' : 'bg-white text-indigo-600 shadow-sm') : (isRamadan ? 'text-white/50 hover:text-white hover:bg-white/5' : 'text-slate-500 hover:text-slate-800')}`}
                             >
                                 {t('all')}
                             </button>
@@ -255,7 +257,7 @@ const Leaderboard: React.FC<LeaderboardProps> = ({ students, classes, onUpdateSt
                                     <div className={`w-[1px] h-5 mx-1.5 rounded-full shrink-0 ${isRamadan ? 'bg-white/10' : 'bg-slate-300'}`} />
                                     <button 
                                         onClick={() => setSelectedClass(c)} 
-                                        className={`relative px-6 py-2.5 rounded-full text-xs font-bold whitespace-nowrap transition-all duration-300 ${selectedClass === c ? (isRamadan ? 'bg-white/15 text-white shadow-lg' : 'bg-white text-indigo-600 shadow-sm') : (isRamadan ? 'text-white/50 hover:text-white hover:bg-white/5' : 'text-slate-500 hover:text-slate-800')}`}
+                                        className={`relative px-6 py-2.5 rounded-full text-xs font-bold whitespace-nowrap transition-all duration-300 ${selectedClass === c ? (isRamadan ? 'bg-white/15 text-white shadow-lg backdrop-blur-md' : 'bg-white text-indigo-600 shadow-sm') : (isRamadan ? 'text-white/50 hover:text-white hover:bg-white/5' : 'text-slate-500 hover:text-slate-800')}`}
                                     >
                                         {c}
                                     </button>
@@ -263,7 +265,7 @@ const Leaderboard: React.FC<LeaderboardProps> = ({ students, classes, onUpdateSt
                             ))}
                         </div>
                     </div>
-                </div> {/* 👈 الغرزة المفقودة: أضف هذا السطر فقط ليغلق الحاوية */}
+                </div> 
             </header>
 
             <div className="flex-1 overflow-y-auto px-2 pt-2 pb-28 custom-scrollbar relative z-10">
@@ -277,12 +279,13 @@ const Leaderboard: React.FC<LeaderboardProps> = ({ students, classes, onUpdateSt
                                         <StudentAvatar gender={s.gender} className="w-full h-full" />
                                     </div>
                                 </div>
-                                <div className={`px-3 py-2 rounded-xl text-center border shadow-sm w-28 md:w-36 transition-colors ${isRamadan ? 'bg-white/10 border-white/20' : 'bg-white border-slate-200'}`}>
+                                {/* تم إضافة الزجاج المضبب (backdrop-blur) لبطاقات الأوائل في الثيم الداكن */}
+                                <div className={`px-3 py-2 rounded-xl text-center border shadow-sm w-28 md:w-36 transition-colors ${isRamadan ? 'bg-white/10 border-white/20 backdrop-blur-md' : 'bg-white border-slate-200'}`}>
                                     <h3 className={`font-black text-xs md:text-sm truncate ${isRamadan ? 'text-white' : 'text-slate-800'}`} title={s.name}>{getShortName(s.name)}</h3>
                                     <span className="text-amber-500 font-bold text-xs" dir="ltr">{s.monthlyPoints}</span>
                                 </div>
                                 <div className="flex gap-1 mt-2 w-full justify-center">
-                                    <button onClick={() => setCertificateStudent(s)} className={`text-[10px] px-2 py-1 rounded-lg flex items-center justify-center gap-1 shadow-md transition-colors ${isRamadan ? 'bg-white/10 text-white hover:bg-white/20 border border-white/10' : 'bg-slate-700 text-white hover:bg-slate-800'}`}>
+                                    <button onClick={() => setCertificateStudent(s)} className={`text-[10px] px-2 py-1 rounded-lg flex items-center justify-center gap-1 shadow-md transition-colors ${isRamadan ? 'bg-white/10 text-white hover:bg-white/20 border border-white/10 backdrop-blur-md' : 'bg-slate-700 text-white hover:bg-slate-800'}`}>
                                         <Award size={12} /> {t('certificateBtn')}
                                     </button>
                                     <button onClick={() => handleDeductPoint(s)} className={`text-[10px] px-2 py-1 rounded-lg shadow-sm transition-colors flex items-center justify-center ${isRamadan ? 'bg-rose-500/20 text-rose-400 hover:bg-rose-500/30' : 'bg-rose-100 text-rose-500 hover:bg-rose-200'}`} title={t('deductBtnTitle')}>
@@ -296,8 +299,9 @@ const Leaderboard: React.FC<LeaderboardProps> = ({ students, classes, onUpdateSt
 
                 <div className="grid grid-cols-3 md:grid-cols-5 gap-3 mt-8 pb-20">
                     {restOfStudents.map((s, index) => (
-                        <div key={s.id} className={`rounded-2xl p-3 shadow-sm border flex flex-col items-center relative active:scale-95 transition-all duration-300 ${isRamadan ? 'bg-white/5 border-white/10 hover:bg-white/10' : 'bg-white border-slate-100 hover:shadow-md'}`}>
-                            <div className={`absolute top-1 ${dir === 'rtl' ? 'right-1' : 'left-1'} font-bold w-5 h-5 rounded flex items-center justify-center text-[9px] ${isRamadan ? 'bg-white/10 text-indigo-200' : 'bg-indigo-50 text-indigo-600'}`}>{index + 4}</div>
+                        {/* تم إضافة الزجاج المضبب (backdrop-blur) لبقية البطاقات في الثيم الداكن */}
+                        <div key={s.id} className={`rounded-2xl p-3 shadow-sm border flex flex-col items-center relative active:scale-95 transition-all duration-300 ${isRamadan ? 'bg-white/5 border-white/10 backdrop-blur-md hover:bg-white/10' : 'bg-white border-slate-100 hover:shadow-md'}`}>
+                            <div className={`absolute top-1 ${dir === 'rtl' ? 'right-1' : 'left-1'} font-bold w-5 h-5 rounded flex items-center justify-center text-[9px] ${isRamadan ? 'bg-white/10 text-indigo-200 backdrop-blur-sm' : 'bg-indigo-50 text-indigo-600'}`}>{index + 4}</div>
                             <div className={`w-12 h-12 rounded-full border-2 shadow-md overflow-hidden mb-2 cursor-pointer ${isRamadan ? 'border-white/20' : 'border-white'}`} onClick={() => handleAddPoints(s)}>
                                 <StudentAvatar gender={s.gender} className="w-full h-full" />
                             </div>
@@ -322,10 +326,10 @@ const Leaderboard: React.FC<LeaderboardProps> = ({ students, classes, onUpdateSt
                         </div>
 
                         <div className="flex-1 overflow-auto bg-slate-200 p-4 md:p-8 flex justify-center items-center custom-scrollbar">
-                            <div ref={certificateRef} className="shrink-0" dir="rtl"> {/* الشهادة دائماً باللغة العربية بناءً على طلب المعلمين عادةً */}
+                            <div ref={certificateRef} className="shrink-0" dir="rtl"> 
                                 <CertificateTemplate 
                                     studentName={certificateStudent.name}
-                                    grade={certificateStudent.classes[0]}
+                                    grade={certificateStudent.classes?.[0] || ''} {/* حماية من الانهيار هنا أيضاً */}
                                     teacherName={teacherInfo?.name || t('defaultTeacherNameLine')}
                                     schoolName={teacherInfo?.school}
                                     subject={teacherInfo?.subject}
