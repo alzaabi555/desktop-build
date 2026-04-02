@@ -4,12 +4,12 @@ const RamadanTheme: React.FC = () => {
   useEffect(() => {
     document.body.className = 'theme-dark';
     
-    // 🎨 تطبيق اللون الأساسي من نظامك: Background Dark
-    document.body.style.backgroundColor = '#0B0F1A';
+    // 🎨 تطبيق اللون الأساسي: سماء ليلية عميقة جداً
+    document.body.style.backgroundColor = '#050B14'; 
     document.body.style.color = '#ffffff';
 
     let metaThemeColor = document.querySelector("meta[name=theme-color]");
-    if (metaThemeColor) metaThemeColor.setAttribute("content", "#0B0F1A");
+    if (metaThemeColor) metaThemeColor.setAttribute("content", "#050B14");
 
     window.document.documentElement.classList.add('dark');
 
@@ -28,48 +28,48 @@ const RamadanTheme: React.FC = () => {
           /* ==================================================================== */
           
           body.theme-dark {
-              /* Background Dark من نظامك */
-              background-color: #0B0F1A !important;
-              background-image: radial-gradient(circle at 50% 0%, #151e32 0%, #0B0F1A 80%) !important;
+              background-color: #050B14 !important;
+              background-image: radial-gradient(circle at 50% 0%, #0d1627 0%, #050B14 80%) !important;
               background-attachment: fixed !important;
           }
 
-          /* 🧊 دمج نظام Glassmorphism + Glow + Cards من نظامك */
+          /* 🧊 دمج نظام Glassmorphism الاحترافي (بدون وهج مزعج) */
           .theme-dark aside, 
           .theme-dark .z-\\[100001\\], 
           .theme-dark div.rounded-\\[1\\.5rem\\],
           .theme-dark div.rounded-2xl,
           .theme-dark div.rounded-3xl {
-              /* Glass Base: bg-white/10 */
-              background-color: rgba(255, 255, 255, 0.05) !important;
+              /* 1. جعل الزجاج أكثر شفافية (2% أبيض فقط بدلاً من 5%) */
+              background-color: rgba(255, 255, 255, 0.02) !important;
               
-              /* Backdrop Blur XL */
-              backdrop-filter: blur(24px) !important;
-              -webkit-backdrop-filter: blur(24px) !important;
+              /* 2. تفعيل ضبابية الزجاج بشكل ناعم */
+              backdrop-filter: blur(16px) !important;
+              -webkit-backdrop-filter: blur(16px) !important;
               
-              /* Border: border-white/10 */
-              border: 1px solid rgba(255, 255, 255, 0.1) !important;
+              /* 3. إطار زجاجي نحيف جداً يعطي فخامة */
+              border: 1px solid rgba(255, 255, 255, 0.08) !important;
               
-              /* ✨ Glow System: shadow-[0_0_25px_rgba(59,130,246,0.5)] */
-              box-shadow: 0 0 25px rgba(59, 130, 246, 0.3), 0 10px 30px rgba(0,0,0,0.5) !important;
+              /* 4. إزالة الوهج النيون الأزرق المزعج، واستبداله بظل هادئ يفصل البطاقة عن الخلفية */
+              box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3) !important;
               
               transition: all 0.3s ease-in-out !important;
           }
 
-          /* تطبيق تأثير Card Hover من نظامك */
+          /* تطبيق تأثير عند مرور الماوس (Hover) */
           .theme-dark div.rounded-\\[1\\.5rem\\]:hover,
           .theme-dark div.rounded-2xl:hover {
-              /* glow.hover */
-              box-shadow: 0 0 40px rgba(59, 130, 246, 0.5), 0 10px 30px rgba(0,0,0,0.6) !important;
-              transform: scale(1.01) !important;
+              background-color: rgba(255, 255, 255, 0.04) !important;
+              border-color: rgba(255, 255, 255, 0.15) !important;
+              /* وهج أزرق خفييييف جداً عند اللمس فقط */
+              box-shadow: 0 8px 32px rgba(59, 130, 246, 0.1) !important;
+              transform: translateY(-2px) !important;
           }
 
-          /* 💎 تخصيص الأزرار السريعة (Buttons System) */
+          /* 💎 تخصيص الأزرار السريعة */
           .theme-dark button.bg-blue-600,
           .theme-dark button.bg-gradient-to-r {
-              /* buttons.primary */
-              background: linear-gradient(to right, #3b82f6, #22d3ee) !important; /* from-blue-500 to-cyan-400 */
-              box-shadow: 0 4px 15px rgba(59, 130, 246, 0.4) !important;
+              background: linear-gradient(to right, #3b82f6, #06b6d4) !important;
+              box-shadow: 0 4px 15px rgba(59, 130, 246, 0.2) !important;
               border: none !important;
           }
 
@@ -77,40 +77,38 @@ const RamadanTheme: React.FC = () => {
           .theme-dark input, 
           .theme-dark select, 
           .theme-dark textarea {
-              /* glass.subtle */
-              background-color: rgba(255, 255, 255, 0.05) !important;
-              backdrop-filter: blur(16px) !important;
+              background-color: rgba(255, 255, 255, 0.03) !important;
+              backdrop-filter: blur(12px) !important;
               border: 1px solid rgba(255, 255, 255, 0.1) !important;
               color: #FFFFFF !important;
+              box-shadow: inset 0 2px 4px rgba(0,0,0,0.2) !important;
           }
 
-          .theme-dark input:focus {
-              /* glow.cyan */
-              box-shadow: 0 0 20px rgba(34, 211, 238, 0.4) !important;
-              border-color: rgba(34, 211, 238, 0.8) !important;
+          .theme-dark input:focus,
+          .theme-dark select:focus {
+              box-shadow: 0 0 0 1px rgba(59, 130, 246, 0.5) !important;
+              border-color: rgba(59, 130, 246, 0.5) !important;
+              background-color: rgba(255, 255, 255, 0.06) !important;
           }
 
           /* النصوص (Text System) */
           .theme-dark .text-slate-800,
           .theme-dark .text-slate-900,
           .theme-dark .text-gray-800 { 
-              color: #ffffff !important; /* text.primary */
+              color: #ffffff !important; 
           }
           
           .theme-dark .text-slate-500,
           .theme-dark .text-slate-600 { 
-              color: #d1d5db !important; /* text.secondary (gray-300) */
+              color: #94a3b8 !important; 
           }
         `}
       </style>
 
-      {/* 🌌 أضواء النيون الخلفية باستخدام ألوان الـ Accent الخاصة بك */}
+      {/* 🌌 أضواء النيون الخلفية (تم تخفيفها لكي لا تطغى على التطبيق) */}
       <div className="fixed inset-0 z-[-1] pointer-events-none overflow-hidden select-none">
-        {/* إضاءة زرقاء/سماوية (Primary) */}
-        <div className="absolute top-[-10%] right-[-10%] w-[800px] h-[800px] bg-blue-500 rounded-full blur-[150px] opacity-[0.15]"></div>
-        
-        {/* إضاءة أرجوانية/زهرية (Accent) في الأسفل */}
-        <div className="absolute bottom-[-10%] left-[-10%] w-[600px] h-[600px] bg-purple-500 rounded-full blur-[150px] opacity-[0.12]"></div>
+        <div className="absolute top-[-10%] right-[-10%] w-[800px] h-[800px] bg-blue-500 rounded-full blur-[150px] opacity-[0.08]"></div>
+        <div className="absolute bottom-[-10%] left-[-10%] w-[600px] h-[600px] bg-indigo-500 rounded-full blur-[150px] opacity-[0.08]"></div>
       </div>
     </>
   );
