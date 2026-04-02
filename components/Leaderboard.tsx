@@ -299,7 +299,6 @@ const Leaderboard: React.FC<LeaderboardProps> = ({ students, classes, onUpdateSt
 
                 <div className="grid grid-cols-3 md:grid-cols-5 gap-3 mt-8 pb-20">
                     {restOfStudents.map((s, index) => (
-                        {/* تم إضافة الزجاج المضبب (backdrop-blur) لبقية البطاقات في الثيم الداكن */}
                         <div key={s.id} className={`rounded-2xl p-3 shadow-sm border flex flex-col items-center relative active:scale-95 transition-all duration-300 ${isRamadan ? 'bg-white/5 border-white/10 backdrop-blur-md hover:bg-white/10' : 'bg-white border-slate-100 hover:shadow-md'}`}>
                             <div className={`absolute top-1 ${dir === 'rtl' ? 'right-1' : 'left-1'} font-bold w-5 h-5 rounded flex items-center justify-center text-[9px] ${isRamadan ? 'bg-white/10 text-indigo-200 backdrop-blur-sm' : 'bg-indigo-50 text-indigo-600'}`}>{index + 4}</div>
                             <div className={`w-12 h-12 rounded-full border-2 shadow-md overflow-hidden mb-2 cursor-pointer ${isRamadan ? 'border-white/20' : 'border-white'}`} onClick={() => handleAddPoints(s)}>
@@ -329,7 +328,7 @@ const Leaderboard: React.FC<LeaderboardProps> = ({ students, classes, onUpdateSt
                             <div ref={certificateRef} className="shrink-0" dir="rtl"> 
                                 <CertificateTemplate 
                                     studentName={certificateStudent.name}
-                                    grade={certificateStudent.classes?.[0] || ''} {/* حماية من الانهيار هنا أيضاً */}
+                                    grade={certificateStudent.classes?.[0] || ''}
                                     teacherName={teacherInfo?.name || t('defaultTeacherNameLine')}
                                     schoolName={teacherInfo?.school}
                                     subject={teacherInfo?.subject}
