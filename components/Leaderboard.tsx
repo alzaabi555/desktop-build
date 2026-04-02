@@ -68,7 +68,9 @@ const Leaderboard: React.FC<LeaderboardProps> = ({ students, classes, onUpdateSt
 
    // المستشعر الرمضاني / الثيم الداكن
   const isRamadan = true;
-
+// 🛡️ دروع الحماية من البيانات الفاسدة
+    const safeStudents = Array.isArray(students) ? students : [];
+    const safeClasses = Array.isArray(classes) ? classes : [];
     const getShortName = (fullName: string) => {
         if (!fullName) return '';
         const nameParts = fullName.trim().split(' ');
@@ -76,20 +78,21 @@ const Leaderboard: React.FC<LeaderboardProps> = ({ students, classes, onUpdateSt
         return `${nameParts[0]} ${nameParts[nameParts.length - 1]}`;
     };
     
-    // 📢 خوارزمية الشريط الإخباري الذكي (تمت معالجة الانهيار هنا)
+    // 📢 خوارزمية الشريط الإخباري الذكي (مدرعة بالكامل)
     const tickerText = useMemo(() => {
-        let baseStudents = students;
+        let baseStudents = safeStudents;
         if (selectedClass !== 'all') {
-            baseStudents = students.filter(s => s.classes?.includes(selectedClass));
+            baseStudents = safeStudents.filter(s => s.classes?.includes(selectedClass));
         }
 
         const studentsWithPoints = baseStudents.map(student => {
             const monthlyPoints = (student.behaviors || [])
                 .filter(b => {
+                    if (!b) return false; // 👈 حماية من السلوك الفارغ الذي يسبب الانهيار
                     const d = new Date(b.date);
                     return d.getMonth() === currentMonth && d.getFullYear() === today.getFullYear();
                 })
-                .reduce((acc, b) => acc + b.points, 0);
+                .reduce((acc, b) => acc + (b?.points || 0), 0);
             return { ...student, monthlyPoints };
         }).filter(s => s.monthlyPoints > 0)
           .sort((a, b) => b.monthlyPoints - a.monthlyPoints);
@@ -99,14 +102,14 @@ const Leaderboard: React.FC<LeaderboardProps> = ({ students, classes, onUpdateSt
         if (selectedClass === 'all') {
             const classTopMap = new Map<string, typeof studentsWithPoints[0]>();
             studentsWithPoints.forEach(s => {
-                const sClass = s.classes?.[0]; // حماية من الانهيار هنا
+                const sClass = s.classes?.[0];
                 if (sClass && !classTopMap.has(sClass)) {
                     classTopMap.set(sClass, s);
                 }
             });
 
             return Array.from(classTopMap.values())
-                .map(s => `👑 ${t('championOf')} (${s.classes?.[0] || ''}): ${getShortName(s.name)} [${s.monthlyPoints} ${t('pointsWord')}]`) // حماية هنا أيضاً
+                .map(s => `👑 ${t('championOf')} (${s.classes?.[0] || ''}): ${getShortName(s.name)} [${s.monthlyPoints} ${t('pointsWord')}]`)
                 .join(' 🌟 | 🌟 ');
         } else {
             const top3 = studentsWithPoints.slice(0, 3);
@@ -115,7 +118,27 @@ const Leaderboard: React.FC<LeaderboardProps> = ({ students, classes, onUpdateSt
                 .map((s, idx) => `${medals[idx]}: ${getShortName(s.name)} [${s.monthlyPoints} ${t('pointsWord')}]`)
                 .join(' ✨ | ✨ ');
         }
-    }, [students, selectedClass, currentMonth, t]);
+    }, [safeStudents, selectedClass, currentMonth, t]);
+
+    // 🏆 الترتيب الأساسي (مدرع ضد البحث عن طلاب بدون اسم)
+    const rankedStudents = useMemo(() => {
+        let filtered = safeStudents;
+        if (selectedClass !== 'all') filtered = safeStudents.filter(s => s.classes?.includes(selectedClass));
+        // 👈 تمت الحماية هنا: (s.name || '') تمنع الانهيار
+        if (searchTerm.trim()) filtered = filtered.filter(s => (s.name || '').toLowerCase().includes(searchTerm.toLowerCase()));
+        
+        const withPoints = filtered.map(student => {
+            const monthlyPoints = (student.behaviors || [])
+                .filter(b => {
+                    if (!b) return false; // 👈 حماية من السلوك الفارغ
+                    const d = new Date(b.date);
+                    return d.getMonth() === currentMonth && d.getFullYear() === today.getFullYear();
+                })
+                .reduce((acc, b) => acc + (b?.points || 0), 0);
+            return { ...student, monthlyPoints };
+        });
+        return withPoints.sort((a, b) => b.monthlyPoints - a.monthlyPoints);
+    }, [safeStudents, selectedClass, searchTerm, currentMonth]);
 
     const rankedStudents = useMemo(() => {
         let filtered = students;
@@ -252,7 +275,7 @@ const Leaderboard: React.FC<LeaderboardProps> = ({ students, classes, onUpdateSt
                             </button>
 
                             {/* أزرار الفصول (Classes) */}
-                            {classes.map(c => (
+                             {safeClasses.map(c => (
                                 <React.Fragment key={c}>
                                     <div className={`w-[1px] h-5 mx-1.5 rounded-full shrink-0 ${isRamadan ? 'bg-white/10' : 'bg-slate-300'}`} />
                                     <button 
