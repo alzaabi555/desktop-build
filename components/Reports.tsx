@@ -237,11 +237,10 @@ const PrintPreviewModal: React.FC<{
   if (!isOpen) return null;
 
   return (
-    // 🌟 الإزاحة الديناميكية لضمان عدم اختفاء زر الإغلاق تحت القائمة الجانبية
     <div className={`fixed inset-0 z-[99999] bg-slate-900/95 backdrop-blur-sm ${dir === 'rtl' ? 'md:pr-[18rem]' : 'md:pl-[18rem]'} flex flex-col`} dir={dir}>
       <div id="preview-scroll-container" className="h-full overflow-auto p-4 md:p-8 custom-scrollbar">
         
-        <div className="sticky top-0 z-50 bg-slate-800 text-white p-4 flex justify-between items-center border border-white/10 shadow-2xl rounded-2xl mb-6">
+        <div className="sticky top-0 z-50 bg-slate-800 text-white p-4 flex justify-between items-center border border-white/10 shadow-2xl rounded-2xl mb-6 backdrop-blur-md">
           <button
             onClick={onClose}
             className="bg-rose-600 hover:bg-rose-500 text-white px-4 md:px-6 py-2.5 rounded-xl font-black flex items-center gap-2 shadow-lg transition-all active:scale-95"
@@ -289,15 +288,14 @@ const PrintPreviewModal: React.FC<{
 };
 
 // =================================================================================
-// ✅ القوالب المحدثة (مترجمة ديناميكياً)
+// ✅ القوالب المحدثة (للتباعة: تظل دائمًا بخلفية بيضاء لتوفير الحبر)
 // =================================================================================
 
 const GradesTemplate = ({ students, tools, teacherInfo, semester, gradeClass }: any) => {
-  const { t, dir } = useApp(); // 🌍 محرك اللغات
+  const { t, dir } = useApp();
 
   const settings = getGradingSettings() || { totalScore: 100, finalExamWeight: 40, finalExamName: '' };
   
-  // 🌟 فلترة ذكية لاسم الامتحان النهائي القادم من الذاكرة
   const savedFinalExamName = settings.finalExamName?.trim() || '';
   const isDefaultExamName = savedFinalExamName === 'الامتحان النهائي' || savedFinalExamName === 'Final Exam' || savedFinalExamName === '';
   const finalExamName = isDefaultExamName ? t('finalExamNameDefault') : savedFinalExamName;
@@ -427,7 +425,7 @@ const GradesTemplate = ({ students, tools, teacherInfo, semester, gradeClass }: 
 };
 
 const CertificatesTemplate = ({ students, settings, teacherInfo }: any) => {
-  const { t, dir, language } = useApp(); // 🌍 محرك اللغات
+  const { t, dir, language } = useApp(); 
 
   const safeSettings = settings || {};
   const titleRaw = safeSettings.title;
@@ -516,6 +514,7 @@ const CertificatesTemplate = ({ students, settings, teacherInfo }: any) => {
                     </h2>
                   </div>
 
+                  {/* حماية من الانهيار هنا s.classes?.[0] */}
                   <p className="text-xl font-bold text-gray-700 leading-relaxed max-w-3xl">
                     {t('enrolledInClass')} <span className="text-amber-600 font-black text-2xl mx-2">({s.classes?.[0] || '-'})</span>
                     {rawBody}
@@ -558,14 +557,13 @@ const CertificatesTemplate = ({ students, settings, teacherInfo }: any) => {
 };
 
 const SummonTemplate = ({ student, teacherInfo, data }: any) => {
-  const { t, dir } = useApp(); // 🌍 محرك اللغات
+  const { t, dir } = useApp();
 
   if (!student) return <div className="p-10 text-center text-black">{t('errorStudentDataUnavailable')}</div>;
 
   const safeData = data || {};
   const safeProcedures = Array.isArray(safeData.procedures) ? safeData.procedures : [];
 
-  // 🌟 فلترة ذكية للإجراءات المحفوظة
   const getProcLabel = (procId: string) => {
     const map: any = {
         'procVerbalWarning': t('procVerbalWarning'),
@@ -647,7 +645,7 @@ const SummonTemplate = ({ student, teacherInfo, data }: any) => {
 };
 
 const ClassReportsTemplate = ({ students, teacherInfo, semester, assessmentTools }: any) => {
-  const { t, dir, language } = useApp(); // 🌍 محرك اللغات
+  const { t, dir, language } = useApp(); 
 
   const settings = getGradingSettings();
   const finalExamNameRaw = settings?.finalExamName?.trim() || '';
@@ -660,7 +658,6 @@ const ClassReportsTemplate = ({ students, teacherInfo, semester, assessmentTools
   const continuousTools = safeTools.filter((t: any) => t.name.trim() !== finalExamName);
   const finalTool = safeTools.find((t: any) => t.name.trim() === finalExamName);
 
-  // 🌟 فلترة ذكية للسلوكيات المحفوظة لكي تعود إنجليزية
   const translateBehavior = (desc: string) => {
     const map: any = {
         'إجابة متميزة': t('behPos1'),
@@ -731,7 +728,8 @@ const ClassReportsTemplate = ({ students, teacherInfo, semester, assessmentTools
             <div className="bg-slate-50 p-6 rounded-2xl border-2 border-black mb-8 flex justify-between items-center text-black">
               <div>
                 <h3 className="text-2xl font-black mb-1">{student.name}</h3>
-                <p className="text-base text-black font-bold">{t('classLabelTemplate')} {student.classes[0]}</p>
+                {/* حماية من الانهيار هنا student.classes?.[0] */}
+                <p className="text-base text-black font-bold">{t('classLabelTemplate')} {student.classes?.[0] || '-'}</p>
               </div>
               <div className="flex gap-4 text-xs font-bold">
                 <span className="bg-emerald-100 border border-black text-emerald-900 px-3 py-1 rounded">{t('positiveLabel')} {totalPositive}</span>
@@ -799,7 +797,6 @@ const ClassReportsTemplate = ({ students, teacherInfo, semester, assessmentTools
                         <div className="p-2 space-y-2">
                             {displayPosBehaviors.length > 0 ? displayPosBehaviors.map((b: any, idx: number) => (
                                 <div key={idx} className="flex justify-between items-center border-b border-black/50 pb-1 last:border-0 text-sm">
-                                    {/* 🌟 ترجمة السلوك المحفوظ */}
                                     <span className="font-bold text-black">{translateBehavior(b.description)}</span>
                                     <div className={`text-${dir === 'rtl' ? 'left' : 'right'} text-[10px] font-bold text-black flex flex-col items-${dir === 'rtl' ? 'end' : 'start'}`}>
                                         <span>{new Date(b.date).toLocaleDateString(language === 'ar' ? 'en-GB' : 'en-US')}</span>
@@ -817,7 +814,6 @@ const ClassReportsTemplate = ({ students, teacherInfo, semester, assessmentTools
                         <div className="p-2 space-y-2">
                             {negBehaviors.length > 0 ? negBehaviors.map((b: any, idx: number) => (
                                 <div key={idx} className="flex justify-between items-center border-b border-black/50 pb-1 last:border-0 text-sm">
-                                    {/* 🌟 ترجمة السلوك المحفوظ */}
                                     <span className="font-bold text-black">{translateBehavior(b.description)}</span>
                                     <div className={`text-${dir === 'rtl' ? 'left' : 'right'} text-[10px] font-bold text-black flex flex-col items-${dir === 'rtl' ? 'end' : 'start'}`}>
                                         <span>{new Date(b.date).toLocaleDateString(language === 'ar' ? 'en-GB' : 'en-US')}</span>
@@ -852,10 +848,10 @@ const ClassReportsTemplate = ({ students, teacherInfo, semester, assessmentTools
 };
 
 // =================================================================================
-// 3. UI (Main Component)
+// 3. UI (Main Component - Strictly Dark Theme)
 // =================================================================================
 const Reports: React.FC<ReportsProps> = ({ initialTab }) => {
-  const { students, setStudents, classes, teacherInfo, currentSemester, assessmentTools, certificateSettings, setCertificateSettings, t, dir, language } = useApp(); // 🌍 محرك اللغات
+  const { students, setStudents, classes, teacherInfo, currentSemester, assessmentTools, certificateSettings, setCertificateSettings, t, dir, language } = useApp(); 
   const [activeTab, setActiveTab] = useState<'student_report' | 'grades_record' | 'certificates' | 'parent_cards' | 'summon'>(initialTab || 'student_report');
 
   const [stGrade, setStGrade] = useState<string>('all');
@@ -893,8 +889,6 @@ const Reports: React.FC<ReportsProps> = ({ initialTab }) => {
   const [previewData, setPreviewData] = useState<{ isOpen: boolean; title: string; content: React.ReactNode; landscape?: boolean }>({
     isOpen: false, title: '', content: null
   });
-
-  const isRamadan = true;
 
   const availableGrades = useMemo(() => {
     const grades = new Set<string>();
@@ -953,7 +947,6 @@ const Reports: React.FC<ReportsProps> = ({ initialTab }) => {
     }
   };
 
-  // 🌟 استخدام ID بدلاً من النص
   const availableProceduresList = [
     { id: 'procVerbalWarning', label: t('procVerbalWarning') }, 
     { id: 'procWrittenPledge', label: t('procWrittenPledge') }, 
@@ -1048,7 +1041,7 @@ const Reports: React.FC<ReportsProps> = ({ initialTab }) => {
   ];
 
   return (
-    <div className={`flex flex-col h-full relative font-sans transition-colors duration-500 ${isRamadan ? 'text-white' : 'bg-[#f8fafc] text-slate-800'} ${dir === 'rtl' ? 'text-right' : 'text-left'}`} dir={dir}>
+    <div className={`flex flex-col h-full relative font-sans transition-colors duration-500 text-white ${dir === 'rtl' ? 'text-right' : 'text-left'}`} dir={dir}>
       <PrintPreviewModal
         isOpen={previewData.isOpen}
         onClose={() => setPreviewData({ ...previewData, isOpen: false })}
@@ -1058,30 +1051,32 @@ const Reports: React.FC<ReportsProps> = ({ initialTab }) => {
       />
 
       {/* ================= HEADER ================= */}
-    <header 
-    className={`shrink-0 z-40 px-4 pt-[env(safe-area-inset-top)] w-full transition-all duration-300 bg-transparent ${isRamadan ? 'text-white' : 'text-slate-800'}`}
-    style={{ WebkitAppRegion: 'drag' } as any}
->
+     {/* ================= HEADER ================= */}
+      <header 
+        className={`shrink-0 z-40 px-4 pt-[env(safe-area-inset-top)] w-full transition-all duration-300 bg-transparent text-white`}
+        style={{ WebkitAppRegion: 'drag' } as any}
+      >
         <div className="flex items-center gap-3 mb-6 mt-4 px-2">
-          <div className={`p-2.5 rounded-xl border ${isRamadan ? 'bg-white/10 backdrop-blur-md border-white/20' : 'bg-white/10 backdrop-blur-md border-white/20'}`}>
+          <div className="p-2.5 rounded-xl border bg-white/10 backdrop-blur-md border-white/20">
             <Icon3DReportCenter className="w-6 h-6" />
           </div>
           <div>
             <h1 className="text-xl font-black tracking-wide">{t('reportsCenter')}</h1>
-            <p className={`text-[10px] font-bold opacity-80 ${isRamadan ? 'text-indigo-200' : 'text-blue-200'}`}>{t('printStatementsAndCertificates')}</p>
+            <p className="text-[10px] font-bold opacity-80 text-indigo-200">{t('printStatementsAndCertificates')}</p>
           </div>
         </div>
 
-        <div className="flex gap-3 overflow-x-auto no-scrollbar pb-2 px-1">
+        {/* 👈 التعديل تم هنا: إضافة خاصية no-drag لحاوية الأزرار لتستجيب للنقر */}
+        <div className="flex gap-3 overflow-x-auto no-scrollbar pb-2 px-1" style={{ WebkitAppRegion: 'no-drag' } as any}>
           {tabs.map(tab => {
             const isActive = activeTab === tab.id;
             return (
               <button
                 key={tab.id}
                 onClick={() => setActiveTab(tab.id as any)}
-                className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs font-bold whitespace-nowrap transition-all active:scale-95 ${isActive ? (isRamadan ? 'bg-indigo-500/30 border border-indigo-400/50 text-white shadow-md' : 'bg-white text-[#1e3a8a] shadow-lg') : 'bg-white/10 text-blue-100 hover:bg-white/20'}`}
+                className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs font-bold whitespace-nowrap transition-all active:scale-95 ${isActive ? 'bg-indigo-500/30 border border-indigo-400/50 text-white shadow-md backdrop-blur-md' : 'bg-white/10 text-blue-100 hover:bg-white/20'}`}
               >
-                <tab.icon className={`w-4 h-4 ${isActive ? (isRamadan ? 'opacity-100' : 'text-[#1e3a8a]') : 'text-blue-200 opacity-80'}`} />
+                <tab.icon className={`w-4 h-4 ${isActive ? 'opacity-100' : 'text-blue-200 opacity-80'}`} />
                 {tab.label}
               </button>
             );
@@ -1089,17 +1084,15 @@ const Reports: React.FC<ReportsProps> = ({ initialTab }) => {
         </div>
       </header>
 
-     {/* ================= CONTENT AREA ================= */}
-<div className="flex-1 overflow-y-auto px-2 pt-2 pb-28 custom-scrollbar relative z-10">
-    {/* تم حذف الحاجز الوهمي من هنا، ضع محتوى التقارير مباشرة */}
-
-        <div className={`rounded-[2rem] p-6 shadow-sm border min-h-[400px] transition-colors ${isRamadan ? 'bg-white/5 backdrop-blur-2xl border-white/10' : 'bg-white border-slate-100'}`}>
+      {/* ================= CONTENT AREA ================= */}
+      <div className="flex-1 overflow-y-auto px-2 pt-2 pb-28 custom-scrollbar relative z-10">
+        <div className="rounded-[2rem] p-6 shadow-sm border min-h-[400px] transition-colors bg-white/5 backdrop-blur-2xl border-white/10 text-white">
           
           {activeTab === 'student_report' && (
             <div className="space-y-6">
-              <div className={`flex items-center gap-3 border-b pb-4 mb-2 ${isRamadan ? 'border-white/10' : 'border-slate-50'}`}>
-                <div className={`p-2 rounded-xl ${isRamadan ? 'bg-indigo-500/20 text-indigo-300' : 'bg-indigo-50 text-indigo-600'}`}><Icon3DStudent className="w-5 h-5" /></div>
-                <h3 className={`font-black text-lg ${isRamadan ? 'text-white' : 'text-slate-800'}`}>{t('comprehensiveStudentReport')}</h3>
+              <div className="flex items-center gap-3 border-b pb-4 mb-2 border-white/10">
+                <div className="p-2 rounded-xl bg-indigo-500/20 text-indigo-300"><Icon3DStudent className="w-5 h-5" /></div>
+                <h3 className="font-black text-lg text-white">{t('comprehensiveStudentReport')}</h3>
               </div>
 
               <div className="space-y-4">
@@ -1108,7 +1101,7 @@ const Reports: React.FC<ReportsProps> = ({ initialTab }) => {
                     <button
                       key={g}
                       onClick={() => setStGrade(g)}
-                      className={`px-4 py-2 text-xs font-bold rounded-xl border transition-all ${stGrade === g ? (isRamadan ? 'bg-indigo-500/40 text-indigo-200 border-indigo-400/50' : 'bg-indigo-600 text-white border-transparent') : (isRamadan ? 'bg-white/5 text-slate-300 border-white/10 hover:bg-white/10' : 'bg-slate-50 text-slate-600 border-slate-200')}`}
+                      className={`px-4 py-2 text-xs font-bold rounded-xl border transition-all ${stGrade === g ? 'bg-indigo-500/40 text-indigo-200 border-indigo-400/50 backdrop-blur-sm' : 'bg-white/5 text-slate-300 border-white/10 hover:bg-white/10 backdrop-blur-sm'}`}
                     >
                       {t('gradePrefix')} {g}
                     </button>
@@ -1116,13 +1109,13 @@ const Reports: React.FC<ReportsProps> = ({ initialTab }) => {
                 </div>
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <select value={stClass} onChange={(e) => setStClass(e.target.value)} className={`w-full p-4 border rounded-2xl font-bold outline-none transition-colors text-sm ${isRamadan ? 'bg-[#0f172a]/50 border-white/20 text-white focus:border-indigo-400' : 'bg-slate-50 border-slate-200 text-slate-700 focus:border-indigo-500'}`}>
-                    {getClassesForGrade(stGrade).map(c => <option key={c} value={c} className={isRamadan ? 'bg-slate-900 text-white' : ''}>{c}</option>)}
+                  <select value={stClass} onChange={(e) => setStClass(e.target.value)} className="w-full p-4 border rounded-2xl font-bold outline-none transition-colors text-sm bg-[#0f172a]/50 border-white/20 text-white focus:border-indigo-400 backdrop-blur-md">
+                    {getClassesForGrade(stGrade).map(c => <option key={c} value={c} className="bg-slate-900 text-white">{c}</option>)}
                   </select>
 
-                  <select value={selectedStudentId} onChange={(e) => setSelectedStudentId(e.target.value)} className={`w-full p-4 border rounded-2xl font-bold outline-none transition-colors text-sm ${isRamadan ? 'bg-[#0f172a]/50 border-white/20 text-white focus:border-indigo-400' : 'bg-slate-50 border-slate-200 text-slate-700 focus:border-indigo-500'}`}>
-                    <option value="" className={isRamadan ? 'text-slate-500 bg-slate-900' : ''}>{t('selectStudentPlaceholder')}</option>
-                    {filteredStudentsForStudentTab.map(s => <option key={s.id} value={s.id} className={isRamadan ? 'bg-slate-900 text-white' : ''}>{s.name}</option>)}
+                  <select value={selectedStudentId} onChange={(e) => setSelectedStudentId(e.target.value)} className="w-full p-4 border rounded-2xl font-bold outline-none transition-colors text-sm bg-[#0f172a]/50 border-white/20 text-white focus:border-indigo-400 backdrop-blur-md">
+                    <option value="" className="text-slate-500 bg-slate-900">{t('selectStudentPlaceholder')}</option>
+                    {filteredStudentsForStudentTab.map(s => <option key={s.id} value={s.id} className="bg-slate-900 text-white">{s.name}</option>)}
                   </select>
                 </div>
               </div>
@@ -1131,7 +1124,7 @@ const Reports: React.FC<ReportsProps> = ({ initialTab }) => {
                 <button
                   onClick={openClassReportsPreview}
                   disabled={!stClass || filteredStudentsForStudentTab.length === 0}
-                  className={`px-5 py-3.5 rounded-xl font-black text-xs shadow-lg flex items-center gap-2 active:scale-95 transition-all flex-1 justify-center disabled:opacity-50 ${isRamadan ? 'bg-white/10 text-white hover:bg-white/20 border border-white/20' : 'bg-slate-800 text-white hover:bg-slate-700'}`}
+                  className="px-5 py-3.5 rounded-xl font-black text-xs shadow-lg flex items-center gap-2 active:scale-95 transition-all flex-1 justify-center disabled:opacity-50 bg-white/10 text-white hover:bg-white/20 border border-white/20 backdrop-blur-md"
                 >
                   <Icon3DLayers className="w-4 h-4" /> {t('printEntireClass')}
                 </button>
@@ -1144,7 +1137,7 @@ const Reports: React.FC<ReportsProps> = ({ initialTab }) => {
                     }
                   }}
                   disabled={!selectedStudentId}
-                  className={`disabled:opacity-50 px-6 py-3.5 rounded-xl font-black text-xs shadow-lg flex items-center gap-2 active:scale-95 transition-all flex-1 justify-center ${isRamadan ? 'bg-indigo-600 text-white hover:bg-indigo-500' : 'bg-indigo-600 text-white hover:bg-indigo-700'}`}
+                  className="disabled:opacity-50 px-6 py-3.5 rounded-xl font-black text-xs shadow-lg flex items-center gap-2 active:scale-95 transition-all flex-1 justify-center bg-indigo-600 text-white hover:bg-indigo-500"
                 >
                   <Icon3DDocument className="w-4 h-4" /> {t('individualPreview')}
                 </button>
@@ -1154,9 +1147,9 @@ const Reports: React.FC<ReportsProps> = ({ initialTab }) => {
 
           {activeTab === 'grades_record' && (
             <div className="space-y-6">
-              <div className={`flex items-center gap-3 border-b pb-4 mb-2 ${isRamadan ? 'border-white/10' : 'border-slate-50'}`}>
-                <div className={`p-2 rounded-xl ${isRamadan ? 'bg-amber-500/20 text-amber-400' : 'bg-amber-50 text-amber-600'}`}><Icon3DGrades className="w-5 h-5" /></div>
-                <h3 className={`font-black text-lg ${isRamadan ? 'text-white' : 'text-slate-800'}`}>{t('gradesRecordTab')}</h3>
+              <div className="flex items-center gap-3 border-b pb-4 mb-2 border-white/10">
+                <div className="p-2 rounded-xl bg-amber-500/20 text-amber-400"><Icon3DGrades className="w-5 h-5" /></div>
+                <h3 className="font-black text-lg text-white">{t('gradesRecordTab')}</h3>
               </div>
 
               <div className="space-y-4">
@@ -1165,21 +1158,21 @@ const Reports: React.FC<ReportsProps> = ({ initialTab }) => {
                     <button
                       key={g}
                       onClick={() => { setGradesGrade(g); setGradesClass('all'); }}
-                      className={`px-4 py-2 text-xs font-bold rounded-xl border transition-all ${gradesGrade === g ? (isRamadan ? 'bg-amber-500/40 text-amber-200 border-amber-400/50' : 'bg-amber-600 text-white border-transparent') : (isRamadan ? 'bg-white/5 text-slate-300 border-white/10 hover:bg-white/10' : 'bg-slate-50 text-slate-600 border-slate-200')}`}
+                      className={`px-4 py-2 text-xs font-bold rounded-xl border transition-all ${gradesGrade === g ? 'bg-amber-500/40 text-amber-200 border-amber-400/50 backdrop-blur-sm' : 'bg-white/5 text-slate-300 border-white/10 hover:bg-white/10 backdrop-blur-sm'}`}
                     >
                       {t('gradePrefix')} {g}
                     </button>
                   ))}
                 </div>
 
-                <select value={gradesClass} onChange={(e) => setGradesClass(e.target.value)} className={`w-full p-4 border rounded-2xl font-bold outline-none transition-colors text-sm ${isRamadan ? 'bg-[#0f172a]/50 border-white/20 text-white focus:border-amber-400' : 'bg-slate-50 border-slate-200 text-slate-700 focus:border-amber-500'}`}>
-                  <option value="all" className={isRamadan ? 'bg-slate-900 text-white' : ''}>{t('allClassesInGrade').split(' ')[0]}</option>
-                  {getClassesForGrade(gradesGrade).map(c => <option key={c} value={c} className={isRamadan ? 'bg-slate-900 text-white' : ''}>{c}</option>)}
+                <select value={gradesClass} onChange={(e) => setGradesClass(e.target.value)} className="w-full p-4 border rounded-2xl font-bold outline-none transition-colors text-sm bg-[#0f172a]/50 border-white/20 text-white focus:border-amber-400 backdrop-blur-md">
+                  <option value="all" className="bg-slate-900 text-white">{t('allClassesInGrade').split(' ')[0]}</option>
+                  {getClassesForGrade(gradesGrade).map(c => <option key={c} value={c} className="bg-slate-900 text-white">{c}</option>)}
                 </select>
               </div>
 
               <div className="flex justify-end pt-4">
-                <button onClick={openGradesPreview} className={`w-full text-white px-6 py-4 rounded-xl font-black text-xs flex items-center justify-center gap-2 shadow-lg active:scale-95 transition-all ${isRamadan ? 'bg-amber-600 hover:bg-amber-500' : 'bg-amber-500 hover:bg-amber-600'}`}>
+                <button onClick={openGradesPreview} className="w-full text-white px-6 py-4 rounded-xl font-black text-xs flex items-center justify-center gap-2 shadow-lg active:scale-95 transition-all bg-amber-600 hover:bg-amber-500">
                   <Icon3DPrint className="w-5 h-5" /> {t('previewAndPrintRecord')}
                 </button>
               </div>
@@ -1188,12 +1181,12 @@ const Reports: React.FC<ReportsProps> = ({ initialTab }) => {
 
           {activeTab === 'certificates' && (
             <div className="space-y-6">
-              <div className={`flex justify-between items-center pb-4 border-b mb-2 ${isRamadan ? 'border-white/10' : 'border-slate-50'}`}>
+              <div className="flex justify-between items-center pb-4 border-b mb-2 border-white/10">
                 <div className="flex items-center gap-3">
-                  <div className={`p-2 rounded-xl ${isRamadan ? 'bg-emerald-500/20 text-emerald-400' : 'bg-emerald-50 text-emerald-600'}`}><Icon3DCertificate className="w-5 h-5" /></div>
-                  <h3 className={`font-black text-lg ${isRamadan ? 'text-white' : 'text-slate-800'}`}>{t('certificatesTab')}</h3>
+                  <div className="p-2 rounded-xl bg-emerald-500/20 text-emerald-400"><Icon3DCertificate className="w-5 h-5" /></div>
+                  <h3 className="font-black text-lg text-white">{t('certificatesTab')}</h3>
                 </div>
-                <button onClick={() => setShowCertSettingsModal(true)} className={`p-2 rounded-xl transition-colors ${isRamadan ? 'bg-white/10 text-slate-300 hover:bg-white/20' : 'bg-slate-50 text-slate-500 hover:bg-slate-100'}`}>
+                <button onClick={() => setShowCertSettingsModal(true)} className="p-2 rounded-xl transition-colors bg-white/10 text-slate-300 hover:bg-white/20 backdrop-blur-sm">
                   <Icon3DSettings className="w-5 h-5" />
                 </button>
               </div>
@@ -1204,23 +1197,23 @@ const Reports: React.FC<ReportsProps> = ({ initialTab }) => {
                     <button
                       key={g}
                       onClick={() => setCertGrade(g)}
-                      className={`px-4 py-2 text-xs font-bold rounded-xl border transition-all ${certGrade === g ? (isRamadan ? 'bg-emerald-500/40 text-emerald-200 border-emerald-400/50' : 'bg-emerald-600 text-white border-transparent') : (isRamadan ? 'bg-white/5 text-slate-300 border-white/10 hover:bg-white/10' : 'bg-slate-50 text-slate-600 border-slate-200')}`}
+                      className={`px-4 py-2 text-xs font-bold rounded-xl border transition-all ${certGrade === g ? 'bg-emerald-500/40 text-emerald-200 border-emerald-400/50 backdrop-blur-sm' : 'bg-white/5 text-slate-300 border-white/10 hover:bg-white/10 backdrop-blur-sm'}`}
                     >
                       {t('gradePrefix')} {g}
                     </button>
                   ))}
                 </div>
 
-                <select value={certClass} onChange={(e) => { setCertClass(e.target.value); setSelectedCertStudents([]); }} className={`w-full p-4 border rounded-2xl font-bold outline-none transition-colors text-sm ${isRamadan ? 'bg-[#0f172a]/50 border-white/20 text-white focus:border-emerald-400' : 'bg-slate-50 border-slate-200 text-slate-700 focus:border-emerald-500'}`}>
-                  <option value="" disabled className={isRamadan ? 'text-slate-500 bg-slate-900' : ''}>{t('selectClassPlaceholder')}</option>
-                  {getClassesForGrade(certGrade).map(c => <option key={c} value={c} className={isRamadan ? 'bg-slate-900 text-white' : ''}>{c}</option>)}
+                <select value={certClass} onChange={(e) => { setCertClass(e.target.value); setSelectedCertStudents([]); }} className="w-full p-4 border rounded-2xl font-bold outline-none transition-colors text-sm bg-[#0f172a]/50 border-white/20 text-white focus:border-emerald-400 backdrop-blur-md">
+                  <option value="" disabled className="text-slate-500 bg-slate-900">{t('selectClassPlaceholder')}</option>
+                  {getClassesForGrade(certGrade).map(c => <option key={c} value={c} className="bg-slate-900 text-white">{c}</option>)}
                 </select>
               </div>
 
               <div className="space-y-2">
                 <div className="flex justify-between px-2">
-                  <label className={`text-xs font-bold ${isRamadan ? 'text-slate-400' : 'text-slate-500'}`}>{t('studentsLabel')} ({selectedCertStudents.length})</label>
-                  <button onClick={selectAllCertStudents} className={`text-xs font-bold transition-colors ${isRamadan ? 'text-emerald-400 hover:text-emerald-300' : 'text-emerald-600 hover:text-emerald-700'}`}>{t('selectAll')}</button>
+                  <label className="text-xs font-bold text-slate-400">{t('studentsLabel')} ({selectedCertStudents.length})</label>
+                  <button onClick={selectAllCertStudents} className="text-xs font-bold transition-colors text-emerald-400 hover:text-emerald-300">{t('selectAll')}</button>
                 </div>
 
                 <div className="grid grid-cols-2 gap-2 max-h-52 overflow-y-auto p-1 custom-scrollbar">
@@ -1228,7 +1221,7 @@ const Reports: React.FC<ReportsProps> = ({ initialTab }) => {
                     <button
                       key={s.id}
                       onClick={() => toggleCertStudent(s.id)}
-                      className={`p-3 rounded-xl border text-xs font-bold flex justify-between transition-all ${selectedCertStudents.includes(s.id) ? (isRamadan ? 'bg-emerald-600 text-white border-emerald-500 shadow-md' : 'bg-emerald-600 text-white border-emerald-600 shadow-md') : (isRamadan ? 'bg-[#0f172a]/50 border-white/10 text-slate-300 hover:bg-white/10' : 'bg-white border-slate-200 text-slate-600 hover:bg-slate-50')}`}
+                      className={`p-3 rounded-xl border text-xs font-bold flex justify-between transition-all ${selectedCertStudents.includes(s.id) ? 'bg-emerald-600 text-white border-emerald-500 shadow-md backdrop-blur-sm' : 'bg-[#0f172a]/50 border-white/10 text-slate-300 hover:bg-white/10 backdrop-blur-sm'}`}
                     >
                       {s.name} {selectedCertStudents.includes(s.id) && <Check size={14} />}
                     </button>
@@ -1240,7 +1233,7 @@ const Reports: React.FC<ReportsProps> = ({ initialTab }) => {
                 <button
                   onClick={openCertificatesPreview}
                   disabled={selectedCertStudents.length === 0}
-                  className={`w-full disabled:opacity-50 text-white px-6 py-4 rounded-xl font-black text-xs flex items-center justify-center gap-2 shadow-lg active:scale-95 transition-all ${isRamadan ? 'bg-emerald-600 hover:bg-emerald-500' : 'bg-emerald-600 hover:bg-emerald-700'}`}
+                  className="w-full disabled:opacity-50 text-white px-6 py-4 rounded-xl font-black text-xs flex items-center justify-center gap-2 shadow-lg active:scale-95 transition-all bg-emerald-600 hover:bg-emerald-500"
                 >
                   <Icon3DPrint className="w-5 h-5" /> {t('previewAndPrintCertificates')}
                 </button>
@@ -1250,9 +1243,9 @@ const Reports: React.FC<ReportsProps> = ({ initialTab }) => {
 
           {activeTab === 'parent_cards' && (
             <div className="space-y-6">
-              <div className={`flex items-center gap-3 border-b pb-4 mb-2 ${isRamadan ? 'border-white/10' : 'border-slate-50'}`}>
-                <div className={`p-2 rounded-xl ${isRamadan ? 'bg-amber-500/20 text-amber-400' : 'bg-amber-50 text-amber-600'}`}><Icon3DParentCard className="w-5 h-5" /></div>
-                <h3 className={`font-black text-lg ${isRamadan ? 'text-white' : 'text-slate-800'}`}>{t('parentLoginCards')}</h3>
+              <div className="flex items-center gap-3 border-b pb-4 mb-2 border-white/10">
+                <div className="p-2 rounded-xl bg-amber-500/20 text-amber-400"><Icon3DParentCard className="w-5 h-5" /></div>
+                <h3 className="font-black text-lg text-white">{t('parentLoginCards')}</h3>
               </div>
 
               <div className="space-y-4">
@@ -1261,21 +1254,21 @@ const Reports: React.FC<ReportsProps> = ({ initialTab }) => {
                     <button
                       key={g}
                       onClick={() => { setCardsGrade(g); setCardsClass('all'); }}
-                      className={`px-4 py-2 text-xs font-bold rounded-xl border transition-all ${cardsGrade === g ? (isRamadan ? 'bg-amber-500/40 text-amber-200 border-amber-400/50' : 'bg-amber-600 text-white border-transparent') : (isRamadan ? 'bg-white/5 text-slate-300 border-white/10 hover:bg-white/10' : 'bg-slate-50 text-slate-600 border-slate-200')}`}
+                      className={`px-4 py-2 text-xs font-bold rounded-xl border transition-all ${cardsGrade === g ? 'bg-amber-500/40 text-amber-200 border-amber-400/50 backdrop-blur-sm' : 'bg-white/5 text-slate-300 border-white/10 hover:bg-white/10 backdrop-blur-sm'}`}
                     >
                       {t('gradePrefix')} {g}
                     </button>
                   ))}
                 </div>
 
-                <select value={cardsClass} onChange={(e) => setCardsClass(e.target.value)} className={`w-full p-4 border rounded-2xl font-bold outline-none transition-colors text-sm ${isRamadan ? 'bg-[#0f172a]/50 border-white/20 text-white focus:border-amber-400' : 'bg-slate-50 border-slate-200 text-slate-700 focus:border-amber-500'}`}>
-                  <option value="all" className={isRamadan ? 'bg-slate-900 text-white' : ''}>{t('allClassesInGrade')}</option>
-                  {getClassesForGrade(cardsGrade).map(c => <option key={c} value={c} className={isRamadan ? 'bg-slate-900 text-white' : ''}>{c}</option>)}
+                <select value={cardsClass} onChange={(e) => setCardsClass(e.target.value)} className="w-full p-4 border rounded-2xl font-bold outline-none transition-colors text-sm bg-[#0f172a]/50 border-white/20 text-white focus:border-amber-400 backdrop-blur-md">
+                  <option value="all" className="bg-slate-900 text-white">{t('allClassesInGrade')}</option>
+                  {getClassesForGrade(cardsGrade).map(c => <option key={c} value={c} className="bg-slate-900 text-white">{c}</option>)}
                 </select>
               </div>
 
               <div className="flex justify-end pt-4">
-                <button onClick={openParentCardsPreview} className={`w-full text-white px-6 py-4 rounded-xl font-black text-xs flex items-center justify-center gap-2 shadow-lg active:scale-95 transition-all ${isRamadan ? 'bg-amber-600 hover:bg-amber-500' : 'bg-amber-500 hover:bg-amber-600'}`}>
+                <button onClick={openParentCardsPreview} className="w-full text-white px-6 py-4 rounded-xl font-black text-xs flex items-center justify-center gap-2 shadow-lg active:scale-95 transition-all bg-amber-600 hover:bg-amber-500">
                   <Icon3DPrint className="w-5 h-5" /> {t('previewAndPrintCards')}
                 </button>
               </div>
@@ -1284,20 +1277,20 @@ const Reports: React.FC<ReportsProps> = ({ initialTab }) => {
 
           {activeTab === 'summon' && (
             <div className="space-y-6">
-              <div className={`flex items-center gap-3 border-b pb-4 mb-2 ${isRamadan ? 'border-white/10' : 'border-slate-50'}`}>
-                <div className={`p-2 rounded-xl ${isRamadan ? 'bg-rose-500/20 text-rose-400' : 'bg-rose-50 text-rose-600'}`}><Icon3DSummon className="w-5 h-5" /></div>
-                <h3 className={`font-black text-lg ${isRamadan ? 'text-white' : 'text-slate-800'}`}>{t('summonTab')}</h3>
+              <div className="flex items-center gap-3 border-b pb-4 mb-2 border-white/10">
+                <div className="p-2 rounded-xl bg-rose-500/20 text-rose-400"><Icon3DSummon className="w-5 h-5" /></div>
+                <h3 className="font-black text-lg text-white">{t('summonTab')}</h3>
               </div>
 
               <div className="grid grid-cols-2 gap-4">
-                <select value={summonClass} onChange={(e) => setSummonClass(e.target.value)} className={`p-4 border rounded-2xl font-bold outline-none transition-colors text-sm ${isRamadan ? 'bg-[#0f172a]/50 border-white/20 text-white focus:border-rose-400' : 'bg-slate-50 border-slate-200 text-slate-700 focus:border-rose-500'}`}>
-                  <option value="" disabled className={isRamadan ? 'text-slate-500 bg-slate-900' : ''}>{t('selectClassPlaceholder')}</option>
-                  {getClassesForGrade(summonGrade).map(c => <option key={c} value={c} className={isRamadan ? 'bg-slate-900 text-white' : ''}>{c}</option>)}
+                <select value={summonClass} onChange={(e) => setSummonClass(e.target.value)} className="p-4 border rounded-2xl font-bold outline-none transition-colors text-sm bg-[#0f172a]/50 border-white/20 text-white focus:border-rose-400 backdrop-blur-md">
+                  <option value="" disabled className="text-slate-500 bg-slate-900">{t('selectClassPlaceholder')}</option>
+                  {getClassesForGrade(summonGrade).map(c => <option key={c} value={c} className="bg-slate-900 text-white">{c}</option>)}
                 </select>
 
-                <select value={summonStudentId} onChange={(e) => setSummonStudentId(e.target.value)} className={`p-4 border rounded-2xl font-bold outline-none transition-colors text-sm ${isRamadan ? 'bg-[#0f172a]/50 border-white/20 text-white focus:border-rose-400' : 'bg-slate-50 border-slate-200 text-slate-700 focus:border-rose-500'}`}>
-                  <option value="" className={isRamadan ? 'text-slate-500 bg-slate-900' : ''}>{t('studentPlaceholder')}</option>
-                  {availableStudentsForSummon.map(s => <option key={s.id} value={s.id} className={isRamadan ? 'bg-slate-900 text-white' : ''}>{s.name}</option>)}
+                <select value={summonStudentId} onChange={(e) => setSummonStudentId(e.target.value)} className="p-4 border rounded-2xl font-bold outline-none transition-colors text-sm bg-[#0f172a]/50 border-white/20 text-white focus:border-rose-400 backdrop-blur-md">
+                  <option value="" className="text-slate-500 bg-slate-900">{t('studentPlaceholder')}</option>
+                  {availableStudentsForSummon.map(s => <option key={s.id} value={s.id} className="bg-slate-900 text-white">{s.name}</option>)}
                 </select>
               </div>
 
@@ -1313,7 +1306,7 @@ const Reports: React.FC<ReportsProps> = ({ initialTab }) => {
                     <button
                       key={r.id}
                       onClick={() => setSummonData({ ...summonData, reasonType: r.id })}
-                      className={`px-4 py-2 rounded-xl text-xs font-bold border transition-all ${summonData.reasonType === r.id ? (isRamadan ? 'bg-rose-600 text-white border-rose-500 shadow-md' : 'bg-rose-600 text-white border-rose-600 shadow-md') : (isRamadan ? 'bg-[#0f172a]/50 text-slate-300 border-white/20 hover:bg-white/10' : 'bg-slate-50 text-slate-600 border-slate-200 hover:bg-slate-100')}`}
+                      className={`px-4 py-2 rounded-xl text-xs font-bold border transition-all ${summonData.reasonType === r.id ? 'bg-rose-600 text-white border-rose-500 shadow-md backdrop-blur-sm' : 'bg-[#0f172a]/50 text-slate-300 border-white/20 hover:bg-white/10 backdrop-blur-sm'}`}
                     >
                       {r.label}
                     </button>
@@ -1325,7 +1318,7 @@ const Reports: React.FC<ReportsProps> = ({ initialTab }) => {
                     value={summonData.customReason}
                     onChange={(e) => setSummonData({ ...summonData, customReason: e.target.value })}
                     placeholder={t('writeSummonReasonHere')}
-                    className={`w-full p-4 border rounded-2xl font-bold mt-2 h-20 resize-none outline-none transition-colors text-sm ${isRamadan ? 'bg-[#0f172a]/50 border-white/20 text-white focus:border-rose-400 placeholder:text-slate-600' : 'bg-slate-50 border-slate-300 text-slate-800 focus:border-rose-500'}`}
+                    className="w-full p-4 border rounded-2xl font-bold mt-2 h-20 resize-none outline-none transition-colors text-sm bg-[#0f172a]/50 border-white/20 text-white focus:border-rose-400 placeholder:text-slate-500 backdrop-blur-md"
                   />
                 )}
               </div>
@@ -1335,7 +1328,7 @@ const Reports: React.FC<ReportsProps> = ({ initialTab }) => {
                   <button
                     key={p.id}
                     onClick={() => toggleProcedure(p.id)}
-                    className={`p-2 rounded-lg text-[10px] font-bold border transition-all ${takenProcedures.includes(p.id) ? (isRamadan ? 'bg-indigo-500/30 border-indigo-400 text-indigo-200' : 'bg-indigo-100 border-indigo-500 text-indigo-700') : (isRamadan ? 'bg-white/5 border-white/10 text-slate-400 hover:bg-white/10' : 'bg-white border-slate-200 text-slate-500 hover:bg-slate-50')}`}
+                    className={`p-2 rounded-lg text-[10px] font-bold border transition-all ${takenProcedures.includes(p.id) ? 'bg-indigo-500/30 border-indigo-400 text-indigo-200 backdrop-blur-sm' : 'bg-white/5 border-white/10 text-slate-400 hover:bg-white/10 backdrop-blur-sm'}`}
                   >
                     {p.label}
                   </button>
@@ -1344,18 +1337,18 @@ const Reports: React.FC<ReportsProps> = ({ initialTab }) => {
 
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <div className="space-y-1">
-                  <label className={`text-[10px] font-bold ${isRamadan ? 'text-slate-400' : 'text-slate-500'}`}>{t('issueDateLabel')}</label>
-                  <input type="date" value={summonData.issueDate} onChange={(e) => setSummonData({ ...summonData, issueDate: e.target.value })} className={`w-full p-3 border rounded-xl text-xs font-bold outline-none ${isRamadan ? 'bg-[#0f172a]/50 border-white/20 text-white focus:border-rose-400' : 'bg-slate-50 border-slate-200 focus:border-rose-500'}`} />
+                  <label className="text-[10px] font-bold text-slate-400">{t('issueDateLabel')}</label>
+                  <input type="date" value={summonData.issueDate} onChange={(e) => setSummonData({ ...summonData, issueDate: e.target.value })} className="w-full p-3 border rounded-xl text-xs font-bold outline-none bg-[#0f172a]/50 border-white/20 text-white focus:border-rose-400 backdrop-blur-md [color-scheme:dark]" />
                 </div>
 
                 <div className="space-y-1">
-                  <label className={`text-[10px] font-bold ${isRamadan ? 'text-slate-400' : 'text-slate-500'}`}>{t('attendanceDateLabel')}</label>
-                  <input type="date" value={summonData.date} onChange={(e) => setSummonData({ ...summonData, date: e.target.value })} className={`w-full p-3 border rounded-xl text-xs font-bold outline-none ${isRamadan ? 'bg-[#0f172a]/50 border-white/20 text-white focus:border-rose-400' : 'bg-slate-50 border-slate-200 focus:border-rose-500'}`} />
+                  <label className="text-[10px] font-bold text-slate-400">{t('attendanceDateLabel')}</label>
+                  <input type="date" value={summonData.date} onChange={(e) => setSummonData({ ...summonData, date: e.target.value })} className="w-full p-3 border rounded-xl text-xs font-bold outline-none bg-[#0f172a]/50 border-white/20 text-white focus:border-rose-400 backdrop-blur-md [color-scheme:dark]" />
                 </div>
 
                 <div className="space-y-1">
-                  <label className={`text-[10px] font-bold ${isRamadan ? 'text-slate-400' : 'text-slate-500'}`}>{t('timeLabel')}</label>
-                  <input type="time" value={summonData.time} onChange={(e) => setSummonData({ ...summonData, time: e.target.value })} className={`w-full p-3 border rounded-xl text-xs font-bold outline-none ${isRamadan ? 'bg-[#0f172a]/50 border-white/20 text-white focus:border-rose-400' : 'bg-slate-50 border-slate-200 focus:border-rose-500'}`} />
+                  <label className="text-[10px] font-bold text-slate-400">{t('timeLabel')}</label>
+                  <input type="time" value={summonData.time} onChange={(e) => setSummonData({ ...summonData, time: e.target.value })} className="w-full p-3 border rounded-xl text-xs font-bold outline-none bg-[#0f172a]/50 border-white/20 text-white focus:border-rose-400 backdrop-blur-md [color-scheme:dark]" />
                 </div>
               </div>
 
@@ -1363,7 +1356,7 @@ const Reports: React.FC<ReportsProps> = ({ initialTab }) => {
                 <button
                   onClick={openSummonPreview}
                   disabled={!summonStudentId}
-                  className={`w-full disabled:opacity-50 text-white px-6 py-4 rounded-xl font-black text-xs flex items-center justify-center gap-2 shadow-lg active:scale-95 transition-all ${isRamadan ? 'bg-rose-600 hover:bg-rose-500' : 'bg-rose-600 hover:bg-rose-700'}`}
+                  className="w-full disabled:opacity-50 text-white px-6 py-4 rounded-xl font-black text-xs flex items-center justify-center gap-2 shadow-lg active:scale-95 transition-all bg-rose-600 hover:bg-rose-500"
                 >
                   <Icon3DEye className="w-5 h-5" /> {t('previewLetter')}
                 </button>
@@ -1373,13 +1366,13 @@ const Reports: React.FC<ReportsProps> = ({ initialTab }) => {
         </div>
       </div>
 
-      <Modal isOpen={showCertSettingsModal} onClose={() => setShowCertSettingsModal(false)} className={`max-w-md rounded-[2rem] ${isRamadan ? 'bg-transparent' : ''}`}>
-        <div className={`text-center p-6 rounded-[2rem] border transition-colors ${isRamadan ? 'bg-[#0f172a]/95 backdrop-blur-2xl border-white/10 text-white shadow-[0_0_40px_rgba(0,0,0,0.5)]' : 'bg-white border-transparent text-slate-800'}`}>
+      <Modal isOpen={showCertSettingsModal} onClose={() => setShowCertSettingsModal(false)} className="max-w-md rounded-[2rem] bg-transparent">
+        <div className="text-center p-6 rounded-[2rem] border transition-colors bg-[#0f172a]/95 backdrop-blur-2xl border-white/10 text-white shadow-[0_0_40px_rgba(0,0,0,0.5)]">
           <h3 className="font-black text-lg mb-4">{t('certificateSettingsTitle')}</h3>
           <div className="space-y-3">
-            <input type="text" value={tempCertSettings.title} onChange={(e) => setTempCertSettings({ ...tempCertSettings, title: e.target.value })} className={`w-full p-3 border rounded-xl font-bold outline-none transition-colors ${isRamadan ? 'bg-[#1e1b4b]/50 border-indigo-500/30 text-white focus:border-indigo-400' : 'bg-slate-50 border-slate-200 text-slate-800 focus:border-indigo-500'}`} placeholder={t('certificateTitlePlaceholder')} />
-            <textarea value={tempCertSettings.bodyText} onChange={(e) => setTempCertSettings({ ...tempCertSettings, bodyText: e.target.value })} className={`w-full p-3 border rounded-xl font-bold h-24 outline-none transition-colors resize-none ${isRamadan ? 'bg-[#1e1b4b]/50 border-indigo-500/30 text-white focus:border-indigo-400' : 'bg-slate-50 border-slate-200 text-slate-800 focus:border-indigo-500'}`} placeholder={t('certificateBodyPlaceholder')} />
-            <button onClick={() => { setCertificateSettings(tempCertSettings); setShowCertSettingsModal(false); }} className={`w-full py-3 rounded-xl font-black shadow-lg active:scale-95 transition-all ${isRamadan ? 'bg-indigo-600 hover:bg-indigo-500 text-white' : 'bg-indigo-600 hover:bg-indigo-700 text-white'}`}>{t('saveBtn')}</button>
+            <input type="text" value={tempCertSettings.title} onChange={(e) => setTempCertSettings({ ...tempCertSettings, title: e.target.value })} className="w-full p-3 border rounded-xl font-bold outline-none transition-colors bg-[#1e1b4b]/50 border-indigo-500/30 text-white focus:border-indigo-400 placeholder-slate-400" placeholder={t('certificateTitlePlaceholder')} />
+            <textarea value={tempCertSettings.bodyText} onChange={(e) => setTempCertSettings({ ...tempCertSettings, bodyText: e.target.value })} className="w-full p-3 border rounded-xl font-bold h-24 outline-none transition-colors resize-none bg-[#1e1b4b]/50 border-indigo-500/30 text-white focus:border-indigo-400 placeholder-slate-400" placeholder={t('certificateBodyPlaceholder')} />
+            <button onClick={() => { setCertificateSettings(tempCertSettings); setShowCertSettingsModal(false); }} className="w-full py-3 rounded-xl font-black shadow-lg active:scale-95 transition-all bg-indigo-600 hover:bg-indigo-500 text-white">{t('saveBtn')}</button>
           </div>
         </div>
       </Modal>
