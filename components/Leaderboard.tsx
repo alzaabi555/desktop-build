@@ -124,13 +124,13 @@ const Leaderboard: React.FC<LeaderboardProps> = ({ students, classes, onUpdateSt
     const rankedStudents = useMemo(() => {
         let filtered = safeStudents;
         if (selectedClass !== 'all') filtered = safeStudents.filter(s => s.classes?.includes(selectedClass));
-        // 👈 تمت الحماية هنا: (s.name || '') تمنع الانهيار
+        // حماية البحث من الطلاب بدون اسم
         if (searchTerm.trim()) filtered = filtered.filter(s => (s.name || '').toLowerCase().includes(searchTerm.toLowerCase()));
         
         const withPoints = filtered.map(student => {
             const monthlyPoints = (student.behaviors || [])
                 .filter(b => {
-                    if (!b) return false; // 👈 حماية من السلوك الفارغ
+                    if (!b) return false; // حماية من السلوك الفارغ
                     const d = new Date(b.date);
                     return d.getMonth() === currentMonth && d.getFullYear() === today.getFullYear();
                 })
@@ -139,23 +139,6 @@ const Leaderboard: React.FC<LeaderboardProps> = ({ students, classes, onUpdateSt
         });
         return withPoints.sort((a, b) => b.monthlyPoints - a.monthlyPoints);
     }, [safeStudents, selectedClass, searchTerm, currentMonth]);
-
-    const rankedStudents = useMemo(() => {
-        let filtered = students;
-        if (selectedClass !== 'all') filtered = students.filter(s => s.classes?.includes(selectedClass));
-        if (searchTerm.trim()) filtered = filtered.filter(s => s.name.toLowerCase().includes(searchTerm.toLowerCase()));
-        
-        const withPoints = filtered.map(student => {
-            const monthlyPoints = (student.behaviors || [])
-                .filter(b => {
-                    const d = new Date(b.date);
-                    return d.getMonth() === currentMonth && d.getFullYear() === today.getFullYear();
-                })
-                .reduce((acc, b) => acc + b.points, 0);
-            return { ...student, monthlyPoints };
-        });
-        return withPoints.sort((a, b) => b.monthlyPoints - a.monthlyPoints);
-    }, [students, selectedClass, searchTerm, currentMonth]);
 
     const topThree = rankedStudents.slice(0, 3);
     const restOfStudents = rankedStudents.slice(3);
