@@ -890,9 +890,14 @@ const Reports: React.FC<ReportsProps> = ({ initialTab }) => {
     isOpen: false, title: '', content: null
   });
 
+  // 🛡️ دروع الحماية الأساسية من أي بيانات فاسدة أو طلاب ناقصين
+  const safeStudents = Array.isArray(students) ? students : [];
+  const safeClasses = Array.isArray(classes) ? classes : [];
+
   const availableGrades = useMemo(() => {
     const grades = new Set<string>();
-    classes.forEach(c => {
+    safeClasses.forEach(c => {
+      if (typeof c !== 'string') return;
       if (c.includes('/')) {
         grades.add(c.split('/')[0].trim());
       } else {
@@ -901,8 +906,8 @@ const Reports: React.FC<ReportsProps> = ({ initialTab }) => {
         else grades.add(c.split(' ')[0]);
       }
     });
-    students.forEach(s => { if (s.grade) grades.add(s.grade); });
-    if (grades.size === 0 && classes.length > 0) return ['عام'];
+    safeStudents.forEach(s => { if (s && s.grade) grades.add(s.grade); });
+    if (grades.size === 0 && safeClasses.length > 0) return ['عام'];
 
     return Array.from(grades).sort((a, b) => {
       const numA = parseInt(a);
@@ -910,20 +915,22 @@ const Reports: React.FC<ReportsProps> = ({ initialTab }) => {
       if (!isNaN(numA) && !isNaN(numB)) return numA - numB;
       return a.localeCompare(b);
     });
-  }, [students, classes]);
+  }, [safeStudents, safeClasses]);
 
   const getClassesForGrade = (grade: string) => {
-    if (grade === 'all') return classes;
-    return classes.filter(c => {
+    if (grade === 'all') return safeClasses;
+    return safeClasses.filter(c => {
+      if (typeof c !== 'string') return false; // حماية إضافية
       if (c.includes('/')) return c.split('/')[0].trim() === grade;
       return c.startsWith(grade);
     });
   };
 
-  const filteredStudentsForStudentTab = useMemo(() => students.filter(s => s.classes.includes(stClass)), [students, stClass]);
-  const filteredStudentsForGrades = useMemo(() => students.filter(s => gradesClass === 'all' || s.classes.includes(gradesClass)), [students, gradesClass]);
-  const filteredStudentsForCert = useMemo(() => students.filter(s => s.classes.includes(certClass)), [students, certClass]);
-  const availableStudentsForSummon = useMemo(() => students.filter(s => s.classes.includes(summonClass)), [summonClass, students]);
+  // 🛡️ الفلاتر المدرعة: تمت إضافة (Array.isArray) لمنع أي انهيار بسبب الفصول المفقودة
+  const filteredStudentsForStudentTab = useMemo(() => safeStudents.filter(s => Array.isArray(s?.classes) && s.classes.includes(stClass)), [safeStudents, stClass]);
+  const filteredStudentsForGrades = useMemo(() => safeStudents.filter(s => gradesClass === 'all' || (Array.isArray(s?.classes) && s.classes.includes(gradesClass))), [safeStudents, gradesClass]);
+  const filteredStudentsForCert = useMemo(() => safeStudents.filter(s => Array.isArray(s?.classes) && s.classes.includes(certClass)), [safeStudents, certClass]);
+  const availableStudentsForSummon = useMemo(() => safeStudents.filter(s => Array.isArray(s?.classes) && s.classes.includes(summonClass)), [summonClass, safeStudents]);
 
   useEffect(() => { const cls = getClassesForGrade(stGrade); if (cls.length > 0) setStClass(cls[0]); }, [stGrade, classes]);
   useEffect(() => { const cls = getClassesForGrade(certGrade); if (cls.length > 0) setCertClass(cls[0]); }, [certGrade, classes]);
@@ -1132,7 +1139,7 @@ const Reports: React.FC<ReportsProps> = ({ initialTab }) => {
                 <button
                   onClick={() => {
                     if (selectedStudentId) {
-                      const s = students.find(st => st.id === selectedStudentId);
+                      const s = safeStudents.find(st => st && st.id === selectedStudentId);
                       if (s) setViewingStudent(s);
                     }
                   }}
