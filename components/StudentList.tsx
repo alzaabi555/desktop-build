@@ -284,29 +284,52 @@ const StudentList: React.FC<StudentListProps> = ({
 
     const handleRandomPick = () => {
         const todayStr = new Date().toLocaleDateString('en-CA');
-        const presentStudents = filteredStudents.filter(s => {
-            const attendanceRecord = s.attendance.find(a => a.date === todayStr);
+        const now = new Date();
+
+        // 1. تصفية الطلاب المتاحين (استبعاد الغائبين + أصحاب السلوك السلبي اليوم)
+        const eligibleStudents = filteredStudents.filter(student => {
+            // استبعاد الغائب أو الهارب
+            const attendanceRecord = student.attendance?.find(a => a.date === todayStr);
             const isAbsentOrTruant = attendanceRecord?.status === 'absent' || attendanceRecord?.status === 'truant';
-            return !isAbsentOrTruant;
+            if (isAbsentOrTruant) return false;
+
+            // استبعاد من لديه سلوك سلبي في نفس اليوم
+            const hasNegativeToday = (student.behaviors || []).some(b => {
+                const bDate = new Date(b.date);
+                return b.type === 'negative' && 
+                       bDate.getDate() === now.getDate() &&
+                       bDate.getMonth() === now.getMonth() &&
+                       bDate.getFullYear() === now.getFullYear();
+            });
+            if (hasNegativeToday) return false;
+
+            return true; // الطالب حاضر وسلوكه نظيف اليوم!
         });
 
-        if (presentStudents.length === 0) {
-            alert(t('alertNoPresentStudentsForDraw'));
+        // إذا لم يكن هناك أي طالب متاح (الكل إما غائب أو معاقب)
+        if (eligibleStudents.length === 0) {
+            alert(t('alertNoPresentStudentsForDraw') || 'لا يوجد طلاب متاحين للقرعة (الجميع غائب أو لديه سلوك سلبي)');
             return;
         }
 
-        const eligibleCandidates = presentStudents.filter(s => !pickedStudentIds.includes(s.id));
+        // 2. تصفية الطلاب الذين لم يسبق اختيارهم في هذه الجولة
+        let candidates = eligibleStudents.filter(s => !pickedStudentIds.includes(s.id));
 
-        if (eligibleCandidates.length === 0) {
-            if (confirm(t('alertAllPresentSelected'))) {
-                setPickedStudentIds([]);
+        // 3. إعادة الضبط الذكي في حال تم سحب جميع الطلاب المتاحين
+        if (candidates.length === 0) {
+            if (confirm(t('alertAllPresentSelected') || 'تم سحب جميع الطلاب المتاحين. هل تريد تصفير القرعة والبدء من جديد؟')) {
+                setPickedStudentIds([]); // تصفير الذاكرة
+                candidates = eligibleStudents; // إعادة إدخال جميع الطلاب المتاحين للقرعة من جديد
+            } else {
+                return; // إلغاء العملية إذا لم يرد المعلم التصفير
             }
-            return;
         }
 
-        const randomIndex = Math.floor(Math.random() * eligibleCandidates.length);
-        const winner = eligibleCandidates[randomIndex];
+        // 4. السحب العشوائي العادل من القائمة النقية
+        const randomIndex = Math.floor(Math.random() * candidates.length);
+        const winner = candidates[randomIndex];
 
+        // تسجيل الطالب كـ "تم اختياره" حتى لا يتكرر
         setPickedStudentIds(prev => [...prev, winner.id]);
         setRandomWinner(winner);
         playSound('positive'); 
