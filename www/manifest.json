@@ -1,0 +1,24 @@
+{
+  "name": "راصد",
+  "short_name": "راصد",
+  "description": "تطبيق متكامل لإدارة حضور وغياب الطلاب، تسجيل السلوكيات، وإصدار التقارير.",
+  "start_url": "./index.html",
+  "display": "standalone",
+  "orientation": "any",
+  "background_color": "#f2f2f7",
+  "theme_color": "#f2f2f7",
+  "scope": ".",
+  "icons": [
+    {
+      "src": "icon.png?v=3",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "icon.png?v=3",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}

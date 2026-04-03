@@ -1,0 +1,98 @@
+/* theme/tokens.css */
+
+@layer base {
+  /* ☀️ الثيم الفاتح (Light) */
+  :root[data-theme="light"] {
+    --bg: #f2f2f7;
+    --text: #000000;
+    --secondary: #8e8e93;
+    --card: #ffffff;
+    --border: rgba(60, 60, 67, 0.18);
+    --glass: rgba(255, 255, 255, 0.7);
+    --primary: #007aff;
+    --glow: rgba(0, 122, 255, 0.1);
+  }
+
+  /* 🌙 الثيم الداكن (Dark) */
+  :root[data-theme="dark"] {
+    --bg: #000000;
+    --text: #ffffff;
+    --secondary: #ebebf599;
+    --card: #1c1c1e;
+    --border: rgba(84, 84, 88, 0.65);
+    --glass: rgba(28, 28, 30, 0.7);
+    --primary: #0a84ff;
+    --glow: rgba(10, 132, 255, 0.15);
+  }
+
+  /* 🧊 الثيم الزجاجي الفاخر (Deep Space Glass - مطابق للصورة المرفقة) */
+  :root[data-theme="glass"] {
+    /* خلفية زرقاء داكنة/فضائية مع تدرج يحاكي الصورة */
+    --bg: radial-gradient(circle at top right, #0d2b5e 0%, #051024 40%, #020617 100%);
+    
+    --text: #ffffff;
+    --secondary: #8fb0e8; /* لون أزرق فاتح مائل للرمادي للنصوص الثانوية */
+    
+    /* البطاقات: زرقاء داكنة شفافة جداً */
+    --card: rgba(13, 34, 74, 0.4); 
+    --glass: rgba(13, 34, 74, 0.2); 
+    
+    /* حدود مضيئة لتعطي الإحساس الزجاجي ثلاثي الأبعاد */
+    --border: rgba(143, 176, 232, 0.2); 
+    
+    --primary: #4da6ff; /* أزرق نيون ساطع للأيقونات والأزرار */
+    --glow: rgba(77, 166, 255, 0.4); /* توهج قوي للون الأساسي */
+  }
+
+  /* ✨ الثيم الرمضاني (Ramadan) */
+  :root[data-theme="ramadan"] {
+    --bg: #0B0F1A;
+    --text: #fef3c7;
+    --secondary: #d97706;
+    --card: rgba(30, 27, 75, 0.4);
+    --border: rgba(251, 191, 36, 0.15);
+    --glass: rgba(15, 23, 42, 0.4);
+    --primary: #fbbf24;
+    --glow: rgba(251, 191, 36, 0.2);
+  }
+}
+
+@layer components {
+  /* 🌟 كلاسات الزجاج الموحدة */
+  
+  /* البطاقات العادية (Cards) */
+  .glass-card {
+    @apply bg-bgCard border border-borderColor;
+    backdrop-filter: blur(24px); /* تمويه قوي */
+    -webkit-backdrop-filter: blur(24px);
+    /* ظل خارجي داكن + ظل داخلي علوي مضيء (لإبراز الحواف الزجاجية) */
+    box-shadow: 
+      0 10px 30px rgba(0, 0, 0, 0.5), 
+      inset 0 1px 1px rgba(255, 255, 255, 0.15),
+      inset 0 -1px 1px rgba(0, 0, 0, 0.2);
+  }
+  
+  /* اللوحات الكبيرة والـ Drawers (Panels) */
+  .glass-panel {
+    @apply bg-bgSoft border border-borderColor;
+    backdrop-filter: blur(32px);
+    -webkit-backdrop-filter: blur(32px);
+    box-shadow: 
+      0 15px 40px rgba(0, 0, 0, 0.6),
+      inset 0 1px 1px rgba(255, 255, 255, 0.15);
+  }
+
+  /* الأزرار الزجاجية */
+  .glass-button {
+    @apply bg-bgSoft border border-borderColor text-textPrimary transition-all duration-300 hover:bg-bgCard active:scale-95;
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    box-shadow: inset 0 1px 1px rgba(255, 255, 255, 0.1);
+  }
+}
+
+@layer utilities {
+  .animate-smooth {
+    transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+  }
+}
