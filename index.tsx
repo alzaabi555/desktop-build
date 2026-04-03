@@ -4,7 +4,6 @@ import { HashRouter } from 'react-router-dom';
 import App from './App';
 
 const container = document.getElementById('root');
-const container = document.getElementById('root');
 
 const hideLoader = () => {
   const loader = document.getElementById('initial-loader');
