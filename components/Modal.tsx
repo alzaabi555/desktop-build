@@ -1,7 +1,8 @@
+
 import React, { useEffect } from 'react';
 import ReactDOM from 'react-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-// ❌ تم حذف استيراد ThemeContext من هنا
+import { useTheme } from '../context/ThemeContext';
 
 interface ModalProps {
   isOpen: boolean;
@@ -11,7 +12,7 @@ interface ModalProps {
 }
 
 const Modal: React.FC<ModalProps> = ({ isOpen, onClose, children, className }) => {
-  // ❌ تم استئصال سطر useTheme المسبب للانهيار من هنا
+  const { isLowPower } = useTheme();
 
   useEffect(() => {
     if (isOpen) {

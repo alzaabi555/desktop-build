@@ -24,9 +24,9 @@ type DetailCardProps = {
 };
 
 const DetailCard: React.FC<DetailCardProps> = ({ icon: Icon, title, desc, details, colorClass, isRamadan }) => (
-  <div className={`p-6 rounded-[2rem] border transition-all duration-300 ${isRamadan ? 'bg-white/5 border-white/10 hover:bg-white/10 hover:border-indigo-400/50 backdrop-blur-xl shadow-lg' : 'bg-slate-800/40 border-slate-700/50 hover:bg-slate-800 hover:border-indigo-500/30'}`}>
+  <div className={`p-6 rounded-[2rem] border transition-all duration-300 ${isRamadan ? 'bg-bgCard/5 border-white/10 hover:bg-bgCard/10 hover:border-indigo-400/50 backdrop-blur-xl shadow-lg' : 'bg-slate-800/40 border-slate-700/50 hover:bg-slate-800 hover:border-indigo-500/30'}`}>
     <div className="flex items-start gap-4">
-      <div className={`p-3 rounded-2xl shrink-0 ${isRamadan ? 'bg-white/10 text-white shadow-inner' : colorClass ?? 'bg-indigo-600/30 text-white'}`}>
+      <div className={`p-3 rounded-2xl shrink-0 ${isRamadan ? 'bg-bgCard/10 text-white shadow-inner' : colorClass ?? 'bg-indigo-600/30 text-white'}`}>
         <Icon size={24} />
       </div>
       <div>
@@ -144,12 +144,12 @@ const UserGuide: React.FC = () => {
         <div className="h-full flex flex-col pt-[env(safe-area-inset-top)]">
           <div className={`p-6 border-b flex justify-between items-center ${isRamadan ? 'border-white/10' : 'border-slate-800'}`}>
             <div className="flex items-center gap-3">
-              <div className={`p-2 rounded-xl ${isRamadan ? 'bg-white/10 text-white' : 'bg-indigo-600 text-white'}`}>
+              <div className={`p-2 rounded-xl ${isRamadan ? 'bg-bgCard/10 text-white' : 'bg-indigo-600 text-white'}`}>
                 <BookOpen className="w-5 h-5" />
               </div>
               <span className="font-black text-xl">{t('rasedGuideTitle')}</span>
             </div>
-            <button onClick={() => setSidebarOpen(false)} className={`lg:hidden p-2 rounded-xl transition-colors ${isRamadan ? 'text-slate-400 hover:bg-white/10 hover:text-white' : 'text-slate-400 hover:bg-slate-800 hover:text-white'}`}>
+            <button onClick={() => setSidebarOpen(false)} className={`lg:hidden p-2 rounded-xl transition-colors ${isRamadan ? 'text-slate-400 hover:bg-bgCard/10 hover:text-white' : 'text-slate-400 hover:bg-slate-800 hover:text-white'}`}>
               <X size={20} />
             </button>
           </div>
@@ -163,7 +163,7 @@ const UserGuide: React.FC = () => {
                   ${
                     activeSection === item.id
                       ? (isRamadan ? `bg-indigo-500/20 text-indigo-300 border border-indigo-500/30 shadow-lg ${dir === 'rtl' ? 'translate-x-[-4px]' : 'translate-x-[4px]'}` : `bg-indigo-600 text-white shadow-lg ${dir === 'rtl' ? 'translate-x-[-4px]' : 'translate-x-[4px]'}`)
-                      : (isRamadan ? 'text-slate-400 hover:bg-white/5 hover:text-white' : 'text-slate-400 hover:bg-slate-800 hover:text-white')
+                      : (isRamadan ? 'text-slate-400 hover:bg-bgCard/5 hover:text-white' : 'text-slate-400 hover:bg-slate-800 hover:text-white')
                   }`}
               >
                 <item.icon className={`w-4 h-4 ${activeSection === item.id ? (isRamadan ? 'text-indigo-400' : 'text-white') : 'text-slate-500'}`} />
@@ -176,7 +176,7 @@ const UserGuide: React.FC = () => {
             <button
               onClick={handleDownloadPDF}
               disabled={isExporting}
-              className={`w-full py-3 rounded-xl font-bold text-xs flex items-center justify-center gap-2 transition-all disabled:opacity-60 ${isRamadan ? 'bg-white/10 hover:bg-white/20 text-white' : 'bg-slate-800 hover:bg-slate-700 text-slate-300'}`}
+              className={`w-full py-3 rounded-xl font-bold text-xs flex items-center justify-center gap-2 transition-all disabled:opacity-60 ${isRamadan ? 'bg-bgCard/10 hover:bg-bgCard/20 text-white' : 'bg-slate-800 hover:bg-slate-700 text-slate-300'}`}
             >
               {isExporting ? (
                 <span className="animate-pulse">{t('savingStatus')}</span>
@@ -196,7 +196,7 @@ const UserGuide: React.FC = () => {
         {/* Mobile Menu Button - متوافق مع النوتش */}
         <button
           onClick={() => setSidebarOpen(true)}
-          className={`fixed top-[calc(env(safe-area-inset-top)+1rem)] ${dir === 'rtl' ? 'right-4' : 'left-4'} z-40 p-3 rounded-xl shadow-lg lg:hidden backdrop-blur-xl transition-all ${isRamadan ? 'bg-white/10 border border-white/20 text-white' : 'bg-slate-800/80 border border-slate-700 text-white'}`}
+          className={`fixed top-[calc(env(safe-area-inset-top)+1rem)] ${dir === 'rtl' ? 'right-4' : 'left-4'} z-40 p-3 rounded-xl shadow-lg lg:hidden backdrop-blur-xl transition-all ${isRamadan ? 'bg-bgCard/10 border border-borderColor text-white' : 'bg-slate-800/80 border border-slate-700 text-white'}`}
         >
           <Menu size={24} />
         </button>
@@ -221,7 +221,7 @@ const UserGuide: React.FC = () => {
               {/* 1. Dashboard */}
               <section id="dashboard" className="scroll-mt-24">
                 <div className="flex items-center gap-3 mb-8">
-                  <div className={`p-3 rounded-2xl ${isRamadan ? 'bg-white/10 shadow-inner' : 'bg-indigo-600'}`}>
+                  <div className={`p-3 rounded-2xl ${isRamadan ? 'bg-bgCard/10 shadow-inner' : 'bg-indigo-600'}`}>
                     <Home className={`w-6 h-6 ${isRamadan ? 'text-indigo-400' : 'text-white'}`} />
                   </div>
                   <h2 className="text-3xl font-black text-white">{t('sec1Title')}</h2>
@@ -266,7 +266,7 @@ const UserGuide: React.FC = () => {
               {/* 2. Attendance */}
               <section id="attendance" className="scroll-mt-24">
                 <div className="flex items-center gap-3 mb-8">
-                  <div className={`p-3 rounded-2xl ${isRamadan ? 'bg-white/10 shadow-inner' : 'bg-emerald-600'}`}>
+                  <div className={`p-3 rounded-2xl ${isRamadan ? 'bg-bgCard/10 shadow-inner' : 'bg-emerald-600'}`}>
                     <Calendar className={`w-6 h-6 ${isRamadan ? 'text-emerald-400' : 'text-white'}`} />
                   </div>
                   <h2 className="text-3xl font-black text-white">{t('sec2Title')}</h2>
@@ -307,7 +307,7 @@ const UserGuide: React.FC = () => {
               {/* 3. Students */}
               <section id="students" className="scroll-mt-24">
                 <div className="flex items-center gap-3 mb-8">
-                  <div className={`p-3 rounded-2xl ${isRamadan ? 'bg-white/10 shadow-inner' : 'bg-pink-600'}`}>
+                  <div className={`p-3 rounded-2xl ${isRamadan ? 'bg-bgCard/10 shadow-inner' : 'bg-pink-600'}`}>
                     <Users className={`w-6 h-6 ${isRamadan ? 'text-pink-400' : 'text-white'}`} />
                   </div>
                   <h2 className="text-3xl font-black text-white">{t('sec3Title')}</h2>
@@ -348,7 +348,7 @@ const UserGuide: React.FC = () => {
               {/* 4. Grades */}
               <section id="grades" className="scroll-mt-24">
                 <div className="flex items-center gap-3 mb-8">
-                  <div className={`p-3 rounded-2xl ${isRamadan ? 'bg-white/10 shadow-inner' : 'bg-blue-600'}`}>
+                  <div className={`p-3 rounded-2xl ${isRamadan ? 'bg-bgCard/10 shadow-inner' : 'bg-blue-600'}`}>
                     <BarChart className={`w-6 h-6 ${isRamadan ? 'text-blue-400' : 'text-white'}`} />
                   </div>
                   <h2 className="text-3xl font-black text-white">{t('sec4Title')}</h2>
@@ -389,7 +389,7 @@ const UserGuide: React.FC = () => {
               {/* 5. Knights */}
               <section id="knights" className="scroll-mt-24">
                 <div className="flex items-center gap-3 mb-8">
-                  <div className={`p-3 rounded-2xl ${isRamadan ? 'bg-white/10 shadow-inner' : 'bg-amber-600'}`}>
+                  <div className={`p-3 rounded-2xl ${isRamadan ? 'bg-bgCard/10 shadow-inner' : 'bg-amber-600'}`}>
                     <Award className={`w-6 h-6 ${isRamadan ? 'text-amber-400' : 'text-white'}`} />
                   </div>
                   <h2 className="text-3xl font-black text-white">{t('sec5Title')}</h2>
@@ -423,7 +423,7 @@ const UserGuide: React.FC = () => {
               {/* 6. Reports */}
               <section id="reports" className="scroll-mt-24">
                 <div className="flex items-center gap-3 mb-8">
-                  <div className={`p-3 rounded-2xl ${isRamadan ? 'bg-white/10 shadow-inner' : 'bg-indigo-600'}`}>
+                  <div className={`p-3 rounded-2xl ${isRamadan ? 'bg-bgCard/10 shadow-inner' : 'bg-indigo-600'}`}>
                     <Printer className={`w-6 h-6 ${isRamadan ? 'text-indigo-400' : 'text-white'}`} />
                   </div>
                   <h2 className="text-3xl font-black text-white">{t('sec6Title')}</h2>
@@ -457,7 +457,7 @@ const UserGuide: React.FC = () => {
               {/* 7. Settings */}
               <section id="settings" className="scroll-mt-24 border-t border-slate-800 pt-12">
                 <div className="flex items-center gap-3 mb-8">
-                  <div className={`p-3 rounded-2xl ${isRamadan ? 'bg-white/10 shadow-inner' : 'bg-slate-700'}`}>
+                  <div className={`p-3 rounded-2xl ${isRamadan ? 'bg-bgCard/10 shadow-inner' : 'bg-slate-700'}`}>
                     <Settings className={`w-6 h-6 ${isRamadan ? 'text-slate-400' : 'text-white'}`} />
                   </div>
                   <h2 className="text-3xl font-black text-white">{t('sec7Title')}</h2>
@@ -496,7 +496,7 @@ const UserGuide: React.FC = () => {
               </section>
             </div>
 
-            <div className={`text-center py-12 text-sm font-bold border-t ${isRamadan ? 'border-white/10 text-indigo-200/50' : 'border-slate-900 text-slate-500 bg-slate-950'}`}>
+            <div className={`text-center py-12 text-sm font-bold border-t ${isRamadan ? 'border-white/10 text-indigo-200/50' : 'border-slate-900 text-textSecondarybg-slate-950'}`}>
               {t('footerText1')} {new Date().getFullYear()}
             </div>
 

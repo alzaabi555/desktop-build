@@ -45,19 +45,19 @@ const DrawerSheet: React.FC<{
             <div
                 className={`fixed z-[101] flex flex-col shadow-2xl transition-transform duration-500 ease-[cubic-bezier(0.32,0.72,0,1)]
                     ${positioningStyles}
-                    ${isRamadan ? 'bg-[#0f172a] border-white/10 text-white' : 'bg-white border-slate-200 text-slate-800'}
+                    ${isRamadan ? 'bg-[#0f172a] border-white/10 text-white' : 'bg-bgCard border-slate-200 text-textPrimary'}
                     ${transformStyles}
                 `}
             >
                 {mode === 'bottom' && (
                     <div className="md:hidden flex justify-center pt-3 pb-1 shrink-0 cursor-pointer" onClick={onClose}>
-                        <div className={`w-10 h-1.5 rounded-full ${isRamadan ? 'bg-white/20' : 'bg-slate-300'}`} />
+                        <div className={`w-10 h-1.5 rounded-full ${isRamadan ? 'bg-bgCard/20' : 'bg-slate-300'}`} />
                     </div>
                 )}
 
                 <button
                     onClick={onClose}
-                    className={`absolute top-4 ${dir === 'rtl' ? 'left-4' : 'right-4'} p-2 rounded-full transition-colors z-[102] ${isRamadan ? 'hover:bg-white/10 text-white/70' : 'hover:bg-slate-100 text-slate-500'} ${mode === 'bottom' ? 'hidden md:flex' : 'flex'}`}
+                    className={`absolute top-4 ${dir === 'rtl' ? 'left-4' : 'right-4'} p-2 rounded-full transition-colors z-[102] ${isRamadan ? 'hover:bg-bgCard/10 text-white/70' : 'hover:bg-slate-100 text-textSecondary'} ${mode === 'bottom' ? 'hidden md:flex' : 'flex'}`}
                 >
                     <X size={20} />
                 </button>
@@ -232,21 +232,21 @@ const StudentGroups: React.FC<StudentGroupsProps> = ({ onBack }) => {
   }
 
   return (
-    <div className={`flex flex-col h-full overflow-hidden ${isRamadan ? 'text-white' : 'text-slate-800 bg-[#f8fafc]'} ${dir === 'rtl' ? 'text-right' : 'text-left'}`} dir={dir}>
+    <div className={`flex flex-col h-full overflow-hidden ${isRamadan ? 'text-white' : 'text-textPrimary bg-[#f8fafc]'} ${dir === 'rtl' ? 'text-right' : 'text-left'}`} dir={dir}>
       
       {/* ================= 🩺 الهيدر القياسي الممتد للنوتش ================= */}
     <header 
-    className={`shrink-0 z-40 px-4 pt-[env(safe-area-inset-top)] w-full transition-all duration-300 bg-transparent ${isRamadan ? 'text-white' : 'text-slate-800'}`}
+    className={`shrink-0 z-40 px-4 pt-[env(safe-area-inset-top)] w-full transition-all duration-300 bg-transparent ${isRamadan ? 'text-white' : 'text-textPrimary'}`}
     style={{ WebkitAppRegion: 'drag' } as any}
 >
         <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
           <div className="flex items-center gap-4">
             {onBack && (
-              <button onClick={onBack} style={{ WebkitAppRegion: 'no-drag' } as any} className={`p-2 rounded-full transition-colors ${isRamadan ? 'hover:bg-white/10' : 'hover:bg-white/20'}`}>
+              <button onClick={onBack} style={{ WebkitAppRegion: 'no-drag' } as any} className={`p-2 rounded-full transition-colors ${isRamadan ? 'hover:bg-bgCard/10' : 'hover:bg-bgCard/20'}`}>
                 <ArrowRight className={`w-6 h-6 ${dir === 'ltr' ? 'rotate-180' : ''}`} />
               </button>
             )}
-            <div className="bg-white/10 p-2 rounded-xl border border-white/20">
+            <div className="bg-bgCard/10 p-2 rounded-xl border border-borderColor">
               <Users className="w-5 h-5 text-white" />
             </div>
             <div style={{ WebkitAppRegion: 'no-drag' } as any}>
@@ -259,7 +259,7 @@ const StudentGroups: React.FC<StudentGroupsProps> = ({ onBack }) => {
             value={selectedClass} 
             onChange={(e) => { setSelectedClass(e.target.value); setActiveCatId(''); }}
             style={{ WebkitAppRegion: 'no-drag' } as any}
-            className={`p-2 md:p-3 rounded-xl border font-black text-sm md:text-lg outline-none cursor-pointer min-w-[150px] md:min-w-[200px] ${isRamadan ? 'bg-[#0f172a]/80 border-white/20 text-white' : 'bg-white/20 border-white/30 text-white'}`}
+            className={`p-2 md:p-3 rounded-xl border font-black text-sm md:text-lg outline-none cursor-pointer min-w-[150px] md:min-w-[200px] ${isRamadan ? 'bg-[#0f172a]/80 border-borderColor text-white' : 'bg-bgCard/20 border-white/30 text-white'}`}
           >
             {classes.map(c => <option key={c} value={c} className={isRamadan ? 'bg-[#0f172a]' : 'bg-[#446A8D]'}>{c}</option>)}
           </select>
@@ -270,7 +270,7 @@ const StudentGroups: React.FC<StudentGroupsProps> = ({ onBack }) => {
     <div className="flex-1 overflow-y-auto px-2 pt-2 pb-28 custom-scrollbar relative z-10 flex flex-col md:flex-row">
         
         {/* ================= 🗂️ العمود الأيمن: التقسيمات ================= */}
-        <div className={`w-full md:w-1/3 flex flex-col shrink-0 mb-4 md:mb-0 ${dir === 'rtl' ? 'md:border-l' : 'md:border-r'} ${isRamadan ? 'border-white/10 bg-[#020617]/50 backdrop-blur-sm' : 'border-slate-200 bg-white'}`}>
+        <div className={`w-full md:w-1/3 flex flex-col shrink-0 mb-4 md:mb-0 ${dir === 'rtl' ? 'md:border-l' : 'md:border-r'} ${isRamadan ? 'border-white/10 bg-[#020617]/50 backdrop-blur-sm' : 'border-slate-200 bg-bgCard'}`}>
           <div className="p-5 border-b border-inherit shrink-0">
             <h2 className={`font-black text-lg mb-4 flex items-center gap-2 ${isRamadan ? 'text-indigo-300' : ''}`}>
               <FolderPlus className={`w-5 h-5 ${isRamadan ? 'text-indigo-400' : 'text-indigo-500'}`} /> {t('classCategorizations')}
@@ -282,7 +282,7 @@ const StudentGroups: React.FC<StudentGroupsProps> = ({ onBack }) => {
                 value={newCatTitle}
                 onChange={(e) => setNewCatTitle(e.target.value)}
                 onKeyDown={(e) => e.key === 'Enter' && handleCreateCategorization()}
-                className={`flex-1 p-3 rounded-xl border text-sm font-bold outline-none ${isRamadan ? 'bg-[#0f172a]/80 border-white/20 focus:border-indigo-400 text-white placeholder:text-slate-500' : 'bg-slate-50 border-slate-200 focus:border-indigo-500'}`}
+                className={`flex-1 p-3 rounded-xl border text-sm font-bold outline-none ${isRamadan ? 'bg-[#0f172a]/80 border-borderColor focus:border-indigo-400 text-white placeholder:text-textSecondary' : 'bg-slate-50 border-slate-200 focus:border-indigo-500'}`}
               />
               <button 
                 onClick={handleCreateCategorization}
@@ -296,7 +296,7 @@ const StudentGroups: React.FC<StudentGroupsProps> = ({ onBack }) => {
 
           <div className="flex-1 overflow-y-auto p-4 space-y-3 custom-scrollbar">
             {classCategorizations.length === 0 ? (
-              <div className={`text-center p-8 rounded-2xl border border-dashed ${isRamadan ? 'border-white/20 text-slate-400 bg-white/5' : 'border-slate-300 text-slate-500'}`}
+              <div className={`text-center p-8 rounded-2xl border border-dashed ${isRamadan ? 'border-borderColor text-slate-400 bg-bgCard/5' : 'border-slate-300 text-textSecondary'}`}
                    dangerouslySetInnerHTML={{ __html: t('noCategorizations') }}>
               </div>
             ) : (
@@ -304,11 +304,11 @@ const StudentGroups: React.FC<StudentGroupsProps> = ({ onBack }) => {
                 <div 
                   key={cat.id} 
                   onClick={() => setActiveCatId(cat.id)}
-                  className={`p-4 rounded-2xl border-2 cursor-pointer transition-all flex justify-between items-center group ${activeCatId === cat.id ? (isRamadan ? 'border-indigo-500 bg-indigo-500/20' : 'border-indigo-500 bg-indigo-50 shadow-md') : (isRamadan ? 'border-white/10 bg-white/5 hover:bg-white/10' : 'border-slate-200 bg-white hover:border-slate-300')}`}
+                  className={`p-4 rounded-2xl border-2 cursor-pointer transition-all flex justify-between items-center group ${activeCatId === cat.id ? (isRamadan ? 'border-indigo-500 bg-indigo-500/20' : 'border-indigo-500 bg-indigo-50 shadow-md') : (isRamadan ? 'border-white/10 bg-bgCard/5 hover:bg-bgCard/10' : 'border-slate-200 bg-bgCard hover:border-slate-300')}`}
                 >
                   <div>
                     <h3 className={`font-black text-lg ${activeCatId === cat.id ? (isRamadan ? 'text-indigo-300' : 'text-indigo-800') : ''}`}>{cat.title}</h3>
-                    <p className={`text-xs font-bold mt-1 ${isRamadan ? 'text-slate-400' : 'text-slate-500'}`}>
+                    <p className={`text-xs font-bold mt-1 ${isRamadan ? 'text-slate-400' : 'text-textSecondary'}`}>
                       {cat.groups.length} {t('groupsCount')} • {cat.groups.reduce((acc, g) => acc + g.studentIds.length, 0)} {t('studentsCountWord')}
                     </p>
                   </div>
@@ -334,7 +334,7 @@ const StudentGroups: React.FC<StudentGroupsProps> = ({ onBack }) => {
           ) : (
             <>
               {/* شريط الإضافة للمجموعات */}
-              <div className={`p-4 border-b flex flex-wrap gap-3 items-center shrink-0 ${isRamadan ? 'border-white/10 bg-white/5 backdrop-blur-md' : 'border-slate-200 bg-white'}`}>
+              <div className={`p-4 border-b flex flex-wrap gap-3 items-center shrink-0 ${isRamadan ? 'border-white/10 bg-bgCard/5 backdrop-blur-md' : 'border-slate-200 bg-bgCard'}`}>
                 <div className="flex gap-1 shrink-0">
                   {groupColors.map(color => (
                     <button 
@@ -351,7 +351,7 @@ const StudentGroups: React.FC<StudentGroupsProps> = ({ onBack }) => {
                     value={newGroupName}
                     onChange={(e) => setNewGroupName(e.target.value)}
                     onKeyDown={(e) => e.key === 'Enter' && handleCreateGroup()}
-                    className={`flex-1 p-2 rounded-xl border text-sm font-bold outline-none ${isRamadan ? 'bg-[#0f172a]/80 border-white/20 focus:border-indigo-400 text-white placeholder:text-slate-500' : 'bg-slate-50 border-slate-200 focus:border-indigo-500'}`}
+                    className={`flex-1 p-2 rounded-xl border text-sm font-bold outline-none ${isRamadan ? 'bg-[#0f172a]/80 border-borderColor focus:border-indigo-400 text-white placeholder:text-textSecondary' : 'bg-slate-50 border-slate-200 focus:border-indigo-500'}`}
                   />
                   <button 
                     onClick={handleCreateGroup}
@@ -366,10 +366,10 @@ const StudentGroups: React.FC<StudentGroupsProps> = ({ onBack }) => {
               <div className="flex-1 overflow-y-auto p-6 custom-scrollbar flex flex-col gap-6">
                 
                 {/* منطقة الطلاب غير الموزعين */}
-                <div className={`p-5 rounded-2xl border shrink-0 ${isRamadan ? 'bg-white/5 border-white/10' : 'bg-white border-slate-200 shadow-sm'}`}>
+                <div className={`p-5 rounded-2xl border shrink-0 ${isRamadan ? 'bg-bgCard/5 border-white/10' : 'bg-bgCard border-slate-200 shadow-sm'}`}>
                   <h3 className="font-black text-sm mb-4 flex items-center justify-between">
-                    <span className={isRamadan ? 'text-slate-300' : 'text-slate-500'}>{t('unassignedStudents')}</span>
-                    <span className={`text-xs px-3 py-1 rounded-lg font-bold ${isRamadan ? 'bg-white/10 text-white' : 'bg-slate-100 text-slate-700'}`}>
+                    <span className={isRamadan ? 'text-slate-300' : 'text-textSecondary'}>{t('unassignedStudents')}</span>
+                    <span className={`text-xs px-3 py-1 rounded-lg font-bold ${isRamadan ? 'bg-bgCard/10 text-white' : 'bg-slate-100 text-slate-700'}`}>
                       {t('remainingLabel')} {unassignedStudents.length}
                     </span>
                   </h3>
@@ -380,7 +380,7 @@ const StudentGroups: React.FC<StudentGroupsProps> = ({ onBack }) => {
                   ) : (
                     <div className="flex flex-wrap gap-2">
                       {unassignedStudents.map(s => (
-                        <div key={s.id} className={`px-3 py-2 rounded-xl text-xs font-black border flex items-center gap-2 ${isRamadan ? 'bg-white/10 border-white/20 text-slate-200' : 'bg-slate-50 border-slate-200 text-slate-600'}`}>
+                        <div key={s.id} className={`px-3 py-2 rounded-xl text-xs font-black border flex items-center gap-2 ${isRamadan ? 'bg-bgCard/10 border-borderColor text-slate-200' : 'bg-slate-50 border-slate-200 text-slate-600'}`}>
                           {getShortName(s.name)}
                         </div>
                       ))}
@@ -397,11 +397,11 @@ const StudentGroups: React.FC<StudentGroupsProps> = ({ onBack }) => {
                     const isCompleted = group.isCompleted;
                     const containerStyle = isCompleted 
                         ? (isRamadan ? `bg-emerald-900/30 border-emerald-500/50 opacity-80 scale-[0.98]` : `bg-emerald-50/60 border-emerald-300 opacity-80 scale-[0.98]`)
-                        : (isRamadan ? `bg-white/5 ${groupColor.border}` : `bg-white ${groupColor.border} shadow-sm`);
+                        : (isRamadan ? `bg-bgCard/5 ${groupColor.border}` : `bg-bgCard ${groupColor.border} shadow-sm`);
 
                     const headerStyle = isCompleted 
                         ? (isRamadan ? `bg-emerald-500/20 border-inherit` : `bg-emerald-100/50 border-inherit`) 
-                        : (isRamadan ? 'bg-white/10 border-inherit' : `${groupColor.bg} border-inherit`);
+                        : (isRamadan ? 'bg-bgCard/10 border-inherit' : `${groupColor.bg} border-inherit`);
 
                     return (
                       <div key={group.id} className={`rounded-2xl border-2 flex flex-col overflow-hidden transition-all duration-300 ${containerStyle}`}>
@@ -410,7 +410,7 @@ const StudentGroups: React.FC<StudentGroupsProps> = ({ onBack }) => {
                               <button 
                                 onClick={() => toggleGroupCompletion(group.id)} 
                                 title={isCompleted ? t('undoCompletion') : t('markAsCompleted')}
-                                className={`p-1.5 rounded-lg border-2 transition-all ${isCompleted ? 'bg-emerald-500 border-emerald-500 text-white shadow-md' : (isRamadan ? 'bg-white/10 border-white/20 text-white hover:border-emerald-400 hover:text-emerald-400' : 'bg-white/50 border-slate-300 text-slate-300 hover:border-emerald-400 hover:text-emerald-500')}`}
+                                className={`p-1.5 rounded-lg border-2 transition-all ${isCompleted ? 'bg-emerald-500 border-emerald-500 text-white shadow-md' : (isRamadan ? 'bg-bgCard/10 border-borderColor text-white hover:border-emerald-400 hover:text-emerald-400' : 'bg-bgCard/50 border-slate-300 text-slate-300 hover:border-emerald-400 hover:text-emerald-500')}`}
                               >
                                   <CheckCircle2 size={16} className={isCompleted ? "animate-in zoom-in" : ""} />
                               </button>
@@ -420,7 +420,7 @@ const StudentGroups: React.FC<StudentGroupsProps> = ({ onBack }) => {
                           </div>
 
                           <div className="flex items-center gap-1">
-                            <span className={`text-[10px] font-bold px-2 py-1 rounded-lg backdrop-blur-sm ${isCompleted ? (isRamadan ? 'bg-emerald-500/30 text-emerald-200' : 'bg-white/50 text-emerald-700') : (isRamadan ? 'bg-white/20 text-white' : `bg-white/50 ${groupColor.text}`)}`}>
+                            <span className={`text-[10px] font-bold px-2 py-1 rounded-lg backdrop-blur-sm ${isCompleted ? (isRamadan ? 'bg-emerald-500/30 text-emerald-200' : 'bg-bgCard/50 text-emerald-700') : (isRamadan ? 'bg-bgCard/20 text-white' : `bg-bgCard/50 ${groupColor.text}`)}`}>
                               {groupStudents.length}
                             </span>
                             <button onClick={() => handleDeleteGroup(group.id)} className={`p-1.5 rounded-lg transition-colors ${isRamadan ? 'hover:bg-rose-500/20 text-rose-400' : 'hover:bg-rose-100 text-rose-500'}`} title={t('deleteGroupBtn')}>
@@ -432,7 +432,7 @@ const StudentGroups: React.FC<StudentGroupsProps> = ({ onBack }) => {
                         <div className={`p-3 flex-1 min-h-[150px] ${isCompleted ? (isRamadan ? 'bg-transparent' : 'bg-emerald-50/30') : (isRamadan ? 'bg-transparent' : 'bg-slate-50/30')}`}>
                           <div className="flex flex-col gap-2">
                             {groupStudents.map(s => (
-                              <div key={s.id} className={`p-2 rounded-xl text-xs font-bold border flex justify-between items-center group/item transition-all ${isCompleted ? (isRamadan ? 'bg-white/5 border-emerald-500/30 text-emerald-200/60 line-through' : 'bg-white/40 border-emerald-200/50 text-emerald-900/60 line-through') : (isRamadan ? 'bg-white/10 border-white/10' : 'bg-white border-slate-200 hover:border-slate-300')}`}>
+                              <div key={s.id} className={`p-2 rounded-xl text-xs font-bold border flex justify-between items-center group/item transition-all ${isCompleted ? (isRamadan ? 'bg-bgCard/5 border-emerald-500/30 text-emerald-200/60 line-through' : 'bg-bgCard/40 border-emerald-200/50 text-emerald-900/60 line-through') : (isRamadan ? 'bg-bgCard/10 border-white/10' : 'bg-bgCard border-slate-200 hover:border-slate-300')}`}>
                                 <span>{getShortName(s.name)}</span>
                                 {!isCompleted && (
                                     <button onClick={() => removeStudentFromGroup(s.id, group.id)} className={`p-1 rounded-md opacity-0 group-hover/item:opacity-100 transition-all ${isRamadan ? 'text-rose-400 hover:bg-rose-500/20' : 'text-rose-500 hover:bg-rose-100'}`} title={t('removeFromGroupBtn')}>
@@ -445,7 +445,7 @@ const StudentGroups: React.FC<StudentGroupsProps> = ({ onBack }) => {
                         </div>
                         
                         {!isCompleted && (
-                            <div className={`p-3 border-t shrink-0 ${isRamadan ? 'bg-white/5 border-white/10' : 'bg-white'}`}>
+                            <div className={`p-3 border-t shrink-0 ${isRamadan ? 'bg-bgCard/5 border-white/10' : 'bg-bgCard'}`}>
                               <button 
                                 onClick={() => openAssignModal(group.id)}
                                 className={`w-full py-2.5 rounded-xl border-2 border-dashed font-bold text-sm flex items-center justify-center gap-2 transition-colors ${isRamadan ? 'border-indigo-400/50 text-indigo-300 hover:bg-indigo-500/20' : 'border-indigo-200 text-indigo-600 hover:bg-indigo-50 hover:border-indigo-400'}`}
@@ -469,7 +469,7 @@ const StudentGroups: React.FC<StudentGroupsProps> = ({ onBack }) => {
         <DrawerSheet isOpen={true} onClose={() => setAssigningToGroup(null)} isRamadan={isRamadan} dir={dir}>
           <div className="flex flex-col h-full w-full">
             
-            <div className={`p-5 pb-4 border-b flex justify-between items-center shrink-0 ${isRamadan ? 'border-white/10 bg-white/5' : 'bg-slate-50 border-slate-100'}`}>
+            <div className={`p-5 pb-4 border-b flex justify-between items-center shrink-0 ${isRamadan ? 'border-white/10 bg-bgCard/5' : 'bg-slate-50 border-slate-100'}`}>
               <div>
                 <h3 className="font-black text-xl">{t('selectStudentsTitle')}</h3>
                 <p className={`text-sm font-bold mt-1 ${isRamadan ? 'text-indigo-400' : 'text-indigo-500'}`}>
@@ -491,7 +491,7 @@ const StudentGroups: React.FC<StudentGroupsProps> = ({ onBack }) => {
                       className={`flex items-center p-3 rounded-xl border-2 cursor-pointer transition-all active:scale-95 ${
                         isSelected 
                           ? (isRamadan ? 'border-indigo-500 bg-indigo-500/20' : 'border-indigo-500 bg-indigo-50') 
-                          : (isRamadan ? 'border-white/10 bg-white/5 hover:bg-white/10' : 'border-slate-100 hover:border-indigo-200 hover:bg-slate-50')
+                          : (isRamadan ? 'border-white/10 bg-bgCard/5 hover:bg-bgCard/10' : 'border-slate-100 hover:border-indigo-200 hover:bg-slate-50')
                       }`}
                     >
                       <div className={`w-6 h-6 rounded-lg flex items-center justify-center border-2 ${dir === 'rtl' ? 'ml-3' : 'mr-3'} shrink-0 transition-colors ${
@@ -516,7 +516,7 @@ const StudentGroups: React.FC<StudentGroupsProps> = ({ onBack }) => {
               </div>
             </div>
             
-            <div className={`p-4 pt-4 mt-auto border-t flex gap-3 shrink-0 ${isRamadan ? 'border-white/10 bg-white/5' : 'bg-slate-50 border-slate-100'}`}>
+            <div className={`p-4 pt-4 mt-auto border-t flex gap-3 shrink-0 ${isRamadan ? 'border-white/10 bg-bgCard/5' : 'bg-slate-50 border-slate-100'}`}>
               <button onClick={saveBulkAssignment} className={`flex-1 py-4 rounded-xl font-black text-sm transition-colors shadow-lg active:scale-95 ${isRamadan ? 'bg-indigo-600 text-white hover:bg-indigo-500' : 'bg-indigo-600 text-white hover:bg-indigo-700'}`}>
                 {t('confirmAndAssignBtn')} ({selectedStudentIds.size})
               </button>

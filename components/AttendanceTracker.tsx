@@ -8,7 +8,7 @@ import { Share } from '@capacitor/share';
 import { Capacitor } from '@capacitor/core';
 import { StudentAvatar } from './StudentAvatar';
 import { useApp } from '../context/AppContext'; 
-import DrawerSheet from './DrawerSheet';
+import { Drawer as DrawerSheet } from './ui/Drawer';
 
 interface AttendanceTrackerProps {
   students: Student[];
@@ -195,30 +195,30 @@ const AttendanceTracker: React.FC<AttendanceTrackerProps> = ({ students, classes
   };
 
   return (
-   <div className={`flex flex-col h-full space-y-6 pb-24 md:pb-8 overflow-hidden relative ${isRamadan ? 'text-textPrimary' : 'text-slate-800'} ${dir === 'rtl' ? 'text-right' : 'text-left'}`} dir={dir}>
+   <div className={`flex flex-col h-full space-y-6 pb-24 md:pb-8 overflow-hidden relative text-textPrimary ${dir === 'rtl' ? 'text-right' : 'text-left'}`} dir={dir}>
             
 <header 
-    className={`shrink-0 z-40 px-4 pt-[env(safe-area-inset-top)] w-full transition-all duration-300 bg-transparent ${isRamadan ? 'text-textPrimary' : 'text-slate-800'}`}
+    className={`shrink-0 z-40 px-4 pt-[env(safe-area-inset-top)] w-full transition-all duration-300 bg-transparent text-textPrimary`}
     style={{ WebkitAppRegion: 'drag' } as any}
 >
                 <div className="flex justify-between items-center gap-3 mb-5">
                     <h1 className="text-xl md:text-2xl font-black tracking-wide shrink-0">{t('attendanceTitle')}</h1>
                     
                     <div className="flex-1 relative group" style={{ WebkitAppRegion: 'no-drag' } as any}>
-                        <Search className={`absolute ${dir === 'rtl' ? 'right-3' : 'left-3'} top-1/2 -translate-y-1/2 w-4 h-4 text-textMuted`} />
+                        <Search className={`absolute ${dir === 'rtl' ? 'right-3' : 'left-3'} top-1/2 -translate-y-1/2 w-4 h-4 text-textSecondary`} />
                         <input 
                             type="text" 
                             value={searchTerm}
                             onChange={(e) => setSearchTerm(e.target.value)}
                             placeholder={t('searchStudentPlaceholder')} 
-                            className={`w-full border rounded-xl py-2.5 ${dir === 'rtl' ? 'pr-10 pl-4' : 'pl-10 pr-4'} text-xs font-bold outline-none transition-all ${isRamadan ? 'bg-bgCard border-bgSoft text-textPrimary placeholder:text-textMuted focus:bg-bgSoft/50 focus:border-primary' : 'bg-white/20 border-white/30 text-white placeholder:text-blue-100 focus:bg-white/30'}`}
+                            className={`w-full border rounded-xl py-2.5 ${dir === 'rtl' ? 'pr-10 pl-4' : 'pl-10 pr-4'} text-xs font-bold outline-none transition-all bg-bgCard border-borderColor text-textPrimary placeholder:text-textSecondary focus:bg-bgSoft`}
                         />
                     </div>
 
                     <button 
                         onClick={handleExportDailyExcel} 
                         disabled={isExportingExcel} 
-                        className={`w-10 h-10 shrink-0 rounded-xl border flex items-center justify-center active:scale-95 transition-all ${isRamadan ? 'bg-bgCard border-bgSoft text-primary hover:bg-bgSoft' : 'bg-white/20 border-white/30 text-white hover:bg-white/30'}`}
+                        className={`w-10 h-10 shrink-0 rounded-xl border flex items-center justify-center active:scale-95 transition-all bg-bgSoft border-borderColor text-textPrimary hover:bg-bgCard`}
                         style={{ WebkitAppRegion: 'no-drag' } as any}
                         title={t('exportRecord')}
                     >
@@ -227,8 +227,8 @@ const AttendanceTracker: React.FC<AttendanceTrackerProps> = ({ students, classes
                 </div>
 
                 {/* 💉 الأيام والتاريخ */}
-                <div className={`flex items-center justify-between gap-1 mb-4 p-2 rounded-2xl border shadow-inner ${isRamadan ? 'bg-bgCard border-bgSoft' : 'bg-white/10 border-white/20'}`} style={{ WebkitAppRegion: 'no-drag' } as any}>
-                    <button onClick={() => setWeekOffset(prev => prev - 1)} className="p-1 text-textSecondary hover:bg-bgSoft rounded-lg transition-colors"><ChevronRight className={`w-5 h-5 ${dir === 'rtl' ? 'rotate-0' : 'rotate-180'}`}/></button>
+                <div className={`flex items-center justify-between gap-1 mb-4 p-2 rounded-2xl border shadow-inner bg-bgSoft border-borderColor`} style={{ WebkitAppRegion: 'no-drag' } as any}>
+                    <button onClick={() => setWeekOffset(prev => prev - 1)} className="p-1 text-textSecondary hover:bg-bgCard rounded-lg transition-colors"><ChevronRight className={`w-5 h-5 ${dir === 'rtl' ? 'rotate-0' : 'rotate-180'}`}/></button>
                     <div className="flex flex-1 justify-between gap-1 text-center">
                         {weekDates.map((date, idx) => {
                             const isSelected = date.toLocaleDateString('en-CA') === selectedDate;
@@ -237,35 +237,35 @@ const AttendanceTracker: React.FC<AttendanceTrackerProps> = ({ students, classes
                                 <button 
                                     key={idx} 
                                     onClick={() => setSelectedDate(date.toLocaleDateString('en-CA'))}
-                                    className={`flex flex-col items-center justify-center py-2 px-1 rounded-xl flex-1 transition-all ${isSelected ? (isRamadan ? 'bg-primary border border-primary text-textPrimary shadow-[0_4px_10px_rgba(37,99,235,0.3)] scale-105' : 'bg-white text-[#1e3a8a] shadow-md scale-105') : 'text-textSecondary hover:bg-bgSoft/50'}`}
+                                    className={`flex flex-col items-center justify-center py-2 px-1 rounded-xl flex-1 transition-all ${isSelected ? 'bg-primary border border-primary text-white shadow-md scale-105' : 'text-textSecondary hover:bg-bgCard'}`}
                                 >
-                                    <span className={`text-[9px] font-bold mb-0.5 ${isSelected ? 'text-white/80' : 'text-textMuted'}`}>{date.toLocaleDateString(language === 'ar' ? 'ar-EG' : 'en-US', { weekday: 'short' })}</span>
+                                    <span className={`text-[9px] font-bold mb-0.5 ${isSelected ? 'text-white/80' : 'text-textSecondary'}`}>{date.toLocaleDateString(language === 'ar' ? 'ar-EG' : 'en-US', { weekday: 'short' })}</span>
                                     <span className="text-sm font-black">{date.getDate()}</span>
-                                    {isToday && !isSelected && <div className="w-1 h-1 bg-primaryLight rounded-full mt-1"></div>}
+                                    {isToday && !isSelected && <div className="w-1 h-1 bg-primary rounded-full mt-1"></div>}
                                 </button>
                             );
                         })}
                     </div>
-                    <button onClick={() => setWeekOffset(prev => prev + 1)} className="p-1 text-textSecondary hover:bg-bgSoft rounded-lg transition-colors"><ChevronLeft className={`w-5 h-5 ${dir === 'rtl' ? 'rotate-0' : 'rotate-180'}`}/></button>
+                    <button onClick={() => setWeekOffset(prev => prev + 1)} className="p-1 text-textSecondary hover:bg-bgCard rounded-lg transition-colors"><ChevronLeft className={`w-5 h-5 ${dir === 'rtl' ? 'rotate-0' : 'rotate-180'}`}/></button>
                 </div>
 
                 {/* 💉 الفصول الدراسية */}
                 <div className="mb-2 w-full overflow-x-auto no-scrollbar pb-2 mt-2" style={{ WebkitAppRegion: 'no-drag' } as any}>
-                    <div className={`inline-flex items-center p-1.5 rounded-full border backdrop-blur-md transition-all ${isRamadan ? 'bg-bgCard border-bgSoft' : 'bg-slate-100 border-slate-200'}`}>
+                    <div className={`inline-flex items-center p-1.5 rounded-full border backdrop-blur-md transition-all bg-bgSoft border-borderColor`}>
                         
                         <button 
                             onClick={() => { setSelectedGrade('all'); setClassFilter('all'); }} 
-                            className={`relative px-6 py-2.5 rounded-full text-xs font-bold whitespace-nowrap transition-all duration-300 ${selectedGrade === 'all' && classFilter === 'all' ? (isRamadan ? 'bg-primary text-white shadow-lg' : 'bg-white text-indigo-600 shadow-sm') : (isRamadan ? 'text-textSecondary hover:text-textPrimary hover:bg-bgSoft/50' : 'text-slate-500 hover:text-slate-800')}`}
+                            className={`relative px-6 py-2.5 rounded-full text-xs font-bold whitespace-nowrap transition-all duration-300 ${selectedGrade === 'all' && classFilter === 'all' ? 'bg-bgCard text-primary shadow-sm' : 'text-textSecondary hover:text-textPrimary hover:bg-bgCard/50'}`}
                         >
                             {t('all')}
                         </button>
 
                         {availableGrades.map(g => (
                             <React.Fragment key={`grade-${g}`}>
-                                <div className={`w-[1px] h-5 mx-1.5 rounded-full shrink-0 ${isRamadan ? 'bg-bgSoft' : 'bg-slate-300'}`} />
+                                <div className={`w-[1px] h-5 mx-1.5 rounded-full shrink-0 bg-borderColor`} />
                                 <button 
                                     onClick={() => { setSelectedGrade(g); setClassFilter('all'); }} 
-                                    className={`relative px-6 py-2.5 rounded-full text-xs font-bold whitespace-nowrap transition-all duration-300 ${selectedGrade === g && classFilter === 'all' ? (isRamadan ? 'bg-primary text-white shadow-lg' : 'bg-white text-indigo-600 shadow-sm') : (isRamadan ? 'text-textSecondary hover:text-textPrimary hover:bg-bgSoft/50' : 'text-slate-500 hover:text-slate-800')}`}
+                                    className={`relative px-6 py-2.5 rounded-full text-xs font-bold whitespace-nowrap transition-all duration-300 ${selectedGrade === g && classFilter === 'all' ? 'bg-bgCard text-primary shadow-sm' : 'text-textSecondary hover:text-textPrimary hover:bg-bgCard/50'}`}
                                 >
                                     {t('gradePrefix')} {g}
                                 </button>
@@ -274,10 +274,10 @@ const AttendanceTracker: React.FC<AttendanceTrackerProps> = ({ students, classes
 
                         {visibleClasses.map(c => (
                             <React.Fragment key={`class-${c}`}>
-                                <div className={`w-[1px] h-5 mx-1.5 rounded-full shrink-0 ${isRamadan ? 'bg-bgSoft' : 'bg-slate-300'}`} />
+                                <div className={`w-[1px] h-5 mx-1.5 rounded-full shrink-0 bg-borderColor`} />
                                 <button 
                                     onClick={() => setClassFilter(c)} 
-                                    className={`relative px-6 py-2.5 rounded-full text-xs font-bold whitespace-nowrap transition-all duration-300 ${classFilter === c ? (isRamadan ? 'bg-primary text-white shadow-lg' : 'bg-white text-indigo-600 shadow-sm') : (isRamadan ? 'text-textSecondary hover:text-textPrimary hover:bg-bgSoft/50' : 'text-slate-500 hover:text-slate-800')}`}
+                                    className={`relative px-6 py-2.5 rounded-full text-xs font-bold whitespace-nowrap transition-all duration-300 ${classFilter === c ? 'bg-bgCard text-primary shadow-sm' : 'text-textSecondary hover:text-textPrimary hover:bg-bgCard/50'}`}
                                 >
                                     {c}
                                 </button>
@@ -293,17 +293,17 @@ const AttendanceTracker: React.FC<AttendanceTrackerProps> = ({ students, classes
             <div className="relative z-10 px-2">
                 <div className="mb-4">
                     <div className="flex justify-between items-center gap-2 text-center">
-                        <button onClick={() => markAll('present')} className={`flex-1 rounded-2xl p-2.5 border shadow-sm active:scale-95 transition-all ${isRamadan ? 'bg-success/10 border-success/30 hover:bg-success/20' : 'bg-emerald-50 border-emerald-100'}`}>
-                            <span className={`block text-[10px] font-bold mb-1 ${isRamadan ? 'text-success' : 'text-emerald-600'}`}>{t('presentAll')}</span>
-                            <span className={`block text-xl font-black ${isRamadan ? 'text-success' : 'text-emerald-700'}`}>{stats.present}</span>
+                        <button onClick={() => markAll('present')} className={`flex-1 rounded-2xl p-2.5 border shadow-sm active:scale-95 transition-all bg-success/10 border-success/30 hover:bg-success/20`}>
+                            <span className={`block text-[10px] font-bold mb-1 text-success`}>{t('presentAll')}</span>
+                            <span className={`block text-xl font-black text-success`}>{stats.present}</span>
                         </button>
-                        <button onClick={() => markAll('absent')} className={`flex-1 rounded-2xl p-2.5 border shadow-sm active:scale-95 transition-all ${isRamadan ? 'bg-danger/10 border-danger/30 hover:bg-danger/20' : 'bg-rose-50 border-rose-100'}`}>
-                            <span className={`block text-[10px] font-bold mb-1 ${isRamadan ? 'text-danger' : 'text-rose-600'}`}>{t('absentAll')}</span>
-                            <span className={`block text-xl font-black ${isRamadan ? 'text-danger' : 'text-rose-700'}`}>{stats.absent}</span>
+                        <button onClick={() => markAll('absent')} className={`flex-1 rounded-2xl p-2.5 border shadow-sm active:scale-95 transition-all bg-danger/10 border-danger/30 hover:bg-danger/20`}>
+                            <span className={`block text-[10px] font-bold mb-1 text-danger`}>{t('absentAll')}</span>
+                            <span className={`block text-xl font-black text-danger`}>{stats.absent}</span>
                         </button>
-                        <div className={`flex-1 rounded-2xl p-2.5 border shadow-sm ${isRamadan ? 'bg-warning/10 border-warning/30' : 'bg-amber-50 border-amber-100'}`}>
-                            <span className={`block text-[10px] font-bold mb-1 ${isRamadan ? 'text-warning' : 'text-amber-600'}`}>{t('lateAll')}</span>
-                            <span className={`block text-xl font-black ${isRamadan ? 'text-warning' : 'text-amber-700'}`}>{stats.late}</span>
+                        <div className={`flex-1 rounded-2xl p-2.5 border shadow-sm bg-warning/10 border-warning/30`}>
+                            <span className={`block text-[10px] font-bold mb-1 text-warning`}>{t('lateAll')}</span>
+                            <span className={`block text-xl font-black text-warning`}>{stats.late}</span>
                         </div>
                     </div>
                 </div>
@@ -312,42 +312,44 @@ const AttendanceTracker: React.FC<AttendanceTrackerProps> = ({ students, classes
                     <div className="grid grid-cols-2 gap-3">
                         {filteredStudents.map(student => {
                             const status = getStatus(student);
+                            
+                            // ألوان الحدود والخلفية الديناميكية بناءً على حالة الحضور
+                            let cardStyle = 'border-borderColor';
+                            if (status === 'present') cardStyle = 'border-success/50 shadow-[0_0_10px_rgba(34,197,94,0.15)] bg-success/5';
+                            else if (status === 'absent') cardStyle = 'border-danger/50 shadow-[0_0_10px_rgba(239,68,68,0.15)] bg-danger/5';
+                            else if (status === 'late') cardStyle = 'border-warning/50 shadow-[0_0_10px_rgba(245,158,11,0.15)] bg-warning/5';
+                            else if (status === 'truant') cardStyle = 'border-info/50 shadow-[0_0_10px_rgba(6,182,212,0.15)] bg-info/5';
+
                             return (
                                 /* 💉 كروت الطلاب */
-                                <div key={student.id} className={`rounded-[1.5rem] border flex flex-col items-center overflow-hidden transition-all duration-200 ${isRamadan ? 'bg-bgCard hover:bg-bgCard/80 shadow-md' : 'bg-white'} ${
-                                    status === 'present' ? (isRamadan ? 'border-success shadow-[0_0_15px_rgba(34,197,94,0.1)]' : 'border-emerald-400') : 
-                                    status === 'absent' ? (isRamadan ? 'border-danger shadow-[0_0_15px_rgba(239,68,68,0.1)]' : 'border-red-400') : 
-                                    status === 'late' ? (isRamadan ? 'border-warning shadow-[0_0_15px_rgba(245,158,11,0.1)]' : 'border-amber-400') :
-                                    status === 'truant' ? (isRamadan ? 'border-info shadow-[0_0_15px_rgba(6,182,212,0.1)]' : 'border-purple-400') :
-                                    (isRamadan ? 'border-bgSoft' : 'border-transparent')
-                                }`}>
+                                <div key={student.id} className={`glass-panel rounded-[1.5rem] border flex flex-col items-center overflow-hidden transition-all duration-300 hover:-translate-y-1 ${cardStyle}`}>
                                     <div className="p-4 flex flex-col items-center w-full">
                                         <StudentAvatar gender={student.gender} className="w-16 h-16" />
-                                        <h3 className={`font-bold text-sm text-center line-clamp-1 w-full mt-3 ${isRamadan ? 'text-textPrimary' : 'text-slate-900'}`}>{student.name}</h3>
-                                        <span className={`text-[10px] px-2 py-0.5 rounded-full mt-1 font-bold ${isRamadan ? 'bg-bgSoft text-textSecondary border border-bgSoft' : 'bg-slate-100 text-slate-400'}`}>{student.classes[0]}</span>
+                                        <h3 className={`font-bold text-sm text-center line-clamp-1 w-full mt-3 text-textPrimary`}>{student.name}</h3>
+                                        <span className={`text-[10px] px-2 py-0.5 rounded-full mt-1 font-bold bg-bgSoft text-textSecondary`}>{student.classes[0]}</span>
                                     </div>
 
                                     {/* 💉 أزرار تحضير الطالب */}
-                                    <div className={`flex w-full border-t divide-x ${dir === 'rtl' ? 'divide-x-reverse' : ''} ${isRamadan ? 'border-bgSoft divide-bgSoft' : 'border-slate-100 divide-slate-100'}`}>
+                                    <div className={`flex w-full border-t divide-x ${dir === 'rtl' ? 'divide-x-reverse' : ''} border-borderColor divide-borderColor`}>
                                         
-                                        <button onClick={() => toggleAttendance(student.id, 'present')} className={`flex-1 py-3 flex flex-col items-center justify-center gap-1 transition-colors ${status === 'present' ? (isRamadan ? 'bg-success/20 text-success' : 'bg-emerald-50 text-emerald-600') : (isRamadan ? 'text-textMuted hover:bg-bgSoft/50 hover:text-textPrimary' : 'text-slate-400 hover:bg-slate-50')}`}>
-                                            <div className={`w-6 h-6 rounded-full flex items-center justify-center transition-colors ${status === 'present' ? 'bg-success text-white' : (isRamadan ? 'bg-bgSoft text-textSecondary' : 'bg-slate-200 text-white')}`}>✓</div>
+                                        <button onClick={() => toggleAttendance(student.id, 'present')} className={`flex-1 py-3 flex flex-col items-center justify-center gap-1 transition-colors ${status === 'present' ? 'bg-success/20 text-success' : 'text-textSecondary hover:bg-bgSoft hover:text-success'}`}>
+                                            <div className={`w-6 h-6 rounded-full flex items-center justify-center transition-colors ${status === 'present' ? 'bg-success text-white' : 'bg-bgSoft text-textSecondary'}`}>✓</div>
                                             <span className="text-[10px] font-bold">{t('present')}</span>
                                         </button>
 
-                                        <button onClick={() => toggleAttendance(student.id, 'absent')} className={`flex-1 py-3 flex flex-col items-center justify-center gap-1 transition-colors ${status === 'absent' ? (isRamadan ? 'bg-danger/20 text-danger' : 'bg-red-50 text-red-600') : (isRamadan ? 'text-textMuted hover:bg-bgSoft/50 hover:text-textPrimary' : 'text-slate-400 hover:bg-slate-50')}`}>
-                                            <div className={`w-6 h-6 rounded-full flex items-center justify-center transition-colors ${status === 'absent' ? 'bg-danger text-white' : (isRamadan ? 'bg-bgSoft text-textSecondary' : 'bg-slate-200 text-white')}`}>✕</div>
+                                        <button onClick={() => toggleAttendance(student.id, 'absent')} className={`flex-1 py-3 flex flex-col items-center justify-center gap-1 transition-colors ${status === 'absent' ? 'bg-danger/20 text-danger' : 'text-textSecondary hover:bg-bgSoft hover:text-danger'}`}>
+                                            <div className={`w-6 h-6 rounded-full flex items-center justify-center transition-colors ${status === 'absent' ? 'bg-danger text-white' : 'bg-bgSoft text-textSecondary'}`}>✕</div>
                                             <span className="text-[10px] font-bold">{t('absent')}</span>
                                         </button>
 
-                                        <button onClick={() => toggleAttendance(student.id, 'late')} className={`flex-1 py-3 flex flex-col items-center justify-center gap-1 transition-colors ${status === 'late' ? (isRamadan ? 'bg-warning/20 text-warning' : 'bg-amber-50 text-amber-600') : (isRamadan ? 'text-textMuted hover:bg-bgSoft/50 hover:text-textPrimary' : 'text-slate-400 hover:bg-slate-50')}`}>
+                                        <button onClick={() => toggleAttendance(student.id, 'late')} className={`flex-1 py-3 flex flex-col items-center justify-center gap-1 transition-colors ${status === 'late' ? 'bg-warning/20 text-warning' : 'text-textSecondary hover:bg-bgSoft hover:text-warning'}`}>
                                             <div className={`text-xs opacity-80 ${status === 'late' ? '' : 'grayscale'}`}>⏰</div>
                                             <span className="text-[10px] font-bold">{t('late')}</span>
                                         </button>
 
-                                        <button onClick={() => toggleAttendance(student.id, 'truant')} className={`flex-1 py-3 flex flex-col items-center justify-center gap-1 transition-colors ${status === 'truant' ? (isRamadan ? 'bg-info/20 text-info' : 'bg-purple-50 text-purple-600') : (isRamadan ? 'text-textMuted hover:bg-bgSoft/50 hover:text-textPrimary' : 'text-slate-400 hover:bg-slate-50')}`}>
+                                        <button onClick={() => toggleAttendance(student.id, 'truant')} className={`flex-1 py-3 flex flex-col items-center justify-center gap-1 transition-colors ${status === 'truant' ? 'bg-info/20 text-info' : 'text-textSecondary hover:bg-bgSoft hover:text-info'}`}>
                                             <div className={`w-6 h-6 flex items-center justify-center`}>
-                                                <DoorOpen className={`w-4 h-4 transition-colors ${status === 'truant' ? (isRamadan ? 'text-info' : 'text-purple-600') : (isRamadan ? 'text-textSecondary' : 'text-slate-400')}`} />
+                                                <DoorOpen className={`w-4 h-4 transition-colors ${status === 'truant' ? 'text-info' : 'text-textSecondary'}`} />
                                             </div>
                                             <span className="text-[10px] font-bold">{t('truant')}</span>
                                         </button>
@@ -358,9 +360,9 @@ const AttendanceTracker: React.FC<AttendanceTrackerProps> = ({ students, classes
                         })}
                     </div>
                 ) : (
-                    <div className={`flex flex-col items-center justify-center py-20 ${isRamadan ? 'opacity-70' : 'opacity-50'}`}>
-                        <UserCircle2 className={`w-16 h-16 mb-4 ${isRamadan ? 'text-textSecondary' : 'text-gray-300'}`} />
-                        <p className={`text-sm font-bold ${isRamadan ? 'text-textSecondary' : 'text-gray-400'}`}>{t('noStudents')}</p>
+                    <div className={`flex flex-col items-center justify-center py-20 opacity-70`}>
+                        <UserCircle2 className={`w-16 h-16 mb-4 text-textSecondary/50`} />
+                        <p className={`text-sm font-bold text-textSecondary`}>{t('noStudents')}</p>
                     </div>
                 )}
             </div>
@@ -377,20 +379,20 @@ const AttendanceTracker: React.FC<AttendanceTrackerProps> = ({ students, classes
                 <div className="flex flex-col items-center text-center h-full justify-center pb-4">
                     
                     <div className={`w-20 h-20 mx-auto mb-6 rounded-full flex items-center justify-center shadow-inner shrink-0 ${
-                        notificationTarget.type === 'absent' ? (isRamadan ? 'bg-danger/20 text-danger' : 'bg-rose-100 text-rose-600') : 
-                        notificationTarget.type === 'late' ? (isRamadan ? 'bg-warning/20 text-warning' : 'bg-amber-100 text-amber-600') : 
-                        (isRamadan ? 'bg-info/20 text-info' : 'bg-purple-100 text-purple-600')
+                        notificationTarget.type === 'absent' ? 'bg-danger/20 text-danger' : 
+                        notificationTarget.type === 'late' ? 'bg-warning/20 text-warning' : 
+                        'bg-info/20 text-info'
                     }`}>
                         <MessageCircle className="w-10 h-10" />
                     </div>
 
-                    <h3 className={`font-black text-xl mb-3 ${isRamadan ? 'text-textPrimary' : 'text-[#1e293b]'}`}>
+                    <h3 className={`font-black text-xl mb-3 text-textPrimary`}>
                         {t('parentNotification')}
                     </h3>
                     
-                    <div className={`text-sm font-bold mb-8 leading-relaxed ${isRamadan ? 'text-textSecondary' : 'text-slate-500'}`}>
+                    <div className={`text-sm font-bold mb-8 leading-relaxed text-textSecondary`}>
                         {t('sendAlertPrompt')}
-                        <div className={`text-lg mt-2 font-black ${isRamadan ? 'text-primaryLight' : 'text-[#4338ca]'}`}>
+                        <div className={`text-lg mt-2 font-black text-primary`}>
                             {notificationTarget.student.name}
                         </div>
                     </div>
@@ -398,11 +400,7 @@ const AttendanceTracker: React.FC<AttendanceTrackerProps> = ({ students, classes
                     <div className="space-y-3 w-full mt-auto shrink-0">
                         <button 
                             onClick={() => performNotification('whatsapp')} 
-                            className={`w-full py-4 text-white rounded-2xl font-black text-sm flex items-center justify-center gap-3 transition-all active:scale-95 shadow-lg ${
-                                isRamadan 
-                                ? 'bg-success hover:bg-success/80 shadow-[0_4px_15px_rgba(34,197,94,0.3)]' 
-                                : 'bg-[#25D366] hover:bg-[#1fa851]'
-                            }`}
+                            className={`w-full py-4 text-white rounded-2xl font-black text-sm flex items-center justify-center gap-3 transition-all active:scale-95 shadow-lg bg-[#25D366] hover:bg-[#1fa851]`}
                         >
                             <MessageCircle className="w-5 h-5" />
                             {t('sendWhatsapp')}
@@ -410,20 +408,14 @@ const AttendanceTracker: React.FC<AttendanceTrackerProps> = ({ students, classes
 
                         <button 
                             onClick={() => performNotification('sms')} 
-                            className={`w-full py-4 rounded-2xl font-black text-sm transition-all active:scale-95 border ${
-                                isRamadan 
-                                ? 'bg-bgSoft text-textPrimary border-bgSoft hover:bg-bgCard' 
-                                : 'bg-slate-100 text-slate-700 border-slate-200 hover:bg-slate-200'
-                            }`}
+                            className={`w-full py-4 rounded-2xl font-black text-sm transition-all active:scale-95 border bg-transparent text-textPrimary border-borderColor hover:bg-bgSoft`}
                         >
                             {t('sendSms')}
                         </button>
 
                         <button 
                             onClick={() => setNotificationTarget(null)} 
-                            className={`w-full py-3 font-bold text-xs transition-colors ${
-                                isRamadan ? 'text-textSecondary hover:text-danger' : 'text-slate-400 hover:text-rose-600'
-                            }`}
+                            className={`w-full py-3 font-bold text-xs transition-colors text-textSecondary hover:text-danger`}
                         >
                             {t('cancelAction')}
                         </button>

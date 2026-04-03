@@ -8,9 +8,10 @@ import { useApp } from '../context/AppContext';
 import { Filesystem, Directory, Encoding } from '@capacitor/filesystem';
 import { Share } from '@capacitor/share';
 import { Capacitor } from '@capacitor/core';
+import { useTheme } from '../theme/ThemeProvider'; // 👈 استدعاء محرك الثيمات
 
 // 🚀 تم استدعاء المكون المطور بدلاً من كتابته مرة أخرى هنا لتجنب الأخطاء وتوحيد التصميم!
-import DrawerSheet from './DrawerSheet';
+import { Drawer as DrawerSheet } from './ui/Drawer';
 
 const Settings = () => {
   const { 
@@ -22,6 +23,9 @@ const Settings = () => {
     language, setLanguage, t, dir 
   } = useApp();
 
+  // 🎨 جلب الثيم الحالي
+  const { theme } = useTheme();
+
   const [name, setName] = useState(teacherInfo?.name || '');
   const [school, setSchool] = useState(teacherInfo?.school || '');
   const [civilId, setCivilId] = useState(teacherInfo?.civilId || ''); 
@@ -29,7 +33,8 @@ const Settings = () => {
   const [loading, setLoading] = useState<'backup' | 'restore' | 'reset' | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  const isRamadan = true;
+  // ✅ جعل المتغير ديناميكياً يعتمد على الثيم الحالي (داكن أو رمضاني)
+  const isRamadan = theme === 'ramadan' || theme === 'dark';
 
   // 🎛️ حالات فتح اللوحات (Drawers)
   const [activeDrawer, setActiveDrawer] = useState<'language' | 'profile' | 'system' | null>(null);
@@ -121,7 +126,7 @@ const Settings = () => {
 >
         <div className="flex justify-between items-center max-w-4xl mx-auto w-full pb-4">
             <div className="flex items-center gap-3">
-                <div className="bg-white/10 p-2 rounded-xl border border-white/20">
+                <div className="bg-bgCard/10 p-2 rounded-xl border border-white/20">
                     <SettingsIcon className="w-5 h-5 text-white" />
                 </div>
                 <div style={{ WebkitAppRegion: 'no-drag' } as any}>
@@ -141,10 +146,10 @@ const Settings = () => {
           {/* 🌐 مجموعة إعدادات اللغة */}
           <div className="space-y-2">
             <h3 className={`px-2 text-[10px] font-black uppercase tracking-wider ${isRamadan ? 'text-indigo-300/70' : 'text-slate-400'}`}>التفضيلات</h3>
-            <div className={`rounded-2xl overflow-hidden border ${isRamadan ? 'bg-white/5 border-white/10' : 'bg-white border-slate-100 shadow-sm'}`}>
+            <div className={`rounded-2xl overflow-hidden border ${isRamadan ? 'bg-bgCard/5 border-white/10' : 'bg-bgCard border-slate-100 shadow-sm'}`}>
                 <button 
                     onClick={() => setActiveDrawer('language')}
-                    className={`w-full p-4 flex items-center justify-between transition-colors active:bg-white/5 ${isRamadan ? 'hover:bg-white/5' : 'hover:bg-slate-50'}`}
+                    className={`w-full p-4 flex items-center justify-between transition-colors active:bg-bgCard/5 ${isRamadan ? 'hover:bg-bgCard/5' : 'hover:bg-slate-50'}`}
                 >
                     <div className="flex items-center gap-3">
                         <div className={`p-2 rounded-lg ${isRamadan ? 'bg-indigo-500/20 text-indigo-400' : 'bg-indigo-50 text-indigo-600'}`}><Globe size={20} /></div>
@@ -161,10 +166,10 @@ const Settings = () => {
           {/* 👤 مجموعة إعدادات الحساب */}
           <div className="space-y-2">
             <h3 className={`px-2 text-[10px] font-black uppercase tracking-wider ${isRamadan ? 'text-indigo-300/70' : 'text-slate-400'}`}>الحساب والمدرسة</h3>
-            <div className={`rounded-2xl overflow-hidden border ${isRamadan ? 'bg-white/5 border-white/10' : 'bg-white border-slate-100 shadow-sm'}`}>
+            <div className={`rounded-2xl overflow-hidden border ${isRamadan ? 'bg-bgCard/5 border-white/10' : 'bg-bgCard border-slate-100 shadow-sm'}`}>
                 <button 
                     onClick={() => setActiveDrawer('profile')}
-                    className={`w-full p-4 flex items-center justify-between transition-colors active:bg-white/5 ${isRamadan ? 'hover:bg-white/5' : 'hover:bg-slate-50'}`}
+                    className={`w-full p-4 flex items-center justify-between transition-colors active:bg-bgCard/5 ${isRamadan ? 'hover:bg-bgCard/5' : 'hover:bg-slate-50'}`}
                 >
                     <div className="flex items-center gap-3">
                         <div className={`p-2 rounded-lg ${isRamadan ? 'bg-amber-500/20 text-amber-400' : 'bg-amber-50 text-amber-600'}`}><UserCircle size={20} /></div>
@@ -178,10 +183,10 @@ const Settings = () => {
           {/* ⚙️ مجموعة إعدادات النظام */}
           <div className="space-y-2">
             <h3 className={`px-2 text-[10px] font-black uppercase tracking-wider ${isRamadan ? 'text-indigo-300/70' : 'text-slate-400'}`}>النظام والبيانات</h3>
-            <div className={`rounded-2xl overflow-hidden border flex flex-col divide-y ${isRamadan ? 'bg-white/5 border-white/10 divide-white/5' : 'bg-white border-slate-100 divide-slate-50 shadow-sm'}`}>
+            <div className={`rounded-2xl overflow-hidden border flex flex-col divide-y ${isRamadan ? 'bg-bgCard/5 border-white/10 divide-white/5' : 'bg-bgCard border-slate-100 divide-slate-50 shadow-sm'}`}>
                 <button 
                     onClick={() => setActiveDrawer('system')}
-                    className={`w-full p-4 flex items-center justify-between transition-colors active:bg-white/5 ${isRamadan ? 'hover:bg-white/5' : 'hover:bg-slate-50'}`}
+                    className={`w-full p-4 flex items-center justify-between transition-colors active:bg-bgCard/5 ${isRamadan ? 'hover:bg-bgCard/5' : 'hover:bg-slate-50'}`}
                 >
                     <div className="flex items-center gap-3">
                         <div className={`p-2 rounded-lg ${isRamadan ? 'bg-emerald-500/20 text-emerald-400' : 'bg-emerald-50 text-emerald-600'}`}><Database size={20} /></div>
@@ -209,14 +214,14 @@ const Settings = () => {
             <div className="p-6 space-y-3">
                 <button 
                     onClick={() => { setLanguage('ar'); setActiveDrawer(null); }}
-                    className={`w-full p-4 rounded-xl border-2 flex items-center justify-between transition-all ${language === 'ar' ? (isRamadan ? 'border-indigo-500 bg-indigo-500/20' : 'border-indigo-500 bg-indigo-50') : (isRamadan ? 'border-white/10 bg-white/5 hover:bg-white/10' : 'border-slate-100 bg-white hover:bg-slate-50')}`}
+                    className={`w-full p-4 rounded-xl border-2 flex items-center justify-between transition-all ${language === 'ar' ? (isRamadan ? 'border-indigo-500 bg-indigo-500/20' : 'border-indigo-500 bg-indigo-50') : (isRamadan ? 'border-white/10 bg-bgCard/5 hover:bg-bgCard/10' : 'border-slate-100 bg-bgCard hover:bg-slate-50')}`}
                 >
                     <span className="font-bold text-lg">العربية (Arabic)</span>
                     {language === 'ar' && <div className={`w-6 h-6 rounded-full flex items-center justify-center ${isRamadan ? 'bg-indigo-500 text-white' : 'bg-indigo-600 text-white'}`}>✓</div>}
                 </button>
                 <button 
                     onClick={() => { setLanguage('en'); setActiveDrawer(null); }}
-                    className={`w-full p-4 rounded-xl border-2 flex items-center justify-between transition-all ${language === 'en' ? (isRamadan ? 'border-indigo-500 bg-indigo-500/20' : 'border-indigo-500 bg-indigo-50') : (isRamadan ? 'border-white/10 bg-white/5 hover:bg-white/10' : 'border-slate-100 bg-white hover:bg-slate-50')}`}
+                    className={`w-full p-4 rounded-xl border-2 flex items-center justify-between transition-all ${language === 'en' ? (isRamadan ? 'border-indigo-500 bg-indigo-500/20' : 'border-indigo-500 bg-indigo-50') : (isRamadan ? 'border-white/10 bg-bgCard/5 hover:bg-bgCard/10' : 'border-slate-100 bg-bgCard hover:bg-slate-50')}`}
                 >
                     <span className="font-bold text-lg">English (English)</span>
                     {language === 'en' && <div className={`w-6 h-6 rounded-full flex items-center justify-center ${isRamadan ? 'bg-indigo-500 text-white' : 'bg-indigo-600 text-white'}`}>✓</div>}
@@ -246,7 +251,7 @@ const Settings = () => {
                     <p className={`text-[10px] text-center mt-1 ${isRamadan ? 'text-slate-400' : 'text-slate-400'}`}>مطلوب لتمكين ولي الأمر من جلب درجات الطالب بأمان</p>
                 </div>
             </div>
-            <div className={`p-4 border-t shrink-0 ${isRamadan ? 'border-white/10 bg-black/20' : 'border-slate-100 bg-white'}`}>
+            <div className={`p-4 border-t shrink-0 ${isRamadan ? 'border-white/10 bg-black/20' : 'border-slate-100 bg-bgCard'}`}>
                 <button onClick={() => { setTeacherInfo({ ...teacherInfo, name, school, civilId }); setActiveDrawer(null); }} className={`w-full py-4 rounded-xl font-black text-sm transition-all shadow-lg active:scale-95 flex items-center justify-center gap-2 ${isRamadan ? 'bg-indigo-600 hover:bg-indigo-500 text-white' : 'bg-indigo-600 hover:bg-indigo-700 text-white'}`}>
                     <Save size={18} /> {t('saveProfileBtn')}
                 </button>
@@ -264,16 +269,16 @@ const Settings = () => {
             <div className="flex-1 overflow-y-auto p-6 space-y-4 custom-scrollbar">
                 
                 {/* خلايا خيارات النظام */}
-                <div className={`rounded-2xl overflow-hidden border flex flex-col divide-y ${isRamadan ? 'bg-white/5 border-white/10 divide-white/5' : 'bg-white border-slate-100 divide-slate-50 shadow-sm'}`}>
+                <div className={`rounded-2xl overflow-hidden border flex flex-col divide-y ${isRamadan ? 'bg-bgCard/5 border-white/10 divide-white/5' : 'bg-bgCard border-slate-100 divide-slate-50 shadow-sm'}`}>
                     
-                    <button onClick={handleBackup} className={`w-full p-4 flex items-center justify-between transition-colors active:bg-white/5 ${isRamadan ? 'hover:bg-white/10' : 'hover:bg-slate-50'}`}>
+                    <button onClick={handleBackup} className={`w-full p-4 flex items-center justify-between transition-colors active:bg-bgCard/5 ${isRamadan ? 'hover:bg-bgCard/10' : 'hover:bg-slate-50'}`}>
                         <div className="flex items-center gap-3">
                             <div className={`p-2 rounded-lg ${isRamadan ? 'bg-emerald-500/20 text-emerald-400' : 'bg-emerald-50 text-emerald-600'}`}><Download size={18} /></div>
                             <span className="font-bold text-sm">تصدير نسخة احتياطية (محلياً)</span>
                         </div>
                     </button>
 
-                    <button onClick={() => fileInputRef.current?.click()} className={`w-full p-4 flex items-center justify-between transition-colors active:bg-white/5 ${isRamadan ? 'hover:bg-white/10' : 'hover:bg-slate-50'}`}>
+                    <button onClick={() => fileInputRef.current?.click()} className={`w-full p-4 flex items-center justify-between transition-colors active:bg-bgCard/5 ${isRamadan ? 'hover:bg-bgCard/10' : 'hover:bg-slate-50'}`}>
                         <div className="flex items-center gap-3">
                             <div className={`p-2 rounded-lg ${isRamadan ? 'bg-blue-500/20 text-blue-400' : 'bg-blue-50 text-blue-600'}`}><UploadCloud size={18} /></div>
                             <span className="font-bold text-sm">استيراد نسخة سابقة</span>
@@ -284,7 +289,7 @@ const Settings = () => {
 
                 <div className="pt-6">
                     <p className={`text-[10px] font-bold px-2 mb-2 uppercase ${isRamadan ? 'text-rose-400/80' : 'text-rose-400'}`}>منطقة الخطر</p>
-                    <div className={`rounded-2xl overflow-hidden border ${isRamadan ? 'bg-white/5 border-rose-500/30' : 'bg-white border-rose-100 shadow-sm'}`}>
+                    <div className={`rounded-2xl overflow-hidden border ${isRamadan ? 'bg-bgCard/5 border-rose-500/30' : 'bg-bgCard border-rose-100 shadow-sm'}`}>
                         <button onClick={handleFactoryReset} className={`w-full p-4 flex items-center justify-between transition-colors active:bg-rose-500/10 ${isRamadan ? 'hover:bg-rose-500/10' : 'hover:bg-rose-50'}`}>
                             <div className="flex items-center gap-3">
                                 <div className={`p-2 rounded-lg ${isRamadan ? 'bg-rose-500/20 text-rose-400' : 'bg-rose-50 text-rose-600'}`}><Trash2 size={18} /></div>
