@@ -3,10 +3,6 @@ import { createRoot } from 'react-dom/client';
 import { HashRouter } from 'react-router-dom';
 import App from './App';
 
-// ❌ قم بمسح أو تهميش هذه الأسطر تماماً
-// import './index.css';  
-// import './theme/tokens.css';
-
 const container = document.getElementById('root');
 const container = document.getElementById('root');
 
