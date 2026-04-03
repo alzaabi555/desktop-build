@@ -11,26 +11,25 @@ const ThemeContext = createContext<ThemeContextType | undefined>(undefined);
 
 export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [theme, setTheme] = useState<Theme>(() => {
-    return (localStorage.getItem('rased-theme') as Theme) || 'light';
+    // ✅ تم تعيين الثيم الزجاجي الفاخر (glass) كافتراضي بدلاً من الفاتح
+    return (localStorage.getItem('rased-theme') as Theme) || 'glass';
   });
 
   useEffect(() => {
     const root = window.document.documentElement; // وسم <html>
-    const body = window.document.body; // وسم <body>
 
-    // مسح الثيمات القديمة من HTML و Body
+    // تنظيف أي كلاسات قديمة عالقة من النسخة السابقة لتجنب التضارب
     const themes = ['light', 'dark', 'glass', 'ramadan'];
     root.classList.remove(...themes);
-    body.classList.remove(...themes);
+    window.document.body.classList.remove(...themes);
 
-    // فرض الثيم الجديد بقوة
-    root.classList.add(theme);
-    body.classList.add(theme);
+    // ✅ السر هنا: يجب حقن الثيم كـ (data-theme) ليتطابق مع ملف tokens.css
+    root.setAttribute('data-theme', theme);
     
     localStorage.setItem('rased-theme', theme);
     
-    // دليل قاطع للتأكد أن الأوامر وصلت للشاشة
-    console.log("🔥 تم حقن الثيم في الشاشة بنجاح:", theme, "| كلاسات الـ HTML الآن هي:", root.className);
+    // دليل قاطع للتأكد أن الأوامر وصلت للشاشة بالطريقة الصحيحة
+    console.log("🔥 تم حقن الثيم بنجاح! HTML الآن يحتوي على:", `data-theme="${theme}"`);
   }, [theme]);
 
   return (
