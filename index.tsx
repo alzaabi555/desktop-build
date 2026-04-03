@@ -2,7 +2,8 @@ import React from 'react';
 import { createRoot } from 'react-dom/client';
 import { HashRouter } from 'react-router-dom'; // 👈 1. استدعاء الموجه الهاش (ضروري للويندوز)
 import App from './App';
-
+import './index.css'; 
+import './theme/tokens.css';
 const container = document.getElementById('root');
 
 const hideLoader = () => {
