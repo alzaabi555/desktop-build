@@ -40,7 +40,7 @@ export const translations = {
   "parentAppDesc": "مزامنة السلوك والدرجات",
   "cloudSectionTitle": "السحابة المركزية",
   "uploadBackupBtn": "رفع نسخة احتياطية",
-  "restoreDataBtn": "استرجاع البيانات"
+  "restoreDataBtn": "استرجاع البيانات",
   syncMenuTitle: "مركز المزامنة",
   syncStudentsOnly: "تطبيق الطلاب والمهام",
   syncParentsOnly: "تطبيق أولياء الأمور",
