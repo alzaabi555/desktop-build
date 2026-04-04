@@ -3,7 +3,7 @@
 import React, { useState } from 'react';
 import { cn } from '../../utils/cn';
 import { useTheme } from '../../theme/ThemeProvider';
-import { Menu, X } from 'lucide-react'; 
+import { Menu, X, Minus, Square } from 'lucide-react'; // 👈 تمت إضافة أيقونات الشريط العلوي
 
 import { Drawer as DrawerSheet } from '../ui/Drawer'; 
 
@@ -42,16 +42,65 @@ export const AppLayout: React.FC<AppLayoutProps> = ({
     setShowMoreMenu(false);
   };
 
+  // 💻 دوال التحكم في نافذة سطح المكتب (Electron)
+  const handleWindowControl = (action: 'minimize' | 'maximize' | 'close') => {
+    if ((window as any).electron) {
+      (window as any).electron.send(action); 
+    }
+  };
+
+  // 🔍 فحص ذكي: هل التطبيق يعمل حالياً في بيئة ويندوز (Electron) أم موبايل/متصفح؟
+  const isDesktop = !!(window as any).electron;
+
   return (
     <div className="flex flex-col h-screen font-sans overflow-hidden text-textPrimary animate-smooth relative" dir={dir}>
       
-      {/* 🌟 طبقة الخلفية الديناميكية (تعمل بنجاح مع كل الثيمات) */}
+      {/* 👑 الشريط العلوي المخصص لسطح المكتب (يظهر فقط في الويندوز) */}
+      {isDesktop && (
+        <div 
+          className="flex justify-between items-center px-4 h-10 shrink-0 z-[99999] glass-panel border-b border-borderColor rounded-none bg-bgCard/40 backdrop-blur-md"
+          style={{ WebkitAppRegion: 'drag' } as any} // 👈 يسمح بسحب النافذة من الشريط
+        >
+          {/* عنوان التطبيق المصغر */}
+          <div className="flex items-center gap-2 text-textSecondary text-xs font-bold pointer-events-none">
+            {Logo && <div className="w-4 h-4 flex items-center justify-center">{Logo}</div>}
+            <span>{appName}</span>
+          </div>
+
+          {/* أزرار التحكم بالنافذة */}
+          <div className="flex items-center gap-1" style={{ WebkitAppRegion: 'no-drag' } as any}>
+            <button 
+              onClick={() => handleWindowControl('minimize')}
+              className="p-1.5 rounded text-textSecondary hover:bg-bgSoft hover:text-textPrimary transition-colors"
+              title={dir === 'rtl' ? 'تصغير' : 'Minimize'}
+            >
+              <Minus size={14} />
+            </button>
+            <button 
+              onClick={() => handleWindowControl('maximize')}
+              className="p-1.5 rounded text-textSecondary hover:bg-bgSoft hover:text-textPrimary transition-colors"
+              title={dir === 'rtl' ? 'تكبير' : 'Maximize'}
+            >
+              <Square size={12} />
+            </button>
+            <button 
+              onClick={() => handleWindowControl('close')}
+              className="p-1.5 rounded text-textSecondary hover:bg-red-500/80 hover:text-white transition-colors"
+              title={dir === 'rtl' ? 'إغلاق' : 'Close'}
+            >
+              <X size={14} />
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* 🌟 طبقة الخلفية الديناميكية */}
       <div 
         className="fixed inset-0 z-[-2] transition-all duration-500" 
         style={{ background: 'var(--bg)' }} 
       />
 
-      {/* ✨ تأثيرات الإضاءة (السديم) - تعتمد على متغيرات الثيم */}
+      {/* ✨ تأثيرات الإضاءة (السديم) */}
       <div className="fixed inset-0 z-[-1] pointer-events-none overflow-hidden">
         <div className="absolute top-[-10%] right-[10%] w-[500px] h-[500px] bg-primary/20 rounded-full blur-[120px] animate-pulse" />
         <div className="absolute bottom-[-10%] left-[10%] w-[400px] h-[400px] bg-glow rounded-full blur-[100px] opacity-40" />
@@ -61,8 +110,7 @@ export const AppLayout: React.FC<AppLayoutProps> = ({
         
         {/* 💻 القائمة الجانبية (سطح المكتب) */}
         <aside className={cn(
-          "hidden md:flex w-72 flex-col z-50 h-full relative glass-panel",
-          // 👈 تم الإصلاح: ربط الحدود بلون الثيم الذكي
+          "hidden md:flex w-72 flex-col z-50 h-full relative glass-panel rounded-none",
           dir === 'rtl' ? 'border-l border-borderColor' : 'border-r border-borderColor'
         )}>
           <div className="p-8 flex items-center gap-4 shrink-0">
@@ -82,7 +130,7 @@ export const AppLayout: React.FC<AppLayoutProps> = ({
                   "w-full flex items-center gap-3 px-4 py-3.5 rounded-2xl transition-all duration-300 active:scale-95",
                   activeTab === item.id 
                     ? "bg-primary text-white shadow-[0_0_20px_var(--glow)]" 
-                    : "text-textSecondary hover:bg-bgSoft hover:text-textPrimary" // 👈 تم تحسين تأثير المرور
+                    : "text-textSecondary hover:bg-bgSoft hover:text-textPrimary"
                 )}
               >
                 <item.icon size={20} />
@@ -104,7 +152,6 @@ export const AppLayout: React.FC<AppLayoutProps> = ({
 
       {/* 📱 شريط التنقل السفلي للهاتف */}
       <div className="md:hidden fixed bottom-6 left-4 right-4 z-[9999]">
-        {/* 👈 تم الإصلاح الجذري: إزالة الظلال الثابتة واستخدام border-borderColor ليعمل مع الثيم الفاتح والداكن */}
         <div className="glass-panel rounded-[2.5rem] p-2 flex justify-around items-center border border-borderColor">
           
           {mobileNavItems.map((item) => {
@@ -117,7 +164,7 @@ export const AppLayout: React.FC<AppLayoutProps> = ({
               >
                 <div className={cn(
                   "p-2 rounded-2xl transition-all duration-500",
-                  isActive ? "bg-primary/20 text-primary shadow-[0_0_15px_var(--glow)] scale-110" : "text-textSecondary opacity-80" // 👈 زيادة الوضوح قليلاً للعناصر غير النشطة
+                  isActive ? "bg-primary/20 text-primary shadow-[0_0_15px_var(--glow)] scale-110" : "text-textSecondary opacity-80"
                 )}>
                   <item.IconComponent size={24} strokeWidth={isActive ? 2.5 : 2} />
                 </div>
@@ -153,7 +200,7 @@ export const AppLayout: React.FC<AppLayoutProps> = ({
         </div>
       </div>
 
-      {/* 🗄️ القائمة السفلية "المزيد" (مربوطة الآن بـ DrawerSheet الذكي الذي أصلحناه) */}
+      {/* 🗄️ القائمة السفلية "المزيد" (بالشكل الذكي الجديد) */}
       {showMoreMenu && (
         <div className="relative z-[99999]">
             <DrawerSheet isOpen={showMoreMenu} onClose={() => setShowMoreMenu(false)} dir={dir} mode="bottom">
@@ -174,7 +221,6 @@ export const AppLayout: React.FC<AppLayoutProps> = ({
                                         onClick={() => handleExtraNavigate(item.id)}
                                         className={cn(
                                             "flex flex-col items-center justify-center p-4 rounded-2xl border transition-all active:scale-95",
-                                            // 👈 استخدام ألوان الثيم الديناميكية للبطاقات
                                             isActive 
                                                 ? "bg-primary/10 border-primary/50 text-primary" 
                                                 : "glass-card hover:bg-bgSoft text-textSecondary hover:text-textPrimary"
