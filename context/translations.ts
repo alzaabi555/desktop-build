@@ -122,7 +122,7 @@ export const translations = {
   "civilIdHint": "مطلوب لتمكين ولي الأمر من جلب درجات الطالب بأمان",
   "exportBackupLocal": "تصدير نسخة احتياطية (محلياً)",
   "importBackup": "استيراد نسخة سابقة",
-  "dangerZoneTitle": "منطقة الخطر"
+  "dangerZoneTitle": "منطقة الخطر",
     settingsTitle: "الإعدادات ",
     settingsSubtitle: "تخصيص الهوية وإدارة البيانات السحابية والمحلية",
     profileTitle: "الملف الشخصي",
