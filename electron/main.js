@@ -48,22 +48,22 @@ function createWindow() {
   const themeBgColor = ramadanActive ? '#0f172a' : '#f3f4f6'; 
   const themeSymbolColor = ramadanActive ? '#ffffff' : '#446A8D'; 
 
-  mainWindow = new BrowserWindow({
+ mainWindow = new BrowserWindow({
     width: 1280,
     height: 800,
     minWidth: 900,
     minHeight: 600,
     icon: path.join(__dirname, '../icon.png'),
     backgroundColor: themeBgColor, 
-    titleBarStyle: 'hidden', 
-    titleBarOverlay: {
-      color: themeBgColor,
-      symbolColor: themeSymbolColor,
-      height: 35
-    },
+    
+    // 💉 الجرعة السحرية: تلغي إطار الويندوز وأزراره بالكامل
+    frame: false, 
+
+    // ❌ (تم استئصال titleBarStyle و titleBarOverlay بالكامل لمنع التضارب مع أزرارنا)
+
     webPreferences: {
-      nodeIntegration: false,
-      contextIsolation: true,
+        nodeIntegration: true, // أو حسب إعداداتك السابقة
+        contextIsolation: false, // أو حسب إعداداتك السابقة
       preload: path.resolve(__dirname, 'preload.js'),
       sandbox: false,
       backgroundThrottling: false,
