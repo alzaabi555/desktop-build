@@ -1464,7 +1464,7 @@ navMore: "More",
   "secSyncCard1Title": "Connect with Google Drive",
   "secSyncCard1Desc": "Link the app to your Google account to secure your database and automatically sync it across your devices.",
   "secSyncCard2Title": "Local Backup",
-  "secSyncCard2Desc": "Export your app data as an encrypted file and keep it on your device for easy restoration at any time."
+  "secSyncCard2Desc": "Export your app data as an encrypted file and keep it on your device for easy restoration at any time.",
     rasedGuideTitle: "Rased Guide",
     dashboardMenu: "1. Dashboard",
     attendanceMenu: "2. Attendance",
