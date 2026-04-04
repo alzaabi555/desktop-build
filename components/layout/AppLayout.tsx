@@ -43,16 +43,15 @@ export const AppLayout: React.FC<AppLayoutProps> = ({
   };
 
   return (
-    /* 1. إزالة أي خلفية قسرية من الحاوية الرئيسية (bg-bgMain تم إزالتها) */
     <div className="flex flex-col h-screen font-sans overflow-hidden text-textPrimary animate-smooth relative" dir={dir}>
       
-      {/* 2. إضافة طبقة الخلفية الديناميكية بقوة (هنا السر!) */}
+      {/* 🌟 طبقة الخلفية الديناميكية (تعمل بنجاح مع كل الثيمات) */}
       <div 
         className="fixed inset-0 z-[-2] transition-all duration-500" 
         style={{ background: 'var(--bg)' }} 
       />
 
-      {/* تأثيرات الإضاءة (السديم) */}
+      {/* ✨ تأثيرات الإضاءة (السديم) - تعتمد على متغيرات الثيم */}
       <div className="fixed inset-0 z-[-1] pointer-events-none overflow-hidden">
         <div className="absolute top-[-10%] right-[10%] w-[500px] h-[500px] bg-primary/20 rounded-full blur-[120px] animate-pulse" />
         <div className="absolute bottom-[-10%] left-[10%] w-[400px] h-[400px] bg-glow rounded-full blur-[100px] opacity-40" />
@@ -60,10 +59,11 @@ export const AppLayout: React.FC<AppLayoutProps> = ({
 
       <div className="flex flex-1 overflow-hidden relative z-10 w-full">
         
-        {/* القائمة الجانبية (سطح المكتب) */}
+        {/* 💻 القائمة الجانبية (سطح المكتب) */}
         <aside className={cn(
           "hidden md:flex w-72 flex-col z-50 h-full relative glass-panel",
-          dir === 'rtl' ? 'border-l' : 'border-r'
+          // 👈 تم الإصلاح: ربط الحدود بلون الثيم الذكي
+          dir === 'rtl' ? 'border-l border-borderColor' : 'border-r border-borderColor'
         )}>
           <div className="p-8 flex items-center gap-4 shrink-0">
             <div className="w-12 h-12 shrink-0">{Logo}</div>
@@ -82,7 +82,7 @@ export const AppLayout: React.FC<AppLayoutProps> = ({
                   "w-full flex items-center gap-3 px-4 py-3.5 rounded-2xl transition-all duration-300 active:scale-95",
                   activeTab === item.id 
                     ? "bg-primary text-white shadow-[0_0_20px_var(--glow)]" 
-                    : "text-textSecondary hover:bg-bgCard"
+                    : "text-textSecondary hover:bg-bgSoft hover:text-textPrimary" // 👈 تم تحسين تأثير المرور
                 )}
               >
                 <item.icon size={20} />
@@ -92,7 +92,7 @@ export const AppLayout: React.FC<AppLayoutProps> = ({
           </nav>
         </aside>
 
-        {/* المحتوى الرئيسي */}
+        {/* 📄 المحتوى الرئيسي */}
         <main className="flex-1 flex flex-col h-full overflow-hidden relative z-10">
           <div className="flex-1 overflow-y-auto custom-scrollbar pb-32 md:pb-6 px-4 md:px-10 pt-safe">
             <div className="max-w-5xl mx-auto w-full min-h-full py-6">
@@ -102,9 +102,10 @@ export const AppLayout: React.FC<AppLayoutProps> = ({
         </main>
       </div>
 
-      {/* شريط التنقل السفلي للهاتف */}
+      {/* 📱 شريط التنقل السفلي للهاتف */}
       <div className="md:hidden fixed bottom-6 left-4 right-4 z-[9999]">
-        <div className="glass-panel rounded-[2.5rem] p-2 flex justify-around items-center shadow-[0_10px_40px_rgba(0,0,0,0.4)] border-white/10">
+        {/* 👈 تم الإصلاح الجذري: إزالة الظلال الثابتة واستخدام border-borderColor ليعمل مع الثيم الفاتح والداكن */}
+        <div className="glass-panel rounded-[2.5rem] p-2 flex justify-around items-center border border-borderColor">
           
           {mobileNavItems.map((item) => {
             const isActive = activeTab === item.id;
@@ -116,7 +117,7 @@ export const AppLayout: React.FC<AppLayoutProps> = ({
               >
                 <div className={cn(
                   "p-2 rounded-2xl transition-all duration-500",
-                  isActive ? "bg-primary/20 text-primary shadow-[0_0_15px_var(--glow)] scale-110" : "text-textSecondary opacity-60"
+                  isActive ? "bg-primary/20 text-primary shadow-[0_0_15px_var(--glow)] scale-110" : "text-textSecondary opacity-80" // 👈 زيادة الوضوح قليلاً للعناصر غير النشطة
                 )}>
                   <item.IconComponent size={24} strokeWidth={isActive ? 2.5 : 2} />
                 </div>
@@ -129,7 +130,7 @@ export const AppLayout: React.FC<AppLayoutProps> = ({
             );
           })}
 
-          {/* زر المزيد */}
+          {/* ➕ زر المزيد */}
           {extraNavItems.length > 0 && (
              <button
                 onClick={() => setShowMoreMenu(true)}
@@ -137,7 +138,7 @@ export const AppLayout: React.FC<AppLayoutProps> = ({
               >
                 <div className={cn(
                   "p-2 rounded-2xl transition-all duration-500",
-                  showMoreMenu ? "bg-primary/20 text-primary scale-110" : "text-textSecondary opacity-60"
+                  showMoreMenu ? "bg-primary/20 text-primary scale-110" : "text-textSecondary opacity-80"
                 )}>
                   <Menu size={24} strokeWidth={showMoreMenu ? 2.5 : 2} />
                 </div>
@@ -152,10 +153,10 @@ export const AppLayout: React.FC<AppLayoutProps> = ({
         </div>
       </div>
 
-      {/* القائمة السفلية "المزيد" */}
+      {/* 🗄️ القائمة السفلية "المزيد" (مربوطة الآن بـ DrawerSheet الذكي الذي أصلحناه) */}
       {showMoreMenu && (
         <div className="relative z-[99999]">
-            <DrawerSheet isOpen={showMoreMenu} onClose={() => setShowMoreMenu(false)} dir={dir}>
+            <DrawerSheet isOpen={showMoreMenu} onClose={() => setShowMoreMenu(false)} dir={dir} mode="bottom">
                 <div className="flex flex-col h-full w-full">
                     <div className="flex justify-between items-center mb-6 pb-2 border-b border-borderColor shrink-0">
                         <h3 className="font-black text-xl text-textPrimary">
@@ -172,10 +173,11 @@ export const AppLayout: React.FC<AppLayoutProps> = ({
                                         key={item.id}
                                         onClick={() => handleExtraNavigate(item.id)}
                                         className={cn(
-                                            "flex flex-col items-center justify-center p-4 rounded-2xl border transition-all active:scale-95 shadow-sm",
+                                            "flex flex-col items-center justify-center p-4 rounded-2xl border transition-all active:scale-95",
+                                            // 👈 استخدام ألوان الثيم الديناميكية للبطاقات
                                             isActive 
                                                 ? "bg-primary/10 border-primary/50 text-primary" 
-                                                : "bg-bgCard border-borderColor text-textSecondary hover:bg-bgSoft hover:text-textPrimary"
+                                                : "glass-card hover:bg-bgSoft text-textSecondary hover:text-textPrimary"
                                         )}
                                     >
                                         <item.icon size={28} className={isActive ? "text-primary mb-2" : "mb-2"} strokeWidth={isActive ? 2.5 : 2} />
