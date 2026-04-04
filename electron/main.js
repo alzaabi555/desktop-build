@@ -59,23 +59,22 @@ function createWindow() {
     // 💉 الجرعة السحرية: تلغي إطار الويندوز وأزراره بالكامل
     frame: false, 
 
-    // ❌ (تم استئصال titleBarStyle و titleBarOverlay بالكامل لمنع التضارب مع أزرارنا)
-
     webPreferences: {
-        nodeIntegration: true, // أو حسب إعداداتك السابقة
-        contextIsolation: false, // أو حسب إعداداتك السابقة
-      preload: path.resolve(__dirname, 'preload.js'),
-      sandbox: false,
-      backgroundThrottling: false,
-      webSecurity: true,
-      zoomFactor: 1.0
+        // 🚨 الجراحة الدقيقة: هذه الإعدادات ضرورية ليعمل preload.js والشريط العلوي بأمان
+        nodeIntegration: false, 
+        contextIsolation: true, 
+        preload: path.resolve(__dirname, 'preload.js'),
+        sandbox: false,
+        backgroundThrottling: false,
+        webSecurity: true,
+        zoomFactor: 1.0
     }
   });
 
   mainWindow.webContents.session.clearCache();
   mainWindow.loadFile(path.join(__dirname, '../www/index.html'));
- mainWindow.autoHideMenuBar = true;
-mainWindow.removeMenu();
+  mainWindow.autoHideMenuBar = true;
+  mainWindow.removeMenu();
 
   mainWindow.webContents.setWindowOpenHandler(({ url }) => {
     try {
@@ -104,12 +103,31 @@ mainWindow.removeMenu();
 }
 
 // ---------------------------------------------------------
-// 📡 3. قنوات الاتصال (IPC)
+// 📡 3. قنوات الاتصال (IPC) - 🧠 (تم زراعة أجهزة الأزرار هنا)
 // ---------------------------------------------------------
 ipcMain.handle('get-app-version', () => app.getVersion());
 
+// أجهزة الاستقبال لأزرار الشريط العلوي الزجاجي
+ipcMain.on('minimize', () => {
+  if (mainWindow) mainWindow.minimize();
+});
+
+ipcMain.on('maximize', () => {
+  if (mainWindow) {
+    if (mainWindow.isMaximized()) {
+      mainWindow.unmaximize();
+    } else {
+      mainWindow.maximize();
+    }
+  }
+});
+
+ipcMain.on('close', () => {
+  if (mainWindow) mainWindow.close();
+});
+
 // ---------------------------------------------------------
-// 🏁 4. دورة حياة التطبيق (الإصلاح الجذري هنا)
+// 🏁 4. دورة حياة التطبيق 
 // ---------------------------------------------------------
 app.whenReady().then(() => {
   createWindow();
@@ -118,7 +136,7 @@ app.whenReady().then(() => {
   // if (process.env.NODE_ENV === 'production') {
   //   autoUpdater.checkForUpdatesAndNotify();
   // }
-}); // تم إغلاق القوس بشكل صحيح هنا
+}); 
 
 app.on('activate', () => {
   if (BrowserWindow.getAllWindows().length === 0) createWindow();
