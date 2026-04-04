@@ -643,7 +643,7 @@ export const translations = {
   "secSyncCard1Title": "الربط مع Google Drive",
   "secSyncCard1Desc": "اربط التطبيق بحسابك في جوجل لتأمين قاعدة بياناتك ومزامنتها بين هاتفك وحاسوبك تلقائياً.",
   "secSyncCard2Title": "النسخ الاحتياطي المحلي",
-  "secSyncCard2Desc": "يمكنك تصدير بيانات التطبيق كملف مشفر والاحتفاظ به على جهازك لاستعادته في أي وقت."
+  "secSyncCard2Desc": "يمكنك تصدير بيانات التطبيق كملف مشفر والاحتفاظ به على جهازك لاستعادته في أي وقت.",
     rasedGuideTitle: "دليل راصد",
     dashboardMenu: "1. لوحة القيادة",
     attendanceMenu: "2. الحضور والغياب",
