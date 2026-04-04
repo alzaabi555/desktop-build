@@ -123,7 +123,7 @@ export const translations = {
   "exportBackupLocal": "تصدير نسخة احتياطية (محلياً)",
   "importBackup": "استيراد نسخة سابقة",
   "dangerZoneTitle": "منطقة الخطر"
-    settingsTitle: "الإعدادات",
+    settingsTitle: "الإعدادات ",
     settingsSubtitle: "تخصيص الهوية وإدارة البيانات السحابية والمحلية",
     profileTitle: "الملف الشخصي",
     profileSubtitle: "الرقم المدني هو مفتاحك السري للمزامنة السحابية",
