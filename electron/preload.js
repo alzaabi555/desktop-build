@@ -12,4 +12,6 @@ contextBridge.exposeInMainWorld('electron', {
    * يُستخدم لفتح الواتساب أو أي روابط دعم فني خارج نافذة التطبيق
    */
   openExternal: (url) => shell.openExternal(url),
+  // 🚀 🚀 هذا هو العصب المفقود الذي زرعناه للتو! 
+  send: (channel, data) => ipcRenderer.send(channel, data)
 });
