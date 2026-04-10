@@ -85,7 +85,6 @@ const GradeBook: React.FC<GradeBookProps> = ({
   const [bulkScore, setBulkScore] = useState('');
   const [activeToolId, setActiveToolId] = useState<string>('');
 
-  // 💉 حالة جديدة خاصة باستدعاء ولي الأمر للدرجات المتدنية
   const [summonData, setSummonData] = useState<{ student: Student; score: string; category: string } | null>(null);
 
   const isRamadan = true;
@@ -442,7 +441,6 @@ const GradeBook: React.FC<GradeBookProps> = ({
     }
   };
 
-  // 💉 دالة إرسال الاستدعاء عبر الواتساب
   const sendSummonMessage = () => {
     if (!summonData) return;
     const message = `استدعاء ولي أمر: \nنود إفادتكم بتدني مستوى الطالب/ة *${summonData.student.name}* في مادة *${teacherInfo?.subject || 'المادة'}*، حيث حصل على درجة *${summonData.score}* في *${summonData.category}*.\nنرجو المتابعة والتواصل مع المعلم لمصلحة الطالب.`;
@@ -640,9 +638,11 @@ const GradeBook: React.FC<GradeBookProps> = ({
             const totalScore = semGrades.reduce((acc, curr) => acc + (curr.score || 0), 0);
             const symbolColor = getSymbolColor(totalScore);
             
-            // 💉 منطق الاستشعار للاستدعاء السريع
+            // 💉 منطق الاستشعار الذكي والمحسن (يلتقط أي صيغة لكلمة "اختبار قصير" أو "الإختبار" أو "1")
             const activeTool = tools.find(t => t.id === activeToolId);
-            const isShortQuiz = activeTool?.name.includes('اختبار قصير');
+            const toolNameNormalized = normalizeText(activeTool?.name || '');
+            const isShortQuiz = toolNameNormalized.includes('اختبار') && toolNameNormalized.includes('قصير');
+            
             const scoreNum = parseFloat(currentGrade);
             const needsSummon = isShortQuiz && !isNaN(scoreNum) && scoreNum < 10 && currentGrade !== '';
 
@@ -652,7 +652,7 @@ const GradeBook: React.FC<GradeBookProps> = ({
                 {/* 🚨 زر الإنذار والاستدعاء */}
                 {needsSummon && (
                   <button
-                    onClick={() => setSummonData({ student, score: currentGrade, category: activeTool.name })}
+                    onClick={() => setSummonData({ student, score: currentGrade, category: activeTool?.name || '' })}
                     className="absolute -top-2 -left-2 md:-left-3 p-1.5 md:p-2 bg-danger/10 backdrop-blur-md rounded-full border border-danger/30 text-danger hover:bg-danger/20 transition-all animate-pulse z-20 shadow-md active:scale-90"
                     title="استدعاء ولي الأمر (درجة متدنية)"
                   >
