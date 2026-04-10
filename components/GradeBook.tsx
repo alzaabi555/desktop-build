@@ -3,7 +3,7 @@ import { Student, GradeRecord, AssessmentTool } from '../types';
 import { 
   Plus, X, Trash2, Settings, Check, Loader2, Edit2, 
   FileSpreadsheet, FileUp, Wand2, BarChart3, SlidersHorizontal, 
-  FileDown, PieChart, AlertTriangle, Download, Copy 
+  FileDown, PieChart, AlertTriangle, Download, Copy, Send 
 } from 'lucide-react';
 import { useApp } from '../context/AppContext';
 import { Filesystem, Directory, Encoding } from '@capacitor/filesystem';
@@ -84,6 +84,9 @@ const GradeBook: React.FC<GradeBookProps> = ({
   const [bulkFillTool, setBulkFillTool] = useState<AssessmentTool | null>(null);
   const [bulkScore, setBulkScore] = useState('');
   const [activeToolId, setActiveToolId] = useState<string>('');
+
+  // 💉 حالة جديدة خاصة باستدعاء ولي الأمر للدرجات المتدنية
+  const [summonData, setSummonData] = useState<{ student: Student; score: string; category: string } | null>(null);
 
   const isRamadan = true;
 
@@ -439,6 +442,20 @@ const GradeBook: React.FC<GradeBookProps> = ({
     }
   };
 
+  // 💉 دالة إرسال الاستدعاء عبر الواتساب
+  const sendSummonMessage = () => {
+    if (!summonData) return;
+    const message = `استدعاء ولي أمر: \nنود إفادتكم بتدني مستوى الطالب/ة *${summonData.student.name}* في مادة *${teacherInfo?.subject || 'المادة'}*، حيث حصل على درجة *${summonData.score}* في *${summonData.category}*.\nنرجو المتابعة والتواصل مع المعلم لمصلحة الطالب.`;
+    
+    const phone = summonData.student.parentPhone || '';
+    if (phone) {
+      window.open(`https://wa.me/${phone}?text=${encodeURIComponent(message)}`, '_blank');
+    } else {
+      alert('لا يوجد رقم هاتف مسجل لولي الأمر.');
+    }
+    setSummonData(null);
+  };
+
   // 🌍 تطبيق الـ dir
   return (
    <div className={`flex flex-col h-full space-y-6 pb-24 md:pb-8 overflow-hidden relative text-textPrimary ${dir === 'rtl' ? 'text-right' : 'text-left'}`} dir={dir}>
@@ -622,9 +639,27 @@ const GradeBook: React.FC<GradeBookProps> = ({
             const semGrades = getSemesterGrades(student, currentSemester);
             const totalScore = semGrades.reduce((acc, curr) => acc + (curr.score || 0), 0);
             const symbolColor = getSymbolColor(totalScore);
+            
+            // 💉 منطق الاستشعار للاستدعاء السريع
+            const activeTool = tools.find(t => t.id === activeToolId);
+            const isShortQuiz = activeTool?.name.includes('اختبار قصير');
+            const scoreNum = parseFloat(currentGrade);
+            const needsSummon = isShortQuiz && !isNaN(scoreNum) && scoreNum < 10 && currentGrade !== '';
 
             return (
               <div key={student.id} className={`glass-panel rounded-2xl p-2 border border-borderColor flex flex-col items-center relative transition-all duration-300 hover:shadow-md hover:-translate-y-1`}>
+                
+                {/* 🚨 زر الإنذار والاستدعاء */}
+                {needsSummon && (
+                  <button
+                    onClick={() => setSummonData({ student, score: currentGrade, category: activeTool.name })}
+                    className="absolute -top-2 -left-2 md:-left-3 p-1.5 md:p-2 bg-danger/10 backdrop-blur-md rounded-full border border-danger/30 text-danger hover:bg-danger/20 transition-all animate-pulse z-20 shadow-md active:scale-90"
+                    title="استدعاء ولي الأمر (درجة متدنية)"
+                  >
+                    <AlertTriangle className="w-4 h-4 md:w-5 md:h-5" />
+                  </button>
+                )}
+
                 <StudentAvatar gender={student.gender} className={`w-10 h-10 mb-1.5 border-2 shadow-sm border-borderColor`} />
                 
                 <h3 className={`font-bold text-[10px] leading-[1.2] text-center break-words mb-2 w-full min-h-[30px] flex items-center justify-center text-textPrimary`}>
@@ -643,7 +678,7 @@ const GradeBook: React.FC<GradeBookProps> = ({
                         value={currentGrade} 
                         onChange={e => handleGradeChange(student.id, e.target.value)} 
                         placeholder="-" 
-                        className={`w-full h-8 rounded-lg text-center font-black text-sm outline-none border-2 transition-all bg-bgCard border-borderColor focus:border-primary text-textPrimary placeholder:text-textSecondary`} 
+                        className={`w-full h-8 rounded-lg text-center font-black text-sm outline-none border-2 transition-all bg-bgCard border-borderColor focus:border-primary text-textPrimary placeholder:text-textSecondary ${needsSummon ? 'border-danger/50 text-danger' : ''}`} 
                     />
                 </div>
               </div>
@@ -741,6 +776,38 @@ const GradeBook: React.FC<GradeBookProps> = ({
                 <input type="number" autoFocus placeholder={t('score')} className={`w-full rounded-xl p-4 text-center text-xl font-black outline-none border transition-colors bg-bgCard border-borderColor focus:border-primary text-textPrimary placeholder:text-textSecondary`} value={bulkScore} onChange={e => setBulkScore(e.target.value)} />
                 <button onClick={handleBulkFill} className={`w-full py-4 rounded-xl font-black text-sm shadow-lg active:scale-95 transition-all bg-primary hover:bg-primary/80 text-white`}>{t('applyBulkFill')}</button>
             </div>
+          </div>
+        )}
+      </DrawerSheet>
+
+      {/* 🌟 4. اللوحة المنزلقة: إرسال استدعاء ولي الأمر (Smart Summon Alert) */}
+      <DrawerSheet isOpen={!!summonData} onClose={() => setSummonData(null)} isRamadan={isRamadan} dir={dir} mode="bottom">
+        {summonData && (
+          <div className="flex flex-col h-full w-full pb-6">
+            <div className="flex justify-center mb-4">
+              <div className="w-16 h-16 bg-danger/10 border border-danger/20 rounded-full flex items-center justify-center shadow-[0_0_20px_rgba(239,68,68,0.2)] animate-pulse">
+                <AlertTriangle className="w-8 h-8 text-danger" />
+              </div>
+            </div>
+            
+            <h3 className="font-black text-lg text-center mb-1 text-textPrimary">استدعاء ولي أمر</h3>
+            <p className="text-xs font-bold text-center text-textSecondary mb-6">لقد حصل الطالب على درجة متدنية وتتطلب تدخلاً سريعاً.</p>
+
+            <div className="bg-bgSoft border border-borderColor rounded-2xl p-4 mb-6 relative">
+              <div className="absolute -top-3 right-4 bg-bgCard px-2 text-[10px] font-black text-primary border border-borderColor rounded-lg">نص الرسالة التلقائية</div>
+              <p className="text-sm font-bold text-textPrimary leading-relaxed whitespace-pre-wrap select-all">
+                استدعاء ولي أمر:
+                {'\n'}نود إفادتكم بتدني مستوى الطالب/ة <span className="text-primary">{summonData.student.name}</span> في مادة <span className="text-primary">{teacherInfo?.subject || 'المادة'}</span>، حيث حصل على درجة <span className="text-danger bg-danger/10 px-1 rounded">{summonData.score}</span> في <span className="text-warning">{summonData.category}</span>.
+                {'\n'}نرجو المتابعة والتواصل مع المعلم لمصلحة الطالب.
+              </p>
+            </div>
+
+            <button 
+              onClick={sendSummonMessage}
+              className="w-full py-4 rounded-xl font-black text-sm shadow-lg active:scale-95 transition-all bg-success hover:bg-success/80 text-white flex items-center justify-center gap-2 mt-auto"
+            >
+              <Send className="w-5 h-5" /> إرسال عبر واتساب
+            </button>
           </div>
         )}
       </DrawerSheet>
