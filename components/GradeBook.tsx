@@ -441,16 +441,30 @@ const GradeBook: React.FC<GradeBookProps> = ({
     }
   };
 
+  // 💉 الجراحة الدقيقة: تحديث منطق إرسال الاستدعاء ليكون مطابقاً لمنطق صفحة الطلاب ويدعم Electron (الكمبيوتر)
   const sendSummonMessage = () => {
     if (!summonData) return;
+    if (!summonData.student.parentPhone) {
+        alert(t('alertNoParentPhone') || 'لا يوجد رقم هاتف مسجل لولي الأمر.');
+        return;
+    }
+
     const message = `استدعاء ولي أمر: \nنود إفادتكم بتدني مستوى الطالب/ة *${summonData.student.name}* في مادة *${teacherInfo?.subject || 'المادة'}*، حيث حصل على درجة *${summonData.score}* في *${summonData.category}*.\nنرجو المتابعة والتواصل مع المعلم لمصلحة الطالب.`;
     
-    const phone = summonData.student.parentPhone || '';
-    if (phone) {
-      window.open(`https://wa.me/${phone}?text=${encodeURIComponent(message)}`, '_blank');
-    } else {
-      alert('لا يوجد رقم هاتف مسجل لولي الأمر.');
+    const msg = encodeURIComponent(message);
+    let cleanPhone = summonData.student.parentPhone.replace(/[^0-9]/g, '');
+
+    if (cleanPhone.startsWith('00')) cleanPhone = cleanPhone.substring(2);
+    if (cleanPhone.length === 8) cleanPhone = '968' + cleanPhone;
+    else if (cleanPhone.length === 9 && cleanPhone.startsWith('0')) cleanPhone = '968' + cleanPhone.substring(1);
+
+    if ((window as any).electron) { 
+        (window as any).electron.openExternal(`whatsapp://send?phone=${cleanPhone}&text=${msg}`); 
+    } else { 
+        const universalUrl = `https://api.whatsapp.com/send?phone=${cleanPhone}&text=${msg}`; 
+        window.open(universalUrl, '_blank'); 
     }
+
     setSummonData(null);
   };
 
@@ -638,7 +652,6 @@ const GradeBook: React.FC<GradeBookProps> = ({
             const totalScore = semGrades.reduce((acc, curr) => acc + (curr.score || 0), 0);
             const symbolColor = getSymbolColor(totalScore);
             
-            // 💉 منطق الاستشعار الذكي والمحسن (يلتقط أي صيغة لكلمة "اختبار قصير" أو "الإختبار" أو "1")
             const activeTool = tools.find(t => t.id === activeToolId);
             const toolNameNormalized = normalizeText(activeTool?.name || '');
             const isShortQuiz = toolNameNormalized.includes('اختبار') && toolNameNormalized.includes('قصير');
