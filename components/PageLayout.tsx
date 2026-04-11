@@ -30,23 +30,23 @@ const PageLayout: React.FC<PageLayoutProps> = ({
     setScrollY(e.currentTarget.scrollTop);
   };
 
-  // 💉 إذا نزل المستخدم للأسفل أكثر من 20 بكسل، نفعّل حالة التقلص
+  // 💉 تفعيل حالة التقلص عند النزول أكثر من 20 بكسل
   const isScrolled = scrollY > 20;
   const BackIcon = dir === 'rtl' ? ChevronRight : ChevronLeft;
 
   return (
-    <div className="relative w-full h-[100dvh] flex flex-col bg-bgSoft text-textPrimary overflow-hidden" dir={dir}>
+    // 💉 1. استخدام h-full بدلاً من h-[100dvh] لكي يحترم القائمة الجانبية في الويندوز
+    <div className="relative w-full h-full flex flex-col bg-bgSoft text-textPrimary overflow-hidden" dir={dir}>
       
-      {/* ================= 🩺 الهيدر الثابت (Fixed Edge-to-Edge) ================= */}
-      {/* 💉 1. fixed left-0 right-0 w-full تضمن أنه من الحافة للحافة ولن يرتفع أبداً */}
+      {/* ================= 🩺 الهيدر المرن (Flex Item) ================= */}
+      {/* 💉 2. إزالة fixed left-0 right-0 واستخدام shrink-0 ليبقى الهيدر أعلى الصفحة بأدب دون تخطي حدوده */}
       <header 
-        className={`fixed top-0 left-0 right-0 w-full z-50 transition-all duration-300 border-b ${
+        className={`shrink-0 w-full z-40 transition-all duration-300 border-b ${
           isScrolled 
-            ? 'bg-bgCard/90 backdrop-blur-md border-borderColor shadow-sm' // 💉 4. يدعم الثيم الداكن والزجاجي تلقائياً!
+            ? 'bg-bgCard/90 backdrop-blur-md border-borderColor shadow-sm' 
             : 'bg-bgSoft border-transparent'
         }`}
         style={{
-          // 💉 2. دالة max تحمي النوتش ولا تترك فراغات ضخمة
           paddingTop: 'max(env(safe-area-inset-top), 12px)' 
         }}
       >
@@ -97,7 +97,7 @@ const PageLayout: React.FC<PageLayoutProps> = ({
             </div>
           </div>
 
-          {/* 💉 الفلاتر والبحث (تختفي بذكاء مع النزول لتوسيع الشاشة) */}
+          {/* 💉 الفلاتر والبحث (تختفي بذكاء مع النزول) */}
           {leftActions && (
             <div 
               className="w-full transition-all duration-300 overflow-hidden origin-top"
@@ -114,21 +114,12 @@ const PageLayout: React.FC<PageLayoutProps> = ({
       </header>
 
       {/* ================= 📝 منطقة المحتوى (Scrollable Area) ================= */}
-      {/* 💉 3. المحتوى هنا ينزلق بأمان "تحت" الهيدر الثابت */}
+      {/* 💉 3. المحتوى يأخذ المساحة المتبقية (flex-1) وينزلق بشكل طبيعي بدون الحاجة لمساحة دافعة (Spacer) */}
       <main 
-        className="flex-1 w-full h-full overflow-y-auto custom-scrollbar relative"
+        className="flex-1 w-full h-full overflow-y-auto overflow-x-hidden custom-scrollbar relative"
         onScroll={handleScroll}
       >
-        {/* 💉 مساحة دافعة ديناميكية (Spacer): 
-            هذه المساحة تساوي حجم الهيدر تماماً لكي لا يختفي أول عنصر تحت الهيدر 
-        */}
-        <div 
-          className="w-full shrink-0 transition-all duration-300" 
-          style={{ height: leftActions ? 'calc(env(safe-area-inset-top) + 130px)' : 'calc(env(safe-area-inset-top) + 70px)' }} 
-        />
-        
-        {/* الحاوية الداخلية للبطاقات */}
-        <div className="px-4 pb-32 w-full">
+        <div className="px-4 pb-32 pt-4 w-full">
           {children}
         </div>
       </main>
