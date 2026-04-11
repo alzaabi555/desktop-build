@@ -132,15 +132,9 @@ export const AppLayout: React.FC<AppLayoutProps> = ({
           </nav>
         </aside>
 
-        {/* 💉 التعديل المعماري الأكبر لحماية كافة الصفحات من التمدد */}
+        {/* 💉 تم تبسيط الـ main ليكون مجرد إطار فارغ، ويترك التنسيق والتمرير لـ PageLayout */}
         <main className="flex-1 flex flex-col h-full overflow-hidden relative z-10">
-          {/* تم إضافة overflow-x-hidden لمنع أي عنصر داخلي من كسر عرض الشاشة */}
-          <div className="flex-1 overflow-y-auto overflow-x-hidden custom-scrollbar pb-[calc(5rem+env(safe-area-inset-bottom))] md:pb-6 px-4 md:px-10 pt-safe flex flex-col items-center">
-            {/* تم توحيد العرض (max-w-md للجوال) و (md:max-w-5xl للكمبيوتر) ليتطابق المحتوى مع الشريط السفلي تماماً */}
-            <div className="w-full max-w-md md:max-w-5xl mx-auto min-h-full py-6">
-              {children}
-            </div>
-          </div>
+           {children}
         </main>
 
       </div>
