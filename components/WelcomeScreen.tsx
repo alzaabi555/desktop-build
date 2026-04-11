@@ -25,27 +25,27 @@ const WelcomeScreen: React.FC<WelcomeScreenProps> = ({ onFinish }) => {
             id: 1,
             customContent: (
                 <div className="grid grid-cols-2 gap-4 w-full px-4 relative z-10">
-                    <div className={`p-5 rounded-[2rem] shadow-sm flex flex-col items-center text-center transition-all ${isRamadan ? 'bg-bgCard/5 border border-white/10 backdrop-blur-xl' : 'bg-bgCard border border-slate-100'}`}>
+                    <div className={`p-5 rounded-[2rem] shadow-sm flex flex-col items-center text-center transition-all ${isRamadan ? 'bg-white/5 border border-white/10 backdrop-blur-xl' : 'bg-white border border-slate-100'}`}>
                         <div className={`w-12 h-12 rounded-full flex items-center justify-center mb-3 ${isRamadan ? 'bg-emerald-500/20 text-emerald-400' : 'bg-emerald-50 text-emerald-600'}`}><Check className="w-6 h-6"/></div>
-                        <h3 className={`font-black text-sm ${isRamadan ? 'text-white' : 'text-textPrimary'}`}>حضور ذكي</h3>
+                        <h3 className={`font-black text-sm ${isRamadan ? 'text-white' : 'text-slate-800'}`}>حضور ذكي</h3>
                     </div>
-                    <div className={`p-5 rounded-[2rem] shadow-sm flex flex-col items-center text-center transition-all ${isRamadan ? 'bg-bgCard/5 border border-white/10 backdrop-blur-xl' : 'bg-bgCard border border-slate-100'}`}>
+                    <div className={`p-5 rounded-[2rem] shadow-sm flex flex-col items-center text-center transition-all ${isRamadan ? 'bg-white/5 border border-white/10 backdrop-blur-xl' : 'bg-white border border-slate-100'}`}>
                         <div className={`w-12 h-12 rounded-full flex items-center justify-center mb-3 ${isRamadan ? 'bg-amber-500/20 text-amber-400' : 'bg-amber-50 text-amber-600'}`}><LayoutDashboard className="w-6 h-6"/></div>
-                        <h3 className={`font-black text-sm ${isRamadan ? 'text-white' : 'text-textPrimary'}`}>سجل درجات</h3>
+                        <h3 className={`font-black text-sm ${isRamadan ? 'text-white' : 'text-slate-800'}`}>سجل درجات</h3>
                     </div>
-                    <div className={`p-5 rounded-[2rem] shadow-sm flex flex-col items-center text-center transition-all ${isRamadan ? 'bg-bgCard/5 border border-white/10 backdrop-blur-xl' : 'bg-bgCard border border-slate-100'}`}>
+                    <div className={`p-5 rounded-[2rem] shadow-sm flex flex-col items-center text-center transition-all ${isRamadan ? 'bg-white/5 border border-white/10 backdrop-blur-xl' : 'bg-white border border-slate-100'}`}>
                         <div className={`w-12 h-12 rounded-full flex items-center justify-center mb-3 ${isRamadan ? 'bg-purple-500/20 text-purple-400' : 'bg-purple-50 text-purple-600'}`}><Zap className="w-6 h-6"/></div>
-                        <h3 className={`font-black text-sm ${isRamadan ? 'text-white' : 'text-textPrimary'}`}>تقارير شاملة</h3>
+                        <h3 className={`font-black text-sm ${isRamadan ? 'text-white' : 'text-slate-800'}`}>تقارير شاملة</h3>
                     </div>
-                    <div className={`p-5 rounded-[2rem] shadow-sm flex flex-col items-center text-center transition-all ${isRamadan ? 'bg-bgCard/5 border border-white/10 backdrop-blur-xl' : 'bg-bgCard border border-slate-100'}`}>
+                    <div className={`p-5 rounded-[2rem] shadow-sm flex flex-col items-center text-center transition-all ${isRamadan ? 'bg-white/5 border border-white/10 backdrop-blur-xl' : 'bg-white border border-slate-100'}`}>
                         <div className={`w-12 h-12 rounded-full flex items-center justify-center mb-3 ${isRamadan ? 'bg-blue-500/20 text-blue-400' : 'bg-blue-50 text-blue-600'}`}><ShieldCheck className="w-6 h-6"/></div>
-                        <h3 className={`font-black text-sm ${isRamadan ? 'text-white' : 'text-textPrimary'}`}>يعمل بلا إنترنت</h3>
+                        <h3 className={`font-black text-sm ${isRamadan ? 'text-white' : 'text-slate-800'}`}>يعمل بلا إنترنت</h3>
                     </div>
                 </div>
             ),
             title: "كل ما تحتاجه",
             desc: "تخلى عن السجلات الورقية. رصد الغياب، الدرجات، والسلوك، وإصدار التقارير أصبح أسرع وأسهل.",
-            color: isRamadan ? "text-white" : "text-textPrimary",
+            color: isRamadan ? "text-white" : "text-slate-800",
         },
         {
             id: 2,
@@ -81,7 +81,7 @@ const WelcomeScreen: React.FC<WelcomeScreenProps> = ({ onFinish }) => {
                 {slides.map((s, idx) => (
                     <div 
                         key={idx} 
-                        className={`h-1.5 rounded-full transition-all duration-500 ${step === idx ? (isRamadan ? 'w-8 bg-indigo-500 shadow-[0_0_10px_rgba(99,102,241,0.8)]' : 'w-8 bg-[#1e3a8a]') : (isRamadan ? 'w-2 bg-bgCard/20' : 'w-2 bg-slate-300')}`}
+                        className={`h-1.5 rounded-full transition-all duration-500 ${step === idx ? (isRamadan ? 'w-8 bg-indigo-500 shadow-[0_0_10px_rgba(99,102,241,0.8)]' : 'w-8 bg-[#1e3a8a]') : (isRamadan ? 'w-2 bg-white/20' : 'w-2 bg-slate-300')}`}
                     />
                 ))}
             </div>
@@ -115,7 +115,7 @@ const WelcomeScreen: React.FC<WelcomeScreenProps> = ({ onFinish }) => {
                         <h1 className={`text-3xl font-black mb-4 tracking-tight transition-colors ${slides[step].color}`}>
                             {slides[step].title}
                         </h1>
-                        <p className={`font-medium text-sm leading-relaxed max-w-[90%] whitespace-pre-line transition-colors ${isRamadan ? 'text-indigo-100/70' : 'text-textSecondary '}`}>
+                        <p className={`font-medium text-sm leading-relaxed max-w-[90%] whitespace-pre-line transition-colors ${isRamadan ? 'text-indigo-100/70' : 'text-slate-500'}`}>
                             {slides[step].desc}
                         </p>
                     </motion.div>
