@@ -1,8 +1,8 @@
-
 {
-  "appId": "com.madrasati.app",
+  "appId": "com.alzaabi.rased.teachers.app",
   "appName": "راصد",
   "webDir": "www",
+  "backgroundColor": "#0f172a",
   "server": {
     "androidScheme": "https",
     "cleartext": true,
@@ -18,11 +18,11 @@
   "android": {
     "allowMixedContent": true,
     "captureInput": true,
-    "backgroundColor": "#111827"
+    "backgroundColor": "#0f172a"
   },
   "ios": {
     "contentInset": "automatic",
-    "backgroundColor": "#F2F2F7",
+    "backgroundColor": "#0f172a",
     "allowsBackForwardNavigationGestures": true
   }
 }
