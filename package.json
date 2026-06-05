@@ -61,6 +61,7 @@
     "productName": "تطبيق راصد",
     "extraResources": [
       "vosk-model/**/*"
+      ],
     "npmRebuild": false,
     "directories": {
       "output": "dist"
