@@ -4,9 +4,7 @@ on:
 
 jobs:
   build:
-    # 💉 الضربة السحرية: نغير السيرفر إلى 2019 المتوافق تماماً مع الذكاء الاصطناعي
-    runs-on: windows-2019
-    
+    runs-on: windows-latest
     permissions:
       contents: write
 
@@ -19,23 +17,12 @@ jobs:
         with:
           node-version: 18
 
-      # تثبيت طبيعي جداً بدون أي أخطاء C++ بفضل السيرفر الجديد
       - name: Install Dependencies
         run: npm install --no-optional
 
-      # 🧠 تحميل الدماغ العربي (Vosk Model) 
-      - name: Download and Extract Vosk Model
-        run: |
-          Invoke-WebRequest -Uri "https://alphacephei.com/vosk/models/vosk-model-small-ar-0.3.zip" -OutFile "vosk-model.zip"
-          Expand-Archive -Path "vosk-model.zip" -DestinationPath "."
-          Rename-Item -Path "vosk-model-small-ar-0.3" -NewName "vosk-model"
-          Remove-Item "vosk-model.zip"
-
-      # بناء تطبيق سطح المكتب
       - name: Build Electron App
         run: npm run electron:dist -- --publish never
 
-      # رفع ملفات التطبيق لتتمكن من تحميله
       - name: Upload Windows Apps
         uses: actions/upload-artifact@v4
         with:
