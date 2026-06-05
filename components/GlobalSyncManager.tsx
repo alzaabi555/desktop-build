@@ -1,16 +1,20 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useApp } from '../context/AppContext';
 import { 
   CloudSync, Users, GraduationCap, CloudUpload, CloudDownload,
-  CheckCircle2, X, AlertCircle, Loader2, Server, Smartphone
+  CheckCircle2, X, AlertCircle, Loader2, Server, Smartphone, Building, Save
 } from 'lucide-react';
 import { Filesystem, Directory, Encoding } from '@capacitor/filesystem';
 import { Capacitor } from '@capacitor/core';
 import { useTheme } from '../theme/ThemeProvider';
+import PageLayout from '../components/PageLayout'; 
 
 const STUDENT_APP_URL = "https://script.google.com/macros/s/AKfycbwMYqSpnXvlMrL6po82-XePyAWBd9FMNCTgY7WlYaOH6pn1kTazLqxEfvremqsSk_dU/exec";
 const PARENT_APP_URL = "https://script.google.com/macros/s/AKfycbzKPPsQsM_dIttcYSxRLs6LQuvXhT6Qia5TwJ1Tw4ObQ-eZFZeJhV6epXXjxA9_SwWk/exec";
 const DEVICE_SYNC_URL = "https://script.google.com/macros/s/AKfycbxXUII_Q_6K6TuewJ0k44mi8mCB-6LQNbDo9rhVdaVOvYCyKFRNCBuddLe_PyLorCdT/exec";
+
+// 💉 رابط الإدارة (تأكد من وضعه هنا)
+const ADMIN_APP_URL = "https://script.google.com/macros/s/AKfycbwZHhZ-RPWUpBGIlw0qTFPUmOPmq9WpcvW4WLklcjb_A9U3MW0luIXYPnHznI29ThpbMA/exec";
 
 const GlobalSyncManager: React.FC = () => {
   const { 
@@ -25,11 +29,21 @@ const GlobalSyncManager: React.FC = () => {
 
   const [syncState, setSyncState] = useState<'idle' | 'syncing' | 'success' | 'error'>('idle');
   const [syncMessage, setSyncMessage] = useState('');
+  
+  // 💉 حالة جديدة مخصصة لكود المدرسة (مفصول تماماً عن الرقم المدني)
+  const [adminSchoolCode, setAdminSchoolCode] = useState('');
 
-  const handleSync = async (type: 'student' | 'parent' | 'backup' | 'restore') => {
+  // استرجاع كود المدرسة المحفوظ مسبقاً عند فتح الصفحة
+  useEffect(() => {
+    const savedCode = localStorage.getItem('rased_admin_school_code');
+    if (savedCode) setAdminSchoolCode(savedCode);
+  }, []);
+
+  const handleSync = async (type: 'student' | 'parent' | 'backup' | 'restore' | 'admin') => {
     
+    // حماية السحابة المركزية (النسخ الاحتياطي الخاص بالمعلم يتطلب رقمه المدني)
     if ((type === 'backup' || type === 'restore') && !teacherInfo?.civilId) {
-      alert(t('alertEnterCivilId'));
+      alert("الرجاء إدخال رقمك المدني (كمعلم) في الإعدادات لربط نسختك الاحتياطية.");
       return;
     }
 
@@ -40,18 +54,25 @@ const GlobalSyncManager: React.FC = () => {
       if (!window.confirm(t('alertConfirmPush'))) return;
     }
 
+    // حماية مزامنة الإدارة (تتطلب كود المدرسة)
+    if (type === 'admin' && adminSchoolCode.trim().length < 2) {
+      alert("الرجاء إدخال كود المدرسة أولاً للاتصال بنظام الإدارة.");
+      return;
+    }
+
     setSyncState('syncing');
 
     try {
-      // 🎓 1. تحديث تطبيق الطلاب
+      // 🎓 1. تطبيق الطلاب
       if (type === 'student') {
         setSyncMessage(t('syncingStudentMsg'));
         const savedTasks = JSON.parse(localStorage.getItem('rased_teacher_tasks') || '[]');
+        // نرسل الطلاب كما هم (لأنهم أصبحوا يمتلكون rasedId تلقائياً من AppContext)
         const payload = { students: students, tasks: savedTasks, className: 'الكل' };
         await fetch(STUDENT_APP_URL, { method: 'POST', body: JSON.stringify(payload) });
       }
       
-      // 👨‍👩‍👦 2. تحديث تطبيق أولياء الأمور
+      // 👨‍👩‍👦 2. تطبيق أولياء الأمور
       else if (type === 'parent') {
         setSyncMessage(t('syncingParentMsg'));
         const today = new Date();
@@ -59,7 +80,8 @@ const GlobalSyncManager: React.FC = () => {
         const currentYear = today.getFullYear();
 
         const parentPayload = students
-            .filter(s => s.parentCode && s.parentCode.trim() !== "")
+            // 💉 التعديل السحري: السماح بالمرور عبر كود راصد السري
+            .filter(s => s.rasedId && s.rasedId.trim() !== "")
             .map(s => {
                 const monthlyPoints = (s.behaviors || [])
                     .filter(b => {
@@ -69,7 +91,7 @@ const GlobalSyncManager: React.FC = () => {
                     .reduce((acc, b) => acc + b.points, 0);
 
                 return {
-                    parentCode: s.parentCode,
+                    rasedId: s.rasedId, // 💉 إرسال الكود السري للسحابة
                     name: s.name,
                     className: s.classes[0] || "",
                     subject: teacherInfo?.subject || t('unspecified'), 
@@ -81,11 +103,70 @@ const GlobalSyncManager: React.FC = () => {
                 };
             });
 
-        if (parentPayload.length === 0) throw new Error(t('alertNoCivilIdToSync'));
+        // 💉 رسالة خطأ صريحة توضح المشكلة إذا كان الفصل فارغاً
+        if (parentPayload.length === 0) throw new Error("لا يوجد أي طالب يمتلك كود راصد السري (RSD) للمزامنة!");
         await fetch(PARENT_APP_URL, { method: 'POST', body: JSON.stringify(parentPayload) });
       }
-      
-      // ☁️ 3. الرفع الاحتياطي (Backup)
+
+    // 🏫 3. تطبيق راصد الإدارة
+      else if (type === 'admin') {
+        setSyncMessage('جاري إرسال التقرير الشامل للإدارة...');
+        localStorage.setItem('rased_admin_school_code', adminSchoolCode.trim());
+
+        const teacherName = teacherInfo?.name || "معلم غير محدد";
+        
+        // 💉 ذكاء اصطناعي: نستخدم نفس صيغة التاريخ الموجودة في شاشة التحضير لضمان التطابق
+        const todayCA = new Date().toLocaleDateString('en-CA'); 
+        
+        let absentStudentsNames: string[] = [];
+        let lateStudentsNames: string[] = [];
+        let truantStudentsNames: string[] = [];
+
+        students.forEach(s => {
+            // نبحث عن سجل اليوم بدقة
+            const todayRecord = s.attendance?.find(a => a.date === todayCA || new Date(a.date).toDateString() === new Date().toDateString());
+            
+            if (todayRecord) {
+                const st = String(todayRecord.status).toLowerCase().trim();
+                
+                if (st === 'absent' || st === 'غائب') {
+                    absentStudentsNames.push(s.name);
+                } 
+                else if (st === 'late' || st === 'متأخر') {
+                    lateStudentsNames.push(s.name);
+                } 
+                // 🟣 هنا كان الفخ! أضفنا 'truant' ليتطابق مع زر التحضير
+                else if (st === 'truant' || st === 'escaped' || st === 'متسرب') {
+                    truantStudentsNames.push(s.name);
+                }
+            }
+        });
+
+        // 📦 تجهيز طرد البيانات للإرسال
+        const adminPayload = {
+            schoolCode: adminSchoolCode.trim(),
+            teacherName: teacherName,
+            className: classes[0] || "كل الفصول", 
+            absentStudents: absentStudentsNames,
+            lateStudents: lateStudentsNames,
+            truantStudents: truantStudentsNames, // 👈 تأكد أن هذا السطر موجود ليرسل التسرب
+            timestamp: new Date().toISOString()
+        };
+
+        try {
+            await fetch(ADMIN_APP_URL, {
+                method: 'POST',
+                mode: 'no-cors', // 💉 لكسر جدار حماية جوجل وجيت هب
+                headers: {
+                    'Content-Type': 'text/plain;charset=utf-8',
+                },
+                body: JSON.stringify(adminPayload)
+            });
+        } catch (error) {
+             throw new Error("تأكد من الاتصال بالإنترنت");
+        }
+      }
+      // ☁️ 4. السحابة المركزية: رفع احتياطي (تستخدم الرقم المدني للمعلم)
       else if (type === 'backup') {
         setSyncMessage(t('syncingBackupMsg'));
         const cleanId = teacherInfo.civilId.trim();
@@ -129,7 +210,7 @@ const GlobalSyncManager: React.FC = () => {
         if (result.status !== 'success') throw new Error("Server Error");
       } 
       
-      // 📥 4. جلب البيانات (Restore)
+      // 📥 5. السحابة المركزية: استرجاع البيانات (تستخدم الرقم المدني للمعلم)
       else if (type === 'restore') {
         setSyncMessage(t('syncingRestoreMsg'));
         const cleanId = teacherInfo.civilId.trim();
@@ -193,7 +274,7 @@ const GlobalSyncManager: React.FC = () => {
           if (hasData) {
               const dataToSave = {
                 version: '4.4.1',
-                timestamp: new Date().toISOString(),
+               timestamp:new Date().toISOString(),
                 students: newStudents,
                 classes: newClasses,
                 hiddenClasses: newHiddenClasses,
@@ -235,174 +316,180 @@ const GlobalSyncManager: React.FC = () => {
         setSyncState('idle');
       }, 3000);
 
-    } catch (error) {
+    } catch (error: any) {
       console.error(error);
       setSyncState('error');
-      setSyncMessage(t('syncError'));
+      setSyncMessage(error.message || t('syncError'));
       setTimeout(() => setSyncState('idle'), 4000);
     }
   };
 
   return (
-  <div className="w-full max-w-6xl mx-auto p-4 md:p-6 space-y-6 text-textPrimary" dir={dir}>
+    <PageLayout
+      title="مركز المزامنة"
+      subtitle="إدارة المزامنة والنسخ الاحتياطي"
+      icon={<CloudSync size={24} />}
+      rightActions={
+        <div className="flex items-center gap-3">
+          <span className="text-[10px] md:text-xs font-bold flex items-center gap-1 text-success bg-success/10 px-2 py-1 rounded-md border border-success/20">
+            <Server className="w-3 h-3 md:w-4 md:h-4" />
+            <span className="hidden sm:inline">متصل</span>
+          </span>
 
-    {/* Header */}
-    <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-      <div>
-        <h1 className="text-2xl font-bold">
-          {t('syncMenuTitle')}
-        </h1>
-        <p className="text-sm text-textSecondary font-bold mt-1">
-          {t('syncMenuSubtitle')}
-        </p>
-      </div>
-
-      <div className="flex items-center gap-3 flex-wrap">
-        <span className="text-sm font-bold flex items-center gap-1 text-success">
-          <Server className="w-4 h-4" />
-          {t('connectedStatus')}
-        </span>
-
-        <button
-          onClick={() => handleSync('student')}
-          className="px-4 py-2 rounded-xl border border-primary bg-primary text-white font-bold flex items-center gap-2 hover:bg-primary/90 hover:scale-[1.03] transition shadow-md"
-        >
-          <CloudSync className="w-4 h-4" />
-          {t('quickSyncBtn')}
-        </button>
-      </div>
-    </div>
-
-    {/* Status Section */}
-    {syncState !== 'idle' && (
-      <div className="rounded-2xl border border-borderColor bg-bgCard p-6 flex flex-col items-center justify-center text-center min-h-[200px] shadow-sm animate-in fade-in">
-
-        {syncState === 'syncing' && (
-          <>
-            <Loader2 className="w-10 h-10 animate-spin mb-4 text-primary" />
-            <p className="font-bold text-textPrimary">{syncMessage}</p>
-          </>
-        )}
-
-        {syncState === 'success' && (
-          <>
-            <CheckCircle2 className="w-10 h-10 mb-4 text-success animate-bounce" />
-            <p className="font-bold text-textPrimary">{syncMessage}</p>
-          </>
-        )}
-
-        {syncState === 'error' && (
-          <>
-            <AlertCircle className="w-10 h-10 mb-4 text-danger animate-pulse" />
-            <p className="font-bold mb-4 text-textPrimary">{syncMessage}</p>
-            <button
-              onClick={() => setSyncState('idle')}
-              className="px-6 py-2 rounded-xl border border-borderColor bg-bgSoft text-textPrimary font-bold hover:bg-bgCard transition"
-            >
-              {t('backBtn')}
-            </button>
-          </>
-        )}
-      </div>
-    )}
-
-    {/* Main Grid */}
-    {syncState === 'idle' && (
-      <>
-        {/* Stats */}
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-          <div className="rounded-xl border border-borderColor bg-bgCard p-4 shadow-sm">
-            <p className="text-xs font-bold text-textSecondary mb-1">{t('studentsCountLabel')}</p>
-            <h3 className="text-xl font-black text-textPrimary">{students.length}</h3>
-          </div>
-
-          <div className="rounded-xl border border-borderColor bg-bgCard p-4 shadow-sm">
-            <p className="text-xs font-bold text-textSecondary mb-1">{t('classesCountLabel')}</p>
-            <h3 className="text-xl font-black text-textPrimary">{classes.length}</h3>
-          </div>
-
-          <div className="rounded-xl border border-borderColor bg-bgCard p-4 shadow-sm">
-            <p className="text-xs font-bold text-textSecondary mb-1">{t('toolsCountLabel')}</p>
-            <h3 className="text-xl font-black text-textPrimary">{assessmentTools.length}</h3>
-          </div>
-
-          <div className="rounded-xl border border-borderColor bg-bgCard p-4 shadow-sm">
-            <p className="text-xs font-bold text-textSecondary mb-1">{t('statusLabel')}</p>
-            <h3 className="text-xl font-black text-success">{t('readyStatus')}</h3>
-          </div>
+          <button
+            onClick={() => handleSync('student')}
+            className="px-3 md:px-4 py-2 rounded-xl border border-primary bg-primary text-white font-bold flex items-center gap-2 hover:bg-primary/90 transition shadow-md active:scale-95"
+          >
+            <CloudSync className="w-4 h-4" />
+            <span className="hidden sm:inline text-xs">مزامنة سريعة</span>
+          </button>
         </div>
+      }
+    >
 
-        {/* Content */}
-        <div className="grid md:grid-cols-3 gap-6">
+      <div className="space-y-6 max-w-5xl mx-auto animate-in fade-in duration-500 pt-4">
 
-          {/* Apps */}
-          <div className="md:col-span-2 rounded-2xl border border-borderColor bg-bgCard p-5 space-y-4 shadow-sm">
-            <h2 className="font-black text-lg text-textPrimary border-b border-borderColor pb-3">{t('appsSectionTitle')}</h2>
+        {/* شاشة التحميل */}
+        {syncState !== 'idle' && (
+          <div className="rounded-2xl border border-borderColor bg-bgCard p-6 flex flex-col items-center justify-center text-center min-h-[200px] shadow-sm animate-in zoom-in-95 duration-300">
+            {syncState === 'syncing' && (
+              <>
+                <Loader2 className="w-10 h-10 animate-spin mb-4 text-primary" />
+                <p className="font-bold text-textPrimary text-lg">{syncMessage}</p>
+              </>
+            )}
 
-            {/* Student App */}
-            <div className="flex items-center justify-between p-4 rounded-xl border border-borderColor bg-bgSoft hover:bg-bgCard hover:shadow-md transition">
-              <div>
-                <h4 className="font-bold text-textPrimary">{t('studentAppTitle')}</h4>
-                <p className="text-xs font-bold text-textSecondary mt-1">{t('studentAppDesc')}</p>
+            {syncState === 'success' && (
+              <>
+                <CheckCircle2 className="w-12 h-12 mb-4 text-success animate-bounce" />
+                <p className="font-bold text-textPrimary text-lg">{syncMessage}</p>
+              </>
+            )}
+
+            {syncState === 'error' && (
+              <>
+                <AlertCircle className="w-12 h-12 mb-4 text-danger animate-pulse" />
+                <p className="font-bold mb-6 text-textPrimary text-lg">{syncMessage}</p>
+                <button onClick={() => setSyncState('idle')} className="px-6 py-2.5 rounded-xl border border-borderColor bg-bgSoft text-textPrimary font-bold hover:bg-bgCard transition active:scale-95">
+                  رجوع
+                </button>
+              </>
+            )}
+          </div>
+        )}
+
+        {syncState === 'idle' && (
+          <>
+            {/* 📈 الإحصائيات التي تم استرجاعها بنجاح */}
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+              <div className="rounded-xl border border-borderColor bg-bgCard p-4 shadow-sm transition-all hover:shadow-md">
+                <p className="text-xs font-bold text-textSecondary mb-1">عدد الطلاب</p>
+                <h3 className="text-xl md:text-2xl font-black text-textPrimary">{students.length}</h3>
               </div>
-
-              <button
-                onClick={() => handleSync('student')}
-                className="px-4 py-2 rounded-xl border border-primary/30 bg-primary/10 text-primary font-bold flex items-center gap-2 hover:bg-primary hover:text-white transition"
-              >
-                <GraduationCap className="w-4 h-4" />
-                {t('syncBtn')}
-              </button>
+              <div className="rounded-xl border border-borderColor bg-bgCard p-4 shadow-sm transition-all hover:shadow-md">
+                <p className="text-xs font-bold text-textSecondary mb-1">الفصول</p>
+                <h3 className="text-xl md:text-2xl font-black text-textPrimary">{classes.length}</h3>
+              </div>
+              <div className="rounded-xl border border-borderColor bg-bgCard p-4 shadow-sm transition-all hover:shadow-md">
+                <p className="text-xs font-bold text-textSecondary mb-1">الأدوات</p>
+                <h3 className="text-xl md:text-2xl font-black text-textPrimary">{assessmentTools.length}</h3>
+              </div>
+              <div className="rounded-xl border border-success/30 bg-success/5 p-4 shadow-sm transition-all hover:shadow-md">
+                <p className="text-xs font-bold text-textSecondary mb-1">الحالة</p>
+                <h3 className="text-xl md:text-2xl font-black text-success">جاهز</h3>
+              </div>
             </div>
 
-            {/* Parent App */}
-            <div className="flex items-center justify-between p-4 rounded-xl border border-borderColor bg-bgSoft hover:bg-bgCard hover:shadow-md transition">
-              <div>
-                <h4 className="font-bold text-textPrimary">{t('parentAppTitle')}</h4>
-                <p className="text-xs font-bold text-textSecondary mt-1">{t('parentAppDesc')}</p>
+            <div className="grid md:grid-cols-3 gap-6">
+
+              {/* 📲 قسم التطبيقات */}
+              <div className="md:col-span-2 rounded-3xl border border-borderColor bg-bgCard p-5 space-y-4 shadow-sm">
+                <h2 className="font-bold text-lg text-textPrimary border-b border-borderColor pb-3 flex items-center gap-2">
+                  <Smartphone className="w-5 h-5 text-primary" />
+                  التطبيقات
+                </h2>
+
+                {/* تطبيق الطلاب */}
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 p-4 rounded-2xl border border-borderColor bg-bgSoft hover:bg-bgCard hover:shadow-md transition">
+                  <div className="flex-1">
+                    <h4 className="font-bold text-base text-textPrimary">تطبيق الطلاب</h4>
+                    <p className="text-xs font-bold text-textSecondary mt-1">إرسال المهام والدرجات</p>
+                  </div>
+                  <button onClick={() => handleSync('student')} className="w-full sm:w-auto px-5 py-3 rounded-xl border border-primary/30 bg-primary/10 text-primary font-bold flex items-center justify-center gap-2 hover:bg-primary hover:text-white transition active:scale-95 shrink-0">
+                    <GraduationCap className="w-5 h-5" /> مزامنة
+                  </button>
+                </div>
+
+                {/* تطبيق أولياء الأمور */}
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 p-4 rounded-2xl border border-borderColor bg-bgSoft hover:bg-bgCard hover:shadow-md transition">
+                  <div className="flex-1">
+                    <h4 className="font-bold text-base text-textPrimary">تطبيق أولياء الأمور</h4>
+                    <p className="text-xs font-bold text-textSecondary mt-1">مزامنة السلوك والدرجات</p>
+                  </div>
+                  <button onClick={() => handleSync('parent')} className="w-full sm:w-auto px-5 py-3 rounded-xl border border-warning/30 bg-warning/10 text-warning font-bold flex items-center justify-center gap-2 hover:bg-warning hover:text-white transition active:scale-95 shrink-0">
+                    <Users className="w-5 h-5" /> مزامنة
+                  </button>
+                </div>
+
+                {/* 💉 راصد الإدارة (تم إضافة حقل كود المدرسة المخصص هنا) */}
+                <div className="flex flex-col gap-3 p-4 rounded-2xl border border-emerald-500/30 bg-emerald-500/5 hover:bg-emerald-500/10 transition">
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                    <div className="flex-1">
+                      <h4 className="font-bold text-base text-textPrimary flex items-center gap-2">
+                        <Building className="w-5 h-5 text-emerald-600" />
+                        راصد الإدارة
+                      </h4>
+                      <p className="text-xs font-bold text-textSecondary mt-1">إرسال تقرير الغياب والحضور للإدارة</p>
+                    </div>
+                  </div>
+                  
+                  <div className="flex flex-col sm:flex-row gap-2 mt-2">
+                    <input 
+                      type="text" 
+                      value={adminSchoolCode}
+                      onChange={(e) => setAdminSchoolCode(e.target.value.replace(/\D/g, ''))}
+                      placeholder="أدخل كود المدرسة (مثال: 88632)"
+                      maxLength={6}
+                      className="flex-1 px-4 py-3 rounded-xl border border-borderColor bg-bgCard text-textPrimary outline-none focus:border-emerald-500 font-mono text-center sm:text-right"
+                    />
+                    <button onClick={() => handleSync('admin')} className="w-full sm:w-auto px-6 py-3 rounded-xl bg-emerald-500 text-white font-bold flex items-center justify-center gap-2 hover:bg-emerald-600 transition active:scale-95 shrink-0">
+                      <CloudUpload className="w-5 h-5" /> إرسال للإدارة
+                    </button>
+                  </div>
+                </div>
+
               </div>
 
-              <button
-                onClick={() => handleSync('parent')}
-                className="px-4 py-2 rounded-xl border border-warning/30 bg-warning/10 text-warning font-bold flex items-center gap-2 hover:bg-warning hover:text-white transition"
-              >
-                <Users className="w-4 h-4" />
-                {t('syncBtn')}
-              </button>
+              {/* ☁️ السحابة المركزية (تم استرجاعها) */}
+              <div className="rounded-3xl border border-borderColor bg-bgCard p-5 space-y-4 shadow-sm flex flex-col">
+                <h2 className="font-bold text-lg text-textPrimary border-b border-borderColor pb-3 flex items-center gap-2">
+                  <CloudSync className="w-5 h-5 text-primary" />
+                  السحابة المركزية
+                </h2>
+
+                <div className="flex flex-col gap-3 flex-1 justify-center">
+                  <button onClick={() => handleSync('backup')} className="w-full p-4 rounded-2xl border-2 border-borderColor bg-bgSoft text-textPrimary font-bold flex items-center justify-between hover:bg-bgCard hover:shadow-md transition hover:border-primary group active:scale-95">
+                    <span className="text-sm">رفع نسخة احتياطية</span>
+                    <div className="p-2.5 rounded-xl bg-primary/10 text-primary group-hover:bg-primary group-hover:text-white transition">
+                        <CloudUpload className="w-5 h-5" />
+                    </div>
+                  </button>
+
+                  <button onClick={() => handleSync('restore')} className="w-full p-4 rounded-2xl border-2 border-borderColor bg-bgSoft text-textPrimary font-bold flex items-center justify-between hover:bg-bgCard hover:shadow-md transition hover:border-success group active:scale-95">
+                    <span className="text-sm">استرجاع البيانات</span>
+                    <div className="p-2.5 rounded-xl bg-success/10 text-success group-hover:bg-success group-hover:text-white transition">
+                        <CloudDownload className="w-5 h-5" />
+                    </div>
+                  </button>
+                </div>
+              </div>
+
             </div>
-
-          </div>
-
-          {/* Backup & Restore */}
-          <div className="rounded-2xl border border-borderColor bg-bgCard p-5 space-y-4 shadow-sm">
-            <h2 className="font-black text-lg text-textPrimary border-b border-borderColor pb-3">{t('cloudSectionTitle')}</h2>
-
-            <button
-              onClick={() => handleSync('backup')}
-              className="w-full p-4 rounded-xl border border-borderColor bg-bgSoft text-textPrimary font-bold flex items-center justify-between hover:bg-bgCard hover:shadow-md transition hover:border-primary group"
-            >
-              <span>{t('uploadBackupBtn')}</span>
-              <div className="p-2 rounded-lg bg-primary/10 text-primary group-hover:bg-primary group-hover:text-white transition">
-                  <CloudUpload className="w-5 h-5" />
-              </div>
-            </button>
-
-            <button
-              onClick={() => handleSync('restore')}
-              className="w-full p-4 rounded-xl border border-borderColor bg-bgSoft text-textPrimary font-bold flex items-center justify-between hover:bg-bgCard hover:shadow-md transition hover:border-success group"
-            >
-              <span>{t('restoreDataBtn')}</span>
-              <div className="p-2 rounded-lg bg-success/10 text-success group-hover:bg-success group-hover:text-white transition">
-                  <CloudDownload className="w-5 h-5" />
-              </div>
-            </button>
-          </div>
-
-        </div>
-      </>
-    )}
-  </div>
-);
+          </>
+        )}
+      </div>
+    </PageLayout>
+  );
 };
 
 export default GlobalSyncManager;
