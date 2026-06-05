@@ -27,8 +27,6 @@ jobs:
       # حتى مع وجود publish never، بعض النسخ تتطلب الصلاحية إذا وُجد التوكن
       - name: Build Electron App
         run: npm run electron:dist -- --publish never
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       # رفع ملفات التطبيق (exe) ليمكنك تحميلها من صفحة Actions
       - name: Upload Windows Apps
