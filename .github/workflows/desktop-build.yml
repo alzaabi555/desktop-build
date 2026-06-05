@@ -23,8 +23,16 @@ jobs:
       - name: Install Dependencies
         run: npm install --no-optional
 
+      # 🧠 تحميل الدماغ العربي (Vosk Model) وفك ضغطه برمجياً
+      # سيقوم جيت هوب بتحميل الملف، فك ضغطه، إعادة تسميته إلى "vosk-model"، ثم حذف الملف المضغوط
+      - name: Download and Extract Vosk Model
+        run: |
+          Invoke-WebRequest -Uri "https://alphacephei.com/vosk/models/vosk-model-small-ar-0.3.zip" -OutFile "vosk-model.zip"
+          Expand-Archive -Path "vosk-model.zip" -DestinationPath "."
+          Rename-Item -Path "vosk-model-small-ar-0.3" -NewName "vosk-model"
+          Remove-Item "vosk-model.zip"
+
       # بناء تطبيق سطح المكتب
-      # حتى مع وجود publish never، بعض النسخ تتطلب الصلاحية إذا وُجد التوكن
       - name: Build Electron App
         run: npm run electron:dist -- --publish never
 
