@@ -3,9 +3,19 @@
  * Developed by: Mohammed Al-Zaabi
  * Copyright © 2026. All rights reserved.
  */
-const { app, BrowserWindow, shell, ipcMain, dialog } = require('electron');
+// 💉 1. تمت إضافة (session) للتحكم بصلاحيات المايكروفون
+const { app, BrowserWindow, shell, ipcMain, dialog, session } = require('electron');
 const path = require('path');
 const { autoUpdater } = require('electron-updater');
+
+// ---------------------------------------------------------
+// 🎙️ 2. مفاتيح جوجل السحرية (Google Speech API)
+// ---------------------------------------------------------
+// Electron يحتاج إلى مفاتيح جوجل لكي "يفهم" الكلام ويحوله لنص.
+// إذا كان لديك مفاتيح من Google Cloud Console، ضعها هنا (أزل علامتي //):
+// process.env.GOOGLE_API_KEY = 'YOUR_GOOGLE_API_KEY';
+// process.env.GOOGLE_DEFAULT_CLIENT_ID = 'YOUR_CLIENT_ID';
+// process.env.GOOGLE_DEFAULT_CLIENT_SECRET = 'YOUR_CLIENT_SECRET';
 
 // ---------------------------------------------------------
 // 🌙 دالة استشعار رمضان الذكية الخاصة بـ Electron
@@ -130,6 +140,25 @@ ipcMain.on('close', () => {
 // 🏁 4. دورة حياة التطبيق 
 // ---------------------------------------------------------
 app.whenReady().then(() => {
+  
+  // 💉 الجراحة الدقيقة للمايك: السماح لتطبيق React بالوصول الفعلي لجهاز المايكروفون
+  session.defaultSession.setPermissionRequestHandler((webContents, permission, callback) => {
+    const allowedPermissions = ['media', 'audioCapture']; // السماح للصوت
+    if (allowedPermissions.includes(permission)) {
+      callback(true); // موافقة
+    } else {
+      callback(false); // رفض
+    }
+  });
+
+  session.defaultSession.setPermissionCheckHandler((webContents, permission) => {
+    const allowedPermissions = ['media', 'audioCapture'];
+    if (allowedPermissions.includes(permission)) {
+      return true;
+    }
+    return false;
+  });
+
   createWindow();
 
   // تم تعطيل التحديث التلقائي مؤقتاً لتجنب تضارب نسخة المتجر
