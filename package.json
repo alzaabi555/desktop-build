@@ -58,8 +58,6 @@
     "publish": null,
     "appId": "com.madrasati.app",
     "productName": "تطبيق راصد",
-    "extraResources": [
-      ],
     "npmRebuild": false,
     "directories": {
       "output": "dist"
