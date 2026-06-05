@@ -401,16 +401,13 @@ const AnalyticsTemplate = ({ data, teacherInfo, targetClass }: any) => {
             <div className="flex gap-4 mb-8 border-b-2 border-black pb-8">
                 <div className="flex-1 border border-black p-3 rounded-xl">
                     <h4 className="font-bold text-[10px] text-center mb-3">نسب نتائج الفصل الأول</h4>
-                    {GRADE_CATEGORIES.map(c => renderBar(data.sem1[c.key as keyof typeof data.sem1].length, data.totalStudents, c.bar, c.label))}
-                </div>
+                    {GRADE_CATEGORIES.map(c => <React.Fragment key={c.key}>{renderBar(data.sem1[c.key as keyof typeof data.sem1].length, data.totalStudents, c.bar, c.label)}</React.Fragment>)}                </div>
                 <div className="flex-1 border border-black p-3 rounded-xl">
                     <h4 className="font-bold text-[10px] text-center mb-3">نسب نتائج الفصل الثاني</h4>
-                    {GRADE_CATEGORIES.map(c => renderBar(data.sem2[c.key as keyof typeof data.sem2].length, data.totalStudents, c.bar, c.label))}
-                </div>
+                    {GRADE_CATEGORIES.map(c => <React.Fragment key={c.key}>{renderBar(data.sem2[c.key as keyof typeof data.sem2].length, data.totalStudents, c.bar, c.label)}</React.Fragment>)}                </div>
                 <div className="flex-1 border-2 border-black p-3 rounded-xl bg-indigo-50/30">
                     <h4 className="font-black text-xs text-center mb-3">النتيجة العامة النهائية</h4>
-                    {GRADE_CATEGORIES.map(c => renderBar(data.final[c.key as keyof typeof data.final].length, data.totalStudents, c.bar, c.label))}
-                </div>
+                    {GRADE_CATEGORIES.map(c => <React.Fragment key={c.key}>{renderBar(data.final[c.key as keyof typeof data.final].length, data.totalStudents, c.bar, c.label)}</React.Fragment>)}                </div>
             </div>
 
             {/* Detailed Tables (Iterating over semesters and final) */}
@@ -1792,20 +1789,17 @@ const Reports: React.FC<ReportsProps> = ({ initialTab }) => {
                       <div className="grid grid-cols-1 md:grid-cols-3 gap-6 pt-4">
                           <div className="border border-borderColor bg-bgCard p-5 rounded-2xl shadow-sm">
                               <h4 className="font-black text-sm text-center mb-6 text-textPrimary">نتائج الفصل الأول</h4>
-                              {GRADE_CATEGORIES.map(c => renderProgressBar(analyticsData.sem1[c.key as keyof typeof analyticsData.sem1].length, analyticsData.totalStudents, c.bar, c.label))}
-                          </div>
+                              {GRADE_CATEGORIES.map(c => <React.Fragment key={c.key}>{renderProgressBar(analyticsData.sem1[c.key as keyof typeof analyticsData.sem1].length, analyticsData.totalStudents, c.bar, c.label)}</React.Fragment>)}                          </div>
 
                           <div className="border border-borderColor bg-bgCard p-5 rounded-2xl shadow-sm">
                               <h4 className="font-black text-sm text-center mb-6 text-textPrimary">نتائج الفصل الثاني</h4>
-                              {GRADE_CATEGORIES.map(c => renderProgressBar(analyticsData.sem2[c.key as keyof typeof analyticsData.sem2].length, analyticsData.totalStudents, c.bar, c.label))}
-                          </div>
+                              {GRADE_CATEGORIES.map(c => <React.Fragment key={c.key}>{renderProgressBar(analyticsData.sem2[c.key as keyof typeof analyticsData.sem2].length, analyticsData.totalStudents, c.bar, c.label)}</React.Fragment>)}                          </div>
 
                           <div className="border-2 border-indigo-100 bg-indigo-50/50 p-5 rounded-2xl shadow-sm">
                               <h4 className="font-black text-sm text-center mb-6 text-indigo-900 flex items-center justify-center gap-2">
                                   <TrendingUp className="w-4 h-4" /> النتيجة العامة النهائية
                               </h4>
-                              {GRADE_CATEGORIES.map(c => renderProgressBar(analyticsData.final[c.key as keyof typeof analyticsData.final].length, analyticsData.totalStudents, c.bar, c.label))}
-                          </div>
+                               {GRADE_CATEGORIES.map(c => <React.Fragment key={c.key}>{renderProgressBar(analyticsData.final[c.key as keyof typeof analyticsData.final].length, analyticsData.totalStudents, c.bar, c.label)}</React.Fragment>)}                          </div>
                       </div>
 
                       {/* 💉 قسم جديد: تفاصيل الأسماء في واجهة التطبيق */}
