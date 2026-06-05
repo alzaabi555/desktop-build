@@ -48,7 +48,7 @@ export const translations = {
     syncBackupBtn: "رفع احتياطي",
     syncRestoreBtn: "جلب البيانات",
     navSync: " مركز المزامنة",
-    // 📚 Library & Tasks (المفاتيح المفقودة في الصور)
+    // 📚 Library & Tasks
     libraryTitle: "إدارة المكتبة والمصادر",
     librarySubtitle: "أرسل شروحات الفيديو والملفات لطلابك بضغطة زر 🚀",
     lessonTitleLabel: "عنوان الدرس أو الملف",
@@ -139,18 +139,18 @@ export const translations = {
 
     // Dashboard
     termPlanTitle: "الخطة الفصلية",
-  customizeTermPlan: "تخصيص الخطة الفصلية",
-  currentWeekBadge: "الأسبوع الحالي",
-  unitLabel: "الوحدة:",
-  lessonLabel: "الدرس:",
-  notSpecified: "لم تحدد",
-  noPlanForCurrentWeek: "لا توجد خطة للأسبوع الحالي",
-  importExcelTermPlan: "استيراد إكسل",
-  unitNamePlaceholder: "اسم الوحدة (مثال: الوحدة الأولى)",
-  lessonNamePlaceholderPrefix: "اسم الدرس (الافتراضي: ",
-  alertTermPlanSaved: "تم حفظ الخطة بنجاح",
-  alertTermPlanImported: "تم استيراد الخطة الفصلية بنجاح",
-  alertExcelFormatError: "خطأ في تنسيق ملف الإكسل",
+    customizeTermPlan: "تخصيص الخطة الفصلية",
+    currentWeekBadge: "الأسبوع الحالي",
+    unitLabel: "الوحدة:",
+    lessonLabel: "الدرس:",
+    notSpecified: "لم تحدد",
+    noPlanForCurrentWeek: "لا توجد خطة للأسبوع الحالي",
+    importExcelTermPlan: "استيراد إكسل",
+    unitNamePlaceholder: "اسم الوحدة (مثال: الوحدة الأولى)",
+    lessonNamePlaceholderPrefix: "اسم الدرس (الافتراضي: ",
+    alertTermPlanSaved: "تم حفظ الخطة بنجاح",
+    alertTermPlanImported: "تم استيراد الخطة الفصلية بنجاح",
+    alertExcelFormatError: "خطأ في تنسيق ملف الإكسل",
     dashboardLoading: "جاري التحميل...",
     welcome: "مرحباً بك",
     schoolFallback: "المدرسة",
@@ -866,7 +866,7 @@ export const translations = {
     uploadBackupBtn: "Upload Backup",
     restoreDataBtn: "Restore Data",
     
-    // 📚 Library & Tasks (المفاتيح المفقودة في الصور)
+    // 📚 Library & Tasks 
     libraryTitle: "Library & Resources",
     librarySubtitle: "Send video lessons and files to students instantly 🚀",
     lessonTitleLabel: "Lesson or File Title",
@@ -944,18 +944,18 @@ export const translations = {
 
     // Dashboard
     termPlanTitle: "Term Plan",
-  customizeTermPlan: "Customize Term Plan",
-  currentWeekBadge: "Current Week",
-  unitLabel: "Unit:",
-  lessonLabel: "Lesson:",
-  notSpecified: "Not specified",
-  noPlanForCurrentWeek: "No plan scheduled for the current week",
-  importExcelTermPlan: "Import Excel",
-  unitNamePlaceholder: "Unit name (e.g., Unit One)",
-  lessonNamePlaceholderPrefix: "Lesson name (Default: ",
-  alertTermPlanSaved: "Term plan saved successfully",
-  alertTermPlanImported: "Term plan imported successfully",
-  alertExcelFormatError: "Invalid Excel file format",
+    customizeTermPlan: "Customize Term Plan",
+    currentWeekBadge: "Current Week",
+    unitLabel: "Unit:",
+    lessonLabel: "Lesson:",
+    notSpecified: "Not specified",
+    noPlanForCurrentWeek: "No plan scheduled for the current week",
+    importExcelTermPlan: "Import Excel",
+    unitNamePlaceholder: "Unit name (e.g., Unit One)",
+    lessonNamePlaceholderPrefix: "Lesson name (Default: ",
+    alertTermPlanSaved: "Term plan saved successfully",
+    alertTermPlanImported: "Term plan imported successfully",
+    alertExcelFormatError: "Invalid Excel file format",
     dashboardLoading: "Loading...",
     welcome: "Welcome",
     schoolFallback: "School",
@@ -1361,8 +1361,6 @@ export const translations = {
     saveChangesBtn: "Save Changes",
     reinforceBtn: "Reinforce",
     minuteAbbrev: "m",
-    minutePlaceholder: "Minutes",
-    alertNoCivilIdToSync: "No students with a Civil ID to sync! Please add Civil IDs.",
     alertSyncSuccess1: "Synced successfully! ☁️✅\nData for",
     alertSyncSuccess2: "students uploaded to the cloud.",
     alertNoPresentStudentsForDraw: "No present students in the current list for the draw.",
@@ -1592,10 +1590,8 @@ export const translations = {
     directorateNorthBatinah: "General Directorate of Education, North Al Batinah",
     defaultSchoolNameAlEbdaa: "Al Ebdaa School for Boys (5-8)",
     defaultSubjectSocialStudies: "Social Studies",
-    certificateOfExcellence: "Certificate of Excellence",
     forKnightsOfMonth: "For Knights of the Month",
     proudToCrownKnight: "We are proud and honored to crown the knight:",
-    knightAppreciationText: " in appreciation of his great efforts and topping the knights of this month. Wishing him continued brilliance and success.",
     
     // Excel Import Component
     downloadExcelTemplateWithCivilId: "Download Excel Template (includes Civil ID)",
@@ -1606,6 +1602,6 @@ export const translations = {
     chooseFileNow: "Choose file now",
     excelTipBestResults: "For best results, download and use the ready template above (contains Civil ID, Name, and Phone).",
     alertSelectClassExcel: "Please select a class first",
-    alertNoValidDataExcel: "No valid data found. Ensure you are using the correct template.",
+    alertNoValidDataExcel: "No valid data found. Ensure you are using the correct template."
   }
 };
