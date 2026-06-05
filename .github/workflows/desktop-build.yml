@@ -5,8 +5,6 @@ on:
 jobs:
   build:
     runs-on: windows-latest
-    
-    # 💉 السطر السحري: إعطاء صلاحية الكتابة لتجاوز خطأ 404 Not Found
     permissions:
       contents: write
 
@@ -19,28 +17,31 @@ jobs:
         with:
           node-version: 18
 
-      # تثبيت المكتبات اللازمة مع تجاهل الاختيارية لتجنب أخطاء البناء
+      # 💉 الحل الجذري لمشكلة C++: إجبار السيرفر على استخدام CMD بدلاً من PowerShell
+      # وتحديد نسخة مترجم مايكروسوفت (msvs_version)
       - name: Install Dependencies
-        run: npm install --no-optional
+        run: npm install
+        shell: cmd
+        env:
+          npm_config_msvs_version: 2022
 
-      # 🧠 تحميل الدماغ العربي (Vosk Model) وفك ضغطه برمجياً
-      # سيقوم جيت هوب بتحميل الملف، فك ضغطه، إعادة تسميته إلى "vosk-model"، ثم حذف الملف المضغوط
+      # 🧠 تحميل الدماغ العربي (Vosk Model)
       - name: Download and Extract Vosk Model
         run: |
           Invoke-WebRequest -Uri "https://alphacephei.com/vosk/models/vosk-model-small-ar-0.3.zip" -OutFile "vosk-model.zip"
           Expand-Archive -Path "vosk-model.zip" -DestinationPath "."
           Rename-Item -Path "vosk-model-small-ar-0.3" -NewName "vosk-model"
           Remove-Item "vosk-model.zip"
+        shell: pwsh # نبقي هذا السطر يعمل بـ PowerShell لأنه يحتاج أوامر تحميل حديثة
 
       # بناء تطبيق سطح المكتب
       - name: Build Electron App
         run: npm run electron:dist -- --publish never
+        shell: cmd
 
-      # رفع ملفات التطبيق (exe) ليمكنك تحميلها من صفحة Actions
+      # رفع ملفات التطبيق
       - name: Upload Windows Apps
         uses: actions/upload-artifact@v4
         with:
           name: StudentManager-Windows-Setup
-          path: |
-            dist/*.exe
-            dist/**/*.appx
+          path: dist/*.exe
