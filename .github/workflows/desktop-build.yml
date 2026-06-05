@@ -1,4 +1,3 @@
-
 name: Build Windows Desktop App (EXE)
 on:
   workflow_dispatch:
@@ -6,6 +5,10 @@ on:
 jobs:
   build:
     runs-on: windows-latest
+    
+    # 💉 السطر السحري: إعطاء صلاحية الكتابة لتجاوز خطأ 404 Not Found
+    permissions:
+      contents: write
 
     steps:
       - name: Checkout Code
@@ -16,18 +19,18 @@ jobs:
         with:
           node-version: 18
 
-      # تثبيت المكتبات اللازمة مع تجاهل الاختيارية (مثل canvas) لتجنب أخطاء البناء
+      # تثبيت المكتبات اللازمة مع تجاهل الاختيارية لتجنب أخطاء البناء
       - name: Install Dependencies
         run: npm install --no-optional
 
-      # بناء تطبيق سطح المكتب (يقوم ببناء الويب ثم تحويله لملف exe)
-      # يتم استخدام الأمر الذي أضفناه سابقاً في package.json
+      # بناء تطبيق سطح المكتب
+      # حتى مع وجود publish never، بعض النسخ تتطلب الصلاحية إذا وُجد التوكن
       - name: Build Electron App
         run: npm run electron:dist -- --publish never
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-      # رفع ملفات التطبيق (exe و appx) ليمكنك تحميلها من صفحة Actions
+      # رفع ملفات التطبيق (exe) ليمكنك تحميلها من صفحة Actions
       - name: Upload Windows Apps
         uses: actions/upload-artifact@v4
         with:
@@ -35,4 +38,3 @@ jobs:
           path: |
             dist/*.exe
             dist/**/*.appx
-     
