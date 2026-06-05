@@ -2,12 +2,18 @@
 export default {
   content: [
     "./index.html",
-    // 1. المسارات الإيجابية (أين يبحث Tailwind)
     "./*.{js,ts,jsx,tsx}",              
     "./components/**/*.{js,ts,jsx,tsx}", 
     "./context/**/*.{js,ts,jsx,tsx}",    
     "./theme/**/*.{js,ts,jsx,tsx}",      
     "./utils/**/*.{js,ts,jsx,tsx}",
+    "./pages/**/*.{js,ts,jsx,tsx}",  // 👈 إضافة أمان
+    "./hooks/**/*.{js,ts,jsx,tsx}",  // 👈 إضافة أمان
+    "!./node_modules/**/*",
+    "!./dist/**/*",
+    "!./build/**/*",
+    "!./.git/**/*"
+  ],
     
     // 2. حراس الحماية لمنع فشل البناء على GitHub (علامة التعجب ! تعني استثناء)
     "!./node_modules/**/*",
