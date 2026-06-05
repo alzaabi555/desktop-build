@@ -14,4 +14,10 @@ contextBridge.exposeInMainWorld('electron', {
   openExternal: (url) => shell.openExternal(url),
   // 🚀 🚀 هذا هو العصب المفقود الذي زرعناه للتو! 
   send: (channel, data) => ipcRenderer.send(channel, data)
+  // إرسال قطعة صوت للذكاء الاصطناعي
+  sendAudioChunk: (buffer) => ipcRenderer.send('audio-chunk', buffer),
+  
+  // استقبال النص المترجم
+  onSpeechResult: (callback) => ipcRenderer.on('speech-result', (event, text) => callback(text)),
+  onSpeechPartial: (callback) => ipcRenderer.on('speech-partial', (event, text) => callback(text)),
 });
