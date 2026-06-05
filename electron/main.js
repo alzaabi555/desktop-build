@@ -6,16 +6,9 @@
 // 💉 1. تمت إضافة (session) للتحكم بصلاحيات المايكروفون
 const { app, BrowserWindow, shell, ipcMain, dialog, session } = require('electron');
 const path = require('path');
+const fs = require('fs'); // 👈 تمت إضافته لقراءة ملفات الذكاء الاصطناعي
+const vosk = require('vosk'); // 👈 تمت إضافة مكتبة الذكاء الاصطناعي
 const { autoUpdater } = require('electron-updater');
-
-// ---------------------------------------------------------
-// 🎙️ 2. مفاتيح جوجل السحرية (Google Speech API)
-// ---------------------------------------------------------
-// Electron يحتاج إلى مفاتيح جوجل لكي "يفهم" الكلام ويحوله لنص.
-// إذا كان لديك مفاتيح من Google Cloud Console، ضعها هنا (أزل علامتي //):
-// process.env.GOOGLE_API_KEY = 'YOUR_GOOGLE_API_KEY';
-// process.env.GOOGLE_DEFAULT_CLIENT_ID = 'YOUR_CLIENT_ID';
-// process.env.GOOGLE_DEFAULT_CLIENT_SECRET = 'YOUR_CLIENT_SECRET';
 
 // ---------------------------------------------------------
 // 🌙 دالة استشعار رمضان الذكية الخاصة بـ Electron
@@ -52,6 +45,7 @@ autoUpdater.autoDownload = true;
 autoUpdater.autoInstallOnAppQuit = true;
 
 let mainWindow;
+let recognizer; // 👈 متغير لتخزين محرك الذكاء الاصطناعي
 
 function createWindow() {
   const ramadanActive = isRamadan();
@@ -136,6 +130,23 @@ ipcMain.on('close', () => {
   if (mainWindow) mainWindow.close();
 });
 
+// 🎤 ---------------------------------------------------------
+// استقبال الصوت من React وتمريره للذكاء الاصطناعي Vosk
+// ---------------------------------------------------------
+ipcMain.on('audio-chunk', (event, buffer) => {
+  if (!recognizer) return;
+  
+  // إطعام الصوت للذكاء الاصطناعي
+  if (recognizer.acceptWaveform(buffer)) {
+      // إذا اكتملت الجملة، أرسلها لـ React
+      event.sender.send('speech-result', recognizer.result().text);
+  } else {
+      // إرسال الكلمات أثناء النطق (Live)
+      event.sender.send('speech-partial', recognizer.partialResult().partial);
+  }
+});
+
+
 // ---------------------------------------------------------
 // 🏁 4. دورة حياة التطبيق 
 // ---------------------------------------------------------
@@ -159,12 +170,29 @@ app.whenReady().then(() => {
     return false;
   });
 
+  // 🧠 ---------------------------------------------------------
+  // تشغيل وتهيئة الدماغ العربي (Vosk)
+  // ---------------------------------------------------------
+  const modelPath = app.isPackaged 
+    ? path.join(process.resourcesPath, 'vosk-model') 
+    : path.join(app.getAppPath(), 'vosk-model');
+
+  try {
+    vosk.setLogLevel(-1); // إخفاء رسائل المطورين
+    if (fs.existsSync(modelPath)) {
+        const model = new vosk.Model(modelPath);
+        recognizer = new vosk.Recognizer({model: model, sampleRate: 16000});
+        console.log("✅ تم تحميل الذكاء الاصطناعي العربي بنجاح!");
+    } else {
+        console.error("❌ لم يتم العثور على مجلد الدماغ في المسار: ", modelPath);
+    }
+  } catch (error) {
+    console.error("❌ خطأ في تشغيل Vosk:", error);
+  }
+
+  // إنشاء النافذة بعد تجهيز الصلاحيات والذكاء الاصطناعي
   createWindow();
 
-  // تم تعطيل التحديث التلقائي مؤقتاً لتجنب تضارب نسخة المتجر
-  // if (process.env.NODE_ENV === 'production') {
-  //   autoUpdater.checkForUpdatesAndNotify();
-  // }
 }); 
 
 app.on('activate', () => {
