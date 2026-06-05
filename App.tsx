@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 // 💉 1. حقن ملف التوكنات الأصلي (الذي يحتوي على ألوان وهوية المعلم)
-import './theme/tokens.css'; 
+import './theme/tokens.css';
 
 // 💉 2. حقن ملف الستايل الأساسي للمعلم
 import './index.css'; 
