@@ -22,6 +22,9 @@ jobs:
 
       - name: Build Electron App
         run: npm run electron:dist -- --publish never
+        # 💉 تم حقن التصريح الأمني هنا لكي لا يعترض المجمع
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Upload Windows Apps
         uses: actions/upload-artifact@v4
