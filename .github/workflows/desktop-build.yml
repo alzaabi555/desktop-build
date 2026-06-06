@@ -23,7 +23,6 @@ jobs:
       - name: Build Electron App
         run: npm run electron:dist -- --publish never
         # 💉 تم حقن التصريح الأمني هنا لكي لا يعترض المجمع
-        env:
        
 
       - name: Upload Windows Apps
