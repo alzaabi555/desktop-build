@@ -55,12 +55,13 @@
     "tailwindcss": "^3.4.1"
   },
   "build": {
-    "publish": null,
     "appId": "com.madrasati.app",
     "productName": "تطبيق راصد",
     "npmRebuild": false,
     "directories": {
       "output": "dist"
+    },
+    // ... باقي الكود
     },
     "files": [
       "www/**/*",
