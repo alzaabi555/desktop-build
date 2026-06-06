@@ -61,7 +61,6 @@
     "directories": {
       "output": "dist"
     },
-    },
     "files": [
       "www/**/*",
       "electron/**/*",
