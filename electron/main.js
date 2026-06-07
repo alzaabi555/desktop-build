@@ -1,6 +1,12 @@
 /**
  * Rased App
- * Developed by: Mohammed Al('http'); * Developed by: Mohammed Al-Zaabi
+ * Developed by: Mohammed Al-Zaabi
+ * Copyright © 2026. All rights reserved.
+ */
+
+const { app, BrowserWindow, shell, ipcMain, dialog, session } = require('electron');
+const path = require('path');
+const http = require('http');
 const { autoUpdater } = require('electron-updater');
 
 // ---------------------------------------------------------
@@ -19,7 +25,7 @@ function isRamadan() {
 }
 
 // ---------------------------------------------------------
-// 🚀 1. إعدادات الأداء والنظام
+// 🚀 إعدادات الأداء والنظام
 // ---------------------------------------------------------
 app.commandLine.appendSwitch('js-flags', '--max-old-space-size=8192');
 app.commandLine.appendSwitch('enable-gpu-rasterization');
@@ -54,7 +60,7 @@ if (!gotLock) {
 }
 
 // ---------------------------------------------------------
-// 🔄 2. إعدادات التحديث التلقائي
+// 🔄 إعدادات التحديث التلقائي
 // ---------------------------------------------------------
 autoUpdater.autoDownload = true;
 autoUpdater.autoInstallOnAppQuit = true;
@@ -481,6 +487,7 @@ function createWindow() {
     height: 800,
     minWidth: 900,
     minHeight: 600,
+    show: false,
     icon: path.join(__dirname, '../icon.png'),
     backgroundColor: themeBgColor,
     frame: false,
@@ -498,7 +505,28 @@ function createWindow() {
   });
 
   mainWindow.webContents.session.clearCache();
+
+  mainWindow.webContents.on('did-fail-load', (event, errorCode, errorDescription) => {
+    console.error('did-fail-load:', errorCode, errorDescription);
+  });
+
+  mainWindow.webContents.on('render-process-gone', (event, details) => {
+    console.error('render-process-gone:', details);
+  });
+
+  mainWindow.on('unresponsive', () => {
+    console.error('mainWindow became unresponsive');
+  });
+
   mainWindow.loadFile(path.join(__dirname, '../www/index.html'));
+
+  mainWindow.once('ready-to-show', () => {
+    if (!mainWindow) return;
+
+    mainWindow.show();
+    mainWindow.focus();
+    mainWindow.center();
+  });
 
   mainWindow.autoHideMenuBar = true;
   mainWindow.removeMenu();
@@ -520,7 +548,6 @@ function createWindow() {
         console.error('Diagnostic script error:', err);
       });
 
-    // للتشخيص فقط. لا تفعله في النسخة النهائية إلا عند الحاجة.
     // mainWindow.webContents.openDevTools();
   });
 
@@ -561,7 +588,7 @@ function createWindow() {
 }
 
 // ---------------------------------------------------------
-// 📡 3. قنوات الاتصال IPC
+// 📡 قنوات الاتصال IPC
 // ---------------------------------------------------------
 ipcMain.handle('get-app-version', () => app.getVersion());
 
@@ -595,7 +622,7 @@ ipcMain.on('open-external', (_event, url) => {
 });
 
 // ---------------------------------------------------------
-// 🏁 4. دورة حياة التطبيق
+// 🏁 دورة حياة التطبيق
 // ---------------------------------------------------------
 app.whenReady().then(() => {
   session.defaultSession.setPermissionRequestHandler(
@@ -710,8 +737,3 @@ app.on('window-all-closed', () => {
     app.quit();
   }
 });
- * Copyright © 2026. All rights reserved.
- */
-
-const { app, BrowserWindow, shell, ipcMain, dialog, session } = require('electron');
-const path = require('path');
