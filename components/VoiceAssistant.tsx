@@ -1,7 +1,18 @@
-import React, { useCallback, useEffect, useRef, useState } from 'react';import React, { useCallback, useEffect, useRefinterface VoiceAssistantProps {
+import React, { useCallback, useEffect, useRef, useState } from 'react';
+import { Mic, MicOff, CheckCircle, XCircle, Bot } from 'lucide-react';
+import { useApp } from '../context/AppContext';
+import { Student } from '../types';
+
+import { VoiceTask, FeedbackType } from '../voice-agent/types';
+import { VoiceAgentMemory } from '../voice-agent/memory';
+import { normalizeText } from '../voice-agent/normalizer';
+import { planCommand } from '../voice-agent/planner';
+import { executeTask } from '../voice-agent/executor';
+import { requiresConfirmation } from '../voice-agent/confirmationManager';
+
+interface VoiceAssistantProps {
   onNavigate?: (tab: string) => void;
 }
-
 const SpeechRecognitionCtor =
   typeof window !== 'undefined'
     ? (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition
