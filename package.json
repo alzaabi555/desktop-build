@@ -2,7 +2,7 @@
   "name": "student-manager-app",
   "version": "1.0.4",
   "homepage": "./",
-  "description": "تطبيق راصد لإدارة حضور وغياب الطلاب - نسخة الاندرويد والايفون المستقلة",
+  "description": "تطبيق راصد لإدارة حضور وغياب الطلاب - نسخة االوندوز",
   "author": "Mohammed Al-Zaabi",
   "main": "electron/main.js",
   "repository": {
