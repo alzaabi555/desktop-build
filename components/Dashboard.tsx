@@ -602,7 +602,61 @@ const Dashboard: React.FC<DashboardProps> = ({
 >
   اختبار المايكروفون
 </button>
-``
+<button
+  onClick={async () => {
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      alert('الميكروفون يعمل داخل Electron');
+      stream.getTracks().forEach(track => track.stop());
+    } catch (error: any) {
+      alert('الميكروفون لا يعمل: ' + (error?.message || error));
+    }
+  }}
+>
+  اختبار الميكروفون الحقيقي
+</button>
+                    <button
+  onClick={() => {
+    const SR =
+      (window as any).SpeechRecognition ||
+      (window as any).webkitSpeechRecognition;
+
+    if (!SR) {
+      alert('SpeechRecognition غير موجود');
+      return;
+    }
+
+    const rec = new SR();
+    rec.lang = 'ar-OM';
+    rec.continuous = false;
+    rec.interimResults = false;
+
+    rec.onstart = () => {
+      alert('بدأ الاستماع. قل كلمة قصيرة الآن');
+    };
+
+    rec.onresult = (event: any) => {
+      const text = event.results?.[0]?.[0]?.transcript || '';
+      alert('تم التعرف على: ' + text);
+    };
+
+    rec.onerror = (event: any) => {
+      alert('خطأ SpeechRecognition: ' + event.error);
+    };
+
+    rec.onend = () => {
+      console.log('SpeechRecognition ended');
+    };
+
+    try {
+      rec.start();
+    } catch (e: any) {
+      alert('تعذر بدء SpeechRecognition: ' + e.message);
+    }
+  }}
+>
+  اختبار التعرف الصوتي
+</button>
                     <div className="relative z-[50]">
                         <button onClick={() => setShowSettingsDropdown(!showSettingsDropdown)} className={`w-8 h-8 md:w-10 md:h-10 bg-bgSoft hover:bg-bgCard border border-borderColor text-textSecondary hover:text-textPrimary rounded-xl flex items-center justify-center transition-all shadow-sm`}>
                             <User size={16} />
