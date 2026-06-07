@@ -1,16 +1,4 @@
-import React, { useCallback, useEffect, useRef, useState } from 'react';
-import { Mic, MicOff, CheckCircle, XCircle, Bot } from 'lucide-react';
-import { useApp } from '../context/AppContext';
-import { Student } from '../types';
-
-import { VoiceTask, FeedbackType } from '../voice-agent/types';
-import { VoiceAgentMemory } from '../voice-agent/memory';
-import { normalizeText } from '../voice-agent/normalizer';
-import { planCommand } from '../voice-agent/planner';
-import { executeTask } from '../voice-agent/executor';
-import { requiresConfirmation } from '../voice-agent/confirmationManager';
-
-interface VoiceAssistantProps {
+import React, { useCallback, useEffect, useRef, useState } from 'react';import React, { useCallback, useEffect, useRefinterface VoiceAssistantProps {
   onNavigate?: (tab: string) => void;
 }
 
@@ -22,7 +10,26 @@ const SpeechRecognitionCtor =
 const VoiceAssistant: React.FC<VoiceAssistantProps> = ({ onNavigate }) => {
   const { dir, students, setStudents, currentSemester } = useApp();
 
-  const voiceSupported = !!SpeechRecognitionCtor;
+  const isElectron =
+    typeof navigator !== 'undefined' &&
+    navigator.userAgent.toLowerCase().includes('electron');
+
+  const hasElectronVoiceBridge =
+    typeof window !== 'undefined' &&
+    !!(window as any).electron?.openVoiceBridge &&
+    !!(window as any).electron?.onVoiceCommand;
+
+  /**
+   * مهم:
+   * في Electron لا نستخدم SpeechRecognition حتى لو كان موجودًا
+   * لأنه أعطى عندك network error.
+   * لذلك:
+   * - Electron يستخدم Chrome Voice Bridge.
+   * - غير Electron يستخدم Web Speech.
+   */
+  const webSpeechSupported = !!SpeechRecognitionCtor && !isElectron;
+  const chromeBridgeSupported = isElectron && hasElectronVoiceBridge;
+  const voiceSupported = webSpeechSupported || chromeBridgeSupported;
 
   const [isListening, setIsListening] = useState(false);
   const [transcript, setTranscript] = useState('');
@@ -67,8 +74,10 @@ const VoiceAssistant: React.FC<VoiceAssistantProps> = ({ onNavigate }) => {
       }
 
       feedbackTimerRef.current = setTimeout(() => {
-        if (shouldListenRef.current && voiceSupported) {
+        if (shouldListenRef.current && webSpeechSupported) {
           setFeedback({ message: 'وضع الحصة نشط... الوكيل يستمع', type: 'info' });
+        } else if (shouldListenRef.current && chromeBridgeSupported) {
+          setFeedback({ message: 'وضع الحصة نشط عبر Chrome... الوكيل يستقبل الأوامر', type: 'info' });
         } else if (!voiceSupported) {
           setFeedback({ message: 'الصوت غير مدعوم هنا، يمكنك كتابة الأمر', type: 'info' });
         } else {
@@ -76,12 +85,11 @@ const VoiceAssistant: React.FC<VoiceAssistantProps> = ({ onNavigate }) => {
         }
       }, 1800);
     },
-    [voiceSupported]
+    [voiceSupported, webSpeechSupported, chromeBridgeSupported]
   );
 
   /**
    * أثناء الحصة نوقف الرد الصوتي حتى لا يتداخل صوت الجهاز مع الميكروفون.
-   * لاحقًا يمكن إضافة إعداد لتفعيل الرد الصوتي عند الحاجة.
    */
   const speak = useCallback((_message: string) => {
     return;
@@ -89,7 +97,7 @@ const VoiceAssistant: React.FC<VoiceAssistantProps> = ({ onNavigate }) => {
 
   const restartRecognition = useCallback(
     (delay = 250) => {
-      if (!voiceSupported) return;
+      if (!webSpeechSupported) return;
       if (!shouldListenRef.current) return;
       if (!recognitionRef.current) return;
 
@@ -113,7 +121,7 @@ const VoiceAssistant: React.FC<VoiceAssistantProps> = ({ onNavigate }) => {
         }
       }, delay);
     },
-    [voiceSupported]
+    [webSpeechSupported]
   );
 
   const createId = useCallback(() => {
@@ -201,8 +209,7 @@ const VoiceAssistant: React.FC<VoiceAssistantProps> = ({ onNavigate }) => {
       const now = Date.now();
 
       /**
-       * منع التكرار غير المقصود من SpeechRecognition.
-       * المدة 1200ms حتى لا تمنع المعلم من تكرار أمر مقصود بسرعة.
+       * منع التكرار غير المقصود.
        */
       if (
         normalized === lastProcessedRef.current.text &&
@@ -269,6 +276,38 @@ const VoiceAssistant: React.FC<VoiceAssistantProps> = ({ onNavigate }) => {
     [displayFeedback, runTasks, speak]
   );
 
+  /**
+   * استقبال الأوامر القادمة من Chrome Voice Bridge في نسخة Electron.
+   */
+  useEffect(() => {
+    if (!chromeBridgeSupported) return;
+
+    const electronApi = (window as any).electron;
+
+    const unsubscribe = electronApi.onVoiceCommand((text: string) => {
+      const finalText = String(text || '').trim();
+
+      if (!finalText) return;
+
+      shouldListenRef.current = true;
+      setIsListening(true);
+      setTranscript(finalText);
+      displayFeedback(`تم استقبال الأمر: ${finalText}`, 'info');
+
+      processCommand(finalText);
+
+      setTimeout(() => {
+        setTranscript('');
+      }, 1200);
+    });
+
+    return () => {
+      if (typeof unsubscribe === 'function') {
+        unsubscribe();
+      }
+    };
+  }, [chromeBridgeSupported, processCommand, displayFeedback]);
+
   const submitTypedCommand = useCallback(() => {
     const command = typedCommand.trim();
 
@@ -283,8 +322,12 @@ const VoiceAssistant: React.FC<VoiceAssistantProps> = ({ onNavigate }) => {
     }, 1200);
   }, [processCommand, typedCommand]);
 
+  /**
+   * Web Speech للمتصفح و Android فقط.
+   * في Electron لا نشغله، لأن Chrome Voice Bridge هو المسؤول عن الصوت.
+   */
   useEffect(() => {
-    if (!voiceSupported) return;
+    if (!webSpeechSupported) return;
 
     try {
       const recognition = new SpeechRecognitionCtor();
@@ -327,10 +370,6 @@ const VoiceAssistant: React.FC<VoiceAssistantProps> = ({ onNavigate }) => {
           setTranscript('');
         }, 1200);
 
-        /**
-         * بعض المتصفحات والجوالات توقف التعرف بعد كل نتيجة.
-         * لذلك نعيد تشغيله بسرعة طالما وضع الحصة مفعل.
-         */
         restartRecognition(350);
       };
 
@@ -407,7 +446,7 @@ const VoiceAssistant: React.FC<VoiceAssistantProps> = ({ onNavigate }) => {
     } catch {
       displayFeedback('تعذر تشغيل التعرف الصوتي، يمكنك كتابة الأمر', 'error');
     }
-  }, [displayFeedback, processCommand, restartRecognition, voiceSupported]);
+  }, [displayFeedback, processCommand, restartRecognition, webSpeechSupported]);
 
   useEffect(() => {
     return () => {
@@ -426,11 +465,36 @@ const VoiceAssistant: React.FC<VoiceAssistantProps> = ({ onNavigate }) => {
   }, []);
 
   const toggleListening = useCallback(() => {
-    if (!voiceSupported) {
+    /**
+     * Windows / Electron:
+     * افتح Chrome Voice Bridge بدل تشغيل SpeechRecognition داخل Electron.
+     */
+    if (chromeBridgeSupported) {
+      shouldListenRef.current = true;
+      setIsListening(true);
+      displayFeedback('سيتم فتح Chrome لوضع الحصة الصوتي', 'info');
+
+      try {
+        (window as any).electron.openVoiceBridge();
+      } catch {
+        displayFeedback('تعذر فتح Chrome Voice Bridge', 'error');
+      }
+
+      return;
+    }
+
+    /**
+     * إذا لم يتوفر لا Web Speech ولا Chrome Bridge.
+     */
+    if (!webSpeechSupported) {
       displayFeedback('الصوت غير مدعوم في هذه البيئة، استخدم كتابة الأمر', 'info');
       return;
     }
 
+    /**
+     * Android / Chrome:
+     * Web Speech الحالي.
+     */
     if (shouldListenRef.current) {
       manualStopRef.current = true;
       shouldListenRef.current = false;
@@ -460,7 +524,14 @@ const VoiceAssistant: React.FC<VoiceAssistantProps> = ({ onNavigate }) => {
     } catch {
       restartRecognition(300);
     }
-  }, [displayFeedback, restartRecognition, voiceSupported]);
+  }, [
+    chromeBridgeSupported,
+    webSpeechSupported,
+    displayFeedback,
+    restartRecognition
+  ]);
+
+  const showTypedFallback = !voiceSupported;
 
   return (
     <div
@@ -469,13 +540,13 @@ const VoiceAssistant: React.FC<VoiceAssistantProps> = ({ onNavigate }) => {
       } z-[99999] flex flex-col items-${dir === 'rtl' ? 'start' : 'end'} pointer-events-none`}
       dir={dir}
     >
-      {(isListening || transcript || feedback.message || !voiceSupported) && (
+      {(isListening || transcript || feedback.message || showTypedFallback) && (
         <div className="mb-4 bg-white/95 backdrop-blur-xl border border-gray-200 shadow-2xl rounded-2xl p-4 max-w-sm pointer-events-auto animate-in slide-in-from-bottom-2 fade-in shadow-indigo-500/10">
           <div className="flex items-center gap-2 mb-2">
             {isListening ? (
               <div className="flex items-center gap-1.5 bg-indigo-100 text-indigo-700 px-3 py-1 rounded-full text-[11px] font-bold animate-pulse tracking-wide">
                 <div className="w-2 h-2 bg-indigo-600 rounded-full animate-ping" />
-                وضع الحصة نشط
+                {chromeBridgeSupported ? 'وضع Chrome الصوتي نشط' : 'وضع الحصة نشط'}
               </div>
             ) : feedback.type === 'success' ? (
               <div className="flex items-center gap-1 text-emerald-600 text-[11px] font-bold">
@@ -499,7 +570,7 @@ const VoiceAssistant: React.FC<VoiceAssistantProps> = ({ onNavigate }) => {
             {transcript || feedback.message}
           </p>
 
-          {!voiceSupported && (
+          {showTypedFallback && (
             <div className="mt-3 flex items-center gap-2">
               <input
                 type="text"
@@ -539,18 +610,22 @@ const VoiceAssistant: React.FC<VoiceAssistantProps> = ({ onNavigate }) => {
               : 'bg-slate-500 text-white'
         }`}
         aria-label={
-          voiceSupported
-            ? isListening || shouldListenRef.current
-              ? 'إيقاف وضع الحصة الصوتي'
-              : 'تشغيل وضع الحصة الصوتي'
-            : 'الصوت غير مدعوم، استخدم كتابة الأمر'
+          chromeBridgeSupported
+            ? 'فتح وضع الحصة الصوتي في Chrome'
+            : webSpeechSupported
+              ? isListening || shouldListenRef.current
+                ? 'إيقاف وضع الحصة الصوتي'
+                : 'تشغيل وضع الحصة الصوتي'
+              : 'الصوت غير مدعوم، استخدم كتابة الأمر'
         }
         title={
-          voiceSupported
-            ? isListening || shouldListenRef.current
-              ? 'إيقاف وضع الحصة الصوتي'
-              : 'تشغيل وضع الحصة الصوتي'
-            : 'الصوت غير مدعوم هنا'
+          chromeBridgeSupported
+            ? 'فتح وضع الحصة الصوتي في Chrome'
+            : webSpeechSupported
+              ? isListening || shouldListenRef.current
+                ? 'إيقاف وضع الحصة الصوتي'
+                : 'تشغيل وضع الحصة الصوتي'
+              : 'الصوت غير مدعوم هنا'
         }
       >
         {voiceSupported ? (
@@ -568,3 +643,14 @@ const VoiceAssistant: React.FC<VoiceAssistantProps> = ({ onNavigate }) => {
 };
 
 export default VoiceAssistant;
+import { Mic, MicOff, CheckCircle, XCircle, Bot } from 'lucide-react';
+import { useApp } from '../context/AppContext';
+import { Student } from '../types';
+
+import { VoiceTask, FeedbackType } from '../voice-agent/types';
+import { VoiceAgentMemory } from '../voice-agent/memory';
+import { normalizeText } from '../voice-agent/normalizer';
+import { planCommand } from '../voice-agent/planner';
+import { executeTask } from '../voice-agent/executor';
+import { requiresConfirmation } from '../voice-agent/confirmationManager';
+
