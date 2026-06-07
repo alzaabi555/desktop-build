@@ -22,11 +22,14 @@ const SpeechRecognitionCtor =
 const VoiceAssistant: React.FC<VoiceAssistantProps> = ({ onNavigate }) => {
   const { dir, students, setStudents, currentSemester } = useApp();
 
+  const voiceSupported = !!SpeechRecognitionCtor;
+
   const [isListening, setIsListening] = useState(false);
   const [transcript, setTranscript] = useState('');
+  const [typedCommand, setTypedCommand] = useState('');
   const [feedback, setFeedback] = useState<{ message: string; type: FeedbackType }>({
-    message: '',
-    type: null
+    message: voiceSupported ? '' : 'الصوت غير مدعوم هنا، يمكنك كتابة الأمر',
+    type: voiceSupported ? null : 'info'
   });
 
   const recognitionRef = useRef<any>(null);
@@ -51,62 +54,67 @@ const VoiceAssistant: React.FC<VoiceAssistantProps> = ({ onNavigate }) => {
     tasks: VoiceTask[];
   } | null>(null);
 
-  const isElectron =
-    typeof navigator !== 'undefined' &&
-    navigator.userAgent.toLowerCase().includes('electron');
-
   useEffect(() => {
     studentsRef.current = students;
   }, [students]);
 
-  const displayFeedback = useCallback((message: string, type: FeedbackType) => {
-    setFeedback({ message, type });
+  const displayFeedback = useCallback(
+    (message: string, type: FeedbackType) => {
+      setFeedback({ message, type });
 
-    if (feedbackTimerRef.current) {
-      clearTimeout(feedbackTimerRef.current);
-    }
-
-    feedbackTimerRef.current = setTimeout(() => {
-      if (shouldListenRef.current) {
-        setFeedback({ message: 'وضع الحصة نشط... الوكيل يستمع', type: 'info' });
-      } else {
-        setFeedback({ message: '', type: null });
+      if (feedbackTimerRef.current) {
+        clearTimeout(feedbackTimerRef.current);
       }
-    }, 1800);
-  }, []);
+
+      feedbackTimerRef.current = setTimeout(() => {
+        if (shouldListenRef.current && voiceSupported) {
+          setFeedback({ message: 'وضع الحصة نشط... الوكيل يستمع', type: 'info' });
+        } else if (!voiceSupported) {
+          setFeedback({ message: 'الصوت غير مدعوم هنا، يمكنك كتابة الأمر', type: 'info' });
+        } else {
+          setFeedback({ message: '', type: null });
+        }
+      }, 1800);
+    },
+    [voiceSupported]
+  );
 
   /**
-   * أثناء الحصة نوقف النطق الصوتي لتقليل البطء ومنع تداخل صوت الجهاز مع المايكروفون.
-   * إذا أردت لاحقًا نضيف إعداد: "تفعيل الرد الصوتي".
+   * أثناء الحصة نوقف الرد الصوتي حتى لا يتداخل صوت الجهاز مع الميكروفون.
+   * لاحقًا يمكن إضافة إعداد لتفعيل الرد الصوتي عند الحاجة.
    */
   const speak = useCallback((_message: string) => {
     return;
   }, []);
 
-  const restartRecognition = useCallback((delay = 250) => {
-    if (!shouldListenRef.current) return;
-    if (!recognitionRef.current) return;
+  const restartRecognition = useCallback(
+    (delay = 250) => {
+      if (!voiceSupported) return;
+      if (!shouldListenRef.current) return;
+      if (!recognitionRef.current) return;
 
-    if (restartTimerRef.current) {
-      clearTimeout(restartTimerRef.current);
-    }
-
-    restartTimerRef.current = setTimeout(() => {
-      if (!shouldListenRef.current || !recognitionRef.current) return;
-      if (isRecognitionStartingRef.current) return;
-
-      try {
-        isRecognitionStartingRef.current = true;
-        recognitionRef.current.start();
-      } catch {
-        // غالبًا المحرك يعمل بالفعل أو لم ينهِ دورة الإيقاف بعد
-      } finally {
-        setTimeout(() => {
-          isRecognitionStartingRef.current = false;
-        }, 500);
+      if (restartTimerRef.current) {
+        clearTimeout(restartTimerRef.current);
       }
-    }, delay);
-  }, []);
+
+      restartTimerRef.current = setTimeout(() => {
+        if (!shouldListenRef.current || !recognitionRef.current) return;
+        if (isRecognitionStartingRef.current) return;
+
+        try {
+          isRecognitionStartingRef.current = true;
+          recognitionRef.current.start();
+        } catch {
+          // غالبًا المحرك يعمل بالفعل أو لم ينهِ دورة الإيقاف بعد
+        } finally {
+          setTimeout(() => {
+            isRecognitionStartingRef.current = false;
+          }, 500);
+        }
+      }, delay);
+    },
+    [voiceSupported]
+  );
 
   const createId = useCallback(() => {
     if (typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function') {
@@ -148,7 +156,7 @@ const VoiceAssistant: React.FC<VoiceAssistantProps> = ({ onNavigate }) => {
           tasks
         };
 
-        displayFeedback('هذا إجراء حساس. قل: نعم للتأكيد أو لا للإلغاء', 'info');
+        displayFeedback('هذا إجراء حساس. قل أو اكتب: نعم للتأكيد أو لا للإلغاء', 'info');
         speak('هذا إجراء حساس. هل تؤكد التنفيذ؟');
         return;
       }
@@ -194,7 +202,7 @@ const VoiceAssistant: React.FC<VoiceAssistantProps> = ({ onNavigate }) => {
 
       /**
        * منع التكرار غير المقصود من SpeechRecognition.
-       * خففنا المدة إلى 1200ms حتى لا يمنع المعلم من تكرار أمر مقصود بسرعة.
+       * المدة 1200ms حتى لا تمنع المعلم من تكرار أمر مقصود بسرعة.
        */
       if (
         normalized === lastProcessedRef.current.text &&
@@ -225,7 +233,7 @@ const VoiceAssistant: React.FC<VoiceAssistantProps> = ({ onNavigate }) => {
           return;
         }
 
-        displayFeedback('قل نعم للتأكيد أو لا للإلغاء', 'info');
+        displayFeedback('قل أو اكتب نعم للتأكيد أو لا للإلغاء', 'info');
         return;
       }
 
@@ -260,9 +268,23 @@ const VoiceAssistant: React.FC<VoiceAssistantProps> = ({ onNavigate }) => {
     },
     [displayFeedback, runTasks, speak]
   );
-  
-useEffect(() => {
-  if (!SpeechRecognitionCtor) return;
+
+  const submitTypedCommand = useCallback(() => {
+    const command = typedCommand.trim();
+
+    if (!command) return;
+
+    setTranscript(command);
+    processCommand(command);
+    setTypedCommand('');
+
+    setTimeout(() => {
+      setTranscript('');
+    }, 1200);
+  }, [processCommand, typedCommand]);
+
+  useEffect(() => {
+    if (!voiceSupported) return;
 
     try {
       const recognition = new SpeechRecognitionCtor();
@@ -383,9 +405,9 @@ useEffect(() => {
         }
       };
     } catch {
-      displayFeedback('تعذر تشغيل التعرف الصوتي', 'error');
+      displayFeedback('تعذر تشغيل التعرف الصوتي، يمكنك كتابة الأمر', 'error');
     }
-  }, [displayFeedback, isElectron, processCommand, restartRecognition]);
+  }, [displayFeedback, processCommand, restartRecognition, voiceSupported]);
 
   useEffect(() => {
     return () => {
@@ -404,6 +426,11 @@ useEffect(() => {
   }, []);
 
   const toggleListening = useCallback(() => {
+    if (!voiceSupported) {
+      displayFeedback('الصوت غير مدعوم في هذه البيئة، استخدم كتابة الأمر', 'info');
+      return;
+    }
+
     if (shouldListenRef.current) {
       manualStopRef.current = true;
       shouldListenRef.current = false;
@@ -433,9 +460,8 @@ useEffect(() => {
     } catch {
       restartRecognition(300);
     }
-  }, [displayFeedback, restartRecognition]);
+  }, [displayFeedback, restartRecognition, voiceSupported]);
 
-if (!SpeechRecognitionCtor) return null;
   return (
     <div
       className={`fixed bottom-24 md:bottom-8 ${
@@ -443,7 +469,7 @@ if (!SpeechRecognitionCtor) return null;
       } z-[99999] flex flex-col items-${dir === 'rtl' ? 'start' : 'end'} pointer-events-none`}
       dir={dir}
     >
-      {(isListening || transcript || feedback.message) && (
+      {(isListening || transcript || feedback.message || !voiceSupported) && (
         <div className="mb-4 bg-white/95 backdrop-blur-xl border border-gray-200 shadow-2xl rounded-2xl p-4 max-w-sm pointer-events-auto animate-in slide-in-from-bottom-2 fade-in shadow-indigo-500/10">
           <div className="flex items-center gap-2 mb-2">
             {isListening ? (
@@ -472,6 +498,33 @@ if (!SpeechRecognitionCtor) return null;
           <p className="text-sm font-bold text-slate-800 leading-relaxed min-h-[1.5rem]">
             {transcript || feedback.message}
           </p>
+
+          {!voiceSupported && (
+            <div className="mt-3 flex items-center gap-2">
+              <input
+                type="text"
+                value={typedCommand}
+                onChange={(e) => setTypedCommand(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter') {
+                    submitTypedCommand();
+                  }
+                }}
+                placeholder="اكتب الأمر هنا..."
+                className="flex-1 rounded-xl border border-gray-200 bg-white px-3 py-2 text-sm font-bold text-slate-800 outline-none focus:border-indigo-500"
+                data-voice-field="أمر مكتوب"
+                aria-label="أمر مكتوب"
+              />
+
+              <button
+                type="button"
+                onClick={submitTypedCommand}
+                className="rounded-xl bg-indigo-600 px-3 py-2 text-xs font-black text-white active:scale-95"
+              >
+                تنفيذ
+              </button>
+            </div>
+          )}
         </div>
       )}
 
@@ -481,18 +534,33 @@ if (!SpeechRecognitionCtor) return null;
         className={`pointer-events-auto flex items-center justify-center w-16 h-16 rounded-full shadow-2xl transition-all duration-300 active:scale-90 ${
           isListening || shouldListenRef.current
             ? 'bg-indigo-600 text-white shadow-indigo-500/40 ring-4 ring-indigo-500/20'
-            : 'bg-slate-800 text-white hover:bg-slate-700'
+            : voiceSupported
+              ? 'bg-slate-800 text-white hover:bg-slate-700'
+              : 'bg-slate-500 text-white'
         }`}
         aria-label={
-          isListening || shouldListenRef.current
-            ? 'إيقاف وضع الحصة الصوتي'
-            : 'تشغيل وضع الحصة الصوتي'
+          voiceSupported
+            ? isListening || shouldListenRef.current
+              ? 'إيقاف وضع الحصة الصوتي'
+              : 'تشغيل وضع الحصة الصوتي'
+            : 'الصوت غير مدعوم، استخدم كتابة الأمر'
+        }
+        title={
+          voiceSupported
+            ? isListening || shouldListenRef.current
+              ? 'إيقاف وضع الحصة الصوتي'
+              : 'تشغيل وضع الحصة الصوتي'
+            : 'الصوت غير مدعوم هنا'
         }
       >
-        {isListening || shouldListenRef.current ? (
-          <Mic className="w-7 h-7" />
+        {voiceSupported ? (
+          isListening || shouldListenRef.current ? (
+            <Mic className="w-7 h-7" />
+          ) : (
+            <MicOff className="w-7 h-7" />
+          )
         ) : (
-          <MicOff className="w-7 h-7" />
+          <Bot className="w-7 h-7" />
         )}
       </button>
     </div>
