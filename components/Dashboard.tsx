@@ -591,7 +591,18 @@ const Dashboard: React.FC<DashboardProps> = ({
                     >
                         <Palette size={16} />
                     </button>
+<button
+  onClick={() => {
+    const supported =
+      (window as any).SpeechRecognition ||
+      (window as any).webkitSpeechRecognition;
 
+    alert(supported ? 'SpeechRecognition موجود' : 'SpeechRecognition غير موجود');
+  }}
+>
+  اختبار المايكروفون
+</button>
+``
                     <div className="relative z-[50]">
                         <button onClick={() => setShowSettingsDropdown(!showSettingsDropdown)} className={`w-8 h-8 md:w-10 md:h-10 bg-bgSoft hover:bg-bgCard border border-borderColor text-textSecondary hover:text-textPrimary rounded-xl flex items-center justify-center transition-all shadow-sm`}>
                             <User size={16} />
