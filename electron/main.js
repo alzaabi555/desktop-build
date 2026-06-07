@@ -1,12 +1,6 @@
 /**
  * Rased App
- * Developed by: Mohammed Al-Zaabi
- * Copyright © 2026. All rights reserved.
- */
-
-const { app, BrowserWindow, shell, ipcMain, dialog, session } = require('electron');
-const path = require('path');
-const http = require('http');
+ * Developed by: Mohammed Al('http'); * Developed by: Mohammed Al-Zaabi
 const { autoUpdater } = require('electron-updater');
 
 // ---------------------------------------------------------
@@ -36,31 +30,14 @@ app.commandLine.appendSwitch('disable-site-isolation-trials');
 // ---------------------------------------------------------
 // 🎙️ إعدادات المايكروفون والوسائط داخل Electron
 // ---------------------------------------------------------
-
-// تفعيل Media Stream داخل Chromium/Electron
 app.commandLine.appendSwitch('enable-media-stream');
-
-// تجاوز نافذة السماح التجريبية للمايكروفون داخل Electron
-// مفيد جدًا للاختبار داخل تطبيق exe
 app.commandLine.appendSwitch('use-fake-ui-for-media-stream');
-
-// السماح بتشغيل الصوت بدون تفاعل إضافي من المستخدم
 app.commandLine.appendSwitch('autoplay-policy', 'no-user-gesture-required');
-
-// تحسين التقاط الصوت في بعض البيئات
 app.commandLine.appendSwitch('enable-usermedia-screen-capturing');
-
-// محاولة إبقاء WebAudio و Media نشطة
 app.commandLine.appendSwitch('disable-background-media-suspend');
-
-// منع تعليق الصفحة في الخلفية قدر الإمكان
 app.commandLine.appendSwitch('disable-renderer-backgrounding');
 app.commandLine.appendSwitch('disable-background-timer-throttling');
 app.commandLine.appendSwitch('disable-backgrounding-occluded-windows');
-
-// ملاحظة:
-// هذه الإعدادات تساعد المايكروفون و getUserMedia.
-// أما SpeechRecognition نفسه فقد يعتمد على دعم Chromium/Electron الداخلي.
 
 // ---------------------------------------------------------
 // 📁 مسار بيانات التطبيق
@@ -83,9 +60,9 @@ autoUpdater.autoDownload = true;
 autoUpdater.autoInstallOnAppQuit = true;
 
 let mainWindow;
+
 // ---------------------------------------------------------
 // 🎙️ Chrome Voice Bridge
-// Chrome يعمل كميكروفون خارجي ويرسل النص إلى Electron
 // ---------------------------------------------------------
 const VOICE_BRIDGE_PORT = 37654;
 let voiceBridgeServer = null;
@@ -109,6 +86,7 @@ function getVoiceBridgeHtml() {
       justify-content: center;
       text-align: center;
     }
+
     .card {
       width: min(520px, calc(100vw - 32px));
       background: rgba(255,255,255,0.08);
@@ -118,6 +96,7 @@ function getVoiceBridgeHtml() {
       box-shadow: 0 25px 80px rgba(0,0,0,0.35);
       backdrop-filter: blur(16px);
     }
+
     .badge {
       display: inline-flex;
       gap: 8px;
@@ -130,17 +109,20 @@ function getVoiceBridgeHtml() {
       font-size: 12px;
       margin-bottom: 16px;
     }
+
     h1 {
       margin: 0 0 8px;
       font-size: 26px;
       font-weight: 900;
     }
+
     p {
       margin: 8px 0;
       color: #cbd5e1;
       font-size: 14px;
       line-height: 1.7;
     }
+
     button {
       margin-top: 20px;
       border: 0;
@@ -154,13 +136,16 @@ function getVoiceBridgeHtml() {
       box-shadow: 0 14px 35px rgba(79,70,229,0.35);
       transition: transform 0.15s ease, background 0.15s ease;
     }
+
     button:active {
       transform: scale(0.96);
     }
+
     button.stop {
       background: #e11d48;
       box-shadow: 0 14px 35px rgba(225,29,72,0.3);
     }
+
     .transcript {
       margin-top: 20px;
       min-height: 48px;
@@ -173,12 +158,14 @@ function getVoiceBridgeHtml() {
       color: #f8fafc;
       word-break: break-word;
     }
+
     .status {
       margin-top: 12px;
       font-size: 12px;
       color: #94a3b8;
       min-height: 20px;
     }
+
     .hint {
       margin-top: 16px;
       font-size: 12px;
@@ -186,6 +173,7 @@ function getVoiceBridgeHtml() {
     }
   </style>
 </head>
+
 <body>
   <div class="card">
     <div class="badge">
@@ -207,7 +195,8 @@ function getVoiceBridgeHtml() {
   <script>
     const ENDPOINT = 'http://127.0.0.1:${VOICE_BRIDGE_PORT}/command';
 
-    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+    const SpeechRecognition =
+      window.SpeechRecognition || window.webkitSpeechRecognition;
 
     const toggleBtn = document.getElementById('toggleBtn');
     const transcriptEl = document.getElementById('transcript');
@@ -247,6 +236,7 @@ function getVoiceBridgeHtml() {
           },
           body: JSON.stringify({ text })
         });
+
         setStatus('تم إرسال الأمر إلى تطبيق راصد');
       } catch (error) {
         setStatus('تعذر إرسال الأمر إلى تطبيق راصد. تأكد أن التطبيق مفتوح.');
@@ -256,7 +246,9 @@ function getVoiceBridgeHtml() {
     function restartRecognition(delay = 350) {
       if (!listening || manualStop) return;
 
-      if (restartTimer) clearTimeout(restartTimer);
+      if (restartTimer) {
+        clearTimeout(restartTimer);
+      }
 
       restartTimer = setTimeout(() => {
         if (!listening || manualStop || !recognition) return;
@@ -271,7 +263,8 @@ function getVoiceBridgeHtml() {
 
     function createRecognition() {
       if (!SpeechRecognition) {
-        transcriptEl.textContent = 'SpeechRecognition غير متوفر في هذا المتصفح. افتح الصفحة في Google Chrome.';
+        transcriptEl.textContent =
+          'SpeechRecognition غير متوفر في هذا المتصفح. افتح الصفحة في Google Chrome.';
         setStatus('المتصفح غير مدعوم.');
         return null;
       }
@@ -310,7 +303,10 @@ function getVoiceBridgeHtml() {
       rec.onerror = (event) => {
         setStatus('خطأ: ' + event.error);
 
-        if (event.error === 'not-allowed' || event.error === 'service-not-allowed') {
+        if (
+          event.error === 'not-allowed' ||
+          event.error === 'service-not-allowed'
+        ) {
           listening = false;
           manualStop = true;
           setListeningUi(false);
@@ -357,10 +353,14 @@ function getVoiceBridgeHtml() {
       manualStop = true;
       listening = false;
 
-      if (restartTimer) clearTimeout(restartTimer);
+      if (restartTimer) {
+        clearTimeout(restartTimer);
+      }
 
       try {
-        recognition && recognition.stop();
+        if (recognition) {
+          recognition.stop();
+        }
       } catch (e) {}
 
       setListeningUi(false);
@@ -376,7 +376,8 @@ function getVoiceBridgeHtml() {
     });
 
     if (!SpeechRecognition) {
-      transcriptEl.textContent = 'افتح هذه الصفحة في Google Chrome حتى يعمل التعرف الصوتي.';
+      transcriptEl.textContent =
+        'افتح هذه الصفحة في Google Chrome حتى يعمل التعرف الصوتي.';
       setStatus('SpeechRecognition غير متوفر.');
     } else {
       setStatus('جاهز. اضغط تشغيل الاستماع.');
@@ -402,7 +403,9 @@ function startVoiceBridgeServer() {
     }
 
     if (req.method === 'GET') {
-      res.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8' });
+      res.writeHead(200, {
+        'Content-Type': 'text/html; charset=utf-8'
+      });
       res.end(getVoiceBridgeHtml());
       return;
     }
@@ -423,10 +426,14 @@ function startVoiceBridgeServer() {
             mainWindow.webContents.send('voice-command', text);
           }
 
-          res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8' });
+          res.writeHead(200, {
+            'Content-Type': 'application/json; charset=utf-8'
+          });
           res.end(JSON.stringify({ ok: true }));
         } catch (error) {
-          res.writeHead(400, { 'Content-Type': 'application/json; charset=utf-8' });
+          res.writeHead(400, {
+            'Content-Type': 'application/json; charset=utf-8'
+          });
           res.end(JSON.stringify({ ok: false }));
         }
       });
@@ -434,12 +441,17 @@ function startVoiceBridgeServer() {
       return;
     }
 
-    res.writeHead(404, { 'Content-Type': 'text/plain; charset=utf-8' });
+    res.writeHead(404, {
+      'Content-Type': 'text/plain; charset=utf-8'
+    });
     res.end('Not found');
   });
 
   voiceBridgeServer.listen(VOICE_BRIDGE_PORT, '127.0.0.1', () => {
-    console.log('Chrome Voice Bridge running on http://127.0.0.1:' + VOICE_BRIDGE_PORT);
+    console.log(
+      'Chrome Voice Bridge running on http://127.0.0.1:' +
+        VOICE_BRIDGE_PORT
+    );
   });
 
   voiceBridgeServer.on('error', error => {
@@ -471,8 +483,6 @@ function createWindow() {
     minHeight: 600,
     icon: path.join(__dirname, '../icon.png'),
     backgroundColor: themeBgColor,
-
-    // إلغاء إطار ويندوز الافتراضي
     frame: false,
 
     webPreferences: {
@@ -483,48 +493,48 @@ function createWindow() {
       backgroundThrottling: false,
       webSecurity: true,
       zoomFactor: 1.0,
-
-      // مهم للوسائط
       enableWebSQL: false
     }
   });
 
-  // تنظيف الكاش عند التشغيل
   mainWindow.webContents.session.clearCache();
-
   mainWindow.loadFile(path.join(__dirname, '../www/index.html'));
 
   mainWindow.autoHideMenuBar = true;
   mainWindow.removeMenu();
 
-  // ---------------------------------------------------------
-  // 🧪 تشخيص حالة المايكروفون و SpeechRecognition داخل النافذة
-  // ---------------------------------------------------------
   mainWindow.webContents.once('did-finish-load', () => {
     console.log('Rased window loaded.');
 
-    // اختبار داخلي يظهر في console إذا فتحت DevTools
-    mainWindow.webContents.executeJavaScript(`
-      console.log('SpeechRecognition:', window.SpeechRecognition);
-      console.log('webkitSpeechRecognition:', window.webkitSpeechRecognition);
-      console.log('mediaDevices:', navigator.mediaDevices);
-      console.log('getUserMedia:', navigator.mediaDevices && navigator.mediaDevices.getUserMedia);
-    `).catch(err => {
-      console.error('Diagnostic script error:', err);
-    });
+    mainWindow.webContents
+      .executeJavaScript(`
+        console.log('SpeechRecognition:', window.SpeechRecognition);
+        console.log('webkitSpeechRecognition:', window.webkitSpeechRecognition);
+        console.log('mediaDevices:', navigator.mediaDevices);
+        console.log(
+          'getUserMedia:',
+          navigator.mediaDevices && navigator.mediaDevices.getUserMedia
+        );
+      `)
+      .catch(err => {
+        console.error('Diagnostic script error:', err);
+      });
 
-    // افتح DevTools مؤقتًا للاختبار إذا أردت
-    // احذف التعليق من السطر التالي أثناء الاختبار فقط
+    // للتشخيص فقط. لا تفعله في النسخة النهائية إلا عند الحاجة.
     // mainWindow.webContents.openDevTools();
   });
 
-  // ---------------------------------------------------------
-  // 🌐 فتح الروابط الخارجية خارج التطبيق
-  // ---------------------------------------------------------
   mainWindow.webContents.setWindowOpenHandler(({ url }) => {
     try {
       const u = new URL(url);
-      const allowed = ['https:', 'http:', 'mailto:', 'tel:', 'sms:', 'whatsapp:'];
+      const allowed = [
+        'https:',
+        'http:',
+        'mailto:',
+        'tel:',
+        'sms:',
+        'whatsapp:'
+      ];
 
       if (allowed.includes(u.protocol)) {
         shell.openExternal(url).catch(console.error);
@@ -555,6 +565,11 @@ function createWindow() {
 // ---------------------------------------------------------
 ipcMain.handle('get-app-version', () => app.getVersion());
 
+ipcMain.handle('open-voice-bridge', () => {
+  openVoiceBridgeInChrome();
+  return true;
+});
+
 ipcMain.on('minimize', () => {
   if (mainWindow) mainWindow.minimize();
 });
@@ -573,65 +588,54 @@ ipcMain.on('close', () => {
   if (mainWindow) mainWindow.close();
 });
 
-// فتح الروابط الخارجية من React عبر preload إن كانت مستخدمة
 ipcMain.on('open-external', (_event, url) => {
   if (typeof url === 'string') {
     shell.openExternal(url).catch(console.error);
   }
 });
-ipcMain.handle('open-voice-bridge', () => {
-  openVoiceBridgeInChrome();
-  return true;
-});
+
 // ---------------------------------------------------------
 // 🏁 4. دورة حياة التطبيق
 // ---------------------------------------------------------
 app.whenReady().then(() => {
-  // ---------------------------------------------------------
-  // 🎙️ صلاحيات المايكروفون والكاميرا والصوت
-  // ---------------------------------------------------------
+  session.defaultSession.setPermissionRequestHandler(
+    (webContents, permission, callback, details) => {
+      console.log('Permission request:', permission, details);
 
-  session.defaultSession.setPermissionRequestHandler((webContents, permission, callback, details) => {
-    console.log('Permission request:', permission, details);
+      const allowedPermissions = [
+        'media',
+        'audioCapture',
+        'videoCapture',
+        'microphone',
+        'camera'
+      ];
 
-    const allowedPermissions = [
-      'media',
-      'audioCapture',
-      'videoCapture',
-      'microphone',
-      'camera'
-    ];
+      if (allowedPermissions.includes(permission)) {
+        callback(true);
+        return;
+      }
 
-    if (allowedPermissions.includes(permission)) {
-      callback(true);
-      return;
+      callback(false);
     }
+  );
 
-    callback(false);
-  });
+  session.defaultSession.setPermissionCheckHandler(
+    (webContents, permission, requestingOrigin, details) => {
+      console.log('Permission check:', permission, requestingOrigin, details);
 
-  session.defaultSession.setPermissionCheckHandler((webContents, permission, requestingOrigin, details) => {
-    console.log('Permission check:', permission, requestingOrigin, details);
+      const allowedPermissions = [
+        'media',
+        'audioCapture',
+        'videoCapture',
+        'microphone',
+        'camera'
+      ];
 
-    const allowedPermissions = [
-      'media',
-      'audioCapture',
-      'videoCapture',
-      'microphone',
-      'camera'
-    ];
-
-    if (allowedPermissions.includes(permission)) {
-      return true;
+      return allowedPermissions.includes(permission);
     }
+  );
 
-    return false;
-  });
-
-  // ---------------------------------------------------------
-  // 🎙️ ضبط إضافي لصلاحيات mediaDevices
-  // ---------------------------------------------------------
-  session.defaultSession.setDevicePermissionHandler((details) => {
+  session.defaultSession.setDevicePermissionHandler(details => {
     console.log('Device permission request:', details);
 
     if (
@@ -645,10 +649,6 @@ app.whenReady().then(() => {
   });
 
   startVoiceBridgeServer();
-
-  // ---------------------------------------------------------
-  // إنشاء النافذة
-  // ---------------------------------------------------------
   createWindow();
 });
 
@@ -681,30 +681,37 @@ autoUpdater.on('update-available', () => {
 });
 
 autoUpdater.on('update-downloaded', () => {
-  dialog.showMessageBox({
-    type: 'question',
-    buttons: ['تثبيت الآن', 'لاحقاً'],
-    title: 'اكتمل التحميل',
-    message: 'تم تحميل التحديث. هل تريد إعادة التشغيل للتثبيت الآن؟'
-  })
-  .then(({ response }) => {
-    if (response === 0) {
-      autoUpdater.quitAndInstall();
-    }
-  });
+  dialog
+    .showMessageBox({
+      type: 'question',
+      buttons: ['تثبيت الآن', 'لاحقاً'],
+      title: 'اكتمل التحميل',
+      message: 'تم تحميل التحديث. هل تريد إعادة التشغيل للتثبيت الآن؟'
+    })
+    .then(({ response }) => {
+      if (response === 0) {
+        autoUpdater.quitAndInstall();
+      }
+    });
 });
 
 app.on('window-all-closed', () => {
   if (voiceBridgeServer) {
-  try {
-    voiceBridgeServer.close();
-  } catch (e) {
-    // تجاهل
+    try {
+      voiceBridgeServer.close();
+    } catch (e) {
+      // تجاهل
+    }
+
+    voiceBridgeServer = null;
   }
-  voiceBridgeServer = null;
-}
+
   if (process.platform !== 'darwin') {
     app.quit();
   }
 });
-``
+ * Copyright © 2026. All rights reserved.
+ */
+
+const { app, BrowserWindow, shell, ipcMain, dialog, session } = require('electron');
+const path = require('path');
