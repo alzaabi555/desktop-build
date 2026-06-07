@@ -1,324 +1,474 @@
-import React, { useState, useEffect, useCallback, useRef } from 'react';
-import { Mic, MicOff, Volume2, CheckCircle, XCircle } from 'lucide-react';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
+import { Mic, MicOff, CheckCircle, XCircle, Bot } from 'lucide-react';
 import { useApp } from '../context/AppContext';
 import { Student } from '../types';
+
+import { VoiceTask, FeedbackType } from '../voice-agent/types';
+import { VoiceAgentMemory } from '../voice-agent/memory';
+import { normalizeText } from '../voice-agent/normalizer';
+import { planCommand } from '../voice-agent/planner';
+import { executeTask } from '../voice-agent/executor';
+import { requiresConfirmation } from '../voice-agent/confirmationManager';
 
 interface VoiceAssistantProps {
   onNavigate?: (tab: string) => void;
 }
 
-const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
+const SpeechRecognitionCtor =
+  typeof window !== 'undefined'
+    ? (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition
+    : null;
 
 const VoiceAssistant: React.FC<VoiceAssistantProps> = ({ onNavigate }) => {
-  const { t, dir, students, setStudents } = useApp(); 
-  
+  const { dir, students, setStudents, currentSemester } = useApp();
+
   const [isListening, setIsListening] = useState(false);
   const [transcript, setTranscript] = useState('');
-  const [feedback, setFeedback] = useState<{ message: string; type: 'info' | 'success' | 'error' | null }>({ message: '', type: null });
-  
+  const [feedback, setFeedback] = useState<{ message: string; type: FeedbackType }>({
+    message: '',
+    type: null
+  });
+
   const recognitionRef = useRef<any>(null);
   const shouldListenRef = useRef(false);
-  const feedbackTimerRef = useRef<NodeJS.Timeout>();
+  const manualStopRef = useRef(false);
+  const isRecognitionStartingRef = useRef(false);
 
-  // 🛡️ الميزة الجديدة: كاشف بيئة تشغيل الويندوز (Electron) لمنع الانهيار
-  const isElectron = typeof navigator !== 'undefined' && navigator.userAgent.toLowerCase().includes('electron');
+  const feedbackTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const restartTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const studentsRef = useRef(students);
-  useEffect(() => { studentsRef.current = students; }, [students]);
-  const navigateRef = useRef(onNavigate);
-  useEffect(() => { navigateRef.current = onNavigate; }, [onNavigate]);
+  const historyRef = useRef<Student[][]>([]);
+  const memoryRef = useRef(new VoiceAgentMemory());
 
-  const speak = (text: string) => {
-    if ('speechSynthesis' in window && !isElectron) { // 🛡️ منع التحدث في الويندوز حالياً
-      const utterance = new SpeechSynthesisUtterance(text);
-      utterance.lang = 'ar-SA';
-      utterance.rate = 1.1;
-      window.speechSynthesis.speak(utterance);
+  const lastProcessedRef = useRef({
+    text: '',
+    time: 0
+  });
+
+  const pendingConfirmationRef = useRef<{
+    message: string;
+    tasks: VoiceTask[];
+  } | null>(null);
+
+  const isElectron =
+    typeof navigator !== 'undefined' &&
+    navigator.userAgent.toLowerCase().includes('electron');
+
+  useEffect(() => {
+    studentsRef.current = students;
+  }, [students]);
+
+  const displayFeedback = useCallback((message: string, type: FeedbackType) => {
+    setFeedback({ message, type });
+
+    if (feedbackTimerRef.current) {
+      clearTimeout(feedbackTimerRef.current);
     }
-  };
 
-  const displayFeedback = useCallback((msg: string, type: 'success' | 'error' | 'info' | null) => {
-    setFeedback({ message: msg, type });
-    
-    if (feedbackTimerRef.current) clearTimeout(feedbackTimerRef.current);
-    
     feedbackTimerRef.current = setTimeout(() => {
       if (shouldListenRef.current) {
-        setFeedback({ message: 'راصد يستمع الآن...', type: 'info' });
+        setFeedback({ message: 'وضع الحصة نشط... الوكيل يستمع', type: 'info' });
       } else {
-        setFeedback({ message: '', type: null }); 
+        setFeedback({ message: '', type: null });
       }
-    }, 3000);
+    }, 1800);
   }, []);
 
-  const normalizeText = (text: string) => {
-    return text
-      .replace(/[\u064B-\u065F\u0640]/g, '')
-      .replace(/[أإآ]/g, 'ا').replace(/ة/g, 'ه').replace(/ى/g, 'ي')
-      .replace(/^(ل|ب|ك|ف|ال)/, '') 
-      .toLowerCase();
-  };
+  /**
+   * أثناء الحصة نوقف النطق الصوتي لتقليل البطء ومنع تداخل صوت الجهاز مع المايكروفون.
+   * إذا أردت لاحقًا نضيف إعداد: "تفعيل الرد الصوتي".
+   */
+  const speak = useCallback((_message: string) => {
+    return;
+  }, []);
 
-  const extractAmount = (text: string): number => {
-    const words = text.split(' ');
-    for (let w of words) {
-      if (w.match(/(نقطتين|درجتين|نجمتين|علامتين|اثنين|مرتين|2)/)) return 2;
-      if (w.match(/(ثلاث|3)/)) return 3;
-      if (w.match(/(اربع|4)/)) return 4;
-      if (w.match(/(خمس|5)/)) return 5;
-      if (w.match(/(ست|6)/)) return 6;
-      if (w.match(/(سبع|7)/)) return 7;
-      if (w.match(/(ثمان|8)/)) return 8;
-      if (w.match(/(تسع|9)/)) return 9;
-      if (w.match(/(عشر|10)/)) return 10;
+  const restartRecognition = useCallback((delay = 250) => {
+    if (!shouldListenRef.current) return;
+    if (!recognitionRef.current) return;
+
+    if (restartTimerRef.current) {
+      clearTimeout(restartTimerRef.current);
     }
-    return 1;
-  };
 
-  const getTargetRoute = (text: string): string | null => {
-    const cmd = text.toLowerCase();
-    if (cmd.match(/(رئيسي|داشبورد|لوحه القياده|شاشه رئيسي)/)) return 'dashboard';
-    if (cmd.match(/(تقرير|تقارير|احصائيات|نتايج|نتائج|شهادات|استدعاء)/)) return 'reports';
-    if (cmd.match(/(درجات|درجه|رصد|سجل الدرجات)/)) return 'grades';
-    if (cmd.match(/(حضور|غياب|سجل الغياب|تحضير)/)) return 'attendance';
-    if (cmd.match(/(طلاب|طلبه|قائمه الطلاب|سجل الطلاب|وارد الاباء)/)) return 'students';
-    if (cmd.match(/(مجموع|مجموعات|فرق|مجموعه)/)) return 'groups';
-    if (cmd.match(/(فرسان|شرف|اوائل|متصدر|لوحه الشرف)/)) return 'leaderboard';
-    if (cmd.match(/(مهام|واجب|تاسك|مهمه)/)) return 'tasks';
-    if (cmd.match(/(مكتبه|مكتبة|مصادر|كتب|ملفات)/)) return 'library';
-    if (cmd.match(/(مزامنه|مزامنة|سحاب|تزامن|رفع|باك اب|احتياطي|نسخ)/)) return 'sync';
-    if (cmd.match(/(اعدادات|ضبط|خصائص|تفضيل)/)) return 'settings';
-    if (cmd.match(/(دليل|شرح|مساعده|استخدام)/)) return 'guide';
-    if (cmd.match(/(حول|عن التطبيق|تطبيق)/)) return 'about';
-    
-    if (cmd.match(/(قفل|خروج|اغلاق التطبيق|تسجيل خروج)/)) {
-       window.location.reload();
-       return null;
-    }
-    return null;
-  };
+    restartTimerRef.current = setTimeout(() => {
+      if (!shouldListenRef.current || !recognitionRef.current) return;
+      if (isRecognitionStartingRef.current) return;
 
-  const scanAndClick = (command: string): boolean => {
-    const actionsMap: { [key: string]: RegExp } = {
-      'add': /(اضافه|جديد|اضف|انشاء)/,
-      'save': /(حفظ|تأكيد|تاكيد|موافق|تم)/,
-      'cancel': /(الغاء|تراجع)/,
-      'close': /(اغلاق النافذه|اغلق|سكّر|رجوع|عوده|اكس)/,
-      'edit': /(تعديل|حرر|غير)/,
-      'delete': /(حذف|امسح|ازاله|ازالة)/,
-      'export': /(تصدير|اكسل|بي دي اف|pdf|طباعه|اطبع)/,
-      'search': /(بحث|ابحث|دور)/,
-      'filter': /(تصفيه|فلتر)/
-    };
-
-    const clickableElements = Array.from(document.querySelectorAll('button, a, [role="button"], input[type="submit"]'));
-    let bestMatch: HTMLElement | null = null;
-
-    for (const el of clickableElements) {
-      const elementText = normalizeText((el.textContent || '').trim());
-      const ariaLabel = normalizeText(el.getAttribute('aria-label') || '');
-      const voiceData = normalizeText(el.getAttribute('data-voice') || ''); 
-
-      if (elementText && command.includes(elementText)) {
-        bestMatch = el as HTMLElement; break;
+      try {
+        isRecognitionStartingRef.current = true;
+        recognitionRef.current.start();
+      } catch {
+        // غالبًا المحرك يعمل بالفعل أو لم ينهِ دورة الإيقاف بعد
+      } finally {
+        setTimeout(() => {
+          isRecognitionStartingRef.current = false;
+        }, 500);
       }
-      
-      if (ariaLabel && command.includes(ariaLabel)) {
-        bestMatch = el as HTMLElement; break;
-      }
+    }, delay);
+  }, []);
 
-      for (const [action, regex] of Object.entries(actionsMap)) {
-        if (regex.test(command)) {
-          if (regex.test(elementText) || regex.test(ariaLabel) || regex.test(voiceData)) {
-            bestMatch = el as HTMLElement; break;
-          }
-        }
-      }
-      if (bestMatch) break;
+  const createId = useCallback(() => {
+    if (typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function') {
+      return crypto.randomUUID();
     }
 
-    if (bestMatch) {
-      bestMatch.style.boxShadow = '0 0 0 4px rgba(99, 102, 241, 0.5)';
-      setTimeout(() => { if (bestMatch) bestMatch.style.boxShadow = ''; }, 300);
-      bestMatch.click(); 
-      return true;
+    return `${Date.now()}-${Math.random().toString(36).slice(2)}`;
+  }, []);
+
+  const saveSnapshot = useCallback(() => {
+    historyRef.current.push(JSON.parse(JSON.stringify(studentsRef.current)));
+
+    if (historyRef.current.length > 20) {
+      historyRef.current.shift();
     }
+  }, []);
 
-    return false;
-  };
+  const undoLastAction = useCallback(() => {
+    const previous = historyRef.current.pop();
 
-  const processCommand = (command: string) => {
-    if (!command.trim()) return;
-    
-    const originalText = command.trim();
-    const text = normalizeText(originalText);
-    
-    if (scanAndClick(text)) {
-      displayFeedback(`تم تنفيذ الإجراء`, 'success');
+    if (!previous) {
+      displayFeedback('لا توجد عملية للتراجع', 'error');
+      speak('لا يوجد شيء للتراجع عنه');
       return;
     }
 
-    const isNavigationWord = text.match(/(افتح|روح|انتقل|عرض|هات|صفح|شاش|ودني|ورني|قسم)/);
-    const targetRoute = getTargetRoute(text);
+    setStudents(previous);
+    displayFeedback('تم التراجع بنجاح', 'success');
+    speak('تم التراجع');
+  }, [displayFeedback, setStudents, speak]);
 
-    let foundStudent: Student | undefined;
-    for (const s of studentsRef.current) {
-      const studentWords = s.name.split(' ').map(normalizeText);
-      const firstName = studentWords[0];
-      if (firstName.length >= 2 && text.includes(firstName)) {
-        foundStudent = s;
-        if (studentWords.length > 1 && text.includes(studentWords[1])) break;
-      }
-    }
+  const runTasks = useCallback(
+    (tasks: VoiceTask[]) => {
+      if (!tasks.length) return;
 
-    if (targetRoute && (isNavigationWord || !foundStudent)) {
-      if (navigateRef.current) {
-        navigateRef.current(targetRoute);
-        displayFeedback(`جاري الانتقال...`, 'success');
-        return;
-      }
-    }
-
-    if (foundStudent && !isNavigationWord) {
-      const isAbsent = text.match(/(غايب|غائب|غياب|غاب|مريض)/);
-      const isPresent = text.match(/(حاضر|حضر|موجود)/);
-      const isNegative = text.match(/(خصم|ناقص|ازعاج|مزعج|نايم|نام|تاخير|متاخر|خطا|غلط|سيء|ضعيف|نقص|اسحب)/);
-      const isPositive = !isNegative && text.match(/(نجم|نقط|درج|ممتاز|بطل|مشارك|صح|شاطر|كفو|عظيم|مبدع|زيد|اعط|ضيف)/);
-      const amount = extractAmount(text);
-
-      if (isAbsent) {
-        setStudents(prev => prev.map(s => s.id === foundStudent!.id ? { ...s, attendance: [...(s.attendance || []), { date: new Date().toISOString(), status: 'absent' }] } : s));
-        displayFeedback(`غياب: ${foundStudent.name}`, 'success');
-        speak(`تم الغياب`);
-        return;
-      }
-      else if (isPresent) {
-        setStudents(prev => prev.map(s => s.id === foundStudent!.id ? { ...s, attendance: [...(s.attendance || []), { date: new Date().toISOString(), status: 'present' }] } : s));
-        displayFeedback(`حضور: ${foundStudent.name}`, 'success');
-        return;
-      }
-      else if (isNegative) {
-        setStudents(prev => prev.map(s => s.id === foundStudent!.id ? { ...s, behaviors: [...(s.behaviors || []), { id: Math.random().toString(), date: new Date().toISOString(), description: `تقويم سلوك (${amount})`, type: 'negative', points: -amount }] } : s));
-        displayFeedback(`خصم ${amount} من: ${foundStudent.name}`, 'success');
-        speak(`خصم ${amount}`);
-        return;
-      }
-      else if (isPositive) {
-        setStudents(prev => prev.map(s => s.id === foundStudent!.id ? { ...s, behaviors: [...(s.behaviors || []), { id: Math.random().toString(), date: new Date().toISOString(), description: `مشاركة وتفاعل (${amount})`, type: 'positive', points: amount }] } : s));
-        displayFeedback(`إضافة ${amount} لـ: ${foundStudent.name}`, 'success');
-        speak(`إضافة ${amount}`);
-        return;
-      }
-    }
-
-    displayFeedback(`أمر غير واضح: "${originalText}"`, 'error');
-  };
-
-  useEffect(() => {
-    // 🛡️ التعديل الجذري: إذا كنا في الويندوز (Electron) أو المتصفح لا يدعم، نوقف كل شيء بأمان
-    if (!SpeechRecognition || isElectron) return;
-    
-    try {
-        const recognition = new SpeechRecognition();
-        recognition.continuous = true; 
-        recognition.interimResults = false; 
-        recognition.lang = 'ar-OM'; 
-
-        recognition.onstart = () => {
-          setIsListening(true);
-          if (feedbackTimerRef.current) clearTimeout(feedbackTimerRef.current);
-          setFeedback({ message: 'راصد يستمع الآن...', type: 'info' });
+      if (requiresConfirmation(tasks)) {
+        pendingConfirmationRef.current = {
+          message: 'هذا إجراء حساس. هل تؤكد التنفيذ؟',
+          tasks
         };
 
-        recognition.onresult = (event: any) => {
-          let interimText = '';
-          let finalText = '';
+        displayFeedback('هذا إجراء حساس. قل: نعم للتأكيد أو لا للإلغاء', 'info');
+        speak('هذا إجراء حساس. هل تؤكد التنفيذ؟');
+        return;
+      }
 
-          for (let i = event.resultIndex; i < event.results.length; i++) {
-            if (event.results[i].isFinal) {
-              finalText += event.results[i][0].transcript;
-            } else {
-              interimText += event.results[i][0].transcript;
+      for (const task of tasks) {
+        if (task.type === 'undo') {
+          undoLastAction();
+          continue;
+        }
+
+        executeTask(task, {
+          setStudents,
+          currentSemester,
+          onNavigate,
+          saveSnapshot,
+          createId,
+          memory: memoryRef.current,
+          displayFeedback,
+          speak
+        });
+      }
+    },
+    [
+      createId,
+      currentSemester,
+      displayFeedback,
+      onNavigate,
+      saveSnapshot,
+      setStudents,
+      speak,
+      undoLastAction
+    ]
+  );
+
+  const processCommand = useCallback(
+    (command: string) => {
+      const originalText = command.trim();
+
+      if (!originalText) return;
+
+      const normalized = normalizeText(originalText);
+      const now = Date.now();
+
+      /**
+       * منع التكرار غير المقصود من SpeechRecognition.
+       * خففنا المدة إلى 1200ms حتى لا يمنع المعلم من تكرار أمر مقصود بسرعة.
+       */
+      if (
+        normalized === lastProcessedRef.current.text &&
+        now - lastProcessedRef.current.time < 1200
+      ) {
+        return;
+      }
+
+      lastProcessedRef.current = {
+        text: normalized,
+        time: now
+      };
+
+      memoryRef.current.setLastCommand(originalText);
+
+      if (pendingConfirmationRef.current) {
+        if (/(نعم|ايوا|ايوه|اكد|أكد|موافق|نفذ)/.test(normalized)) {
+          const pending = pendingConfirmationRef.current;
+          pendingConfirmationRef.current = null;
+          runTasks(pending.tasks);
+          return;
+        }
+
+        if (/(لا|الغ|الغي|تراجع|وقف|إلغاء|الغاء)/.test(normalized)) {
+          pendingConfirmationRef.current = null;
+          displayFeedback('تم إلغاء الإجراء', 'info');
+          speak('تم الإلغاء');
+          return;
+        }
+
+        displayFeedback('قل نعم للتأكيد أو لا للإلغاء', 'info');
+        return;
+      }
+
+      const memory = memoryRef.current.snapshot;
+
+      if (memory.pendingIntent === 'create_student') {
+        const cleanName = originalText
+          .replace(/^(اسمه|اسم الطالب|الطالب اسمه|اسمها|اسم الطالبة|الطالبة اسمها)\s*/g, '')
+          .trim();
+
+        const tasks: VoiceTask[] = [
+          {
+            type: 'create_student',
+            payload: {
+              name: cleanName,
+              grade: memory.pendingGrade || 'بدون فصل'
             }
           }
+        ];
 
-          setTranscript(interimText || finalText);
+        memoryRef.current.clearPendingIntent();
+        runTasks(tasks);
+        return;
+      }
 
-          if (finalText) {
-            processCommand(finalText);
-            setTimeout(() => setTranscript(''), 2500); 
-          }
-        };
+      const tasks = planCommand(originalText, {
+        students: studentsRef.current,
+        memory: memoryRef.current
+      });
 
-        recognition.onend = () => {
-          if (shouldListenRef.current) {
-            setTimeout(() => {
-                if (shouldListenRef.current) {
-                    try { recognition.start(); } catch (e) {}
-                }
-            }, 350);
-          } else {
-            setIsListening(false);
-            displayFeedback('تم الإيقاف', null);
-          }
-        };
+      runTasks(tasks);
+    },
+    [displayFeedback, runTasks, speak]
+  );
+  
+useEffect(() => {
+  if (!SpeechRecognitionCtor) return;
 
-        recognition.onerror = (event: any) => {
-          if (event.error === 'not-allowed') {
-             shouldListenRef.current = false;
-             setIsListening(false);
-             displayFeedback('الرجاء السماح للتطبيق باستخدام المايكروفون', 'error');
-          }
-        };
+    try {
+      const recognition = new SpeechRecognitionCtor();
 
-        recognitionRef.current = recognition;
+      recognition.continuous = true;
+      recognition.interimResults = false;
+      recognition.lang = 'ar-OM';
 
-        return () => {
-           shouldListenRef.current = false;
-           recognition.stop();
+      recognition.onstart = () => {
+        isRecognitionStartingRef.current = false;
+        setIsListening(true);
+
+        if (feedbackTimerRef.current) {
+          clearTimeout(feedbackTimerRef.current);
         }
-    } catch (error) {
-        console.error("Speech Recognition is not fully supported in this environment.", error);
-    }
-  }, [displayFeedback, isElectron]); 
 
-  const toggleListening = useCallback(() => {
-    shouldListenRef.current = !shouldListenRef.current;
-    if (shouldListenRef.current) {
-      try { recognitionRef.current?.start(); } catch (e) {}
-    } else {
-      recognitionRef.current?.stop();
+        setFeedback({
+          message: 'وضع الحصة نشط... الوكيل يستمع',
+          type: 'info'
+        });
+      };
+
+      recognition.onresult = (event: any) => {
+        let finalText = '';
+
+        for (let i = event.resultIndex; i < event.results.length; i++) {
+          if (event.results[i].isFinal) {
+            finalText += event.results[i][0].transcript;
+          }
+        }
+
+        finalText = finalText.trim();
+
+        if (!finalText) return;
+
+        setTranscript(finalText);
+        processCommand(finalText);
+
+        setTimeout(() => {
+          setTranscript('');
+        }, 1200);
+
+        /**
+         * بعض المتصفحات والجوالات توقف التعرف بعد كل نتيجة.
+         * لذلك نعيد تشغيله بسرعة طالما وضع الحصة مفعل.
+         */
+        restartRecognition(350);
+      };
+
+      recognition.onend = () => {
+        setIsListening(false);
+
+        if (manualStopRef.current) {
+          manualStopRef.current = false;
+          shouldListenRef.current = false;
+          displayFeedback('تم إيقاف الوكيل', null);
+          return;
+        }
+
+        if (shouldListenRef.current) {
+          setFeedback({
+            message: 'إعادة تنشيط الاستماع...',
+            type: 'info'
+          });
+
+          restartRecognition(250);
+        } else {
+          displayFeedback('تم إيقاف الوكيل', null);
+        }
+      };
+
+      recognition.onerror = (event: any) => {
+        const error = event.error;
+
+        if (error === 'not-allowed' || error === 'service-not-allowed') {
+          manualStopRef.current = true;
+          shouldListenRef.current = false;
+          setIsListening(false);
+          displayFeedback('الرجاء السماح للتطبيق بالوصول للمايكروفون', 'error');
+          return;
+        }
+
+        if (error === 'no-speech') {
+          if (shouldListenRef.current) {
+            displayFeedback('لم أسمع أمرًا واضحًا... ما زلت أستمع', 'info');
+            restartRecognition(300);
+          }
+          return;
+        }
+
+        if (error === 'aborted' || error === 'network' || error === 'audio-capture') {
+          if (shouldListenRef.current) {
+            displayFeedback('إعادة تشغيل الاستماع...', 'info');
+            restartRecognition(700);
+          }
+          return;
+        }
+
+        if (shouldListenRef.current) {
+          restartRecognition(700);
+        }
+      };
+
+      recognitionRef.current = recognition;
+
+      return () => {
+        manualStopRef.current = true;
+        shouldListenRef.current = false;
+
+        if (restartTimerRef.current) {
+          clearTimeout(restartTimerRef.current);
+        }
+
+        try {
+          recognition.stop();
+        } catch {
+          // تجاهل
+        }
+      };
+    } catch {
+      displayFeedback('تعذر تشغيل التعرف الصوتي', 'error');
     }
+  }, [displayFeedback, isElectron, processCommand, restartRecognition]);
+
+  useEffect(() => {
+    return () => {
+      if (feedbackTimerRef.current) {
+        clearTimeout(feedbackTimerRef.current);
+      }
+
+      if (restartTimerRef.current) {
+        clearTimeout(restartTimerRef.current);
+      }
+
+      if (typeof window !== 'undefined' && 'speechSynthesis' in window) {
+        window.speechSynthesis.cancel();
+      }
+    };
   }, []);
 
-  // 🛡️ إخفاء واجهة المايكروفون بالكامل إذا كنا في الويندوز (Electron)
-  if (!SpeechRecognition || isElectron) return null;
+  const toggleListening = useCallback(() => {
+    if (shouldListenRef.current) {
+      manualStopRef.current = true;
+      shouldListenRef.current = false;
 
+      if (restartTimerRef.current) {
+        clearTimeout(restartTimerRef.current);
+      }
+
+      try {
+        recognitionRef.current?.stop();
+      } catch {
+        // تجاهل
+      }
+
+      setIsListening(false);
+      displayFeedback('تم إيقاف الوكيل', null);
+      return;
+    }
+
+    manualStopRef.current = false;
+    shouldListenRef.current = true;
+
+    displayFeedback('وضع الحصة نشط... الوكيل يستمع', 'info');
+
+    try {
+      recognitionRef.current?.start();
+    } catch {
+      restartRecognition(300);
+    }
+  }, [displayFeedback, restartRecognition]);
+
+if (!SpeechRecognitionCtor) return null;
   return (
-    <div className={`fixed bottom-24 md:bottom-8 ${dir === 'rtl' ? 'left-6' : 'right-6'} z-[99999] flex flex-col items-${dir === 'rtl' ? 'start' : 'end'} pointer-events-none`} dir={dir}>
-      
+    <div
+      className={`fixed bottom-24 md:bottom-8 ${
+        dir === 'rtl' ? 'left-6' : 'right-6'
+      } z-[99999] flex flex-col items-${dir === 'rtl' ? 'start' : 'end'} pointer-events-none`}
+      dir={dir}
+    >
       {(isListening || transcript || feedback.message) && (
         <div className="mb-4 bg-white/95 backdrop-blur-xl border border-gray-200 shadow-2xl rounded-2xl p-4 max-w-sm pointer-events-auto animate-in slide-in-from-bottom-2 fade-in shadow-indigo-500/10">
           <div className="flex items-center gap-2 mb-2">
             {isListening ? (
-              <div className="flex items-center gap-1.5 bg-rose-100 text-rose-700 px-3 py-1 rounded-full text-[11px] font-bold animate-pulse tracking-wide">
-                <div className="w-2 h-2 bg-rose-600 rounded-full animate-ping"></div> المساعد الذكي نشط
+              <div className="flex items-center gap-1.5 bg-indigo-100 text-indigo-700 px-3 py-1 rounded-full text-[11px] font-bold animate-pulse tracking-wide">
+                <div className="w-2 h-2 bg-indigo-600 rounded-full animate-ping" />
+                وضع الحصة نشط
               </div>
             ) : feedback.type === 'success' ? (
               <div className="flex items-center gap-1 text-emerald-600 text-[11px] font-bold">
-                <CheckCircle className="w-3.5 h-3.5" /> تم التنفيذ
+                <CheckCircle className="w-3.5 h-3.5" />
+                تم
               </div>
             ) : feedback.type === 'error' ? (
               <div className="flex items-center gap-1 text-rose-600 text-[11px] font-bold">
-                <XCircle className="w-3.5 h-3.5" /> تنبيه
+                <XCircle className="w-3.5 h-3.5" />
+                تنبيه
               </div>
             ) : (
               <div className="flex items-center gap-1 text-slate-500 text-[11px] font-bold">
-                <Volume2 className="w-3.5 h-3.5" /> راصد
+                <Bot className="w-3.5 h-3.5" />
+                النظام
               </div>
             )}
           </div>
-          
+
           <p className="text-sm font-bold text-slate-800 leading-relaxed min-h-[1.5rem]">
             {transcript || feedback.message}
           </p>
@@ -326,17 +476,21 @@ const VoiceAssistant: React.FC<VoiceAssistantProps> = ({ onNavigate }) => {
       )}
 
       <button
+        type="button"
         onClick={toggleListening}
-        className={`pointer-events-auto flex items-center justify-center w-16 h-16 rounded-full shadow-[0_8px_30px_rgb(0,0,0,0.15)] transition-all duration-300 active:scale-90 ${
-          isListening 
-            ? 'bg-rose-500 text-white shadow-rose-500/40 ring-4 ring-rose-500/20' 
-            : 'bg-indigo-600 text-white hover:bg-indigo-700 hover:shadow-indigo-600/30'
+        className={`pointer-events-auto flex items-center justify-center w-16 h-16 rounded-full shadow-2xl transition-all duration-300 active:scale-90 ${
+          isListening || shouldListenRef.current
+            ? 'bg-indigo-600 text-white shadow-indigo-500/40 ring-4 ring-indigo-500/20'
+            : 'bg-slate-800 text-white hover:bg-slate-700'
         }`}
+        aria-label={
+          isListening || shouldListenRef.current
+            ? 'إيقاف وضع الحصة الصوتي'
+            : 'تشغيل وضع الحصة الصوتي'
+        }
       >
-        {isListening ? (
-          <div className="relative flex items-center justify-center">
-            <Mic className="w-7 h-7 relative z-10" />
-          </div>
+        {isListening || shouldListenRef.current ? (
+          <Mic className="w-7 h-7" />
         ) : (
           <MicOff className="w-7 h-7" />
         )}
