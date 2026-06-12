@@ -397,14 +397,15 @@ const Leaderboard: React.FC<LeaderboardProps> = ({ students, classes, onUpdateSt
                             if (!s) return null; 
                             return (
                             <div key={s.id} className={`flex flex-col items-center ${i === 1 ? 'z-10 -mb-4' : 'opacity-90'}`}>
-                                <div className="relative cursor-p<div
-    className="relative cursor-pointer"
-    role="button"
-    tabIndex={0}
-    data-voice-command={`إضافة نقاط ${s.name} أضف نقاط ${s.name} عزز ${s.name} تكريم ${s.name}`}
-    aria-label={`إضافة نقاط ${s.name}`}
-    title={`إضافة نقاط ${s.name}`}
-    onClick={() => handleAddPoints(s)}
+                                <div className="relative cursor-p
+                                    <div
+  className="relative cursor-pointer"
+  role="button"
+  tabIndex={0}
+  data-voice-command={`إضافة نقاط ${s.name} أضف نقاط ${s.name} عزز ${s.name} تكريم ${s.name}`}
+  aria-label={`إضافة نقاط ${s.name}`}
+  title={`إضافة نقاط ${s.name}`}
+  onClick={() => handleAddPoints(s)}
 >
                                onClick={() => handleAddPoints(s)}>
                                     {i === 1 && <Crown className="w-10 h-10 text-warning fill-warning absolute -top-8 left-1/2 -translate-x-1/2 animate-pulse" />}
