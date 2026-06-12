@@ -1,6 +1,6 @@
 import React, { useState, useMemo, useRef, useEffect } from 'react';
 import { Student } from '../types';
-import { Trophy, Crown, Sparkles, Star, Search, Award, Download, X, Loader2, MinusCircle, Medal, History } from 'lucide-react'; 
+import { Trophy, Crown, Sparkles, Search, Award, Download, X, Loader2, MinusCircle, History } from 'lucide-react'; 
 import { useApp } from '../context/AppContext';
 import { StudentAvatar } from './StudentAvatar';
 import { StudentRow } from './StudentRow';
@@ -164,10 +164,8 @@ const Leaderboard: React.FC<LeaderboardProps> = ({ students, classes, onUpdateSt
     const topThree = rankedStudents.slice(0, 3);
     const restOfStudents = rankedStudents.slice(3);
 
-    // 💉 المنطق السري الجديد: استخراج الفرسان للشهور السابقة مقسمين حسب الفصول (Class-Based Archive)
     const archiveData = useMemo(() => {
         try {
-            // Map<MonthKey, Map<ClassName, Map<StudentId, Student>>>
             const dataMap = new Map<string, Map<string, Map<string, Student & { points: number }>>>();
 
             safeStudents.forEach(student => {
@@ -178,7 +176,6 @@ const Leaderboard: React.FC<LeaderboardProps> = ({ students, classes, onUpdateSt
                     const d = new Date(b.date);
                     if (isNaN(d.getTime())) return;
 
-                    // استثناء الشهر الحالي
                     if (d.getMonth() === currentMonth && d.getFullYear() === today.getFullYear()) return;
 
                     const monthKey = `${d.getFullYear()}-${d.getMonth()}`;
@@ -215,14 +212,13 @@ const Leaderboard: React.FC<LeaderboardProps> = ({ students, classes, onUpdateSt
                     const sorted = Array.from(studentMap.values())
                         .filter(s => s.points > 0)
                         .sort((a, b) => b.points - a.points)
-                        .slice(0, 3); // أخذ أول 3 فقط لكل فصل
+                        .slice(0, 3); 
 
                     if (sorted.length > 0) {
                         classGroups.push({ className, top3: sorted });
                     }
                 });
 
-                // ترتيب الفصول أبجدياً
                 classGroups.sort((a, b) => a.className.localeCompare(b.className));
 
                 if (classGroups.length > 0) {
@@ -235,7 +231,6 @@ const Leaderboard: React.FC<LeaderboardProps> = ({ students, classes, onUpdateSt
                 }
             });
 
-            // ترتيب الشهور من الأحدث للأقدم
             return result.sort((a, b) => {
                 if (a.year !== b.year) return b.year - a.year;
                 return b.month - a.month;
@@ -304,14 +299,14 @@ const Leaderboard: React.FC<LeaderboardProps> = ({ students, classes, onUpdateSt
             icon={<Crown className="w-6 h-6 text-warning" />}
             
             rightActions={
-                <div className={`flex gap-2`} style={{ WebkitAppRegion: 'no-drag' } as any}>
-                   <button
-    data-voice-command="فتح أرشيف الفرسان أرشيف الفرسان"
-    aria-label="فتح أرشيف الفرسان"
-    title="فتح أرشيف الفرسان"
-    onClick={() => setIsArchiveOpen(true)}
-    className="flex items-center gap-1 border rounded-lg text-[10px] px-2 py-1 outline-none font-bold cursor-pointer transition-colors border-borderColor text-textSecondary hover:bg-primary/10 hover:text-primary hover:border-primary/30"
->
+                <div className="flex gap-2" style={{ WebkitAppRegion: 'no-drag' } as any}>
+                    <button
+                        data-voice-command="فتح أرشيف الفرسان أرشيف الفرسان"
+                        aria-label="فتح أرشيف الفرسان"
+                        title="فتح أرشيف الفرسان"
+                        onClick={() => setIsArchiveOpen(true)}
+                        className="flex items-center gap-1 border rounded-lg text-[10px] px-2 py-1 outline-none font-bold cursor-pointer transition-colors border-borderColor text-textSecondary hover:bg-primary/10 hover:text-primary hover:border-primary/30"
+                    >
                         <History size={14} />
                         <span className="hidden sm:inline">{t('archive') || 'الأرشيف'}</span>
                     </button>
@@ -319,7 +314,7 @@ const Leaderboard: React.FC<LeaderboardProps> = ({ students, classes, onUpdateSt
                     <select 
                         value={schoolType} 
                         onChange={(e) => setSchoolType(e.target.value as any)}
-                        className={`border rounded-lg text-[10px] p-2 outline-none font-bold cursor-pointer transition-colors bg-bgSoft border-borderColor text-textPrimary hover:bg-bgCard`}
+                        className="border rounded-lg text-[10px] p-2 outline-none font-bold cursor-pointer transition-colors bg-bgSoft border-borderColor text-textPrimary hover:bg-bgCard"
                     >
                         <option value="mixed" className="bg-bgCard text-textPrimary">{t('mixedSchool')}</option>
                         <option value="boys" className="bg-bgCard text-textPrimary">{t('boysSchool')}</option>
@@ -330,14 +325,14 @@ const Leaderboard: React.FC<LeaderboardProps> = ({ students, classes, onUpdateSt
 
             leftActions={
                 <div className="space-y-2 w-full mt-1" style={{ WebkitAppRegion: 'no-drag' } as any}>
-                    <div className={`w-full flex items-center rounded-xl border overflow-hidden shadow-sm bg-bgSoft border-borderColor backdrop-blur-md`}>
-                        <div className={`px-4 py-2 flex items-center gap-1 font-black text-[11px] shrink-0 z-10 bg-warning text-white`}>
+                    <div className="w-full flex items-center rounded-xl border overflow-hidden shadow-sm bg-bgSoft border-borderColor backdrop-blur-md">
+                        <div className="px-4 py-2 flex items-center gap-1 font-black text-[11px] shrink-0 z-10 bg-warning text-white">
                             <Sparkles size={14} className="animate-pulse" />
                             {t('newsTickerTitle')}
                         </div>
                         <div className="flex-1 overflow-hidden relative flex items-center">
                             {/* @ts-ignore */}
-                            <marquee direction={dir === 'rtl' ? 'right' : 'left'} scrollamount="4" className={`font-bold text-xs pt-1 tracking-wide text-warning`}>
+                            <marquee direction={dir === 'rtl' ? 'right' : 'left'} scrollamount="4" className="font-bold text-xs pt-1 tracking-wide text-warning">
                                 {String(tickerText)}
                             </marquee>
                         </div>
@@ -347,37 +342,37 @@ const Leaderboard: React.FC<LeaderboardProps> = ({ students, classes, onUpdateSt
                         <div className="relative flex-1">
                             <Search className={`absolute ${dir === 'rtl' ? 'right-3' : 'left-3'} top-1/2 -translate-y-1/2 w-4 h-4 text-textSecondary`} />
                             <input
-    type="text"
-    data-voice-field="بحث الفرسان"
-    aria-label="بحث الفرسان"
-    placeholder={t('searchPlaceholder')} 
-    value={searchTerm} 
-    onChange={(e) => setSearchTerm(e.target.value)} 
-    className={`w-full border rounded-xl py-2 ${dir === 'rtl' ? 'pr-10 pl-3' : 'pl-10 pr-3'} text-xs font-bold outline-none transition-all bg-bgCard border-borderColor text-textPrimary placeholder:text-textSecondary focus:bg-bgSoft focus:border-primary/40`} 
-/>
+                                type="text"
+                                data-voice-field="بحث الفرسان"
+                                aria-label="بحث الفرسان"
+                                placeholder={t('searchPlaceholder')} 
+                                value={searchTerm} 
+                                onChange={(e) => setSearchTerm(e.target.value)} 
+                                className={`w-full border rounded-xl py-2 ${dir === 'rtl' ? 'pr-10 pl-3' : 'pl-10 pr-3'} text-xs font-bold outline-none transition-all bg-bgCard border-borderColor text-textPrimary placeholder:text-textSecondary focus:bg-bgSoft focus:border-primary/40`} 
+                            />
                         </div>
 
                         <div className="overflow-x-auto no-scrollbar flex-1 max-w-[50%]">
-                           <div className="inline-flex items-center p-1 rounded-xl border transition-all bg-bgCard border-borderColor h-full shadow-sm">
+                            <div className="inline-flex items-center p-1 rounded-xl border transition-all bg-bgCard border-borderColor h-full shadow-sm">
                                 <button
-    data-voice-command="عرض كل الفرسان عرض كل الفصول في الفرسان"
-    aria-label="عرض كل الفرسان"
-    title="عرض كل الفرسان"
-    onClick={() => setSelectedClass('all')} 
-    className={`relative px-4 py-1.5 rounded-lg text-[10px] font-bold whitespace-nowrap transition-all duration-300 ${selectedClass === 'all' ? 'bg-primary text-white shadow-md' : 'text-textSecondary hover:text-textPrimary hover:bg-bgSoft'}`}
->
+                                    data-voice-command="عرض كل الفرسان عرض كل الفصول في الفرسان"
+                                    aria-label="عرض كل الفرسان"
+                                    title="عرض كل الفرسان"
+                                    onClick={() => setSelectedClass('all')} 
+                                    className={`relative px-4 py-1.5 rounded-lg text-[10px] font-bold whitespace-nowrap transition-all duration-300 ${selectedClass === 'all' ? 'bg-primary text-white shadow-md' : 'text-textSecondary hover:text-textPrimary hover:bg-bgSoft'}`}
+                                >
                                     {t('all')}
                                 </button>
                                 {safeClasses.map(c => (
                                     <React.Fragment key={c}>
-                                        <div className={`w-[1px] h-4 mx-1 rounded-full shrink-0 bg-borderColor`} />
+                                        <div className="w-[1px] h-4 mx-1 rounded-full shrink-0 bg-borderColor" />
                                         <button
-    data-voice-command={`عرض فصل ${c} في الفرسان فرسان فصل ${c}`}
-    aria-label={`عرض فصل ${c} في الفرسان`}
-    title={`عرض فصل ${c}`}
-    onClick={() => setSelectedClass(c)} 
-    className={`relative px-4 py-1.5 rounded-lg text-[10px] font-bold whitespace-nowrap transition-all duration-300 ${selectedClass === c ? 'bg-primary text-white shadow-md' : 'text-textSecondary hover:text-textPrimary hover:bg-bgSoft'}`}
->
+                                            data-voice-command={`عرض فصل ${c} في الفرسان فرسان فصل ${c}`}
+                                            aria-label={`عرض فصل ${c} في الفرسان`}
+                                            title={`عرض فصل ${c}`}
+                                            onClick={() => setSelectedClass(c)} 
+                                            className={`relative px-4 py-1.5 rounded-lg text-[10px] font-bold whitespace-nowrap transition-all duration-300 ${selectedClass === c ? 'bg-primary text-white shadow-md' : 'text-textSecondary hover:text-textPrimary hover:bg-bgSoft'}`}
+                                        >
                                             {c}
                                         </button>
                                     </React.Fragment>
@@ -388,149 +383,129 @@ const Leaderboard: React.FC<LeaderboardProps> = ({ students, classes, onUpdateSt
                 </div>
             }
         >
-
             <div className="animate-in fade-in duration-500 pt-4">
                 
-        {topThree.length > 0 && (
-  <div className="flex justify-center items-end gap-2 md:gap-6 py-4 mb-6">
-    {[topThree[1], topThree[0], topThree[2]].map((s, i) => {
-      if (!s) return null;
+                {topThree.length > 0 && (
+                    <div className="flex justify-center items-end gap-2 md:gap-6 py-4 mb-6">
+                        {[topThree[1], topThree[0], topThree[2]].map((s, i) => {
+                            if (!s) return null;
 
-      return (
-        <div
-          key={s.id}
-          className={`flex flex-col items-center ${
-            i === 1 ? 'z-10 -mb-4' : 'opacity-90'
-          }`}
-        >
-          <div
-            className="relative cursor-pointer"
-            role="button"
-            tabIndex={0}
-            data-voice-command={`إضافة نقاط ${s.name} أضف نقاط ${s.name} عزز ${s.name} تكريم ${s.name}`}
-            aria-label={`إضافة نقاط ${s.name}`}
-            title={`إضافة نقاط ${s.name}`}
-            onClick={() => handleAddPoints(s)}
-          >
-            {i === 1 && (
-              <Crown className="w-10 h-10 text-warning fill-warning absolute -top-8 left-1/2 -translate-x-1/2 animate-pulse" />
-            )}
+                            return (
+                                <div key={s.id} className={`flex flex-col items-center ${i === 1 ? 'z-10 -mb-4' : 'opacity-90'}`}>
+                                    <div
+                                        className="relative cursor-pointer"
+                                        role="button"
+                                        tabIndex={0}
+                                        data-voice-command={`إضافة نقاط ${s.name} أضف نقاط ${s.name} عزز ${s.name} تكريم ${s.name}`}
+                                        aria-label={`إضافة نقاط ${s.name}`}
+                                        title={`إضافة نقاط ${s.name}`}
+                                        onClick={() => handleAddPoints(s)}
+                                    >
+                                        {i === 1 && (
+                                            <Crown className="w-10 h-10 text-warning fill-warning absolute -top-8 left-1/2 -translate-x-1/2 animate-pulse" />
+                                        )}
 
-            <div
-              className={`rounded-full border-4 shadow-xl overflow-hidden mb-2 bg-bgCard transform transition-transform ${
-                i === 1
-                  ? 'w-24 h-24 md:w-32 md:h-32 border-warning scale-110'
-                  : 'w-20 h-20 md:w-24 md:h-24 border-borderColor'
-              }`}
-            >
-              <StudentAvatar gender={s.gender} className="w-full h-full" />
-            </div>
-          </div>
+                                        <div className={`rounded-full border-4 shadow-xl overflow-hidden mb-2 bg-bgCard transform transition-transform ${i === 1 ? 'w-24 h-24 md:w-32 md:h-32 border-warning scale-110' : 'w-20 h-20 md:w-24 md:h-24 border-borderColor'}`}>
+                                            <StudentAvatar gender={s.gender} className="w-full h-full" />
+                                        </div>
+                                    </div>
 
-          <div className="glass-panel px-3 py-2 rounded-xl text-center border border-borderColor shadow-sm w-28 md:w-36 transition-colors">
-            <h3
-              className="font-black text-xs md:text-sm truncate text-textPrimary"
-              title={s.name}
-            >
-              {getShortName(s.name)}
-            </h3>
+                                    <div className="glass-panel px-3 py-2 rounded-xl text-center border border-borderColor shadow-sm w-28 md:w-36 transition-colors">
+                                        <h3 className="font-black text-xs md:text-sm truncate text-textPrimary" title={s.name}>
+                                            {getShortName(s.name)}
+                                        </h3>
+                                        <span className="text-warning font-bold text-xs" dir="ltr">
+                                            {s.monthlyPoints}
+                                        </span>
+                                    </div>
 
-            <span className="text-warning font-bold text-xs" dir="ltr">
-              {s.monthlyPoints}
-            </span>
-          </div>
+                                    <div className="flex gap-1 mt-2 w-full justify-center">
+                                        <button
+                                            data-voice-command={`إصدار شهادة ${s.name} فتح شهادة ${s.name} شهادة ${s.name}`}
+                                            aria-label={`إصدار شهادة ${s.name}`}
+                                            title={`إصدار شهادة ${s.name}`}
+                                            onClick={() => setCertificateStudent(s)}
+                                            className="text-[10px] px-2 py-1 rounded-lg flex items-center justify-center gap-1 shadow-md transition-colors bg-primary/10 text-primary border border-primary/20 hover:bg-primary/20"
+                                        >
+                                            <Award size={12} />
+                                            {t('certificateBtn')}
+                                        </button>
 
-          <div className="flex gap-1 mt-2 w-full justify-center">
-            <button
-              data-voice-command={`إصدار شهادة ${s.name} فتح شهادة ${s.name} شهادة ${s.name}`}
-              aria-label={`إصدار شهادة ${s.name}`}
-              title={`إصدار شهادة ${s.name}`}
-              onClick={() => setCertificateStudent(s)}
-              className="text-[10px] px-2 py-1 rounded-lg flex items-center justify-center gap-1 shadow-md transition-colors bg-primary/10 text-primary border border-primary/20 hover:bg-primary/20"
-            >
-              <Award size={12} />
-              {t('certificateBtn')}
-            </button>
+                                        <button
+                                            data-voice-command={`خصم نقاط ${s.name} تصحيح نقاط ${s.name} حذف نقاط ${s.name}`}
+                                            data-voice-danger="true"
+                                            aria-label={`خصم نقاط ${s.name}`}
+                                            title={`خصم نقاط ${s.name}`}
+                                            onClick={() => handleDeductPoint(s)}
+                                            className="text-[10px] px-2 py-1 rounded-lg shadow-sm transition-colors flex items-center justify-center bg-danger/10 text-danger hover:bg-danger/20"
+                                        >
+                                            <MinusCircle size={12} />
+                                        </button>
+                                    </div>
+                                </div>
+                            );
+                        })}
+                    </div>
+                )}
 
-            <button
-              data-voice-command={`خصم نقاط ${s.name} تصحيح نقاط ${s.name} حذف نقاط ${s.name}`}
-              data-voice-danger="true"
-              aria-label={`خصم نقاط ${s.name}`}
-              title={`خصم نقاط ${s.name}`}
-              onClick={() => handleDeductPoint(s)}
-              className="text-[10px] px-2 py-1 rounded-lg shadow-sm transition-colors flex items-center justify-center bg-danger/10 text-danger hover:bg-danger/20"
-            >
-              <MinusCircle size={12} />
-            </button>
-          </div>
-        </div>
-      );
-    })}
-  </div>
-)}
+                <div className="space-y-2.5 pb-8">
+                    {restOfStudents.map((s, index) => {
+                        if (!s) return null;
 
-               <div className="space-y-2.5 pb-8">
-    {restOfStudents.map((s, index) => {
-        if (!s) return null;
+                        const sClasses = Array.isArray(s.classes) ? s.classes : [];
+                        const studentClass = sClasses[0] || t('unspecified');
 
-        const sClasses = Array.isArray(s.classes) ? s.classes : [];
-        const studentClass = sClasses[0] || t('unspecified');
-
-        return (
-            <StudentRow
-                key={s.id}
-                student={s}
-                dir={dir}
-                subtitle={studentClass}
-                indexLabel={index + 4}
-                badge={`${s.monthlyPoints} ${t('pointsWord')}`}
-                badgeTone="warning"
-                statusText={`الترتيب ${index + 4}`}
-                statusTone="primary"
-                actions={[
-                    {
-                        key: 'add-points',
-                        label: 'تعزيز',
-                        icon: Sparkles,
-                        tone: 'success',
-                        showOnMobile: true,
-                        voiceCommand: `إضافة نقاط ${s.name} أضف نقاط ${s.name} عزز ${s.name} تكريم ${s.name}`,
-                        ariaLabel: `إضافة نقاط ${s.name}`,
-                        title: `إضافة نقاط ${s.name}`,
-                        onClick: () => handleAddPoints(s)
-                    },
-                    {
-                        key: 'certificate',
-                        label: t('certificateBtn'),
-                        icon: Award,
-                        tone: 'primary',
-                        showOnMobile: true,
-                        voiceCommand: `إصدار شهادة ${s.name} فتح شهادة ${s.name} شهادة ${s.name}`,
-                        ariaLabel: `إصدار شهادة ${s.name}`,
-                        title: `إصدار شهادة ${s.name}`,
-                        onClick: () => setCertificateStudent(s)
-                    },
-                    {
-                        key: 'deduct',
-                        label: 'خصم',
-                        icon: MinusCircle,
-                        tone: 'danger',
-                        showOnMobile: false,
-                        danger: true,
-                        voiceCommand: `خصم نقاط ${s.name} تصحيح نقاط ${s.name} حذف نقاط ${s.name}`,
-                        ariaLabel: `خصم نقاط ${s.name}`,
-                        title: `خصم نقاط ${s.name}`,
-                        onClick: () => handleDeductPoint(s)
-                    }
-                ]}
-            />
-        );
-    })}
-</div>
-                        </div>
-                    )})}
+                        return (
+                            <StudentRow
+                                key={s.id}
+                                student={s}
+                                dir={dir}
+                                subtitle={studentClass}
+                                indexLabel={index + 4}
+                                badge={`${s.monthlyPoints} ${t('pointsWord')}`}
+                                badgeTone="warning"
+                                statusText={`الترتيب ${index + 4}`}
+                                statusTone="primary"
+                                actions={[
+                                    {
+                                        key: 'add-points',
+                                        label: 'تعزيز',
+                                        icon: Sparkles,
+                                        tone: 'success',
+                                        showOnMobile: true,
+                                        voiceCommand: `إضافة نقاط ${s.name} أضف نقاط ${s.name} عزز ${s.name} تكريم ${s.name}`,
+                                        ariaLabel: `إضافة نقاط ${s.name}`,
+                                        title: `إضافة نقاط ${s.name}`,
+                                        onClick: () => handleAddPoints(s)
+                                    },
+                                    {
+                                        key: 'certificate',
+                                        label: t('certificateBtn'),
+                                        icon: Award,
+                                        tone: 'primary',
+                                        showOnMobile: true,
+                                        voiceCommand: `إصدار شهادة ${s.name} فتح شهادة ${s.name} شهادة ${s.name}`,
+                                        ariaLabel: `إصدار شهادة ${s.name}`,
+                                        title: `إصدار شهادة ${s.name}`,
+                                        onClick: () => setCertificateStudent(s)
+                                    },
+                                    {
+                                        key: 'deduct',
+                                        label: 'خصم',
+                                        icon: MinusCircle,
+                                        tone: 'danger',
+                                        showOnMobile: false,
+                                        danger: true,
+                                        voiceCommand: `خصم نقاط ${s.name} تصحيح نقاط ${s.name} حذف نقاط ${s.name}`,
+                                        ariaLabel: `خصم نقاط ${s.name}`,
+                                        title: `خصم نقاط ${s.name}`,
+                                        onClick: () => handleDeductPoint(s)
+                                    }
+                                ]}
+                            />
+                        );
+                    })}
                 </div>
-
             </div>
 
             <DrawerSheet isOpen={!!certificateStudent} onClose={() => !isGeneratingPdf && setCertificateStudent(null)} dir={dir} mode="full">
@@ -538,14 +513,16 @@ const Leaderboard: React.FC<LeaderboardProps> = ({ students, classes, onUpdateSt
                     <div className="flex flex-col h-full bg-bgCard">
                         <div className="flex justify-between items-center p-4 bg-bgCard border-b border-borderColor shrink-0">
                             <h3 className="font-black text-textPrimary">{t('previewAndIssueCert')}</h3>
-<button
-    data-voice-command="إغلاق الشهادة إلغاء الشهادة"
-    aria-label="إغلاق الشهادة"
-    title="إغلاق الشهادة"
-    onClick={() => setCertificateStudent(null)}
-    className="p-2 text-textSecondary hover:text-danger transition-colors"
->                      
-</div>
+                            <button
+                                data-voice-command="إغلاق الشهادة إلغاء الشهادة"
+                                aria-label="إغلاق الشهادة"
+                                title="إغلاق الشهادة"
+                                onClick={() => setCertificateStudent(null)}
+                                className="p-2 text-textSecondary hover:text-danger transition-colors"
+                            >
+                                <X size={20} />
+                            </button>
+                        </div>
 
                         <div className="flex-1 overflow-auto bg-bgSoft p-4 md:p-8 flex justify-center items-center custom-scrollbar">
                             <div ref={certificateRef} className="shrink-0" dir="rtl"> 
@@ -560,22 +537,21 @@ const Leaderboard: React.FC<LeaderboardProps> = ({ students, classes, onUpdateSt
                         </div>
 
                         <div className="p-4 border-t border-borderColor flex gap-3 bg-bgCard shrink-0">
-<button
-    data-voice-command="حفظ الشهادة تصدير الشهادة تنزيل الشهادة حفظ PDF"
-    aria-label="حفظ وتصدير الشهادة"
-    title="حفظ وتصدير الشهادة"
-    onClick={handleDownloadPDF}
-    disabled={isGeneratingPdf}
-    className="flex-1 py-4 bg-primary text-white rounded-xl font-black text-lg shadow-lg flex items-center justify-center gap-3 transition-all active:scale-95 hover:bg-primary/80"
->                             
-    {isGeneratingPdf ? <Loader2 size={24} className="animate-spin" /> : <><Download size={24} /> {t('saveAndExportPdf')}</>}
+                            <button
+                                data-voice-command="حفظ الشهادة تصدير الشهادة تنزيل الشهادة حفظ PDF"
+                                aria-label="حفظ وتصدير الشهادة"
+                                title="حفظ وتصدير الشهادة"
+                                onClick={handleDownloadPDF}
+                                disabled={isGeneratingPdf}
+                                className="flex-1 py-4 bg-primary text-white rounded-xl font-black text-lg shadow-lg flex items-center justify-center gap-3 transition-all active:scale-95 hover:bg-primary/80"
+                            >                              
+                                {isGeneratingPdf ? <Loader2 size={24} className="animate-spin" /> : <><Download size={24} /> {t('saveAndExportPdf')}</>}
                             </button>
                         </div>
                     </div>
                 )}
             </DrawerSheet>
 
-            {/* 💉 الأرشيف المعدل: مفصول بالشهور ثم الفصول */}
             <DrawerSheet isOpen={isArchiveOpen} onClose={() => setIsArchiveOpen(false)} dir={dir} mode="right">
                 <div className="flex flex-col h-full bg-bgCard">
                     <div className="flex justify-between items-center p-4 bg-bgCard border-b border-borderColor shrink-0">
@@ -584,12 +560,14 @@ const Leaderboard: React.FC<LeaderboardProps> = ({ students, classes, onUpdateSt
                             <h3 className="font-black text-textPrimary">{t('archive') || 'أرشيف الفرسان (الشهور السابقة)'}</h3>
                         </div>
                         <button
-    data-voice-command="إغلاق أرشيف الفرسان إغلاق الأرشيف"
-    aria-label="إغلاق أرشيف الفرسان"
-    title="إغلاق أرشيف الفرسان"
-    onClick={() => setIsArchiveOpen(false)}
-    className="p-2 text-textSecondary hover:text-danger transition-colors rounded-lg bg-bgSoft hover:bg-danger/10"
-><X size={20} /></button>
+                            data-voice-command="إغلاق أرشيف الفرسان إغلاق الأرشيف"
+                            aria-label="إغلاق أرشيف الفرسان"
+                            title="إغلاق أرشيف الفرسان"
+                            onClick={() => setIsArchiveOpen(false)}
+                            className="p-2 text-textSecondary hover:text-danger transition-colors rounded-lg bg-bgSoft hover:bg-danger/10"
+                        >
+                            <X size={20} />
+                        </button>
                     </div>
 
                     <div className="flex-1 overflow-y-auto p-4 space-y-6">
@@ -608,7 +586,6 @@ const Leaderboard: React.FC<LeaderboardProps> = ({ students, classes, onUpdateSt
                                         فرسان شهر {monthData.monthName} {monthData.year}
                                     </h4>
                                     
-                                    {/* 💉 تكرار الفصول داخل الشهر */}
                                     <div className="space-y-4">
                                         {monthData.classGroups.map((cg, cIdx) => (
                                             <div key={cIdx} className="bg-bgCard/50 p-3 rounded-xl border border-borderColor/50">
