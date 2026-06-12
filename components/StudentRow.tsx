@@ -42,6 +42,12 @@ interface StudentRowProps {
   actions: StudentRowAction[];
   className?: string;
   indexLabel?: string | number;
+
+  /**
+   * محتوى مخصص يظهر في نهاية الصف.
+   * مفيد لصفحة الدرجات لإظهار حقل إدخال الدرجة.
+   */
+  trailingContent?: React.ReactNode;
 }
 
 const toneClasses: Record<ActionTone, string> = {
@@ -74,12 +80,7 @@ export const StudentRow: React.FC<StudentRowProps> = ({
   subtitle,
   badge,
   badgeTone = 'warning',
-  statusText,
-  statusTone = 'neutral',
-  actions,
-  className,
-  indexLabel
-}) => {
+  status
   const [moreOpen, setMoreOpen] = useState(false);
 
   const visibleMobileActions = actions.filter(action => action.showOnMobile !== false);
@@ -215,52 +216,64 @@ export const StudentRow: React.FC<StudentRowProps> = ({
           </div>
         </div>
 
-        {/* أزرار سطح المكتب */}
-        <div className="hidden md:flex items-center gap-2 shrink-0">
-          {actions.map(action => renderActionButton(action))}
-        </div>
+     {/* محتوى مخصص مثل حقل الدرجة */}
+{trailingContent && (
+  <div className="shrink-0">
+    {trailingContent}
+  </div>
+)}
 
-        {/* أزرار الجوال */}
-        <div className="flex md:hidden items-center gap-1.5 shrink-0">
-          {visibleMobileActions.slice(0, 2).map(action =>
-            renderActionButton(action, { compact: true })
-          )}
+{/* أزرار سطح المكتب */}
+{actions.length > 0 && (
+  <div className="hidden md:flex items-center gap-2 shrink-0">
+    {actions.map(action => renderActionButton(action))}
+  </div>
+)}
 
-          {(hiddenMobileActions.length > 0 || visibleMobileActions.length > 2) && (
-            <div className="relative">
-              <button
-                type="button"
-                aria-label="المزيد"
-                title="المزيد"
-                onClick={handleMoreClick}
-                className="h-9 w-9 rounded-xl border border-borderColor bg-bgSoft text-textSecondary flex items-center justify-center active:scale-95 hover:bg-bgCard hover:text-textPrimary transition-all"
-              >
-                <MoreVertical size={17} />
-              </button>
+{/* أزرار الجوال */}
+{actions.length > 0 && (
+  <div className="flex md:hidden items-center gap-1.5 shrink-0">
+    {visibleMobileActions.slice(0, 2).map(action =>
+      renderActionButton(action, { compact: true })
+    )}
 
-              {moreOpen && (
-                <>
-                  <button
-                    type="button"
-                    aria-label="إغلاق القائمة"
-                    onClick={() => setMoreOpen(false)}
-                    className="fixed inset-0 z-[99998] bg-transparent"
-                  />
+    {(hiddenMobileActions.length > 0 || visibleMobileActions.length > 2) && (
+      <div className="relative">
+        <button
+          type="button"
+          aria-label="المزيد"
+          title="المزيد"
+          onClick={handleMoreClick}
+          className="h-9 w-9 rounded-xl border border-borderColor bg-bgSoft text-textSecondary flex items-center justify-center active:scale-95 hover:bg-bgCard hover:text-textPrimary transition-all"
+        >
+          <MoreVertical size={17} />
+        </button>
 
-                  <div
-                    className={cn(
-                      'absolute top-full mt-2 z-[99999] w-44 rounded-2xl border border-borderColor bg-bgCard shadow-elevated p-2 space-y-1',
-                      dir === 'rtl' ? 'left-0' : 'right-0'
-                    )}
-                  >
-                    {[...visibleMobileActions.slice(2), ...hiddenMobileActions].map(action =>
-                      renderActionButton(action, { inMenu: true })
-                    )}
-                  </div>
-                </>
+        {moreOpen && (
+          <>
+            <button
+              type="button"
+              aria-label="إغلاق القائمة"
+              onClick={() => setMoreOpen(false)}
+              className="fixed inset-0 z-[99998] bg-transparent"
+            />
+
+            <div
+              className={cn(
+                'absolute top-full mt-2 z-[99999] w-44 rounded-2xl border border-borderColor bg-bgCard shadow-elevated p-2 space-y-1',
+                dir === 'rtl' ? 'left-0' : 'right-0'
+              )}
+            >
+              {[...visibleMobileActions.slice(2), ...hiddenMobileActions].map(action =>
+                renderActionButton(action, { inMenu: true })
               )}
             </div>
-          )}
+          </>
+        )}
+      </div>
+    )}
+  </div>
+)}
         </div>
       </div>
     </div>
