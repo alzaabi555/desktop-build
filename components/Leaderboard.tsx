@@ -352,33 +352,20 @@ const Leaderboard: React.FC<LeaderboardProps> = ({ students, classes, onUpdateSt
                             />
                         </div>
 
-                        <div className="overflow-x-auto no-scrollbar flex-1 max-w-[50%]">
-                            <div className="inline-flex items-center p-1 rounded-xl border transition-all bg-bgCard border-borderColor h-full shadow-sm">
-                                <button
-                                    data-voice-command="عرض كل الفرسان عرض كل الفصول في الفرسان"
-                                    aria-label="عرض كل الفرسان"
-                                    title="عرض كل الفرسان"
-                                    onClick={() => setSelectedClass('all')} 
-                                    className={`relative px-4 py-1.5 rounded-lg text-[10px] font-bold whitespace-nowrap transition-all duration-300 ${selectedClass === 'all' ? 'bg-primary text-white shadow-md' : 'text-textSecondary hover:text-textPrimary hover:bg-bgSoft'}`}
-                                >
-                                    {t('all')}
-                                </button>
-                                {safeClasses.map(c => (
-                                    <React.Fragment key={c}>
-                                        <div className="w-[1px] h-4 mx-1 rounded-full shrink-0 bg-borderColor" />
-                                        <button
-                                            data-voice-command={`عرض فصل ${c} في الفرسان فرسان فصل ${c}`}
-                                            aria-label={`عرض فصل ${c} في الفرسان`}
-                                            title={`عرض فصل ${c}`}
-                                            onClick={() => setSelectedClass(c)} 
-                                            className={`relative px-4 py-1.5 rounded-lg text-[10px] font-bold whitespace-nowrap transition-all duration-300 ${selectedClass === c ? 'bg-primary text-white shadow-md' : 'text-textSecondary hover:text-textPrimary hover:bg-bgSoft'}`}
-                                        >
-                                            {c}
-                                        </button>
-                                    </React.Fragment>
-                                ))}
-                            </div>
-                        </div>
+                       <div className="relative w-full md:w-60 shrink-0">
+  <select
+    data-voice-field="فصل الفرسان"
+    aria-label="اختيار فصل الفرسان"
+    value={selectedClass}
+    onChange={(e) => setSelectedClass(e.target.value)}
+    className="w-full h-10 rounded-xl border border-borderColor bg-bgCard px-4 text-xs font-black text-textPrimary outline-none shadow-sm transition-all focus:border-primary/40 focus:bg-bgSoft"
+  >
+    <option value="all">
+      كل الفصول
+    </option>
+
+    {safeClasses.map(c => (
+      <option
                     </div>
                 </div>
             }
