@@ -453,138 +453,162 @@ const AttendanceTracker: React.FC<AttendanceTrackerProps> = ({ students, classes
       }
     >
 
-      {/* ⬇️ محتوى الصفحة المباشر (ينزلق بانسيابية) ⬇️ */}
-      <div className="animate-in fade-in duration-500 pt-2 space-y-4">
-        
-        {/* إحصائيات سريعة للتحضير (تحضير الكل) */}
-        <div className="flex justify-between items-center gap-2 text-center">
-            <button onClick={() => markAll('present')} className={`flex-1 rounded-2xl p-2.5 border shadow-sm active:scale-95 transition-all bg-success/10 border-success/30 hover:bg-success/20`}>
-                <span className={`block text-[10px] font-bold mb-1 text-success`}>{t('presentAll')}</span>
-                <span className={`block text-xl font-black text-success`}>{stats.present}</span>
-            </button>
-            <button onClick={() => markAll('absent')} className={`flex-1 rounded-2xl p-2.5 border shadow-sm active:scale-95 transition-all bg-danger/10 border-danger/30 hover:bg-danger/20`}>
-                <span className={`block text-[10px] font-bold mb-1 text-danger`}>{t('absentAll')}</span>
-                <span className={`block text-xl font-black text-danger`}>{stats.absent}</span>
-            </button>
-            <div className={`flex-1 rounded-2xl p-2.5 border shadow-sm bg-warning/10 border-warning/30`}>
-                <span className={`block text-[10px] font-bold mb-1 text-warning`}>{t('lateAll')}</span>
-                <span className={`block text-xl font-black text-warning`}>{stats.late}</span>
-            </div>
-        </div>
+      {/* ⬇️ محتوى الصفحة المباشر (ينزلق بانسيابية) ⬇️ */}{/* ⬇️ محتوى الصفحة المباشر (ينزلق بانسيابية: true,
+                voiceCommand: `سجل غياب ${student.name} غياب ${student.name} ${student.name} غائب`,
+                ariaLabel: `تسجيل غياب ${student.name}`,
+                title: `تسجيل غياب ${student.name}`,
+                danger: true,
+                onClick: () => toggleAttendance(student.id, 'absent')
+              },
+              {
+                key: 'late',
+                label: t('late'),
+                icon: Clock3,
+                tone: status === 'late' ? 'warning' : 'neutral',
+                showOnMobile: true,
+                voiceCommand: `سجل تأخر ${student.name} تأخير ${student.name} ${student.name} متأخر`,
+                ariaLabel: `تسجيل تأخر ${student.name}`,
+                title: `تسجيل تأخر ${student.name}`,
+                onClick: () => toggleAttendance(student.id, 'late')
+              },
+              {
+                key: 'truant',
+                label: t('truant'),
+                icon: DoorOpen,
+                tone: status === 'truant' ? 'info' : 'neutral',
+                showOnMobile: false,
+                voiceCommand: `سجل هروب ${student.name} سجل تسرب ${student.name} خروج ${student.name}`,
+                ariaLabel: `تسجيل هروب أو تسرب ${student.name}`,
+                title: `تسجيل هروب أو تسرب ${student.name}`,
+                onClick: () => toggleAttendance(student.id, 'truant')
+              }
+            ]}
+          />
+        );
+      })}
+    </div>
+  ) : (
+    <div className="flex flex-col items-center justify-center py-20 opacity-70">
+      <UserCircle2 className="w-16 h-16 mb-4 text-textSecondary/50" />
+      <p className="text-sm font-bold text-textSecondary">
+        {t('noStudents')}
+      </p>
+    </div>
+  )}
+</div>
+<div className="animate-in fade-in duration-500 pt-2 space-y-4">
 
-        {/* قائمة الطلاب الاحترافية */}
-{filteredStudents.length > 0 ? (
-  <div className="space-y-2.5 pb-6">
-    {filteredStudents.map((student, index) => {
-      const status = getStatus(student);
+  {/* إحصائيات سريعة للتحضير */}
+  <div className="flex justify-between items-center gap-2 text-center">
+    <button
+      data-voice-command="حضور الجميع تسجيل حضور الجميع تحضير الجميع"
+      aria-label="تسجيل حضور الجميع"
+      onClick={() => markAll('present')}
+      className="flex-1 rounded-2xl p-2.5 border shadow-sm active:scale-95 transition-all bg-success/10 border-success/30 hover:bg-success/20"
+    >
+      <span className="block text-[10px] font-bold mb-1 text-success">
+        {t('presentAll')}
+      </span>
+      <span className="block text-xl font-black text-success">
+        {stats.present}
+      </span>
+    </button>
 
-      const studentClass =
-        student.classes && student.classes.length > 0
-          ? student.classes[0]
-          : t('unspecified');
+    <button
+      data-voice-command="غياب الجميع تسجيل غياب الجميع"
+      data-voice-danger="true"
+      aria-label="تسجيل غياب الجميع"
+      onClick={() => markAll('absent')}
+      className="flex-1 rounded-2xl p-2.5 border shadow-sm active:scale-95 transition-all bg-danger/10 border-danger/30 hover:bg-danger/20"
+    >
+      <span className="block text-[10px] font-bold mb-1 text-danger">
+        {t('absentAll')}
+      </span>
+      <span className="block text-xl font-black text-danger">
+        {stats.absent}
+      </span>
+    </button>
 
-      const statusText =
-        status === 'present'
-          ? t('present')
-          : status === 'absent'
-            ? t('absent')
-            : status === 'late'
-              ? t('late')
-              : status === 'truant'
-                ? t('truant')
-                : 'لم يسجل بعد';
+    <div className="flex-1 rounded-2xl p-2.5 border shadow-sm bg-warning/10 border-warning/30">
+      <span className="block text-[10px] font-bold mb-1 text-warning">
+        {t('lateAll')}
+      </span>
+      <span className="block text-xl font-black text-warning">
+        {stats.late}
+      </span>
+    </div>
+  </div>
 
-      const statusTone =
-        status === 'present'
-          ? 'success'
-          : status === 'absent'
-            ? 'danger'
-            : status === 'late'
-              ? 'warning'
-              : status === 'truant'
-                ? 'info'
-                : 'neutral';
+  {/* قائمة الطلاب الاحترافية */}
+  {filteredStudents.length > 0 ? (
+    <div className="space-y-2.5 pb-6">
+      {filteredStudents.map((student, index) => {
+        const status = getStatus(student);
 
-      return (
-        <StudentRow
-          key={student.id}
-          student={student}
-          dir={dir}
-          subtitle={studentClass}
-          statusText={statusText}
-          statusTone={statusTone as any}
-          indexLabel={index + 1}
-          className={
-            status === 'present'
-              ? 'border-success/30 bg-success/5'
-              : status === 'absent'
-                ? 'border-danger/30 bg-danger/5'
-                : status === 'late'
-                  ? 'border-warning/30 bg-warning/5'
-                  : status === 'truant'
-                    ? 'border-info/30 bg-info/5'
-                    : ''
-          }
-          actions={[
-            {
-              key: 'present',
-              label: t('present'),
-              icon: CheckCircle2,
-              tone: status === 'present' ? 'success' : 'neutral',
-              showOnMobile: true,
-              voiceCommand: `سجل حضور ${student.name} حضور ${student.name} تحضير ${student.name}`,
-              ariaLabel: `تسجيل حضور ${student.name}`,
-              title: `تسجيل حضور ${student.name}`,
-              onClick: () => toggleAttendance(student.id, 'present')
-            },
-            {
-              key: 'absent',
-              label: t('absent'),
-              icon: X,
-              tone: status === 'absent' ? 'danger' : 'neutral',
-              showOnMobile: true,
-              voiceCommand: `سجل غياب ${student.name} غياب ${student.name} ${student.name} غائب`,
-              ariaLabel: `تسجيل غياب ${student.name}`,
-              title: `تسجيل غياب ${student.name}`,
-              danger: true,
-              onClick: () => toggleAttendance(student.id, 'absent')
-            },
-            {
-              key: 'late',
-              label: t('late'),
-              icon: Clock3,
-              tone: status === 'late' ? 'warning' : 'neutral',
-              showOnMobile: true,
-              voiceCommand: `سجل تأخر ${student.name} تأخير ${student.name} ${student.name} متأخر`,
-              ariaLabel: `تسجيل تأخر ${student.name}`,
-              title: `تسجيل تأخر ${student.name}`,
-              onClick: () => toggleAttendance(student.id, 'late')
-            },
-            {
-              key: 'truant',
-              label: t('truant'),
-              icon: DoorOpen,
-              tone: status === 'truant' ? 'info' : 'neutral',
-              showOnMobile: false,
-              voiceCommand: `سجل هروب ${student.name} سجل تسرب ${student.name} خروج ${student.name}`,
-              ariaLabel: `تسجيل هروب أو تسرب ${student.name}`,
-              title: `تسجيل هروب أو تسرب ${student.name}`,
-              onClick: () => toggleAttendance(student.id, 'truant')
+        const studentClass =
+          student.classes && student.classes.length > 0
+            ? student.classes[0]
+            : t('unspecified');
+
+        const statusText =
+          status === 'present'
+            ? t('present')
+            : status === 'absent'
+              ? t('absent')
+              : status === 'late'
+                ? t('late')
+                : status === 'truant'
+                  ? t('truant')
+                  : 'لم يسجل بعد';
+
+        const statusTone =
+          status === 'present'
+            ? 'success'
+            : status === 'absent'
+              ? 'danger'
+              : status === 'late'
+                ? 'warning'
+                : status === 'truant'
+                  ? 'info'
+                  : 'neutral';
+
+        return (
+          <StudentRow
+            key={student.id}
+            student={student}
+            dir={dir}
+            subtitle={studentClass}
+            statusText={statusText}
+            statusTone={statusTone as any}
+            indexLabel={index + 1}
+            className={
+              status === 'present'
+                ? 'border-success/30 bg-success/5'
+                : status === 'absent'
+                  ? 'border-danger/30 bg-danger/5'
+                  : status === 'late'
+                    ? 'border-warning/30 bg-warning/5'
+                    : status === 'truant'
+                      ? 'border-info/30 bg-info/5'
+                      : ''
             }
-          ]}
-        />
-      );
-    })}
-  </div>
-) : (
-  <div className="flex flex-col items-center justify-center py-20 opacity-70">
-    <UserCircle2 className="w-16 h-16 mb-4 text-textSecondary/50" />
-    <p className="text-sm font-bold text-textSecondary">
-      {t('noStudents')}
-    </p>
-  </div>
-)}
-      </div>
+            actions={[
+              {
+                key: 'present',
+                label: t('present'),
+                icon: CheckCircle2,
+                tone: status === 'present' ? 'success' : 'neutral',
+                showOnMobile: true,
+                voiceCommand: `سجل حضور ${student.name} حضور ${student.name} تحضير ${student.name}`,
+                ariaLabel: `تسجيل حضور ${student.name}`,
+                title: `تسجيل حضور ${student.name}`,
+                onClick: () => toggleAttendance(student.id, 'present')
+              },
+              {
+                key: 'absent',
+                label: t('absent'),
+                icon: X,
+                tone: status === 'absent' ? 'danger' : 'neutral',
 
       {/* 🚀 نافذة إشعار ولي الأمر (DrawerSheet) (لا تُمس، توضع خارج المحتوى) */}
       <DrawerSheet 
