@@ -22,12 +22,6 @@ export interface StudentRowAction {
   ariaLabel?: string;
   title?: string;
   danger?: boolean;
-
-  /**
-   * في الجوال:
-   * true = يظهر كزر مباشر
-   * false = يدخل في قائمة المزيد
-   */
   showOnMobile?: boolean;
 }
 
@@ -42,25 +36,15 @@ interface StudentRowProps {
   actions: StudentRowAction[];
   className?: string;
   indexLabel?: string | number;
-
-  /**
-   * محتوى مخصص يظهر في نهاية الصف.
-   * مفيد لصفحة الدرجات لإظهار حقل إدخال الدرجة.
-   */
   trailingContent?: React.ReactNode;
 }
 
 const toneClasses: Record<ActionTone, string> = {
-  primary:
-    'bg-primary/10 text-primary border-primary/20 hover:bg-primary/15',
-  success:
-    'bg-success/10 text-success border-success/20 hover:bg-success/15',
-  danger:
-    'bg-danger/10 text-danger border-danger/20 hover:bg-danger/15',
-  warning:
-    'bg-warning/10 text-warning border-warning/20 hover:bg-warning/15',
-  info:
-    'bg-info/10 text-info border-info/20 hover:bg-info/15',
+  primary: 'bg-primary/10 text-primary border-primary/20 hover:bg-primary/15',
+  success: 'bg-success/10 text-success border-success/20 hover:bg-success/15',
+  danger: 'bg-danger/10 text-danger border-danger/20 hover:bg-danger/15',
+  warning: 'bg-warning/10 text-warning border-warning/20 hover:bg-warning/15',
+  info: 'bg-info/10 text-info border-info/20 hover:bg-info/15',
   neutral:
     'bg-bgSoft text-textSecondary border-borderColor hover:bg-bgCard hover:text-textPrimary'
 };
@@ -80,7 +64,13 @@ export const StudentRow: React.FC<StudentRowProps> = ({
   subtitle,
   badge,
   badgeTone = 'warning',
-  status
+  statusText,
+  statusTone = 'neutral',
+  actions,
+  className,
+  indexLabel,
+  trailingContent
+}) => {
   const [moreOpen, setMoreOpen] = useState(false);
 
   const visibleMobileActions = actions.filter(action => action.showOnMobile !== false);
@@ -159,7 +149,6 @@ export const StudentRow: React.FC<StudentRowProps> = ({
       )}
     >
       <div className="flex items-center gap-3">
-        {/* صورة الطالب / الترتيب */}
         <div className="relative shrink-0">
           <StudentAvatar
             gender={student.gender}
@@ -173,7 +162,6 @@ export const StudentRow: React.FC<StudentRowProps> = ({
           )}
         </div>
 
-        {/* معلومات الطالب */}
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2 min-w-0">
             <h3 className="font-black text-sm md:text-[15px] text-textPrimary truncate">
@@ -193,11 +181,7 @@ export const StudentRow: React.FC<StudentRowProps> = ({
           </div>
 
           <div className="mt-1 flex items-center gap-2 text-[11px] font-bold text-textSecondary min-w-0">
-            {subtitle && (
-              <span className="truncate">
-                {subtitle}
-              </span>
-            )}
+            {subtitle && <span className="truncate">{subtitle}</span>}
 
             {statusText && (
               <>
@@ -216,65 +200,61 @@ export const StudentRow: React.FC<StudentRowProps> = ({
           </div>
         </div>
 
-     {/* محتوى مخصص مثل حقل الدرجة */}
-{trailingContent && (
-  <div className="shrink-0">
-    {trailingContent}
-  </div>
-)}
-
-{/* أزرار سطح المكتب */}
-{actions.length > 0 && (
-  <div className="hidden md:flex items-center gap-2 shrink-0">
-    {actions.map(action => renderActionButton(action))}
-  </div>
-)}
-
-{/* أزرار الجوال */}
-{actions.length > 0 && (
-  <div className="flex md:hidden items-center gap-1.5 shrink-0">
-    {visibleMobileActions.slice(0, 2).map(action =>
-      renderActionButton(action, { compact: true })
-    )}
-
-    {(hiddenMobileActions.length > 0 || visibleMobileActions.length > 2) && (
-      <div className="relative">
-        <button
-          type="button"
-          aria-label="المزيد"
-          title="المزيد"
-          onClick={handleMoreClick}
-          className="h-9 w-9 rounded-xl border border-borderColor bg-bgSoft text-textSecondary flex items-center justify-center active:scale-95 hover:bg-bgCard hover:text-textPrimary transition-all"
-        >
-          <MoreVertical size={17} />
-        </button>
-
-        {moreOpen && (
-          <>
-            <button
-              type="button"
-              aria-label="إغلاق القائمة"
-              onClick={() => setMoreOpen(false)}
-              className="fixed inset-0 z-[99998] bg-transparent"
-            />
-
-            <div
-              className={cn(
-                'absolute top-full mt-2 z-[99999] w-44 rounded-2xl border border-borderColor bg-bgCard shadow-elevated p-2 space-y-1',
-                dir === 'rtl' ? 'left-0' : 'right-0'
-              )}
-            >
-              {[...visibleMobileActions.slice(2), ...hiddenMobileActions].map(action =>
-                renderActionButton(action, { inMenu: true })
-              )}
-            </div>
-          </>
+        {trailingContent && (
+          <div className="shrink-0">
+            {trailingContent}
+          </div>
         )}
-      </div>
-    )}
-  </div>
-)}
-        </div>
+
+        {actions.length > 0 && (
+          <div className="hidden md:flex items-center gap-2 shrink-0">
+            {actions.map(action => renderActionButton(action))}
+          </div>
+        )}
+
+        {actions.length > 0 && (
+          <div className="flex md:hidden items-center gap-1.5 shrink-0">
+            {visibleMobileActions.slice(0, 2).map(action =>
+              renderActionButton(action, { compact: true })
+            )}
+
+            {(hiddenMobileActions.length > 0 || visibleMobileActions.length > 2) && (
+              <div className="relative">
+                <button
+                  type="button"
+                  aria-label="المزيد"
+                  title="المزيد"
+                  onClick={handleMoreClick}
+                  className="h-9 w-9 rounded-xl border border-borderColor bg-bgSoft text-textSecondary flex items-center justify-center active:scale-95 hover:bg-bgCard hover:text-textPrimary transition-all"
+                >
+                  <MoreVertical size={17} />
+                </button>
+
+                {moreOpen && (
+                  <>
+                    <button
+                      type="button"
+                      aria-label="إغلاق القائمة"
+                      onClick={() => setMoreOpen(false)}
+                      className="fixed inset-0 z-[99998] bg-transparent"
+                    />
+
+                    <div
+                      className={cn(
+                        'absolute top-full mt-2 z-[99999] w-44 rounded-2xl border border-borderColor bg-bgCard shadow-elevated p-2 space-y-1',
+                        dir === 'rtl' ? 'left-0' : 'right-0'
+                      )}
+                    >
+                      {[...visibleMobileActions.slice(2), ...hiddenMobileActions].map(action =>
+                        renderActionButton(action, { inMenu: true })
+                      )}
+                    </div>
+                  </>
+                )}
+              </div>
+            )}
+          </div>
+        )}
       </div>
     </div>
   );
