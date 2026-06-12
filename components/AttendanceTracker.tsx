@@ -1,5 +1,139 @@
 import React, { useState, useMemo, useEffect } from 'react';
-import { Student, Attendance {import { Student, AttendanceStatus } from '../types';
+import { Student, AttendanceStatus } from '../types';
+import {
+  MessageCircle,
+  Loader2,
+  Share2,
+  DoorOpen,
+  UserCircle2,
+  ChevronLeft,
+  ChevronRight,
+  Search,
+  X,
+  Send,
+  CheckCircle2,
+  Clock3
+} from 'lucide-react';
+import { Browser } from '@capacitor/browser';
+import * as XLSX from 'xlsx';
+import { Filesystem, Directory } from '@capacitor/filesystem';
+import { Share } from '@capacitor/share';
+import { Capacitor } from '@capacitor/core';
+import { StudentRow } from './StudentRow';
+import { useApp } from '../context/AppContext';
+import { Drawer as DrawerSheet } from './ui/Drawer';
+import PageLayout from '../components/PageLayout';
+
+const ADMIN_APP_URL =
+  'https://script.google.com/macros/s/AKfycbwZHhZ-RPWUpBGIlw0qTFPUmOPmq9WpcvW4WLklcjb_A9U3MW0luIXYPnHznI29ThpbMA/exec';
+
+interface AttendanceTrackerProps {
+  students: Student[];
+  classes: string[];
+  setStudents: React.Dispatch<React.SetStateAction<Student[]>>;
+}
+
+const AttendanceTracker: React.FC<AttendanceTrackerProps> = ({
+  students,
+  classes,
+  setStudents
+}) => {
+  const { t, dir, language, teacherInfo } = useApp();
+
+  const today = new Date();
+
+  const [selectedDate, setSelectedDate] = useState(
+    today.toLocaleDateString('en-CA')
+  );
+
+  const [selectedGrade, setSelectedGrade] = useState<string>(
+    () => sessionStorage.getItem('rased_grade') || 'all'
+  );
+
+  const [classFilter, setClassFilter] = useState<string>(
+    () => sessionStorage.getItem('rased_class') || 'all'
+  );
+
+  const [searchTerm, setSearchTerm] = useState('');
+  const [isExportingExcel, setIsExportingExcel] = useState(false);
+
+  const [notificationTarget, setNotificationTarget] = useState<{
+    student: Student;
+    type: 'absent' | 'late' | 'truant';
+  } | null>(null);
+
+  const [isSyncingAdmin, setIsSyncingAdmin] = useState(false);
+  const [syncSuccess, setSyncSuccess] = useState(false);
+  const [showPeriodSelector, setShowPeriodSelector] = useState(false);
+
+  const isRamadan = false;
+
+  useEffect(() => {
+    sessionStorage.setItem('rased_grade', selectedGrade);
+    sessionStorage.setItem('rased_class', classFilter);
+  }, [selectedGrade, classFilter]);
+
+  const [weekOffset, setWeekOffset] = useState(0);
+
+  const weekDates = useMemo(() => {
+    const dates = [];
+    const startOfWeek = new Date();
+
+    startOfWeek.setDate(today.getDate() - today.getDay() + weekOffset * 7);
+
+    for (let i = 0; i < 5; i++) {
+      const d = new Date(startOfWeek);
+      d.setDate(startOfWeek.getDate() + i);
+      dates.push(d);
+    }
+
+    return dates;
+  }, [weekOffset]);
+
+  const getStatus = (student: Student) => {
+    return student.attendance.find(a => a.date === selectedDate)?.status;
+  };
+
+  const toggleAttendance = (studentId: string, status: AttendanceStatus) => {
+    setStudents(prev =>
+      prev.map(s => {
+        if (s.id !== studentId) return s;
+
+        const filtered = s.attendance.filter(a => a.date !== selectedDate);
+        const currentStatus = s.attendance.find(
+          a => a.date === selectedDate
+        )?.status;
+
+        const newStudent = {
+          ...s,
+          attendance:
+            currentStatus === status
+              ? filtered
+              : [...filtered, { date: selectedDate, status }]
+        };
+
+        if (
+          (status === 'absent' ||
+            status === 'late' ||
+            status === 'truant') &&
+          currentStatus !== status
+        ) {
+          setTimeout(
+            () => setNotificationTarget({ student: newStudent, type: status }),
+            50
+          );
+        }
+
+        return newStudent;
+      })
+    );
+  };
+
+  const markAll = (status: AttendanceStatus) => {
+    const visibleIds = new Set(filteredStudents.map(s => s.id));
+
+    setStudents(prev =>
+      prev.map(s => {
         if (!visibleIds.has(s.id)) return s;
 
         const filtered = s.attendance.filter(a => a.date !== selectedDate);
@@ -791,136 +925,3 @@ import { Student, Attendance {import { Student, AttendanceStatus } from '../type
 };
 
 export default AttendanceTracker;
-import {
-  MessageCircle,
-  Loader2,
-  Share2,
-  DoorOpen,
-  UserCircle2,
-  ChevronLeft,
-  ChevronRight,
-  Search,
-  X,
-  Send,
-  CheckCircle2,
-  Clock3
-} from 'lucide-react';
-import { Browser } from '@capacitor/browser';
-import * as XLSX from 'xlsx';
-import { Filesystem, Directory } from '@capacitor/filesystem';
-import { Share } from '@capacitor/share';
-import { Capacitor } from '@capacitor/core';
-import { StudentRow } from './StudentRow';
-import { useApp } from '../context/AppContext';
-import { Drawer as DrawerSheet } from './ui/Drawer';
-import PageLayout from '../components/PageLayout';
-
-const ADMIN_APP_URL =
-  'https://script.google.com/macros/s/AKfycbwZHhZ-RPWUpBGIlw0qTFPUmOPmq9WpcvW4WLklcjb_A9U3MW0luIXYPnHznI29ThpbMA/exec';
-
-interface AttendanceTrackerProps {
-  students: Student[];
-  classes: string[];
-  setStudents: React.Dispatch<React.SetStateAction<Student[]>>;
-}
-
-const AttendanceTracker: React.FC<AttendanceTrackerProps> = ({
-  students,
-  classes,
-  setStudents
-}) => {
-  const { t, dir, language, teacherInfo } = useApp();
-
-  const today = new Date();
-
-  const [selectedDate, setSelectedDate] = useState(
-    today.toLocaleDateString('en-CA')
-  );
-
-  const [selectedGrade, setSelectedGrade] = useState<string>(
-    () => sessionStorage.getItem('rased_grade') || 'all'
-  );
-
-  const [classFilter, setClassFilter] = useState<string>(
-    () => sessionStorage.getItem('rased_class') || 'all'
-  );
-
-  const [searchTerm, setSearchTerm] = useState('');
-  const [isExportingExcel, setIsExportingExcel] = useState(false);
-
-  const [notificationTarget, setNotificationTarget] = useState<{
-    student: Student;
-    type: 'absent' | 'late' | 'truant';
-  } | null>(null);
-
-  const [isSyncingAdmin, setIsSyncingAdmin] = useState(false);
-  const [syncSuccess, setSyncSuccess] = useState(false);
-  const [showPeriodSelector, setShowPeriodSelector] = useState(false);
-
-  const isRamadan = false;
-
-  useEffect(() => {
-    sessionStorage.setItem('rased_grade', selectedGrade);
-    sessionStorage.setItem('rased_class', classFilter);
-  }, [selectedGrade, classFilter]);
-
-  const [weekOffset, setWeekOffset] = useState(0);
-
-  const weekDates = useMemo(() => {
-    const dates = [];
-    const startOfWeek = new Date();
-
-    startOfWeek.setDate(today.getDate() - today.getDay() + weekOffset * 7);
-
-    for (let i = 0; i < 5; i++) {
-      const d = new Date(startOfWeek);
-      d.setDate(startOfWeek.getDate() + i);
-      dates.push(d);
-    }
-
-    return dates;
-  }, [weekOffset]);
-
-  const getStatus = (student: Student) => {
-    return student.attendance.find(a => a.date === selectedDate)?.status;
-  };
-
-  const toggleAttendance = (studentId: string, status: AttendanceStatus) => {
-    setStudents(prev =>
-      prev.map(s => {
-        if (s.id !== studentId) return s;
-
-        const filtered = s.attendance.filter(a => a.date !== selectedDate);
-        const currentStatus = s.attendance.find(
-          a => a.date === selectedDate
-        )?.status;
-
-        const newStudent = {
-          ...s,
-          attendance:
-            currentStatus === status
-              ? filtered
-              : [...filtered, { date: selectedDate, status }]
-        };
-
-        if (
-          (status === 'absent' ||
-            status === 'late' ||
-            status === 'truant') &&
-          currentStatus !== status
-        ) {
-          setTimeout(
-            () => setNotificationTarget({ student: newStudent, type: status }),
-            50
-          );
-        }
-
-        return newStudent;
-      })
-    );
-  };
-
-  const markAll = (status: AttendanceStatus) => {
-    const visibleIds = new Set(filteredStudents.map(s => s.id));
-
-    setStudents(prev =>
