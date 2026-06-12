@@ -301,16 +301,19 @@ const GradeBook: React.FC<GradeBookProps> = ({
            if (g2) sem2Total += Number(g2.score);
         });
 
-        // حساب النتيجة النهائية (المتوسط)
-        const finalAverage = (sem1Total + sem2Total) / 2;
-        
-        // إدراج البيانات كأعمدة جديدة في نهاية التقرير
-        row['مجموع الفصل الأول'] = sem1Total;
-        row['مجموع الفصل الثاني'] = sem2Total;
-        row['النتيجة النهائية (المعدل)'] = finalAverage;
-        row['التقدير العام'] = getGradeSymbol(finalAverage); // نستخدم نفس دالة الرمز المعتمدة لديك
-        // ========================================================
+       // حساب النتيجة النهائية للعام الدراسي مع جبر 0.5 إلى درجة كاملة
+const finalAverageRaw = (sem1Total + sem2Total) / 2;
 
+// 80.5 تصبح 81
+// 80.4 تصبح 80
+const finalAverage = Math.round(finalAverageRaw);
+
+// إدراج البيانات كأعمدة جديدة في نهاية التقرير
+row['مجموع الفصل الأول'] = sem1Total;
+row['مجموع الفصل الثاني'] = sem2Total;
+row['النتيجة النهائية (المعدل)'] = finalAverage;
+row['التقدير العام'] = getGradeSymbol(finalAverage);
+        
         return row;
       });
 
