@@ -391,57 +391,83 @@ const Leaderboard: React.FC<LeaderboardProps> = ({ students, classes, onUpdateSt
 
             <div className="animate-in fade-in duration-500 pt-4">
                 
-                {topThree.length > 0 && (
-                    <div className="flex justify-center items-end gap-2 md:gap-6 py-4 mb-6">
-                        {[topThree[1], topThree[0], topThree[2]].map((s, i) => {
-                            if (!s) return null; 
-                            return (
-                            <div key={s.id} className={`flex flex-col items-center ${i === 1 ? 'z-10 -mb-4' : 'opacity-90'}`}>
-                                <div className="relative cursor-p
-                                    <div
-  className="relative cursor-pointer"
-  role="button"
-  tabIndex={0}
-  data-voice-command={`إضافة نقاط ${s.name} أضف نقاط ${s.name} عزز ${s.name} تكريم ${s.name}`}
-  aria-label={`إضافة نقاط ${s.name}`}
-  title={`إضافة نقاط ${s.name}`}
-  onClick={() => handleAddPoints(s)}
->
-                               onClick={() => handleAddPoints(s)}>
-                                    {i === 1 && <Crown className="w-10 h-10 text-warning fill-warning absolute -top-8 left-1/2 -translate-x-1/2 animate-pulse" />}
-                                    <div className={`rounded-full border-4 shadow-xl overflow-hidden mb-2 bg-bgCard transform transition-transform ${i === 1 ? 'w-24 h-24 md:w-32 md:h-32 border-warning scale-110' : 'w-20 h-20 md:w-24 md:h-24 border-borderColor'}`}>
-                                        <StudentAvatar gender={s.gender} className="w-full h-full" />
-                                    </div>
-                                </div>
-                                
-                                <div className={`glass-panel px-3 py-2 rounded-xl text-center border border-borderColor shadow-sm w-28 md:w-36 transition-colors`}>
-                                    <h3 className={`font-black text-xs md:text-sm truncate text-textPrimary`} title={s.name}>{getShortName(s.name)}</h3>
-                                    <span className="text-warning font-bold text-xs" dir="ltr">{s.monthlyPoints}</span>
-                                </div>
-                                <div className="flex gap-1 mt-2 w-full justify-center">
-<button
-    data-voice-command={`إصدار شهادة ${s.name} فتح شهادة ${s.name} شهادة ${s.name}`}
-    aria-label={`إصدار شهادة ${s.name}`}
-    title={`إصدار شهادة ${s.name}`}
-    onClick={() => setCertificateStudent(s)}
-    className="text-[10px] px-2 py-1 rounded-lg flex items-center justify-center gap-1 shadow-md transition-colors bg-primary/10 text-primary border border-primary/20 hover:bg-primary/20"
->                                        <Award size={12} /> {t('certificateBtn')}
-                                    </button>
-<button
-    data-voice-command={`خصم نقاط ${s.name} تصحيح نقاط ${s.name} حذف نقاط ${s.name}`}
-    data-voice-danger="true"
-    aria-label={`خصم نقاط ${s.name}`}
-    title={`خصم نقاط ${s.name}`}
-    onClick={() => handleDeductPoint(s)}
-    className="text-[10px] px-2 py-1 rounded-lg shadow-sm transition-colors flex items-center justify-center bg-danger/10 text-danger hover:bg-danger/20"
->
-                <MinusCircle size={12} />
-                                    </button>
-                                </div>
-                            </div>
-                        )})}
-                    </div>
-                )}
+        {topThree.length > 0 && (
+  <div className="flex justify-center items-end gap-2 md:gap-6 py-4 mb-6">
+    {[topThree[1], topThree[0], topThree[2]].map((s, i) => {
+      if (!s) return null;
+
+      return (
+        <div
+          key={s.id}
+          className={`flex flex-col items-center ${
+            i === 1 ? 'z-10 -mb-4' : 'opacity-90'
+          }`}
+        >
+          <div
+            className="relative cursor-pointer"
+            role="button"
+            tabIndex={0}
+            data-voice-command={`إضافة نقاط ${s.name} أضف نقاط ${s.name} عزز ${s.name} تكريم ${s.name}`}
+            aria-label={`إضافة نقاط ${s.name}`}
+            title={`إضافة نقاط ${s.name}`}
+            onClick={() => handleAddPoints(s)}
+          >
+            {i === 1 && (
+              <Crown className="w-10 h-10 text-warning fill-warning absolute -top-8 left-1/2 -translate-x-1/2 animate-pulse" />
+            )}
+
+            <div
+              className={`rounded-full border-4 shadow-xl overflow-hidden mb-2 bg-bgCard transform transition-transform ${
+                i === 1
+                  ? 'w-24 h-24 md:w-32 md:h-32 border-warning scale-110'
+                  : 'w-20 h-20 md:w-24 md:h-24 border-borderColor'
+              }`}
+            >
+              <StudentAvatar gender={s.gender} className="w-full h-full" />
+            </div>
+          </div>
+
+          <div className="glass-panel px-3 py-2 rounded-xl text-center border border-borderColor shadow-sm w-28 md:w-36 transition-colors">
+            <h3
+              className="font-black text-xs md:text-sm truncate text-textPrimary"
+              title={s.name}
+            >
+              {getShortName(s.name)}
+            </h3>
+
+            <span className="text-warning font-bold text-xs" dir="ltr">
+              {s.monthlyPoints}
+            </span>
+          </div>
+
+          <div className="flex gap-1 mt-2 w-full justify-center">
+            <button
+              data-voice-command={`إصدار شهادة ${s.name} فتح شهادة ${s.name} شهادة ${s.name}`}
+              aria-label={`إصدار شهادة ${s.name}`}
+              title={`إصدار شهادة ${s.name}`}
+              onClick={() => setCertificateStudent(s)}
+              className="text-[10px] px-2 py-1 rounded-lg flex items-center justify-center gap-1 shadow-md transition-colors bg-primary/10 text-primary border border-primary/20 hover:bg-primary/20"
+            >
+              <Award size={12} />
+              {t('certificateBtn')}
+            </button>
+
+            <button
+              data-voice-command={`خصم نقاط ${s.name} تصحيح نقاط ${s.name} حذف نقاط ${s.name}`}
+              data-voice-danger="true"
+              aria-label={`خصم نقاط ${s.name}`}
+              title={`خصم نقاط ${s.name}`}
+              onClick={() => handleDeductPoint(s)}
+              className="text-[10px] px-2 py-1 rounded-lg shadow-sm transition-colors flex items-center justify-center bg-danger/10 text-danger hover:bg-danger/20"
+            >
+              <MinusCircle size={12} />
+            </button>
+          </div>
+        </div>
+      );
+    })}
+  </div>
+)}
 
                <div className="space-y-2.5 pb-8">
     {restOfStudents.map((s, index) => {
