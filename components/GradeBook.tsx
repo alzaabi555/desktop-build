@@ -672,7 +672,7 @@ const GradeBook: React.FC<GradeBookProps> = ({
       }
     >
 
-      {/* ⬇️ محتوى الصفحة المباشر: قائمة الطلاب الاحترافية للدرجات ⬇️ */}
+     {/* ⬇️ محتوى الصفحة المباشر: قائمة الطلاب الاحترافية للدرجات ⬇️ */}
 <div className="animate-in fade-in duration-500 pt-2">
   {displayedStudents.length > 0 ? (
     <div className="space-y-2.5 pb-6">
@@ -680,7 +680,6 @@ const GradeBook: React.FC<GradeBookProps> = ({
         const currentGrade = getStudentGradeForActiveTool(student);
         const semGrades = getSemesterGrades(student, currentSemester);
         const totalScore = semGrades.reduce((acc, curr) => acc + (curr.score || 0), 0);
-        const symbolColor = getSymbolColor(totalScore);
 
         const activeTool = tools.find(t => t.id === activeToolId);
         const toolNameNormalized = normalizeText(activeTool?.name || '');
@@ -732,31 +731,23 @@ const GradeBook: React.FC<GradeBookProps> = ({
                   : ''
             }
             trailingContent={
-              <div className="flex items-center gap-2">
-                <div className="hidden sm:flex flex-col items-center justify-center min-w-12">
-                  <span className={`text-[10px] font-black px-2 py-0.5 rounded-lg ${symbolColor}`}>
-                    {gradeSymbol}
-                  </span>
-                </div>
-
-                <input
-                  type="tel"
-                  maxLength={3}
-                  value={currentGrade}
-                  onChange={e => handleGradeChange(student.id, e.target.value)}
-                  placeholder="-"
-                  data-voice-field={`درجة ${student.name}`}
-                  aria-label={`درجة ${student.name}`}
-                  title={`درجة ${student.name}`}
-                  className={`w-16 md:w-20 h-10 rounded-xl text-center font-black text-base outline-none border-2 transition-all bg-bgCard border-borderColor focus:border-primary text-textPrimary placeholder:text-textSecondary ${
-                    needsSummon
-                      ? 'border-danger/50 text-danger bg-danger/5'
-                      : currentGrade === ''
-                        ? 'border-warning/40 bg-warning/5'
-                        : ''
-                  }`}
-                />
-              </div>
+              <input
+                type="tel"
+                maxLength={3}
+                value={currentGrade}
+                onChange={e => handleGradeChange(student.id, e.target.value)}
+                placeholder="-"
+                data-voice-field={`درجة ${student.name}`}
+                aria-label={`درجة ${student.name}`}
+                title={`درجة ${student.name}`}
+                className={`w-16 md:w-20 h-10 rounded-xl text-center font-black text-base outline-none border-2 transition-all bg-bgCard border-borderColor focus:border-primary text-textPrimary placeholder:text-textSecondary ${
+                  needsSummon
+                    ? 'border-danger/50 text-danger bg-danger/5'
+                    : currentGrade === ''
+                      ? 'border-warning/40 bg-warning/5'
+                      : ''
+                }`}
+              />
             }
             actions={
               needsSummon
@@ -796,16 +787,6 @@ const GradeBook: React.FC<GradeBookProps> = ({
     </div>
   )}
 </div>
-            </div>
-          );
-        }) : (
-          <div className="col-span-full py-20 flex flex-col items-center justify-center opacity-70">
-            <Filter className="w-16 h-16 mb-4 text-textSecondary" />
-            <p className="font-bold text-base text-textSecondary">{showMissingGradesOnly ? 'ممتاز! تم رصد الدرجات لجميع الطلاب في هذه الأداة 🎉' : 'لا يوجد طلاب مطابقين للبحث'}</p>
-          </div>
-        )}
-      </div>
-
       {/* ================= النوافذ المنزلقة (توضع كما هي بأمان) ================= */}
 
       {/* 🌟 1. اللوحة المنزلقة: إدارة أدوات التقويم */}
