@@ -1,12 +1,26 @@
 import React, { useState, useMemo, useEffect } from 'react';
 import { Student, AttendanceStatus } from '../types';
-import { MessageCircle, Loader2, Share2, DoorOpen, UserCircle2, ChevronLeft, ChevronRight, Search, X, Send, CheckCircle2 } from 'lucide-react'; // 💉 تم إضافة Send, CheckCircle2 هنا
+import {
+  MessageCircle,
+  Loader2,
+  Share2,
+  DoorOpen,
+  UserCircle2,
+  ChevronLeft,
+  ChevronRight,
+  Search,
+  X,
+  Send,
+  CheckCircle2,
+  Clock3
+} from 'lucide-react';
 import { Browser } from '@capacitor/browser';
 import * as XLSX from 'xlsx';
 import { Filesystem, Directory } from '@capacitor/filesystem';
 import { Share } from '@capacitor/share';
 import { Capacitor } from '@capacitor/core';
 import { StudentAvatar } from './StudentAvatar';
+import { StudentRow } from './StudentRow';
 import { useApp } from '../context/AppContext'; 
 import { Drawer as DrawerSheet } from './ui/Drawer';
 import PageLayout from '../components/PageLayout'; // 💉 استدعاء الغلاف الشامل
@@ -35,7 +49,7 @@ const AttendanceTracker: React.FC<AttendanceTrackerProps> = ({ students, classes
   const [isSyncingAdmin, setIsSyncingAdmin] = useState(false);
   const [syncSuccess, setSyncSuccess] = useState(false);
 
-  const isRamadan = true;
+  const isRamadan = false;
 
   useEffect(() => {
       sessionStorage.setItem('rased_grade', selectedGrade);
@@ -284,12 +298,14 @@ const AttendanceTracker: React.FC<AttendanceTrackerProps> = ({ students, classes
         // 💉 البحث السريع بجانب العنوان
         <div className="relative group hidden sm:block w-32 md:w-48 transition-all duration-300 focus-within:w-64">
             <Search className={`absolute ${dir === 'rtl' ? 'right-3' : 'left-3'} top-1/2 -translate-y-1/2 w-4 h-4 text-textSecondary`} />
-            <input 
-                type="text" 
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                placeholder={t('searchStudentPlaceholder')} 
-                className={`w-full border rounded-xl py-2 ${dir === 'rtl' ? 'pr-9 pl-3' : 'pl-9 pr-3'} text-xs font-bold outline-none transition-all bg-bgCard border-borderColor text-textPrimary placeholder:text-textSecondary focus:bg-bgSoft`}
+           <input
+    type="text"
+    data-voice-field="بحث الحضور"
+    aria-label="بحث الحضور"
+    value={searchTerm}
+    onChange={(e) => setSearchTerm(e.target.value)}
+    placeholder={t('searchStudentPlaceholder')} 
+    className={`w-full border rounded-xl py-2 ${dir === 'rtl' ? 'pr-9 pl-3' : 'pl-9 pr-3'} text-xs font-bold outline-none transition-all bg-bgCard border-borderColor text-textPrimary placeholder:text-textSecondary focus:bg-bg`}
             />
         </div>
       }
@@ -299,43 +315,76 @@ const AttendanceTracker: React.FC<AttendanceTrackerProps> = ({ students, classes
         <div className="flex items-center gap-2 relative">
             <div className="sm:hidden relative w-24">
                 <Search className={`absolute ${dir === 'rtl' ? 'right-2' : 'left-2'} top-1/2 -translate-y-1/2 w-3 h-3 text-textSecondary`} />
-                <input 
-                    type="text" 
-                    value={searchTerm}
-                    onChange={(e) => setSearchTerm(e.target.value)}
-                    placeholder={t('searchStudentPlaceholder')} 
-                    className={`w-full border rounded-xl py-2 ${dir === 'rtl' ? 'pr-7 pl-2' : 'pl-7 pr-2'} text-[10px] font-bold outline-none transition-all bg-bgCard border-borderColor text-textPrimary placeholder:text-textSecondary focus:bg-bgSoft`}
+                <input
+    type="text"
+    data-voice-field="بحث الحضور"
+    aria-label="بحث الحضور"
+    value={searchTerm}
+    onChange={(e) => setSearchTerm(e.target.value)}
+    placeholder={t('searchStudentPlaceholder')} 
+    className={`w-full border rounded-xl py-2 ${dir === 'rtl' ? 'pr-7 pl-2' : 'pl-7 pr-2'} text-[10px] font-bold outline-none transition-all bg-bg`}
                 />
             </div>
 
             {/* 🚀 زر الإرسال للإدارة المزروع (يفتح النافذة الآن بدلاً من الإرسال المباشر) */}
-            <button 
-                onClick={initiateAdminSync} 
-                disabled={isSyncingAdmin} 
-                className={`w-10 h-10 shrink-0 rounded-xl border flex items-center justify-center active:scale-95 transition-all ${syncSuccess ? 'bg-emerald-100 text-emerald-600 border-emerald-200' : 'bg-indigo-50 border-indigo-200 text-indigo-600 hover:bg-indigo-100'}`}
-                title="إرسال تقرير اليوم للإدارة"
-            >
+            <button
+    data-voice-command="إرسال تقرير الحضور للإدارة رفع الغياب للإدارة إرسال غياب اليوم للإدارة"
+    aria-label="إرسال تقرير الحضور للإدارة"
+    onClick={initiateAdminSync}
+    disabled={isSyncingAdmin}
+    className={`w-10 h-10 shrink-0 rounded-xl border flex items-center justify-center active:scale-95 transition-all shadow-sm ${
+        syncSuccess
+            ? 'bg-success/10 text-success border-success/30'
+            : 'bg-primary/10 border-primary/20 text-primary hover:bg-primary/15'
+    }`}
+    title="إرسال تقرير اليوم للإدارة"
+>
+``
+           
                 {isSyncingAdmin ? <Loader2 className="w-5 h-5 animate-spin"/> : syncSuccess ? <CheckCircle2 className="w-5 h-5" /> : <Send className="w-5 h-5"/>}
             </button>
 
             {/* 💉 نافذة اختيار الحصة المنبثقة (Modal) */}
-            {showPeriodSelector && (
-                <div className="absolute top-12 left-0 w-48 bg-bgCard border border-borderColor shadow-xl rounded-xl p-3 z-50 animate-in fade-in zoom-in duration-200">
-                    <p className="text-xs font-bold text-center mb-3 text-textPrimary">هذا الغياب لأي حصة؟</p>
-                    <div className="flex flex-col gap-2">
-                        <button onClick={() => executeAdminSync("الحصة الأولى")} className="py-2 px-3 bg-indigo-50 text-indigo-700 hover:bg-indigo-100 rounded-lg text-xs font-bold transition-colors">الحصة الأولى</button>
-                        <button onClick={() => executeAdminSync("الحصة الخامسة")} className="py-2 px-3 bg-indigo-50 text-indigo-700 hover:bg-indigo-100 rounded-lg text-xs font-bold transition-colors">الحصة الخامسة</button>
-                        <button onClick={() => setShowPeriodSelector(false)} className="py-2 px-3 mt-1 bg-bgSoft text-textSecondary hover:text-danger rounded-lg text-xs font-bold transition-colors">إلغاء</button>
-                    </div>
+            <div className="flex flex-col gap-2">
+    <button
+        data-voice-command="الحصة الأولى حصة أولى الأولى"
+        aria-label="الحصة الأولى"
+        onClick={() => executeAdminSync("الحصة الأولى")}
+        className="py-2 px-3 bg-primary/10 text-primary hover:bg-primary/15 rounded-lg text-xs font-bold transition-colors"
+    >
+        الحصة الأولى
+    </button>
+
+    <button
+        data-voice-command="الحصة الخامسة حصة خامسة الخامسة"
+        aria-label="الحصة الخامسة"
+        onClick={() => executeAdminSync("الحصة الخامسة")}
+        className="py-2 px-3 bg-primary/10 text-primary hover:bg-primary/15 rounded-lg text-xs font-bold transition-colors"
+    >
+        الحصة الخامسة
+    </button>
+
+    <button
+        data-voice-command="إلغاء اختيار الحصة إلغاء إرسال التقرير"
+        aria-label="إلغاء اختيار الحصة"
+        onClick={() => setShowPeriodSelector(false)}
+        className="py-2 px-3 mt-1 bg-bgSoft text-textSecondary hover:text-danger rounded-lg text-xs font-bold transition-colors"
+    >
+        إلغاء
+    </button>
+</div>
                 </div>
             )}
 
-            <button 
-                onClick={handleExportDailyExcel} 
-                disabled={isExportingExcel} 
-                className={`w-10 h-10 shrink-0 rounded-xl border flex items-center justify-center active:scale-95 transition-all bg-bgSoft border-borderColor text-textPrimary hover:bg-bgCard`}
-                title={t('exportRecord')}
-            >
+            <button
+    data-voice-command="تصدير الحضور تصدير سجل الحضور مشاركة سجل الحضور"
+    aria-label="تصدير سجل الحضور"
+    onClick={handleExportDailyExcel}
+    disabled={isExportingExcel}
+    className="w-10 h-10 shrink-0 rounded-xl border flex items-center justify-center active:scale-95 transition-all bg-bgCard border-borderColor text-textPrimary hover:bg-bgSoft shadow-sm"
+    title={t('exportRecord')}
+>
+         
                 {isExportingExcel ? <Loader2 className="w-5 h-5 animate-spin"/> : <Share2 className="w-5 h-5"/>}
             </button>
         </div>
@@ -369,7 +418,7 @@ const AttendanceTracker: React.FC<AttendanceTrackerProps> = ({ students, classes
 
             {/* شريط الفصول */}
             <div className="w-full overflow-x-auto no-scrollbar pb-1">
-                <div className={`inline-flex items-center p-1 rounded-full border backdrop-blur-md transition-all bg-bgSoft border-borderColor`}>
+                <div className="inline-flex items-center p-1 rounded-full border transition-all bg-bgCard border-borderColor shadow-sm">
                     <button 
                         onClick={() => { setSelectedGrade('all'); setClassFilter('all'); }} 
                         className={`relative px-5 py-2 rounded-full text-[10px] font-bold whitespace-nowrap transition-all duration-300 ${selectedGrade === 'all' && classFilter === 'all' ? 'bg-bgCard text-primary shadow-sm' : 'text-textSecondary hover:text-textPrimary hover:bg-bgCard/50'}`}
@@ -423,61 +472,118 @@ const AttendanceTracker: React.FC<AttendanceTrackerProps> = ({ students, classes
             </div>
         </div>
 
-        {/* كروت الطلاب */}
-        {filteredStudents.length > 0 ? (
-            <div className="grid grid-cols-2 gap-3">
-                {filteredStudents.map(student => {
-                    const status = getStatus(student);
-                    
-                    let cardStyle = 'border-borderColor';
-                    if (status === 'present') cardStyle = 'border-success/50 shadow-[0_0_10px_rgba(34,197,94,0.15)] bg-success/5';
-                    else if (status === 'absent') cardStyle = 'border-danger/50 shadow-[0_0_10px_rgba(239,68,68,0.15)] bg-danger/5';
-                    else if (status === 'late') cardStyle = 'border-warning/50 shadow-[0_0_10px_rgba(245,158,11,0.15)] bg-warning/5';
-                    else if (status === 'truant') cardStyle = 'border-info/50 shadow-[0_0_10px_rgba(6,182,212,0.15)] bg-info/5';
+        {/* قائمة الطلاب الاحترافية */}
+{filteredStudents.length > 0 ? (
+    <div className="space-y-2.5 pb-6">
+        {filteredStudents.map((student, index) => {
+            const status = getStatus(student);
 
-                    return (
-                        <div key={student.id} className={`glass-panel rounded-[1.5rem] border flex flex-col items-center overflow-hidden transition-all duration-300 hover:-translate-y-1 ${cardStyle}`}>
-                            <div className="p-4 flex flex-col items-center w-full">
-                                <StudentAvatar gender={student.gender} className="w-16 h-16" />
-                                <h3 className={`font-bold text-sm text-center line-clamp-1 w-full mt-3 text-textPrimary`}>{student.name}</h3>
-                                <span className={`text-[10px] px-2 py-0.5 rounded-full mt-1 font-bold bg-bgSoft text-textSecondary`}>{student.classes[0]}</span>
-                            </div>
+            const studentClass =
+                student.classes && student.classes.length > 0
+                    ? student.classes[0]
+                    : t('unspecified');
 
-                            <div className={`flex w-full border-t divide-x ${dir === 'rtl' ? 'divide-x-reverse' : ''} border-borderColor divide-borderColor`}>
-                                
-                                <button onClick={() => toggleAttendance(student.id, 'present')} className={`flex-1 py-3 flex flex-col items-center justify-center gap-1 transition-colors ${status === 'present' ? 'bg-success/20 text-success' : 'text-textSecondary hover:bg-bgSoft hover:text-success'}`}>
-                                    <div className={`w-6 h-6 rounded-full flex items-center justify-center transition-colors ${status === 'present' ? 'bg-success text-white' : 'bg-bgSoft text-textSecondary'}`}>✓</div>
-                                    <span className="text-[10px] font-bold">{t('present')}</span>
-                                </button>
+            const statusText =
+                status === 'present'
+                    ? t('present')
+                    : status === 'absent'
+                        ? t('absent')
+                        : status === 'late'
+                            ? t('late')
+                            : status === 'truant'
+                                ? t('truant')
+                                : 'لم يسجل بعد';
 
-                                <button onClick={() => toggleAttendance(student.id, 'absent')} className={`flex-1 py-3 flex flex-col items-center justify-center gap-1 transition-colors ${status === 'absent' ? 'bg-danger/20 text-danger' : 'text-textSecondary hover:bg-bgSoft hover:text-danger'}`}>
-                                    <div className={`w-6 h-6 rounded-full flex items-center justify-center transition-colors ${status === 'absent' ? 'bg-danger text-white' : 'bg-bgSoft text-textSecondary'}`}>✕</div>
-                                    <span className="text-[10px] font-bold">{t('absent')}</span>
-                                </button>
+            const statusTone =
+                status === 'present'
+                    ? 'success'
+                    : status === 'absent'
+                        ? 'danger'
+                        : status === 'late'
+                            ? 'warning'
+                            : status === 'truant'
+                                ? 'info'
+                                : 'neutral';
 
-                                <button onClick={() => toggleAttendance(student.id, 'late')} className={`flex-1 py-3 flex flex-col items-center justify-center gap-1 transition-colors ${status === 'late' ? 'bg-warning/20 text-warning' : 'text-textSecondary hover:bg-bgSoft hover:text-warning'}`}>
-                                    <div className={`text-xs opacity-80 ${status === 'late' ? '' : 'grayscale'}`}>⏰</div>
-                                    <span className="text-[10px] font-bold">{t('late')}</span>
-                                </button>
-
-                                <button onClick={() => toggleAttendance(student.id, 'truant')} className={`flex-1 py-3 flex flex-col items-center justify-center gap-1 transition-colors ${status === 'truant' ? 'bg-info/20 text-info' : 'text-textSecondary hover:bg-bgSoft hover:text-info'}`}>
-                                    <div className={`w-6 h-6 flex items-center justify-center`}>
-                                        <DoorOpen className={`w-4 h-4 transition-colors ${status === 'truant' ? 'text-info' : 'text-textSecondary'}`} />
-                                    </div>
-                                    <span className="text-[10px] font-bold">{t('truant')}</span>
-                                </button>
-
-                            </div>
-                        </div>
-                    );
-                })}
-            </div>
-        ) : (
-            <div className={`flex flex-col items-center justify-center py-20 opacity-70`}>
-                <UserCircle2 className={`w-16 h-16 mb-4 text-textSecondary/50`} />
-                <p className={`text-sm font-bold text-textSecondary`}>{t('noStudents')}</p>
-            </div>
-        )}
+            return (
+                <StudentRow
+                    key={student.id}
+                    student={student}
+                    dir={dir}
+                    subtitle={studentClass}
+                    statusText={statusText}
+                    statusTone={statusTone as any}
+                    indexLabel={index + 1}
+                    className={
+                        status === 'present'
+                            ? 'border-success/30 bg-success/5'
+                            : status === 'absent'
+                                ? 'border-danger/30 bg-danger/5'
+                                : status === 'late'
+                                    ? 'border-warning/30 bg-warning/5'
+                                    : status === 'truant'
+                                        ? 'border-info/30 bg-info/5'
+                                        : ''
+                    }
+                    actions={[
+                        {
+                            key: 'present',
+                            label: t('present'),
+                            icon: CheckCircle2,
+                            tone: status === 'present' ? 'success' : 'neutral',
+                            showOnMobile: true,
+                            voiceCommand: `سجل حضور ${student.name} حضور ${student.name} تحضير ${student.name}`,
+                            ariaLabel: `تسجيل حضور ${student.name}`,
+                            title: `تسجيل حضور ${student.name}`,
+                            onClick: () => toggleAttendance(student.id, 'present')
+                        },
+                        {
+                            key: 'absent',
+                            label: t('absent'),
+                            icon: X,
+                            tone: status === 'absent' ? 'danger' : 'neutral',
+                            showOnMobile: true,
+                            voiceCommand: `سجل غياب ${student.name} غياب ${student.name} ${student.name} غائب`,
+                            ariaLabel: `تسجيل غياب ${student.name}`,
+                            title: `تسجيل غياب ${student.name}`,
+                            danger: true,
+                            onClick: () => toggleAttendance(student.id, 'absent')
+                        },
+                        {
+                            key: 'late',
+                            label: t('late'),
+                            icon: Clock3,
+                            tone: status === 'late' ? 'warning' : 'neutral',
+                            showOnMobile: true,
+                            voiceCommand: `سجل تأخر ${student.name} تأخير ${student.name} ${student.name} متأخر`,
+                            ariaLabel: `تسجيل تأخر ${student.name}`,
+                            title: `تسجيل تأخر ${student.name}`,
+                            onClick: () => toggleAttendance(student.id, 'late')
+                        },
+                        {
+                            key: 'truant',
+                            label: t('truant'),
+                            icon: DoorOpen,
+                            tone: status === 'truant' ? 'info' : 'neutral',
+                            showOnMobile: false,
+                            voiceCommand: `سجل هروب ${student.name} سجل تسرب ${student.name} خروج ${student.name}`,
+                            ariaLabel: `تسجيل هروب أو تسرب ${student.name}`,
+                            title: `تسجيل هروب أو تسرب ${student.name}`,
+                            onClick: () => toggleAttendance(student.id, 'truant')
+                        }
+                    ]}
+                />
+            );
+        })}
+    </div>
+) : (
+    <div className="flex flex-col items-center justify-center py-20 opacity-70">
+        <UserCircle2 className="w-16 h-16 mb-4 text-textSecondary/50" />
+        <p className="text-sm font-bold text-textSecondary">
+            {t('noStudents')}
+        </p>
+    </div>
+)}
       </div>
 
       {/* 🚀 نافذة إشعار ولي الأمر (DrawerSheet) (لا تُمس، توضع خارج المحتوى) */}
@@ -509,29 +615,38 @@ const AttendanceTracker: React.FC<AttendanceTrackerProps> = ({ students, classes
                       </div>
                   </div>
 
-                  <div className="space-y-3 w-full mt-auto shrink-0">
-                      <button 
-                          onClick={() => performNotification('whatsapp')} 
-                          className={`w-full py-4 text-white rounded-2xl font-black text-sm flex items-center justify-center gap-3 transition-all active:scale-95 shadow-lg bg-[#25D366] hover:bg-[#1fa851]`}
-                      >
-                          <MessageCircle className="w-5 h-5" />
-                          {t('sendWhatsapp')}
-                      </button>
+                 <div className="space-y-3 w-full mt-auto shrink-0">
+    <button
+        data-voice-command="إرسال واتساب إرسال تنبيه واتساب"
+        aria-label="إرسال تنبيه واتساب"
+        title="إرسال واتساب"
+        onClick={() => performNotification('whatsapp')} 
+        className="w-full py-4 text-white rounded-2xl font-black text-sm flex items-center justify-center gap-3 transition-all active:scale-95 shadow-lg bg-[#25D366] hover:bg-[#1fa851]"
+    >
+        <MessageCircle className="w-5 h-5" />
+        {t('sendWhatsapp')}
+    </button>
 
-                      <button 
-                          onClick={() => performNotification('sms')} 
-                          className={`w-full py-4 rounded-2xl font-black text-sm transition-all active:scale-95 border bg-transparent text-textPrimary border-borderColor hover:bg-bgSoft`}
-                      >
-                          {t('sendSms')}
-                      </button>
+    <button
+        data-voice-command="إرسال رسالة نصية إرسال SMS"
+        aria-label="إرسال رسالة نصية"
+        title="إرسال رسالة نصية"
+        onClick={() => performNotification('sms')} 
+        className="w-full py-4 rounded-2xl font-black text-sm transition-all active:scale-95 border bg-transparent text-textPrimary border-borderColor hover:bg-bgSoft"
+    >
+        {t('sendSms')}
+    </button>
 
-                      <button 
-                          onClick={() => setNotificationTarget(null)} 
-                          className={`w-full py-3 font-bold text-xs transition-colors text-textSecondary hover:text-danger`}
-                      >
-                          {t('cancelAction')}
-                      </button>
-                  </div>
+    <button
+        data-voice-command="إلغاء الإشعار إغلاق الإشعار"
+        aria-label="إلغاء الإشعار"
+        title="إلغاء"
+        onClick={() => setNotificationTarget(null)} 
+        className="w-full py-3 font-bold text-xs transition-colors text-textSecondary hover:text-danger"
+    >
+        {t('cancelAction')}
+    </button>
+</div>
               </div>
           )}
       </DrawerSheet>
