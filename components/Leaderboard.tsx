@@ -338,8 +338,8 @@ const Leaderboard: React.FC<LeaderboardProps> = ({ students, classes, onUpdateSt
                         </div>
                     </div>
 
-                    <div className="flex gap-2">
-                        <div className="relative flex-1">
+<div className="flex flex-col md:flex>
+    <div className="relative flex-1">
                             <Search className={`absolute ${dir === 'rtl' ? 'right-3' : 'left-3'} top-1/2 -translate-y-1/2 w-4 h-4 text-textSecondary`} />
                             <input
                                 type="text"
