@@ -113,8 +113,6 @@ const Dashboard: React.FC<DashboardProps> = ({
 }) => {
     const { classes, setSelectedClass, t, dir } = useApp();
     const { theme, setTheme } = useTheme();
-
-    if (!teacherInfo) return <div className="flex items-center justify-center h-screen text-textPrimary">{t('dashboardLoading')}</div>;
     
     const fileInputRef = useRef<HTMLInputElement>(null);
     const stampInputRef = useRef<HTMLInputElement>(null); 
@@ -531,11 +529,191 @@ const Dashboard: React.FC<DashboardProps> = ({
     const todaySchedule = schedule && schedule.length > dayIndex ? schedule[dayIndex] : { dayName: t('todaySchedule'), periods: [] };
     const isToday = todayRaw === dayIndex;
 
-    const currentMonthIndex = new Date().getMonth();
-    const currentAssessmentPlan = assessmentPlan.find(p => p.monthIndex === currentMonthIndex);
+   const currentMonthIndex = new Date().getMonth();
+const currentAssessmentPlan = assessmentPlan.find(p => p.monthIndex === currentMonthIndex);
 
-    const monthNames = [t('jan'), t('feb'), t('mar'), t('apr'), t('may'), t('jun'), t('jul'), t('aug'), t('sep'), t('oct'), t('nov'), t('dec')];
+const monthNames = [t('jan'), t('feb'), t('mar'), t('apr'), t('may'), t('jun'), t('jul'), t('aug'), t('sep'), t('oct'), t('nov'), t('dec')];
+    if (!teacherInfo) {
+    return (
+        <div className="flex items-center justify-center h-screen text-textPrimary">
+            {t('dashboardLoading')}
+        </div>
+    );
+}
+// ================= Dashboard Smart Helpers =================
 
+const minutesFromTime = (value?: string): number | null => {
+    if (!value || !value.includes(':')) return null;
+    const [h, m] = value.split(':').map(Number);
+    if (Number.isNaN(h) || Number.isNaN(m)) return null;
+    return h * 60 + m;
+};
+
+type PeriodStatus = 'active' | 'upcoming' | 'completed' | 'unknown';
+
+const getPeriodStatus = (start?: string, end?: string): PeriodStatus => {
+    if (!start || !end) return 'unknown';
+
+    // إذا كنا نعرض جدول الأحد في عطلة نهاية الأسبوع، لا نحسبها مكتملة أو نشطة
+    if (!isToday) return 'upcoming';
+
+    const nowMinutes = currentTime.getHours() * 60 + currentTime.getMinutes();
+    const startMinutes = minutesFromTime(start);
+    const endMinutes = minutesFromTime(end);
+
+    if (startMinutes === null || endMinutes === null) return 'unknown';
+
+    if (nowMinutes >= startMinutes && nowMinutes < endMinutes) return 'active';
+    if (nowMinutes < startMinutes) return 'upcoming';
+    return 'completed';
+};
+
+const todayPeriods = todaySchedule.periods?.filter(Boolean) || [];
+const todayPeriodsCount = todayPeriods.length;
+
+const completedPeriodsCount = todaySchedule.periods?.filter((subject: string, idx: number) => {
+    if (!subject) return false;
+    const time = periodTimes[idx];
+    return getPeriodStatus(time?.startTime, time?.endTime) === 'completed';
+}).length || 0;
+
+const dayProgress = todayPeriodsCount > 0
+    ? Math.round((completedPeriodsCount / todayPeriodsCount) * 100)
+    : 0;
+
+const getSmartNextPeriod = () => {
+    if (!todaySchedule.periods || todaySchedule.periods.length === 0) return null;
+
+    // الأولوية للحصة الجارية
+    for (let i = 0; i < todaySchedule.periods.length; i++) {
+        const subject = todaySchedule.periods[i];
+        if (!subject) continue;
+
+        const time = periodTimes[i] || { startTime: '', endTime: '' };
+        const status = getPeriodStatus(time.startTime, time.endTime);
+
+        if (status === 'active') {
+            return {
+                index: i,
+                subject,
+                startTime: time.startTime,
+                endTime: time.endTime,
+                status
+            };
+        }
+    }
+
+    // ثم الحصة القادمة
+    for (let i = 0; i < todaySchedule.periods.length; i++) {
+        const subject = todaySchedule.periods[i];
+        if (!subject) continue;
+
+        const time = periodTimes[i] || { startTime: '', endTime: '' };
+        const status = getPeriodStatus(time.startTime, time.endTime);
+
+        if (status === 'upcoming') {
+            return {
+                index: i,
+                subject,
+                startTime: time.startTime,
+                endTime: time.endTime,
+                status
+            };
+        }
+    }
+
+    return null;
+};
+
+const smartNextPeriod = getSmartNextPeriod();
+
+const isTermPlanReady = Boolean(
+    currentWeekPlan &&
+    currentWeekPlan.unit?.trim() &&
+    currentWeekPlan.lesson?.trim()
+);
+
+const isAssessmentReady = Boolean(
+    currentAssessmentPlan &&
+    currentAssessmentPlan.tasks &&
+    currentAssessmentPlan.tasks.length > 0
+);
+
+const handleStartAttendance = (className?: string) => {
+    if (className && setSelectedClass) setSelectedClass(className);
+    onNavigate('attendance');
+};
+
+const statusMeta = {
+    active: {
+        label: t('now') || 'جارية الآن',
+        className: 'bg-success text-white',
+        cardClass: 'bg-primary border-primary shadow-lg scale-[1.01]',
+        textClass: 'text-white',
+        subTextClass: 'text-white/80'
+    },
+    upcoming: {
+        label: 'قادمة',
+        className: 'bg-info/10 text-info border border-info/20',
+        cardClass: 'glass-card border-borderColor hover:shadow-md',
+        textClass: 'text-textPrimary',
+        subTextClass: 'text-textSecondary'
+    },
+    completed: {
+        label: 'مكتملة',
+        className: 'bg-success/10 text-success border border-success/20',
+        cardClass: 'glass-card border-borderColor opacity-80',
+        textClass: 'text-textPrimary',
+        subTextClass: 'text-textSecondary'
+    },
+    unknown: {
+        label: 'غير محددة',
+        className: 'bg-bgSoft text-textSecondary border border-borderColor',
+        cardClass: 'glass-card border-borderColor',
+        textClass: 'text-textPrimary',
+        subTextClass: 'text-textSecondary'
+    }
+};
+
+const EmptyActionCard = ({
+    icon,
+    title,
+    description,
+    actionLabel,
+    onAction,
+    color = 'primary'
+}: {
+    icon: React.ReactNode;
+    title: string;
+    description: string;
+    actionLabel: string;
+    onAction: () => void;
+    color?: 'primary' | 'info' | 'warning' | 'success';
+}) => (
+    <div className="p-4 md:p-5 rounded-2xl border border-dashed border-borderColor bg-bgSoft text-center">
+        <div className={`w-11 h-11 mx-auto mb-3 rounded-2xl flex items-center justify-center ${
+            color === 'info' ? 'bg-info/10 text-info' :
+            color === 'warning' ? 'bg-warning/10 text-warning' :
+            color === 'success' ? 'bg-success/10 text-success' :
+            'bg-primary/10 text-primary'
+        }`}>
+            {icon}
+        </div>
+        <h4 className="text-sm font-black text-textPrimary">{title}</h4>
+        <p className="text-xs font-bold text-textSecondary mt-1 leading-relaxed">{description}</p>
+        <button
+            onClick={onAction}
+            className={`mt-4 px-4 py-2 rounded-xl text-white text-xs font-black shadow-sm active:scale-95 transition-all ${
+                color === 'info' ? 'bg-info hover:bg-info/80' :
+                color === 'warning' ? 'bg-warning hover:bg-warning/80' :
+                color === 'success' ? 'bg-success hover:bg-success/80' :
+                'bg-primary hover:bg-primary/80'
+            }`}
+        >
+            {actionLabel}
+        </button>
+    </div>
+);
     return (
         <>
         {/* 💉 الغلاف الشامل PageLayout للداشبورد */}
@@ -628,190 +806,528 @@ const Dashboard: React.FC<DashboardProps> = ({
             }
         >
             
-            {/* ⬇️ محتوى الداشبورد الرئيسي ⬇️ */}
-            <div className="space-y-4 md:space-y-6 animate-in fade-in duration-500 pt-2 pb-8 px-2 md:px-0">
-                
-                {/* رسالة السحابة */}
-                {cloudMessage && (
-                    <div className="relative animate-in fade-in slide-in-from-top-4">
-                        <div className={`relative p-3 md:p-4 rounded-2xl border shadow-md overflow-hidden ${
-                            cloudMessage.type === 'warning' ? 'bg-danger/10 border-danger/30' :
-                            cloudMessage.type === 'success' ? 'bg-success/10 border-success/30' :
-                            'bg-info/10 border-info/30'
+     {/* ⬇️ محتوى الداشبورد الرئيسي - النسخة الاحترافية ⬇️ */}
+<div className="space-y-4 md:space-y-6 animate-in fade-in duration-500 pt-2 pb-8 px-2 md:px-0">
+
+    {/* رسالة السحابة */}
+    {cloudMessage && (
+        <div className="relative animate-in fade-in slide-in-from-top-4">
+            <div className={`relative p-3 md:p-4 rounded-2xl border shadow-md overflow-hidden ${
+                cloudMessage.type === 'warning' ? 'bg-danger/10 border-danger/30' :
+                cloudMessage.type === 'success' ? 'bg-success/10 border-success/30' :
+                'bg-info/10 border-info/30'
+            }`}>
+                <div className="flex justify-between items-start">
+                    <div className="flex items-start gap-3">
+                        <div className={`p-2 rounded-xl mt-0.5 ${
+                            cloudMessage.type === 'warning' ? 'bg-danger/20 text-danger' :
+                            cloudMessage.type === 'success' ? 'bg-success/20 text-success' :
+                            'bg-info/20 text-info'
                         }`}>
-                            <div className="flex justify-between items-start">
-                                <div className="flex items-start gap-3">
-                                    <div className={`p-2 rounded-xl mt-0.5 ${
-                                        cloudMessage.type === 'warning' ? 'bg-danger/20 text-danger' :
-                                        cloudMessage.type === 'success' ? 'bg-success/20 text-success' :
-                                        'bg-info/20 text-info'
-                                    }`}>
-                                        <Bell size={20} className="animate-pulse" />
-                                    </div>
-                                    <div>
-                                        <h3 className={`font-black text-sm text-textPrimary`}>{cloudMessage.title}</h3>
-                                        <p className={`text-xs font-bold mt-1 leading-relaxed text-textSecondary`}>{cloudMessage.body}</p>
-                                    </div>
+                            <Bell size={20} className="animate-pulse" />
+                        </div>
+                        <div>
+                            <h3 className="font-black text-sm text-textPrimary">{cloudMessage.title}</h3>
+                            <p className="text-xs font-bold mt-1 leading-relaxed text-textSecondary">{cloudMessage.body}</p>
+                        </div>
+                    </div>
+                    <button
+                        onClick={handleCloseCloudMessage}
+                        className="p-1.5 rounded-lg transition-colors shrink-0 text-textSecondary hover:bg-bgSoft hover:text-textPrimary"
+                    >
+                        <X size={16} />
+                    </button>
+                </div>
+            </div>
+        </div>
+    )}
+
+    {/* بطاقات الملخص الذكي */}
+    <div className="grid grid-cols-2 xl:grid-cols-4 gap-2 md:gap-3">
+        <div className="glass-card border border-borderColor rounded-2xl p-3 md:p-4 shadow-sm">
+            <div className="flex items-center justify-between gap-3">
+                <div className="w-10 h-10 rounded-2xl bg-primary/10 text-primary flex items-center justify-center">
+                    <Clock size={19} />
+                </div>
+                <div className={dir === 'rtl' ? 'text-left' : 'text-right'}>
+                    <div className="text-xl md:text-2xl font-black text-textPrimary">{todayPeriodsCount}</div>
+                    <div className="text-[10px] md:text-xs font-bold text-textSecondary">حصص اليوم</div>
+                </div>
+            </div>
+        </div>
+
+        <div className="glass-card border border-borderColor rounded-2xl p-3 md:p-4 shadow-sm">
+            <div className="flex items-center justify-between gap-3">
+                <div className="w-10 h-10 rounded-2xl bg-info/10 text-info flex items-center justify-center">
+                    <AlarmClock size={19} />
+                </div>
+                <div className={dir === 'rtl' ? 'text-left' : 'text-right'}>
+                    <div className="text-base md:text-xl font-black text-textPrimary font-mono">
+                        {smartNextPeriod?.startTime || '--:--'}
+                    </div>
+                    <div className="text-[10px] md:text-xs font-bold text-textSecondary">
+                        {smartNextPeriod?.status === 'active' ? 'الحصة الحالية' : 'الحصة القادمة'}
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div className="glass-card border border-borderColor rounded-2xl p-3 md:p-4 shadow-sm">
+            <div className="flex items-center justify-between gap-3">
+                <div className="w-10 h-10 rounded-2xl bg-success/10 text-success flex items-center justify-center">
+                    <User size={19} />
+                </div>
+                <div className={dir === 'rtl' ? 'text-left' : 'text-right'}>
+                    <div className="text-xl md:text-2xl font-black text-textPrimary">{students?.length || 0}</div>
+                    <div className="text-[10px] md:text-xs font-bold text-textSecondary">طالب</div>
+                </div>
+            </div>
+        </div>
+
+        <div className="glass-card border border-borderColor rounded-2xl p-3 md:p-4 shadow-sm">
+            <div className="flex items-center justify-between gap-3">
+                <div className={`w-10 h-10 rounded-2xl flex items-center justify-center ${
+                    notificationsEnabled ? 'bg-warning/10 text-warning' : 'bg-bgSoft text-textSecondary'
+                }`}>
+                    {notificationsEnabled ? <Bell size={19} /> : <BellOff size={19} />}
+                </div>
+                <div className={dir === 'rtl' ? 'text-left' : 'text-right'}>
+                    <div className="text-sm md:text-base font-black text-textPrimary">
+                        {notificationsEnabled ? 'مفعلة' : 'متوقفة'}
+                    </div>
+                    <div className="text-[10px] md:text-xs font-bold text-textSecondary">الإشعارات</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    {/* تخطيط احترافي للكمبيوتر */}
+    <div className="grid grid-cols-1 xl:grid-cols-12 gap-4 md:gap-6">
+
+        {/* العمود الرئيسي */}
+        <div className="xl:col-span-8 space-y-4 md:space-y-6">
+
+            {/* بطاقة الحصة الحالية/القادمة */}
+            <div className="rounded-3xl border border-borderColor glass-panel shadow-sm overflow-hidden">
+                {smartNextPeriod ? (
+                    <div className={`relative p-4 md:p-5 ${
+                        smartNextPeriod.status === 'active'
+                            ? 'bg-primary text-white'
+                            : 'bg-primary/10'
+                    }`}>
+                        <div className={`absolute inset-y-0 ${dir === 'rtl' ? 'right-0' : 'left-0'} w-1.5 ${
+                            smartNextPeriod.status === 'active' ? 'bg-white/70' : 'bg-primary'
+                        }`} />
+
+                        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+                            <div className="flex items-start gap-3">
+                                <div className={`w-12 h-12 rounded-2xl flex items-center justify-center shrink-0 ${
+                                    smartNextPeriod.status === 'active'
+                                        ? 'bg-white/20 text-white'
+                                        : 'bg-primary text-white'
+                                }`}>
+                                    <Clock size={22} />
                                 </div>
-                                <button onClick={handleCloseCloudMessage} className={`p-1.5 rounded-lg transition-colors shrink-0 text-textSecondary hover:bg-bgSoft hover:text-textPrimary`}>
-                                    <X size={16} />
-                                </button>
+
+                                <div>
+                                    <div className={`text-[10px] font-black mb-1 ${
+                                        smartNextPeriod.status === 'active'
+                                            ? 'text-white/80'
+                                            : 'text-primary'
+                                    }`}>
+                                        {smartNextPeriod.status === 'active' ? 'الحصة الجارية الآن' : 'الحصة القادمة'}
+                                    </div>
+
+                                    <h3 className={`text-lg md:text-xl font-black ${
+                                        smartNextPeriod.status === 'active'
+                                            ? 'text-white'
+                                            : 'text-textPrimary'
+                                    }`}>
+                                        {smartNextPeriod.subject}
+                                    </h3>
+
+                                    <p className={`text-xs font-bold mt-1 ${
+                                        smartNextPeriod.status === 'active'
+                                            ? 'text-white/80'
+                                            : 'text-textSecondary'
+                                    }`}>
+                                        الحصة {smartNextPeriod.index + 1} · {smartNextPeriod.startTime || '--:--'} - {smartNextPeriod.endTime || '--:--'}
+                                    </p>
+                                </div>
+                            </div>
+
+                            <button
+                                onClick={() => handleStartAttendance(smartNextPeriod.subject)}
+                                className={`px-4 py-2.5 rounded-2xl text-xs font-black shadow-lg active:scale-95 transition-all flex items-center justify-center gap-2 ${
+                                    smartNextPeriod.status === 'active'
+                                        ? 'bg-white text-primary hover:bg-white/90'
+                                        : 'bg-primary text-white hover:bg-primary/80'
+                                }`}
+                            >
+                                <CheckCircle2 size={16} />
+                                {smartNextPeriod.status === 'active' ? 'بدء تسجيل الحضور' : 'الاستعداد للحصة'}
+                            </button>
+                        </div>
+                    </div>
+                ) : (
+                    <div className="p-4 md:p-5">
+                        <div className="flex items-center gap-3">
+                            <div className="w-12 h-12 rounded-2xl bg-success/10 text-success flex items-center justify-center">
+                                <CheckCircle2 size={22} />
+                            </div>
+                            <div>
+                                <h3 className="font-black text-textPrimary text-sm md:text-base">
+                                    لا توجد حصص قادمة
+                                </h3>
+                                <p className="text-xs text-textSecondary font-bold mt-1">
+                                    لا توجد حصص متبقية في جدول اليوم.
+                                </p>
                             </div>
                         </div>
                     </div>
                 )}
+            </div>
 
-                {/* 📅 جدول اليوم */}
-                <div className="relative z-10">
-                    <div className="flex justify-between items-center mb-3">
-                        <h2 className={`text-sm md:text-lg font-black flex items-center gap-2 text-textPrimary`}>
-                            {t('todaySchedule')} <span className={`text-[10px] md:text-xs font-bold px-2 py-1 rounded-lg bg-bgSoft text-textSecondary`}>{t(weekDayKeys[dayIndex]) || todaySchedule.dayName}</span>
-                        </h2>
-                        <button onClick={() => setShowScheduleModal(true)} className={`p-2 rounded-xl shadow-sm border active:scale-95 transition-transform bg-bgSoft border-borderColor text-textSecondary hover:bg-bgCard hover:text-textPrimary`}>
-                            <Clock size={16} className="md:w-5 md:h-5" />
-                        </button>
+            {/* تقدم اليوم الدراسي */}
+            <div className="rounded-3xl border border-borderColor glass-panel p-4 md:p-5 shadow-sm">
+                <div className="flex justify-between items-center mb-3">
+                    <div>
+                        <h3 className="text-sm md:text-base font-black text-textPrimary">تقدم اليوم الدراسي</h3>
+                        <p className="text-xs font-bold text-textSecondary mt-1">
+                            تم إنجاز {completedPeriodsCount} من {todayPeriodsCount} حصص
+                        </p>
                     </div>
+                    <span className="text-xl md:text-2xl font-black text-primary">{dayProgress}%</span>
+                </div>
 
-                    <div className="grid grid-cols-2 gap-2 md:gap-3">
+                <div className="w-full h-2.5 rounded-full bg-bgSoft overflow-hidden">
+                    <div
+                        className="h-full bg-primary rounded-full transition-all duration-500"
+                        style={{ width: `${dayProgress}%` }}
+                    />
+                </div>
+            </div>
+
+            {/* جدول اليوم */}
+            <div className="relative z-10">
+                <div className="flex justify-between items-center mb-3">
+                    <h2 className="text-sm md:text-lg font-black flex items-center gap-2 text-textPrimary">
+                        {t('todaySchedule')}
+                        <span className="text-[10px] md:text-xs font-bold px-2 py-1 rounded-lg bg-bgSoft text-textSecondary">
+                            {t(weekDayKeys[dayIndex]) || todaySchedule.dayName}
+                        </span>
+                    </h2>
+
+                    <button
+                        onClick={() => setShowScheduleModal(true)}
+                        className="p-2 rounded-xl shadow-sm border active:scale-95 transition-transform bg-bgSoft border-borderColor text-textSecondary hover:bg-bgCard hover:text-textPrimary"
+                    >
+                        <Clock size={16} className="md:w-5 md:h-5" />
+                    </button>
+                </div>
+
+                {todayPeriodsCount > 0 ? (
+                    <div className="grid grid-cols-1 sm:grid-cols-2 2xl:grid-cols-4 gap-3">
                         {todaySchedule.periods && todaySchedule.periods.map((subject: string, idx: number) => {
                             if (!subject) return null;
-                            const time = periodTimes[idx] || { startTime: '00:00', endTime: '00:00' };
-                            const isActive = isToday && checkActivePeriod(time.startTime, time.endTime);
-                            const displaySubject = teacherInfo?.subject && teacherInfo.subject.trim().length > 0 ? teacherInfo.subject : subject;
 
-                            const activeClass = 'bg-primary border-primary shadow-lg scale-[1.02] z-10';
-                            const inactiveClass = 'glass-card border-borderColor hover:shadow-md';
+                            const time = periodTimes[idx] || { startTime: '00:00', endTime: '00:00' };
+                            const displaySubject = teacherInfo?.subject && teacherInfo.subject.trim().length > 0
+                                ? teacherInfo.subject
+                                : subject;
+
+                            const status = getPeriodStatus(time.startTime, time.endTime);
+                            const meta = statusMeta[status];
 
                             return (
-                                <div key={idx} className={`relative flex flex-col justify-between p-3 rounded-2xl border transition-all duration-300 gap-2 md:gap-3 ${isActive ? activeClass : inactiveClass}`}>
-                                    <div className="flex items-start gap-2">
-                                        <div className={`w-8 h-8 md:w-10 md:h-10 rounded-xl flex items-center justify-center font-black text-sm md:text-lg shrink-0 ${isActive ? 'bg-white/20 text-white' : 'bg-bgSoft text-textSecondary'}`}>
-                                            {getSubjectIcon(displaySubject) || getSubjectIcon(subject) || (idx + 1)}
-                                        </div>
-                                        <div className="flex-1 min-w-0">
-                                            <div className="flex flex-col items-start gap-0.5">
-                                                <h4 className={`font-black text-xs md:text-sm truncate w-full ${isActive ? 'text-white' : 'text-textPrimary'}`}>{subject}</h4>
-                                                {isActive && <span className="text-[8px] md:text-[9px] bg-success text-white px-1.5 py-0.5 rounded-md font-bold animate-pulse shadow-sm shrink-0 leading-none">{t('now')}</span>}
+                                <div
+                                    key={idx}
+                                    className={`relative flex flex-col justify-between p-3 md:p-4 rounded-2xl border transition-all duration-300 gap-3 ${meta.cardClass}`}
+                                >
+                                    <div className="flex items-start justify-between gap-2">
+                                        <div className="flex items-start gap-2 min-w-0">
+                                            <div className={`w-9 h-9 md:w-10 md:h-10 rounded-xl flex items-center justify-center font-black shrink-0 ${
+                                                status === 'active'
+                                                    ? 'bg-white/20 text-white'
+                                                    : 'bg-bgSoft text-textSecondary'
+                                            }`}>
+                                                {getSubjectIcon(displaySubject) || getSubjectIcon(subject) || (idx + 1)}
+                                            </div>
+
+                                            <div className="min-w-0">
+                                                <h4 className={`font-black text-sm truncate ${meta.textClass}`}>
+                                                    {subject}
+                                                </h4>
+                                                <p className={`text-[11px] font-bold mt-1 ${meta.subTextClass}`}>
+                                                    الحصة {idx + 1}
+                                                </p>
                                             </div>
                                         </div>
+
+                                        <span className={`text-[9px] font-black px-2 py-1 rounded-lg shrink-0 ${meta.className}`}>
+                                            {meta.label}
+                                        </span>
                                     </div>
 
                                     <div className="flex items-center justify-between mt-auto">
                                         <div className="flex flex-col">
-                                            <span className={`text-[8px] font-bold ${isActive ? 'text-white/70' : 'text-textSecondary/70'}`}>{t('period')} {idx + 1}</span>
-                                            <span className={`text-[9px] md:text-[10px] font-bold font-mono ${isActive ? 'text-white/90' : 'text-textSecondary'}`}>
+                                            <span className={`text-[10px] font-bold ${meta.subTextClass}`}>الوقت</span>
+                                            <span className={`text-xs md:text-sm font-black font-mono ${meta.textClass}`}>
                                                 {time.startTime}-{time.endTime}
                                             </span>
                                         </div>
-                                        
-                                        {isActive ? (
-                                            <button 
-                                                onClick={() => {
-                                                    if (setSelectedClass) setSelectedClass(subject);
-                                                    onNavigate('attendance');
-                                                }} 
-                                                className={`p-1.5 md:px-2 md:py-1.5 rounded-lg font-bold text-[10px] shadow-md flex items-center gap-1 active:scale-95 bg-white text-primary`}
-                                                title={t('takeAttendance')}
+
+                                        {status === 'active' ? (
+                                            <button
+                                                onClick={() => handleStartAttendance(subject)}
+                                                className="px-3 py-2 rounded-xl font-black text-[10px] shadow-md flex items-center gap-1 active:scale-95 bg-white text-primary"
                                             >
-                                                <span className="hidden md:inline">{t('takeAttendance')}</span>
-                                                <CheckCircle2 size={14} className="md:w-3 md:h-3" />
+                                                <CheckCircle2 size={14} />
+                                                حضور
+                                            </button>
+                                        ) : status === 'completed' ? (
+                                            <button
+                                                onClick={() => handleStartAttendance(subject)}
+                                                className="px-3 py-2 rounded-xl font-black text-[10px] border border-success/20 bg-success/10 text-success active:scale-95"
+                                            >
+                                                مراجعة
                                             </button>
                                         ) : (
-                                            <div className={`w-1.5 h-1.5 rounded-full bg-borderColor mb-1`}></div>
+                                            <button
+                                                onClick={() => {
+                                                    if (setSelectedClass) setSelectedClass(subject);
+                                                }}
+                                                className="px-3 py-2 rounded-xl font-black text-[10px] border border-borderColor bg-bgSoft text-textSecondary active:scale-95"
+                                            >
+                                                تفاصيل
+                                            </button>
                                         )}
                                     </div>
                                 </div>
                             );
                         })}
                     </div>
-                </div>
-
-                {/* 📖 الخطة الفصلية */}
-                <div className="relative z-10">
-                    <div className={`rounded-3xl p-4 md:p-5 shadow-sm border glass-panel border-borderColor`}>
-                        <div className="flex justify-between items-center mb-3 md:mb-4">
-                            <div className="flex items-center gap-2 md:gap-3">
-                                <div className={`p-1.5 md:p-2 rounded-xl bg-info/10 text-info`}><BookOpen size={16} className="md:w-5 md:h-5"/></div>
-                                <h2 className={`text-sm md:text-base font-black text-textPrimary`}>{t('termPlanTitle') || 'الخطة الفصلية'}</h2>
-                            </div>
-                            <button onClick={() => setShowTermPlanModal(true)} className={`p-1.5 md:p-2 rounded-xl transition-colors bg-bgSoft text-textSecondary hover:bg-bgCard hover:text-textPrimary`}>
-                                <Settings size={16} className="md:w-5 md:h-5" />
-                            </button>
-                        </div>
-                        
-                        <div className="grid grid-cols-1 gap-3">
-                            {currentWeekPlan ? (
-                                <div className={`p-3 md:p-4 rounded-2xl border transition-all bg-info/10 border-info/30`}>
-                                    <div className="flex justify-between items-center mb-2">
-                                        <div className="flex items-center gap-1.5 flex-wrap">
-                                            <span className={`text-[10px] md:text-xs font-black text-info`}>{currentWeekPlan.name}</span>
-                                            <span className={`text-[8px] md:text-[9px] font-bold text-info/70 bg-info/5 px-1.5 py-0.5 rounded-md`}>
-                                                ({currentWeekPlan.start} - {currentWeekPlan.end})
-                                            </span>
-                                        </div>
-                                        <span className={`text-[8px] font-bold px-2 py-0.5 rounded-lg animate-pulse bg-info text-white shadow-sm shrink-0`}>
-                                            {t('currentWeekBadge') || 'الأسبوع الحالي'}
-                                        </span>
-                                    </div>
-                                    <div className="space-y-1.5 mt-2">
-                                        <div className="flex items-start gap-2 text-[10px] md:text-[11px] font-bold text-textPrimary">
-                                            <div className="w-1 h-1 rounded-full mt-1.5 shrink-0 bg-info"></div>
-                                            <span><span className="text-info/80">{t('unitLabel') || 'الوحدة:'}</span> {currentWeekPlan.unit || t('notSpecified') || 'لم تحدد'}</span>
-                                        </div>
-                                        <div className="flex items-start gap-2 text-[10px] md:text-[11px] font-bold text-textPrimary">
-                                            <div className="w-1 h-1 rounded-full mt-1.5 shrink-0 bg-info"></div>
-                                            <span><span className="text-info/80">{t('lessonLabel') || 'الدرس:'}</span> {currentWeekPlan.lesson || currentWeekPlan.defaultTopic}</span>
-                                        </div>
-                                    </div>
-                                </div>
-                            ) : (
-                                <div className="p-4 rounded-2xl border border-dashed border-borderColor text-center text-textSecondary text-xs font-bold bg-bgSoft">
-                                    {t('noPlanForCurrentWeek') || 'لا توجد خطة للأسبوع الحالي'}
-                                </div>
-                            )}
-                        </div>
-                    </div>
-                </div>
-
-                {/* 📝 التقويم المستمر */}
-                <div className="relative z-10">
-                    <div className={`rounded-3xl p-4 md:p-5 shadow-sm border glass-panel border-borderColor`}>
-                        <div className="flex justify-between items-center mb-3 md:mb-4">
-                            <div className="flex items-center gap-2 md:gap-3">
-                                <div className={`p-1.5 md:p-2 rounded-xl bg-warning/10 text-warning`}><CalendarDays size={16} className="md:w-5 md:h-5"/></div>
-                                <h2 className={`text-sm md:text-base font-black text-textPrimary`}>{t('continuousAssessmentPlan')}</h2>
-                            </div>
-                            <button onClick={() => setShowPlanSettingsModal(true)} className={`p-1.5 md:p-2 rounded-xl transition-colors bg-bgSoft text-textSecondary hover:bg-bgCard hover:text-textPrimary`}>
-                                <Settings size={16} className="md:w-5 md:h-5" />
-                            </button>
-                        </div>
-                        
-                        <div className="grid grid-cols-1 gap-3">
-                            {currentAssessmentPlan ? (
-                                <div key={currentAssessmentPlan.id} className={`p-3 md:p-4 rounded-2xl border transition-all bg-primary/10 border-primary/30`}>
-                                    <div className="flex justify-between items-center mb-2">
-                                        <span className={`text-[10px] md:text-xs font-black text-primary`}>{t('monthPrefix')} {currentAssessmentPlan.monthName}</span>
-                                        <span className={`text-[8px] font-bold px-2 py-0.5 rounded-lg animate-pulse bg-primary text-white shadow-sm`}>{t('currentMonthLabel')}</span>
-                                    </div>
-                                    <ul className="space-y-1.5">
-                                        {currentAssessmentPlan.tasks.map((task, idx) => (
-                                            <li key={idx} className={`flex items-start gap-2 text-[9px] md:text-[10px] font-bold text-textPrimary`}>
-                                                <div className={`w-1 h-1 rounded-full mt-1.5 shrink-0 bg-primary`}></div>
-                                                <span>{task}</span>
-                                            </li>
-                                        ))}
-                                    </ul>
-                                </div>
-                            ) : (
-                                <div className="p-4 rounded-2xl border border-dashed border-borderColor text-center text-textSecondary text-xs font-bold bg-bgSoft">
-                                    لا توجد خطة تقويم لهذا الشهر
-                                </div>
-                            )}
-                        </div>
-                    </div>
-                </div>
-
+                ) : (
+                    <EmptyActionCard
+                        icon={<Clock size={22} />}
+                        title="لا توجد حصص في جدول اليوم"
+                        description="قم بإضافة جدول الحصص أو استيراده من ملف Excel ليظهر هنا."
+                        actionLabel="إعداد الجدول"
+                        onAction={() => setShowScheduleModal(true)}
+                        color="primary"
+                    />
+                )}
             </div>
+        </div>
+
+        {/* العمود الجانبي */}
+        <div className="xl:col-span-4 space-y-4 md:space-y-6">
+
+            {/* اختصارات سريعة */}
+            <div className="rounded-3xl p-4 md:p-5 shadow-sm border glass-panel border-borderColor">
+                <div className="flex items-center justify-between mb-4">
+                    <div>
+                        <h2 className="text-sm md:text-base font-black text-textPrimary">اختصارات سريعة</h2>
+                        <p className="text-[10px] md:text-xs font-bold text-textSecondary mt-1">
+                            نفّذ أهم الإجراءات مباشرة
+                        </p>
+                    </div>
+                    <div className="w-10 h-10 rounded-2xl bg-primary/10 text-primary flex items-center justify-center">
+                        <PlayCircle size={20} />
+                    </div>
+                </div>
+
+                <div className="grid grid-cols-2 gap-2">
+                    <button
+                        onClick={() => handleStartAttendance(smartNextPeriod?.subject)}
+                        className="p-3 rounded-2xl bg-primary text-white text-xs font-black flex flex-col items-center gap-2 active:scale-95 transition-all shadow-sm"
+                    >
+                        <CheckCircle2 size={18} />
+                        تسجيل حضور
+                    </button>
+
+                    <button
+                        onClick={() => setShowScheduleModal(true)}
+                        className="p-3 rounded-2xl bg-bgSoft text-textPrimary border border-borderColor text-xs font-black flex flex-col items-center gap-2 active:scale-95 transition-all hover:bg-bgCard"
+                    >
+                        <Clock size={18} />
+                        تعديل الجدول
+                    </button>
+
+                    <button
+                        onClick={() => setShowTermPlanModal(true)}
+                        className="p-3 rounded-2xl bg-bgSoft text-textPrimary border border-borderColor text-xs font-black flex flex-col items-center gap-2 active:scale-95 transition-all hover:bg-bgCard"
+                    >
+                        <BookOpen size={18} />
+                        الخطة الفصلية
+                    </button>
+
+                    <button
+                        onClick={() => setShowPlanSettingsModal(true)}
+                        className="p-3 rounded-2xl bg-bgSoft text-textPrimary border border-borderColor text-xs font-black flex flex-col items-center gap-2 active:scale-95 transition-all hover:bg-bgCard"
+                    >
+                        <CalendarDays size={18} />
+                        التقويم
+                    </button>
+                </div>
+            </div>
+
+            {/* الخطة الفصلية */}
+            <div className="relative z-10">
+                <div className="rounded-3xl p-4 md:p-5 shadow-sm border glass-panel border-borderColor">
+                    <div className="flex justify-between items-center mb-3 md:mb-4">
+                        <div className="flex items-center gap-2 md:gap-3">
+                            <div className="p-1.5 md:p-2 rounded-xl bg-info/10 text-info">
+                                <BookOpen size={16} className="md:w-5 md:h-5" />
+                            </div>
+                            <div>
+                                <h2 className="text-sm md:text-base font-black text-textPrimary">
+                                    {t('termPlanTitle') || 'الخطة الفصلية'}
+                                </h2>
+                                {currentWeekPlan && (
+                                    <p className="text-[10px] font-bold text-textSecondary mt-0.5">
+                                        {currentWeekPlan.name}
+                                    </p>
+                                )}
+                            </div>
+                        </div>
+
+                        <button
+                            onClick={() => setShowTermPlanModal(true)}
+                            className="p-1.5 md:p-2 rounded-xl transition-colors bg-bgSoft text-textSecondary hover:bg-bgCard hover:text-textPrimary"
+                        >
+                            <Settings size={16} className="md:w-5 md:h-5" />
+                        </button>
+                    </div>
+
+                    {currentWeekPlan ? (
+                        <div className={`p-3 md:p-4 rounded-2xl border transition-all ${
+                            isTermPlanReady
+                                ? 'bg-info/10 border-info/30'
+                                : 'bg-warning/10 border-warning/30'
+                        }`}>
+                            <div className="flex justify-between items-center mb-3 gap-2">
+                                <span className={`text-[10px] md:text-xs font-black ${
+                                    isTermPlanReady ? 'text-info' : 'text-warning'
+                                }`}>
+                                    {currentWeekPlan.start} - {currentWeekPlan.end}
+                                </span>
+
+                                <span className={`text-[8px] font-bold px-2 py-0.5 rounded-lg shadow-sm shrink-0 ${
+                                    isTermPlanReady ? 'bg-info text-white' : 'bg-warning text-white'
+                                }`}>
+                                    {isTermPlanReady ? 'جاهزة' : 'تحتاج إكمال'}
+                                </span>
+                            </div>
+
+                            <div className="space-y-2">
+                                <div className="flex items-start gap-2 text-xs font-bold text-textPrimary">
+                                    <div className={`w-1.5 h-1.5 rounded-full mt-1.5 shrink-0 ${
+                                        isTermPlanReady ? 'bg-info' : 'bg-warning'
+                                    }`} />
+                                    <span>
+                                        <span className={isTermPlanReady ? 'text-info' : 'text-warning'}>الوحدة:</span>{' '}
+                                        {currentWeekPlan.unit || 'لم تحدد'}
+                                    </span>
+                                </div>
+
+                                <div className="flex items-start gap-2 text-xs font-bold text-textPrimary">
+                                    <div className={`w-1.5 h-1.5 rounded-full mt-1.5 shrink-0 ${
+                                        isTermPlanReady ? 'bg-info' : 'bg-warning'
+                                    }`} />
+                                    <span>
+                                        <span className={isTermPlanReady ? 'text-info' : 'text-warning'}>الدرس:</span>{' '}
+                                        {currentWeekPlan.lesson || currentWeekPlan.defaultTopic}
+                                    </span>
+                                </div>
+                            </div>
+
+                            {!isTermPlanReady && (
+                                <button
+                                    onClick={() => setShowTermPlanModal(true)}
+                                    className="mt-4 w-full py-2.5 rounded-xl bg-warning text-white text-xs font-black active:scale-95 transition-all"
+                                >
+                                    إكمال بيانات الخطة
+                                </button>
+                            )}
+                        </div>
+                    ) : (
+                        <EmptyActionCard
+                            icon={<BookOpen size={22} />}
+                            title="لا توجد خطة للأسبوع الحالي"
+                            description="أضف خطة الأسبوع لتظهر الوحدة والدرس في الصفحة الرئيسية."
+                            actionLabel="إضافة خطة"
+                            onAction={() => setShowTermPlanModal(true)}
+                            color="info"
+                        />
+                    )}
+                </div>
+            </div>
+
+            {/* التقويم المستمر */}
+            <div className="relative z-10">
+                <div className="rounded-3xl p-4 md:p-5 shadow-sm border glass-panel border-borderColor">
+                    <div className="flex justify-between items-center mb-3 md:mb-4">
+                        <div className="flex items-center gap-2 md:gap-3">
+                            <div className="p-1.5 md:p-2 rounded-xl bg-warning/10 text-warning">
+                                <CalendarDays size={16} className="md:w-5 md:h-5" />
+                            </div>
+                            <div>
+                                <h2 className="text-sm md:text-base font-black text-textPrimary">
+                                    {t('continuousAssessmentPlan')}
+                                </h2>
+                                <p className="text-[10px] font-bold text-textSecondary mt-0.5">
+                                    {currentAssessmentPlan ? `${t('monthPrefix')} ${currentAssessmentPlan.monthName}` : 'الشهر الحالي'}
+                                </p>
+                            </div>
+                        </div>
+
+                        <button
+                            onClick={() => setShowPlanSettingsModal(true)}
+                            className="p-1.5 md:p-2 rounded-xl transition-colors bg-bgSoft text-textSecondary hover:bg-bgCard hover:text-textPrimary"
+                        >
+                            <Settings size={16} className="md:w-5 md:h-5" />
+                        </button>
+                    </div>
+
+                    {isAssessmentReady && currentAssessmentPlan ? (
+                        <div className="p-3 md:p-4 rounded-2xl border transition-all bg-primary/10 border-primary/30">
+                            <div className="flex justify-between items-center mb-3">
+                                <span className="text-[10px] md:text-xs font-black text-primary">
+                                    {t('monthPrefix')} {currentAssessmentPlan.monthName}
+                                </span>
+                                <span className="text-[8px] font-bold px-2 py-0.5 rounded-lg bg-primary text-white shadow-sm">
+                                    {t('currentMonthLabel')}
+                                </span>
+                            </div>
+
+                            <ul className="space-y-2">
+                                {currentAssessmentPlan.tasks.map((task, idx) => (
+                                    <li
+                                        key={idx}
+                                        className="flex items-start gap-2 text-[11px] md:text-xs font-bold text-textPrimary"
+                                    >
+                                        <CheckCircle2 size={13} className="text-primary mt-0.5 shrink-0" />
+                                        <span>{task}</span>
+                                    </li>
+                                ))}
+                            </ul>
+                        </div>
+                    ) : (
+                        <EmptyActionCard
+                            icon={<CalendarDays size={22} />}
+                            title="لا توجد خطة تقويم لهذا الشهر"
+                            description="أضف مهام التقويم المستمر لهذا الشهر حتى تظهر للمعلم مباشرة."
+                            actionLabel="إنشاء خطة تقويم"
+                            onAction={() => setShowPlanSettingsModal(true)}
+                            color="warning"
+                        />
+                    )}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
         </PageLayout>
 
         {/* ================= النوافذ (Drawers) - لم تُمس أبداً ================= */}
