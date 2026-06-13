@@ -2213,13 +2213,13 @@ if (hasSem1Grades && hasSem2Grades) {
               <input type="text" value={tempCertSettings.title} onChange={(e) => setTempCertSettings({ ...tempCertSettings, title: e.target.value })} className="w-full p-3 border rounded-xl font-bold outline-none transition-colors bg-bgSoft border-borderColor text-textPrimary focus:border-primary placeholder:text-textSecondary" placeholder={t('certificateTitlePlaceholder')} />
               <textarea value={tempCertSettings.bodyText} onChange={(e) => setTempCertSettings({ ...tempCertSettings, bodyText: e.target.value })} className="w-full p-3 border rounded-xl font-bold h-24 outline-none transition-colors resize-none bg-bgSoft border-borderColor text-textPrimary focus:border-primary placeholder:text-textSecondary" placeholder={t('certificateBodyPlaceholder')} />
               <button onClick={() => { setCertificateSettings(tempCertSettings); setShowCertSettingsModal(false); }} className="w-full py-3 rounded-xl font-black shadow-lg active:scale-95 transition-all bg-primary hover:bg-primary/80 text-white">{t('saveBtn')}</button>
-            </div>
+           </div>
           </div>
         </DrawerSheet>
 
       </PageLayout>
     </>
   );
-};
+});
 
 export default Reports;
