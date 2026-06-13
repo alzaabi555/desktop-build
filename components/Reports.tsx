@@ -1707,8 +1707,8 @@ if (hasSem1Grades && hasSem2Grades) {
     sem2: hasSem2Grades ? s2Total : null,
     final: null
       
-} 
-    });                         
+}
+  })}                     
   
      return stats;
   }, [safeStudents, analyticsClass, assessmentTools]);
