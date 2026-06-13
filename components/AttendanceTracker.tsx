@@ -473,7 +473,6 @@ return (
         </div>
       }
       rightActions={
-      rightActions={
         <div className="flex items-center gap-2 relative">
           <button
             data-voice-command="إرسال تقرير الحضور للإدارة رفع الغياب للإدارة إرسال غياب اليوم للإدارة"
