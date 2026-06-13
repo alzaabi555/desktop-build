@@ -801,12 +801,6 @@ const getSmartNextPeriod = () => {
 
 const smartNextPeriod = getSmartNextPeriod();
 
-const isTermPlanReady = Boolean(
-    currentWeekPlan &&
-    currentWeekPlan.unit?.trim() &&
-    currentWeekPlan.lesson?.trim()
-);
-
 const isAssessmentReady = Boolean(
     currentAssessmentPlan &&
     currentAssessmentPlan.tasks &&
