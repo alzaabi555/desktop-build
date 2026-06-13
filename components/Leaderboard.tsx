@@ -340,17 +340,22 @@ const Leaderboard: React.FC<LeaderboardProps> = ({ students, classes, onUpdateSt
 
 <div className="flex flex-col md:flex>
     <div className="relative flex-1">
-                            <Search className={`absolute ${dir === 'rtl' ? 'right-3' : 'left-3'} top-1/2 -translate-y-1/2 w-4 h-4 text-textSecondary`} />
-                            <input
-                                type="text"
-                                data-voice-field="بحث الفرسان"
-                                aria-label="بحث الفرسان"
-                                placeholder={t('searchPlaceholder')} 
-                                value={searchTerm} 
-                                onChange={(e) => setSearchTerm(e.target.value)} 
-                                className={`w-full border rounded-xl py-2 ${dir === 'rtl' ? 'pr-10 pl-3' : 'pl-10 pr-3'} text-xs font-bold outline-none transition-all bg-bgCard border-borderColor text-textPrimary placeholder:text-textSecondary focus:bg-bgSoft focus:border-primary/40`} 
-                            />
-                        </div>
+  <Search
+    className={`absolute ${
+      dir === 'rtl' ? 'right-3' : 'left-3'
+    } top-1/2 -translate-y-1/2 w-4 h-4 text-textSecondary`}
+  />
+
+  <input
+    type="text"
+    placeholder={t('searchPlaceholder')}
+    value={searchTerm}
+    onChange={(e) => setSearchTerm(e.target.value)}
+    className={`w-full border rounded-xl py-2 ${
+      dir === 'rtl' ? 'pr-10 pl-3' : 'pl-10 pr-3'
+    } text-xs font-bold outline-none transition-all bg-bgCard border-borderColor text-textPrimary placeholder:text-textSecondary focus:bg-bgSoft`}
+  />
+</div>
 
                        <div className="relative w-full md:w-60 shrink-0">
   <select
