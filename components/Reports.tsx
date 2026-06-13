@@ -765,7 +765,19 @@ const GradesTemplate = ({ students, tools, teacherInfo, semester, gradeClass }: 
   const safeStudents = Array.isArray(students) ? students : [];
 
   const settings = getGradingSettings() || { totalScore: 100, finalExamWeight: 40, finalExamName: '' };
-  
+  const toGradeNumber = (value: any) => {
+  if (value === null || value === undefined || value === '') return 0;
+
+  const num = Number(String(value).replace(',', '.'));
+
+  return Number.isNaN(num) ? 0 : num;
+};
+
+const roundGrade = (value: any) => {
+  const num = toGradeNumber(value);
+  return Math.round(num);
+};
+``
   const savedFinalExamName = settings.finalExamName?.trim() || '';
   const isDefaultExamName = savedFinalExamName === 'الامتحان النهائي' || savedFinalExamName === 'Final Exam' || savedFinalExamName === '';
   const finalExamName = isDefaultExamName ? t('finalExamNameDefault') : savedFinalExamName;
@@ -830,7 +842,7 @@ const GradesTemplate = ({ students, tools, teacherInfo, semester, gradeClass }: 
 
                   const contCells = continuousTools.map((tool: any) => {
                     const g = semGrades.find((r: any) => r.category.trim() === tool.name.trim());
-                    const val = g ? Number(g.score) : 0;
+                   const val = g ? toGradeNumber(g.score) : 0;
                     contSum += val;
                     return (
                       <td key={tool.id} className="border border-black p-1 text-center font-medium text-black">
@@ -844,7 +856,7 @@ const GradesTemplate = ({ students, tools, teacherInfo, semester, gradeClass }: 
 
                   if (finalWeight > 0) {
                     const finalG = semGrades.find((r: any) => r.category.trim() === finalExamName);
-                    finalVal = finalG ? Number(finalG.score) : 0;
+                    finalVal = finalG ? toGradeNumber(finalG.score) : 0;
                     finalCell = (
                       <td className="border border-black p-1 text-center font-bold bg-pink-50 text-black">
                         {finalG ? finalG.score : '-'}
@@ -878,14 +890,15 @@ const GradesTemplate = ({ students, tools, teacherInfo, semester, gradeClass }: 
                   
                   tools.forEach((t: any) => {
                       const g1 = sem1Grades.find((r: any) => r.category.trim() === t.name.trim());
-                      if (g1) sem1Total += (Number(g1.score) || 0);
-                      
+                      if (g1) sem1Total += toGradeNumber(g1.score);
+
                       const g2 = sem2Grades.find((r: any) => r.category.trim() === t.name.trim());
-                      if (g2) sem2Total += (Number(g2.score) || 0);
+                      if (g2) sem2Total += toGradeNumber(g2.score);
                   });
 
-                  const finalAverage = (sem1Total + sem2Total) / 2;
-                  const finalYearSymbol = getSymbol(finalAverage);
+                 const finalAverageRaw = (sem1Total + sem2Total) / 2;
+                  const finalAverage = roundGrade(finalAverageRaw);
+                   const finalYearSymbol = getSymbol(finalAverage);
 
                   return (
                     <tr key={s.id || i}>
