@@ -425,7 +425,7 @@ const updateWeekData = (
 
         updated[idx] = {
             ...updated[idx],
-            value
+            [field]: value
         };
 
         return updated;
