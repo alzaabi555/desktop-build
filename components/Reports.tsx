@@ -1710,8 +1710,7 @@ if (hasSem1Grades && hasSem2Grades) {
 } 
     });                         
   
-
-      return stats;
+     return stats;
   }, [safeStudents, analyticsClass, assessmentTools]);
 
   const renderProgressBar = (count: number, total: number, colorClass: string, label: string) => {
