@@ -358,21 +358,20 @@ const Leaderboard: React.FC<LeaderboardProps> = ({ students, classes, onUpdateSt
 </div>
 
                        <div className="relative w-full md:w-60 shrink-0">
-  <select
-    data-voice-field="فصل الفرسان"
-    aria-label="اختيار فصل الفرسان"
-    value={selectedClass}
-    onChange={(e) => setSelectedClass(e.target.value)}
-    className="w-full h-10 rounded-xl border border-borderColor bg-bgCard px-4 text-xs font-black text-textPrimary outline-none shadow-sm transition-all focus:border-primary/40 focus:bg-bgSoft"
-  >
-    <option value="all">
-      كل الفصول
-    </option>
-
-    {safeClasses.map(c => (
-      <option
-          
-    </div>
+                            <select
+                                data-voice-field="فصل الفرسان"
+                                aria-label="اختيار فصل الفرسان"
+                                value={selectedClass}
+                                onChange={(e) => setSelectedClass(e.target.value)}
+                                className="w-full h-10 rounded-xl border border-borderColor bg-bgCard px-4 text-xs font-black text-textPrimary outline-none shadow-sm transition-all focus:border-primary/40 focus:bg-bgSoft"
+                            >
+                                <option value="all">كل الفصول</option>
+                                {safeClasses.map(c => (
+                                    <option key={c} value={c}>
+                                        {c}
+                                    </option>
+                                ))}
+                            </select>
                         </div>
                     </div>
                 </div>
