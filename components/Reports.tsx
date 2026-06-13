@@ -1706,8 +1706,9 @@ if (hasSem1Grades && hasSem2Grades) {
     sem1: hasSem1Grades ? s1Total : null,
     sem2: hasSem2Grades ? s2Total : null,
     final: null
-  }); // ⬅️ هنا وضعنا القوس المعقوف المفقود `}`
-} // ⬅️ وهنا مسحنا الفاصلة المنقوطة الزائدة `;`
+  }); 
+}
+}); // ⬅️ أضفنا هذا السطر لإغلاق حلقة forEach المفقودة
                 
      return stats;
   }, [safeStudents, analyticsClass, assessmentTools]);
@@ -2220,6 +2221,6 @@ if (hasSem1Grades && hasSem2Grades) {
       </PageLayout>
     </>
   );
-});
+};
 
 export default Reports;
