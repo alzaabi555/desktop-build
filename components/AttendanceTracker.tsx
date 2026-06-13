@@ -445,7 +445,8 @@ const AttendanceTracker: React.FC<AttendanceTrackerProps> = ({
       setIsSyncingAdmin(false);
     }
   };
-return (
+
+  return (
     <PageLayout
       title={t('attendanceTitle')}
       icon={
@@ -552,183 +553,180 @@ return (
           </button>
         </div>
       }
-    leftActions={
-  <div className="space-y-3 w-full mt-1" style={{ WebkitAppRegion: 'no-drag' } as any}>
-    {/* البحث الواضح */}
-    <div className="relative w-full">
-      <Search
-        className={`absolute ${
-          dir === 'rtl' ? 'right-4' : 'left-4'
-        } top-1/2 -translate-y-1/2 w-5 h-5 text-textSecondary`}
-      />
-
-      <div className="relative mt-4 z-10 w-full max-w-md mr-auto">
-  <Search
-    size={22}
-    className={`absolute top-1/2 -translate-y-1/2 text-textSecondary ${
-      dir === 'rtl' ? 'right-4' : 'left-4'
-    }`}
-  />
-<div className="relative mt-4 z-10 w-full max-w-md mr-auto">
-  <Search
-    size={22}
-    className={`absolute top-1/2 -translate-y-1/2 text-textSecondary ${
-      dir === 'rtl' ? 'right-4' : 'left-4'
-    }`}
-  />
-
-  <input
-    value={searchTerm}
-    onChange={(e) => setSearchTerm(e.target.value)}
-    placeholder="بحث عن طالب..."
-    className={`w-full h-12 border rounded-2xl ${
-      dir === 'rtl' ? 'pr-12 pl-4' : 'pl-12 pr-4'
-    } text-sm font-bold outline-none transition-all bg-bgCard border-borderColor text-textPrimary placeholder:text-textSecondary focus:bg-bgSoft focus:border-primary/40 shadow-sm`}
-  />
-</div>
-
-    {/* التقويم المدمج */}
-    <div className="flex items-center justify-between gap-1 p-1.5 rounded-2xl border shadow-sm bg-bgCard border-borderColor">
-      <button
-        type="button"
-        onClick={() => setWeekOffset(prev => prev - 1)}
-        className="p-1.5 text-textSecondary hover:bg-bgSoft rounded-xl transition-colors active:scale-95"
-        aria-label="الأسبوع السابق"
-      >
-        <ChevronRight
-          className={`w-4 h-4 ${dir === 'rtl' ? 'rotate-0' : 'rotate-180'}`}
-        />
-      </button>
-
-      <div className="flex flex-1 justify-between gap-1 text-center">
-        {weekDates.map((date, idx) => {
-          const isSelected =
-            date.toLocaleDateString('en-CA') === selectedDate;
-
-          const isToday =
-            date.toLocaleDateString('en-CA') ===
-            today.toLocaleDateString('en-CA');
-
-          return (
-            <button
-              key={idx}
-              type="button"
-              data-voice-command={`اختر تاريخ ${date.getDate()}`}
-              aria-label={`اختيار تاريخ ${date.getDate()}`}
-              onClick={() => setSelectedDate(date.toLocaleDateString('en-CA'))}
-              className={`flex flex-col items-center justify-center py-1.5 px-1 rounded-xl flex-1 transition-all active:scale-95 ${
-                isSelected
-                  ? 'bg-primary border border-primary text-white shadow-md scale-105'
-                  : 'text-textSecondary hover:bg-bgSoft'
-              }`}
-            >
-              <span
-                className={`text-[8px] font-bold mb-0.5 ${
-                  isSelected ? 'text-white/80' : 'text-textSecondary'
-                }`}
-              >
-                {date.toLocaleDateString(language === 'ar' ? 'ar-EG' : 'en-US', {
-                  weekday: 'short'
-                })}
-              </span>
-
-              <span className="text-xs font-black">
-                {date.getDate()}
-              </span>
-
-              {isToday && !isSelected && (
-                <div className="w-1 h-1 bg-primary rounded-full mt-0.5" />
-              )}
-            </button>
-          );
-        })}
-      </div>
-
-      <button
-        type="button"
-        onClick={() => setWeekOffset(prev => prev + 1)}
-        className="p-1.5 text-textSecondary hover:bg-bgSoft rounded-xl transition-colors active:scale-95"
-        aria-label="الأسبوع التالي"
-      >
-        <ChevronLeft
-          className={`w-4 h-4 ${dir === 'rtl' ? 'rotate-0' : 'rotate-180'}`}
-        />
-      </button>
-    </div>
-
-    {/* فلاتر الصف والفصل */}
-    <div className="w-full flex flex-col md:flex-row gap-2 md:items-center">
-      {/* الصفوف كأزرار قصيرة */}
-      <div className="overflow-x-auto no-scrollbar flex-1">
-        <div className="inline-flex items-center p-1 rounded-2xl border transition-all bg-bgCard border-borderColor shadow-sm">
-          <button
-            type="button"
-            data-voice-command="عرض كل الطلاب في الحضور كل الحضور"
-            aria-label="عرض كل الطلاب"
-            onClick={() => {
-              setSelectedGrade('all');
-              setClassFilter('all');
-            }}
-            className={`px-5 py-2 rounded-xl text-[10px] font-bold whitespace-nowrap transition-all duration-200 active:scale-95 ${
-              selectedGrade === 'all' && classFilter === 'all'
-                ? 'bg-primary text-white shadow-sm'
-                : 'text-textSecondary hover:text-textPrimary hover:bg-bgSoft'
-            }`}
-          >
-            {t('all')}
-          </button>
-
-          {availableGrades.map(g => (
-            <React.Fragment key={`grade-${g}`}>
-              <div className="w-[1px] h-4 mx-1 rounded-full shrink-0 bg-borderColor" />
-
-              <button
-                type="button"
-                data-voice-command={`عرض الصف ${g} في الحضور`}
-                aria-label={`عرض الصف ${g}`}
-                onClick={() => {
-                  setSelectedGrade(g);
-                  setClassFilter('all');
-                }}
-                className={`px-5 py-2 rounded-xl text-[10px] font-bold whitespace-nowrap transition-all duration-200 active:scale-95 ${
-                  selectedGrade === g && classFilter === 'all'
-                    ? 'bg-primary text-white shadow-sm'
-                    : 'text-textSecondary hover:text-textPrimary hover:bg-bgSoft'
-                }`}
-              >
-                {t('gradePrefix')} {g}
-              </button>
-            </React.Fragment>
-          ))}
-        </div>
-      </div>
-
-     {/* قائمة الفصول المنسدلة */}
-      <div className="relative w-full md:w-60 shrink-0">
-        <label className="sr-only">اختيار الفصل</label>
-
-        <select
-          data-voice-field="فصل الحضور"
-          aria-label="اختيار فصل الحضور"
-          value={classFilter}
-          onChange={(e) => setClassFilter(e.target.value)}
-          className="w-full h-11 rounded-2xl border border-borderColor bg-bgCard px-4 text-sm font-black text-textPrimary outline-none shadow-sm transition-all focus:border-primary/40 focus:bg-bgSoft"
+      leftActions={
+        <div
+          className="space-y-3 w-full mt-1"
+          style={{ WebkitAppRegion: 'no-drag' } as any}
         >
-          <option value="all">
-            كل الفصول
-          </option>
+          {/* البحث الواضح */}
+          <div className="relative w-full">
+            <div className="relative mt-4 z-10 w-full max-w-md mr-auto">
+              <Search
+                size={22}
+                className={`absolute top-1/2 -translate-y-1/2 text-textSecondary ${
+                  dir === 'rtl' ? 'right-4' : 'left-4'
+                }`}
+              />
+              <input
+                value={searchTerm}
+                onChange={e => setSearchTerm(e.target.value)}
+                placeholder="بحث عن طالب..."
+                className={`w-full h-12 border rounded-2xl ${
+                  dir === 'rtl' ? 'pr-12 pl-4' : 'pl-12 pr-4'
+                } text-sm font-bold outline-none transition-all bg-bgCard border-borderColor text-textPrimary placeholder:text-textSecondary focus:bg-bgSoft focus:border-primary/40 shadow-sm`}
+              />
+            </div>
+          </div>
 
-          {visibleClasses.map(c => (
-            <option key={c} value={c}>
-              {c}
-            </option>
-          ))}
-        </select>
-      </div>
-    </div>
-  </div>
-}
->
+          {/* التقويم المدمج */}
+          <div className="flex items-center justify-between gap-1 p-1.5 rounded-2xl border shadow-sm bg-bgCard border-borderColor">
+            <button
+              type="button"
+              onClick={() => setWeekOffset(prev => prev - 1)}
+              className="p-1.5 text-textSecondary hover:bg-bgSoft rounded-xl transition-colors active:scale-95"
+              aria-label="الأسبوع السابق"
+            >
+              <ChevronRight
+                className={`w-4 h-4 ${
+                  dir === 'rtl' ? 'rotate-0' : 'rotate-180'
+                }`}
+              />
+            </button>
+
+            <div className="flex flex-1 justify-between gap-1 text-center">
+              {weekDates.map((date, idx) => {
+                const isSelected =
+                  date.toLocaleDateString('en-CA') === selectedDate;
+
+                const isToday =
+                  date.toLocaleDateString('en-CA') ===
+                  today.toLocaleDateString('en-CA');
+
+                return (
+                  <button
+                    key={idx}
+                    type="button"
+                    data-voice-command={`اختر تاريخ ${date.getDate()}`}
+                    aria-label={`اختيار تاريخ ${date.getDate()}`}
+                    onClick={() =>
+                      setSelectedDate(date.toLocaleDateString('en-CA'))
+                    }
+                    className={`flex flex-col items-center justify-center py-1.5 px-1 rounded-xl flex-1 transition-all active:scale-95 ${
+                      isSelected
+                        ? 'bg-primary border border-primary text-white shadow-md scale-105'
+                        : 'text-textSecondary hover:bg-bgSoft'
+                    }`}
+                  >
+                    <span
+                      className={`text-[8px] font-bold mb-0.5 ${
+                        isSelected ? 'text-white/80' : 'text-textSecondary'
+                      }`}
+                    >
+                      {date.toLocaleDateString(
+                        language === 'ar' ? 'ar-EG' : 'en-US',
+                        {
+                          weekday: 'short'
+                        }
+                      )}
+                    </span>
+
+                    <span className="text-xs font-black">
+                      {date.getDate()}
+                    </span>
+
+                    {isToday && !isSelected && (
+                      <div className="w-1 h-1 bg-primary rounded-full mt-0.5" />
+                    )}
+                  </button>
+                );
+              })}
+            </div>
+
+            <button
+              type="button"
+              onClick={() => setWeekOffset(prev => prev + 1)}
+              className="p-1.5 text-textSecondary hover:bg-bgSoft rounded-xl transition-colors active:scale-95"
+              aria-label="الأسبوع التالي"
+            >
+              <ChevronLeft
+                className={`w-4 h-4 ${
+                  dir === 'rtl' ? 'rotate-0' : 'rotate-180'
+                }`}
+              />
+            </button>
+          </div>
+
+          {/* فلاتر الصف والفصل */}
+          <div className="w-full flex flex-col md:flex-row gap-2 md:items-center">
+            {/* الصفوف كأزرار قصيرة */}
+            <div className="overflow-x-auto no-scrollbar flex-1">
+              <div className="inline-flex items-center p-1 rounded-2xl border transition-all bg-bgCard border-borderColor shadow-sm">
+                <button
+                  type="button"
+                  data-voice-command="عرض كل الطلاب في الحضور كل الحضور"
+                  aria-label="عرض كل الطلاب"
+                  onClick={() => {
+                    setSelectedGrade('all');
+                    setClassFilter('all');
+                  }}
+                  className={`px-5 py-2 rounded-xl text-[10px] font-bold whitespace-nowrap transition-all duration-200 active:scale-95 ${
+                    selectedGrade === 'all' && classFilter === 'all'
+                      ? 'bg-primary text-white shadow-sm'
+                      : 'text-textSecondary hover:text-textPrimary hover:bg-bgSoft'
+                  }`}
+                >
+                  {t('all')}
+                </button>
+
+                {availableGrades.map(g => (
+                  <React.Fragment key={`grade-${g}`}>
+                    <div className="w-[1px] h-4 mx-1 rounded-full shrink-0 bg-borderColor" />
+
+                    <button
+                      type="button"
+                      data-voice-command={`عرض الصف ${g} في الحضور`}
+                      aria-label={`عرض الصف ${g}`}
+                      onClick={() => {
+                        setSelectedGrade(g);
+                        setClassFilter('all');
+                      }}
+                      className={`px-5 py-2 rounded-xl text-[10px] font-bold whitespace-nowrap transition-all duration-200 active:scale-95 ${
+                        selectedGrade === g && classFilter === 'all'
+                          ? 'bg-primary text-white shadow-sm'
+                          : 'text-textSecondary hover:text-textPrimary hover:bg-bgSoft'
+                      }`}
+                    >
+                      {t('gradePrefix')} {g}
+                    </button>
+                  </React.Fragment>
+                ))}
+              </div>
+            </div>
+
+            {/* قائمة الفصول المنسدلة */}
+            <div className="relative w-full md:w-60 shrink-0">
+              <label className="sr-only">اختيار الفصل</label>
+
+              <select
+                data-voice-field="فصل الحضور"
+                aria-label="اختيار فصل الحضور"
+                value={classFilter}
+                onChange={e => setClassFilter(e.target.value)}
+                className="w-full h-11 rounded-2xl border border-borderColor bg-bgCard px-4 text-sm font-black text-textPrimary outline-none shadow-sm transition-all focus:border-primary/40 focus:bg-bgSoft"
+              >
+                <option value="all">كل الفصول</option>
+
+                {visibleClasses.map(c => (
+                  <option key={c} value={c}>
+                    {c}
+                  </option>
+                ))}
+              </select>
+            </div>
+          </div>
+        </div>
+      }
+    >
       <div className="animate-in fade-in duration-500 pt-2 space-y-4">
         <div className="flex justify-between items-center gap-2 text-center">
           <button
@@ -784,23 +782,23 @@ return (
                 status === 'present'
                   ? t('present')
                   : status === 'absent'
-                    ? t('absent')
-                    : status === 'late'
-                      ? t('late')
-                      : status === 'truant'
-                        ? t('truant')
-                        : 'لم يسجل بعد';
+                  ? t('absent')
+                  : status === 'late'
+                  ? t('late')
+                  : status === 'truant'
+                  ? t('truant')
+                  : 'لم يسجل بعد';
 
               const statusTone =
                 status === 'present'
                   ? 'success'
                   : status === 'absent'
-                    ? 'danger'
-                    : status === 'late'
-                      ? 'warning'
-                      : status === 'truant'
-                        ? 'info'
-                        : 'neutral';
+                  ? 'danger'
+                  : status === 'late'
+                  ? 'warning'
+                  : status === 'truant'
+                  ? 'info'
+                  : 'neutral';
 
               return (
                 <StudentRow
@@ -815,12 +813,12 @@ return (
                     status === 'present'
                       ? 'border-success/30 bg-success/5'
                       : status === 'absent'
-                        ? 'border-danger/30 bg-danger/5'
-                        : status === 'late'
-                          ? 'border-warning/30 bg-warning/5'
-                          : status === 'truant'
-                            ? 'border-info/30 bg-info/5'
-                            : ''
+                      ? 'border-danger/30 bg-danger/5'
+                      : status === 'late'
+                      ? 'border-warning/30 bg-warning/5'
+                      : status === 'truant'
+                      ? 'border-info/30 bg-info/5'
+                      : ''
                   }
                   actions={[
                     {
@@ -896,8 +894,8 @@ return (
                 notificationTarget.type === 'absent'
                   ? 'bg-danger/20 text-danger'
                   : notificationTarget.type === 'late'
-                    ? 'bg-warning/20 text-warning'
-                    : 'bg-info/20 text-info'
+                  ? 'bg-warning/20 text-warning'
+                  : 'bg-info/20 text-info'
               }`}
             >
               <MessageCircle className="w-10 h-10" />
