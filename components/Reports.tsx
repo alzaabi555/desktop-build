@@ -1706,9 +1706,8 @@ if (hasSem1Grades && hasSem2Grades) {
     sem1: hasSem1Grades ? s1Total : null,
     sem2: hasSem2Grades ? s2Total : null,
     final: null
-      
-)
-);                
+  );
+};                
   
      return stats;
   }, [safeStudents, analyticsClass, assessmentTools]);
