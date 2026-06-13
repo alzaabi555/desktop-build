@@ -703,7 +703,7 @@ return (
         </div>
       </div>
 
-      {/* قائمة الفصول المنسدلة */}
+     {/* قائمة الفصول المنسدلة */}
       <div className="relative w-full md:w-60 shrink-0">
         <label className="sr-only">اختيار الفصل</label>
 
@@ -727,8 +727,8 @@ return (
       </div>
     </div>
   </div>
-}  
-      >
+}
+>
       <div className="animate-in fade-in duration-500 pt-2 space-y-4">
         <div className="flex justify-between items-center gap-2 text-center">
           <button
