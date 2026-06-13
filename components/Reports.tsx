@@ -2220,6 +2220,6 @@ if (hasSem1Grades && hasSem2Grades) {
       </PageLayout>
     </>
   );
-};
+});
 
 export default Reports;
