@@ -50,7 +50,28 @@ interface AssessmentMonth {
     tasks: string[];
 }
 
-// ================= الخطة الفصلية المرنة =================// ================= الخطة الفصلية المرنة        'الأسبوع التاسع',
+// ================= الخطة الفصلية المرنة =================// ================= الخطة الفصلية المر
+interface TermWeekPlan {
+    id: string;
+    name: string;
+    start: string;
+    end: string;
+    unit: string;
+    lesson: string;
+    defaultTopic: string;
+}
+
+const getArabicWeekName = (index: number) => {
+    const names = [
+        'الأسبوع الأول',
+        'الأسبوع الثاني',
+        'الأسبوع الثالث',
+        'الأسبوع الرابع',
+        'الأسبوع الخامس',
+        'الأسبوع السادس',
+        'الأسبوع السابع',
+        'الأسبوع الثامن',
+        'الأسبوع التاسع',
         'الأسبوع العاشر',
         'الأسبوع 11',
         'الأسبوع 12',
@@ -126,28 +147,6 @@ const safeText = (value: any) => {
 
 // ================= انتهاء تعريف الخطة الفصلية المرنة =================
 
-interface TermWeekPlan {
-    id: string;
-    name: string;
-    start: string;
-    end: string;
-    unit: string;
-    lesson: string;
-    defaultTopic: string;
-}
-
-const getArabicWeekName = (index: number) => {
-    const names = [
-        'الأسبوع الأول',
-        'الأسبوع الثاني',
-        'الأسبوع الثالث',
-        'الأسبوع الرابع',
-        'الأسبوع الخامس',
-        'الأسبوع السادس',
-        'الأسبوع السابع',
-        'الأسبوع الثامن',
-
-// 🆕 انتهاء بيانات الخطة الفصلية
 
 const Dashboard: React.FC<DashboardProps> = ({
     students, 
@@ -426,13 +425,12 @@ const updateWeekData = (
 
         updated[idx] = {
             ...updated[idx],
-            [field]: value
+            value
         };
 
         return updated;
     });
 };
-
 const validateTermPlan = (plan: TermWeekPlan[]) => {
     for (const week of plan) {
         if ((week.start && !week.end) || (!week.start && week.end)) {
