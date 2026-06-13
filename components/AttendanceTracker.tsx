@@ -562,18 +562,30 @@ return (
         } top-1/2 -translate-y-1/2 w-5 h-5 text-textSecondary`}
       />
 
-      <input
-        type="text"
-        data-voice-field="بحث الحضور"
-        aria-label="بحث الحضور"
-        value={searchTerm}
-        onChange={(e) => setSearchTerm(e.target.value)}
-        placeholder="بحث عن طالب..."
-        className={`w-full h-12 border rounded-2xl ${
-          dir === 'rtl' ? 'pr-12 pl-4' : 'pl-12 pr-4'
-        } text-sm font-bold outline-none transition-all bg-bgCard border-borderColor text-textPrimary placeholder:text-textSecondary focus:bg-bgSoft focus:border-primary/40 shadow-sm`}
-      />
-    </div>
+      <div className="relative mt-4 z-10 w-full max-w-md mr-auto">
+  <Search
+    size={22}
+    className={`absolute top-1/2 -translate-y-1/2 text-textSecondary ${
+      dir === 'rtl' ? 'right-4' : 'left-4'
+    }`}
+  />
+<div className="relative mt-4 z-10 w-full max-w-md mr-auto">
+  <Search
+    size={22}
+    className={`absolute top-1/2 -translate-y-1/2 text-textSecondary ${
+      dir === 'rtl' ? 'right-4' : 'left-4'
+    }`}
+  />
+
+  <input
+    value={searchTerm}
+    onChange={(e) => setSearchTerm(e.target.value)}
+    placeholder="بحث عن طالب..."
+    className={`w-full h-12 border rounded-2xl ${
+      dir === 'rtl' ? 'pr-12 pl-4' : 'pl-12 pr-4'
+    } text-sm font-bold outline-none transition-all bg-bgCard border-borderColor text-textPrimary placeholder:text-textSecondary focus:bg-bgSoft focus:border-primary/40 shadow-sm`}
+  />
+</div>
 
     {/* التقويم المدمج */}
     <div className="flex items-center justify-between gap-1 p-1.5 rounded-2xl border shadow-sm bg-bgCard border-borderColor">
