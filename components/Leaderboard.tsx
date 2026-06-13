@@ -371,7 +371,7 @@ const Leaderboard: React.FC<LeaderboardProps> = ({ students, classes, onUpdateSt
 
     {safeClasses.map(c => (
       <option
-                    </div>
+          
             }
         >
             <div className="animate-in fade-in duration-500 pt-4">
