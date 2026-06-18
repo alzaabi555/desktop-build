@@ -10,10 +10,28 @@ import { ThemeProvider } from './theme/ThemeProvider';
 
 // 🚀 Icons
 import {
-  LayoutDashboard, Users, CalendarCheck, BarChart3,
-  Settings as SettingsIcon, Info, FileText, BookOpen, Medal, Loader2, CheckSquare, Library, CloudSync,
-  Fingerprint, School, ArrowLeft, ShieldCheck, AlertCircle, Unlock
+  LayoutDashboard,
+  Users,
+  CalendarCheck,
+  BarChart3,
+  Settings as SettingsIcon,
+  Info,
+  FileText,
+  BookOpen,
+  Medal,
+  Loader2,
+  CheckSquare,
+  Library,
+  CloudSync,
+  Fingerprint,
+  School,
+  ArrowLeft,
+  ShieldCheck,
+  AlertCircle,
+  Unlock,
+  Gamepad2
 } from 'lucide-react';
+
 import { App as CapacitorApp } from '@capacitor/app';
 import { Capacitor } from '@capacitor/core';
 
@@ -33,15 +51,66 @@ import WelcomeScreen from './components/WelcomeScreen';
 import StudentGroups from './components/StudentGroups';
 import TeacherLibrary from './components/TeacherLibrary';
 import GlobalSyncManager from './components/GlobalSyncManager'; 
-// 💉 تم استدعاء شاشة مركز القيادة للمعلم الأول
 import SeniorDashboard from './components/SeniorDashboard'; 
-// 🎙️ 1. استدعاء المساعد الصوتي الخارق
 import VoiceAssistant from './components/VoiceAssistant';
+
+// 🎮 بنك أسئلة الألعاب التعليمية
+import TeacherGameQuestionsManager from './components/TeacherGameQuestionsManager';
+import type {
+  PublishGameQuestionsPayload
+} from './components/TeacherGameQuestionsManager';
 
 import { useSchoolBell } from './hooks/useSchoolBell';
 
 // 🌍 The New Global Layout Engine
 import { AppLayout } from './components/layout/AppLayout';
+
+// رابط تطبيق الطالب
+const STUDENT_APP_URL =
+  'https://script.google.com/macros/s/AKfycbwMYqSpnXvlMrL6po82-XePyAWBd9FMNCTgY7WlYaOH6pn1kTazLqxEfvremqsSk_dU/exec';
+
+// =========================================================================
+// 🎮 تجهيز أسئلة الألعاب التعليمية قبل إرسالها لراصد الطالب
+// =========================================================================
+const sanitizeGameQuestionsForStudent = (questions: any[]) => {
+  const today = new Date().toISOString().slice(0, 10);
+
+  return (Array.isArray(questions) ? questions : [])
+    .filter(q => q && q.active !== false)
+    .filter(q => {
+      if (!q.visibleFrom) return true;
+      return String(q.visibleFrom) <= today;
+    })
+    .map(q => ({
+      id: q.id,
+      subject: q.subject,
+      grade: q.grade,
+      className: q.classes?.[0] || q.className || '',
+      classes: q.classes || [],
+      semester: q.semester || '1',
+      unit: q.unit,
+      lesson: q.lesson,
+      gameTypes: q.gameTypes || [],
+      questionType: q.questionType,
+      question: q.question,
+      options:
+        q.questionType === 'true_false'
+          ? ['صح', 'خطأ']
+          : Array.isArray(q.options)
+            ? q.options.filter((opt: string) => String(opt || '').trim())
+            : [],
+      correctAnswerIndex: q.correctAnswerIndex,
+      correctAnswerText: q.correctAnswerText || '',
+      pairs: q.pairs || [],
+      sequence: q.sequence || [],
+      hints: q.hints || [],
+      explanation: q.explanation || '',
+      difficulty: q.difficulty || 'easy',
+      skill: q.skill || 'فهم',
+      active: q.active !== false,
+      visibleFrom: q.visibleFrom || today
+    }));
+};
 
 // ==================================================================
 // 🛡️ شاشة تسجيل الدخول الأمنية - راصد المعلم
@@ -79,11 +148,6 @@ const TeacherLoginScreen: React.FC<{
     setErrorMsg('');
 
     setTimeout(() => {
-      /**
-       * الحالة الأولى:
-       * لا يوجد قفل محفوظ نهائيًا.
-       * هنا فقط نعتبرها أول مرة ونحفظ بيانات القفل.
-       */
       if (!hasSavedLock) {
         localStorage.setItem(CIVIL_ID_KEY, enteredCivilId);
         localStorage.setItem(SCHOOL_CODE_KEY, enteredSchoolCode);
@@ -101,11 +165,6 @@ const TeacherLoginScreen: React.FC<{
         return;
       }
 
-      /**
-       * الحالة الثانية:
-       * يوجد قفل محفوظ.
-       * هنا لا نسمح أبدًا بحفظ مدخلات جديدة إذا كانت خاطئة.
-       */
       const isCivilIdValid = enteredCivilId === savedCivilId;
       const isSchoolCodeValid = enteredSchoolCode === savedSchoolCode;
 
@@ -120,10 +179,6 @@ const TeacherLoginScreen: React.FC<{
     }, 600);
   };
 
-  /**
-   * دخول سريع عند وجود قفل محفوظ.
-   * هذا يمنع طلب إدخال البيانات في كل مرة.
-   */
   const handleQuickLogin = () => {
     if (!hasSavedLock) return;
 
@@ -136,9 +191,6 @@ const TeacherLoginScreen: React.FC<{
     }, 350);
   };
 
-  /**
-   * إعادة ضبط القفل فقط، دون مسح بيانات الطلاب أو الدرجات.
-   */
   const handleResetLock = () => {
     const confirmed = window.confirm(
       'هل أنت متأكد من رغبتك في فك قفل التطبيق؟ لن يتم مسح بيانات الطلاب أو الدرجات، سيتم فقط السماح بتسجيل بيانات دخول جديدة.'
@@ -296,31 +348,40 @@ const TeacherLoginScreen: React.FC<{
   );
 };
 
-
 // ------------------------------------------------------------------
-// BUSINESS LOGIC & ROUTING ONLY (No UI styling clutter here)
+// BUSINESS LOGIC & ROUTING ONLY
 // ------------------------------------------------------------------
 
 const AppContent: React.FC = () => {
   const {
-    isDataLoaded, students, setStudents, classes, setClasses,
-    teacherInfo, setTeacherInfo, schedule, setSchedule,
-    periodTimes, setPeriodTimes, currentSemester, setCurrentSemester,
-    t, dir
+    isDataLoaded,
+    students,
+    setStudents,
+    classes,
+    setClasses,
+    teacherInfo,
+    setTeacherInfo,
+    schedule,
+    setSchedule,
+    periodTimes,
+    setPeriodTimes,
+    currentSemester,
+    setCurrentSemester,
+    t,
+    dir
   } = useApp();
 
   const [activeTab, setActiveTab] = useState('dashboard');
   const [appVersion, setAppVersion] = useState('4.4.1');
-  
-  // 💉 حالة تسجيل الدخول أصبحت false دائماً لتجبر المعلم على المطابقة عند كل فتح للتطبيق
-// ✅ إذا كان قفل المعلم محفوظًا مسبقًا، يدخل التطبيق مباشرة دون طلب الإدخال كل مرة
-const [isLoggedIn, setIsLoggedIn] = useState<boolean>(() => {
-  const lockReady = localStorage.getItem('rased_teacher_lock_ready') === 'true';
-  const civilId = localStorage.getItem('rased_teacher_civil_id');
-  const schoolCode = localStorage.getItem('rased_admin_school_code');
 
-  return Boolean(lockReady && civilId && schoolCode);
-});
+  const [isLoggedIn, setIsLoggedIn] = useState<boolean>(() => {
+    const lockReady = localStorage.getItem('rased_teacher_lock_ready') === 'true';
+    const civilId = localStorage.getItem('rased_teacher_civil_id');
+    const schoolCode = localStorage.getItem('rased_admin_school_code');
+
+    return Boolean(lockReady && civilId && schoolCode);
+  });
+
   const [showWelcome, setShowWelcome] = useState<boolean>(() => !localStorage.getItem('rased_welcome_seen'));
   const [notificationsEnabled, setNotificationsEnabled] = useState<boolean>(() => localStorage.getItem('bell_enabled') === 'true');
 
@@ -334,8 +395,11 @@ const [isLoggedIn, setIsLoggedIn] = useState<boolean>(() => {
           const info = await CapacitorApp.getInfo();
           setAppVersion(info.version);
         }
-      } catch (error) { console.error("Version error", error); }
+      } catch (error) {
+        console.error("Version error", error);
+      }
     };
+
     fetchVersion();
   }, []);
 
@@ -354,7 +418,58 @@ const [isLoggedIn, setIsLoggedIn] = useState<boolean>(() => {
     setShowWelcome(false);
   };
 
-  // 💉 إضافة زر "إدارة القسم" في القائمة السفلية (يظهر فقط للمعلم الأول)
+  // =========================================================================
+  // 🎮 نشر أسئلة الألعاب التعليمية إلى سحابة راصد الطالب
+  // =========================================================================
+  const handlePublishGameQuestions = async (
+    payload: PublishGameQuestionsPayload
+  ) => {
+    if (!payload.questions || payload.questions.length === 0) {
+      alert('لا توجد أسئلة ألعاب صالحة للنشر.');
+      return;
+    }
+
+    const studentGameQuestions = sanitizeGameQuestionsForStudent(payload.questions);
+
+    localStorage.setItem(
+      'rased_teacher_published_game_questions',
+      JSON.stringify(studentGameQuestions)
+    );
+
+    const savedTasks = JSON.parse(
+      localStorage.getItem('rased_teacher_tasks') || '[]'
+    );
+
+    const gamesPayload = {
+      action: 'gameQuestions',
+      schoolCode: payload.schoolCode,
+      teacherId: payload.teacherId,
+      subject: payload.subject,
+      grade: payload.grade,
+      classes: payload.classes,
+      students,
+      tasks: savedTasks,
+      gameQuestions: studentGameQuestions,
+      className: 'الكل',
+      timestamp: new Date().toISOString()
+    };
+
+    const response = await fetch(STUDENT_APP_URL, {
+      method: 'POST',
+      body: JSON.stringify(gamesPayload)
+    });
+
+    try {
+      const result = await response.json();
+
+      if (result && result.success === false) {
+        throw new Error(result.error || 'فشل نشر أسئلة الألعاب.');
+      }
+    } catch {
+      // بعض نشرات Apps Script قد لا ترجع JSON بشكل متوقع، لذلك لا نفشل إذا وصل الطلب.
+    }
+  };
+
   const mobileNavItems = [
     { id: 'dashboard', label: t('navDashboard') || (dir === 'rtl' ? 'الرئيسية' : 'Dashboard'), IconComponent: LayoutDashboard },
     ...(teacherInfo?.role === 'senior' ? [{ id: 'senior_dashboard', label: dir === 'rtl' ? 'القيادة' : 'Leader', IconComponent: ShieldCheck }] : []),
@@ -362,9 +477,9 @@ const [isLoggedIn, setIsLoggedIn] = useState<boolean>(() => {
     { id: 'students', label: t('navStudents') || (dir === 'rtl' ? 'الطلاب' : 'Students'), IconComponent: Users },
     { id: 'grades', label: t('navGrades') || (dir === 'rtl' ? 'الدرجات' : 'Grades'), IconComponent: BarChart3 },
     { id: 'tasks', label: t('navTasks') || t('tasks') || (dir === 'rtl' ? 'المهام' : 'Tasks'), IconComponent: CheckSquare },
+    { id: 'games', label: dir === 'rtl' ? 'الألعاب' : 'Games', IconComponent: Gamepad2 }
   ];
-  
-  // 💉 إضافة زر "إدارة القسم" في القائمة الجانبية (يظهر فقط للمعلم الأول)
+
   const desktopNavItems = [
     { id: 'dashboard', label: t('navDashboard') || (dir === 'rtl' ? 'الرئيسية' : 'Dashboard'), icon: LayoutDashboard },
     ...(teacherInfo?.role === 'senior' ? [{ id: 'senior_dashboard', label: dir === 'rtl' ? 'إدارة القسم' : 'Dept. Admin', icon: ShieldCheck }] : []),
@@ -374,26 +489,34 @@ const [isLoggedIn, setIsLoggedIn] = useState<boolean>(() => {
     { id: 'grades', label: t('navGrades') || (dir === 'rtl' ? 'الدرجات' : 'Grades'), icon: BarChart3 },
     { id: 'tasks', label: t('navTasks') || t('tasks') || (dir === 'rtl' ? 'المهام' : 'Tasks'), icon: CheckSquare },
     { id: 'library', label: t('navLibrary') || t('library') || (dir === 'rtl' ? 'المكتبة' : 'Library'), icon: Library },
+    { id: 'games', label: dir === 'rtl' ? 'الألعاب التعليمية' : 'Educational Games', icon: Gamepad2 },
     { id: 'leaderboard', label: t('navKnights') || (dir === 'rtl' ? 'الفرسان' : 'Leaderboard'), icon: Medal },
     { id: 'reports', label: t('navReports') || (dir === 'rtl' ? 'التقارير' : 'Reports'), icon: FileText },
     { id: 'sync', label: t('navSync') || (dir === 'rtl' ? 'مزامنة السحابة' : 'Cloud Sync'), icon: CloudSync },
     { id: 'guide', label: t('navGuide') || (dir === 'rtl' ? 'الدليل' : 'Guide'), icon: BookOpen },
     { id: 'settings', label: t('navSettings') || (dir === 'rtl' ? 'الإعدادات' : 'Settings'), icon: SettingsIcon },
-    { id: 'about', label: t('navAbout') || (dir === 'rtl' ? 'حول' : 'About'), icon: Info },
+    { id: 'about', label: t('navAbout') || (dir === 'rtl' ? 'حول' : 'About'), icon: Info }
   ];
 
   if (!isDataLoaded) {
     return (
       <div className="flex flex-col h-full w-full items-center justify-center fixed inset-0 z-[99999] bg-bgMain" dir={dir}>
         <Loader2 className="w-12 h-12 text-primary animate-spin mb-4" />
-        <p className="font-medium text-sm text-textSecondary">{t('loadingData') || (dir === 'rtl' ? 'جاري تحميل البيانات...' : 'Loading Data...')}</p>
+        <p className="font-medium text-sm text-textSecondary">
+          {t('loadingData') || (dir === 'rtl' ? 'جاري تحميل البيانات...' : 'Loading Data...')}
+        </p>
       </div>
     );
   }
 
-  // 🛡️ بوابة الأمن: تظهر دائماً حتى يطابق المعلم بياناته بنجاح
   if (!isLoggedIn) {
-    return <TeacherLoginScreen onLogin={() => setIsLoggedIn(true)} teacherInfo={teacherInfo} setTeacherInfo={setTeacherInfo} />;
+    return (
+      <TeacherLoginScreen
+        onLogin={() => setIsLoggedIn(true)}
+        teacherInfo={teacherInfo}
+        setTeacherInfo={setTeacherInfo}
+      />
+    );
   }
 
   if (showWelcome) return <WelcomeScreen onFinish={handleFinishWelcome} />;
@@ -405,37 +528,162 @@ const [isLoggedIn, setIsLoggedIn] = useState<boolean>(() => {
   const renderContent = () => {
     switch (activeTab) {
       case 'dashboard':
-        return <Dashboard
-          students={students} teacherInfo={teacherInfo} onUpdateTeacherInfo={(i) => setTeacherInfo(prev => ({ ...prev, ...i }))}
-          schedule={schedule} onUpdateSchedule={setSchedule} onSelectStudent={() => { }} onNavigate={handleNavigate}
-          onOpenSettings={() => setActiveTab('settings')} periodTimes={periodTimes} setPeriodTimes={setPeriodTimes}
-          notificationsEnabled={notificationsEnabled} onToggleNotifications={handleToggleNotifications}
-          currentSemester={currentSemester} onSemesterChange={setCurrentSemester}
-        />;
-      // 💉 المسار الجديد: شاشة مركز القيادة للمعلم الأول
-      case 'senior_dashboard': return <SeniorDashboard />;
-      case 'tasks': return <TeacherTasks students={students} teacherSubject={teacherInfo?.subject || 'عام'} />;
-      case 'library': return <TeacherLibrary />;
-      case 'attendance': return <AttendanceTracker students={students} classes={classes} setStudents={setStudents} />;
+        return (
+          <Dashboard
+            students={students}
+            teacherInfo={teacherInfo}
+            onUpdateTeacherInfo={(i) => setTeacherInfo(prev => ({ ...prev, ...i }))}
+            schedule={schedule}
+            onUpdateSchedule={setSchedule}
+            onSelectStudent={() => {}}
+            onNavigate={handleNavigate}
+            onOpenSettings={() => setActiveTab('settings')}
+            periodTimes={periodTimes}
+            setPeriodTimes={setPeriodTimes}
+            notificationsEnabled={notificationsEnabled}
+            onToggleNotifications={handleToggleNotifications}
+            currentSemester={currentSemester}
+            onSemesterChange={setCurrentSemester}
+          />
+        );
+
+      case 'senior_dashboard':
+        return <SeniorDashboard />;
+
+      case 'tasks':
+        return (
+          <TeacherTasks
+            students={students}
+            teacherSubject={teacherInfo?.subject || 'عام'}
+          />
+        );
+
+      case 'library':
+        return <TeacherLibrary />;
+
+      case 'attendance':
+        return (
+          <AttendanceTracker
+            students={students}
+            classes={classes}
+            setStudents={setStudents}
+          />
+        );
+
       case 'students':
-        return <StudentList
-          students={students} classes={classes} onAddClass={(n) => setClasses(p => [...p, n])} 
-          onAddStudentManually={(n, c, p, a, g, cid) => setStudents(prev => [...prev, { id: Math.random().toString(36).substr(2, 9), name: n, classes: [c], attendance: [], behaviors: [], grades: [], grade: '', parentPhone: p, avatar: a, gender: g || 'male', parentCode: cid }])}
-          onBatchAddStudents={(newS) => setStudents(prev => [...prev, ...newS])} 
-          onUpdateStudent={(u) => setStudents(p => p.map(s => s.id === u.id ? u : s))}
-          onDeleteStudent={(id) => setStudents(p => p.filter(s => s.id !== id))} 
-          onViewReport={() => {}} currentSemester={currentSemester} onSemesterChange={setCurrentSemester} 
-          onDeleteClass={(cn) => setClasses(p => p.filter(c => c !== cn))}
-        />;
-      case 'groups': return <StudentGroups />;
-      case 'grades': return <GradeBook students={students} classes={classes} onUpdateStudent={(u) => setStudents(p => p.map(s => s.id === u.id ? u : s))} setStudents={setStudents} currentSemester={currentSemester} onSemesterChange={setCurrentSemester} teacherInfo={teacherInfo} />;
-      case 'leaderboard': return <Leaderboard students={students} classes={classes} onUpdateStudent={(u) => setStudents(p => p.map(s => s.id === u.id ? u : s))} teacherInfo={teacherInfo} />;
-      case 'reports': return <Reports />;
-      case 'sync': return <GlobalSyncManager />;
-      case 'guide': return <UserGuide />;
-      case 'settings': return <Settings />;
-      case 'about': return <About />;
-      default: return null;
+        return (
+          <StudentList
+            students={students}
+            classes={classes}
+            onAddClass={(n) => setClasses(p => [...p, n])}
+            onAddStudentManually={(n, c, p, a, g, cid) =>
+              setStudents(prev => [
+                ...prev,
+                {
+                  id: Math.random().toString(36).substr(2, 9),
+                  name: n,
+                  classes: [c],
+                  attendance: [],
+                  behaviors: [],
+                  grades: [],
+                  grade: '',
+                  parentPhone: p,
+                  avatar: a,
+                  gender: g || 'male',
+                  parentCode: cid
+                }
+              ])
+            }
+            onBatchAddStudents={(newS) => setStudents(prev => [...prev, ...newS])}
+            onUpdateStudent={(u) => setStudents(p => p.map(s => s.id === u.id ? u : s))}
+            onDeleteStudent={(id) => setStudents(p => p.filter(s => s.id !== id))}
+            onViewReport={() => {}}
+            currentSemester={currentSemester}
+            onSemesterChange={setCurrentSemester}
+            onDeleteClass={(cn) => setClasses(p => p.filter(c => c !== cn))}
+          />
+        );
+
+      case 'groups':
+        return <StudentGroups />;
+
+      case 'grades':
+        return (
+          <GradeBook
+            students={students}
+            classes={classes}
+            onUpdateStudent={(u) => setStudents(p => p.map(s => s.id === u.id ? u : s))}
+            setStudents={setStudents}
+            currentSemester={currentSemester}
+            onSemesterChange={setCurrentSemester}
+            teacherInfo={teacherInfo}
+          />
+        );
+
+      case 'games':
+        return (
+          <TeacherGameQuestionsManager
+            schoolCode={
+              localStorage.getItem('rased_admin_school_code') ||
+              (teacherInfo as any)?.schoolCode ||
+              teacherInfo?.school ||
+              'default_school'
+            }
+            teacherId={teacherInfo?.civilId || localStorage.getItem('rased_teacher_civil_id') || 'default_teacher'}
+            teacherName={teacherInfo?.name || ''}
+            defaultSubject={teacherInfo?.subject || ''}
+            defaultGrade=""
+            classOptions={classes || []}
+            subjectOptions={
+              teacherInfo?.subject
+                ? [teacherInfo.subject]
+                : [
+                    'الدراسات الاجتماعية',
+                    'العلوم',
+                    'الرياضيات',
+                    'اللغة العربية',
+                    'اللغة الإنجليزية'
+                  ]
+            }
+            gradeOptions={[
+              'الخامس',
+              'السادس',
+              'السابع',
+              'الثامن',
+              'التاسع',
+              'العاشر'
+            ]}
+            onPublish={handlePublishGameQuestions}
+          />
+        );
+
+      case 'leaderboard':
+        return (
+          <Leaderboard
+            students={students}
+            classes={classes}
+            onUpdateStudent={(u) => setStudents(p => p.map(s => s.id === u.id ? u : s))}
+            teacherInfo={teacherInfo}
+          />
+        );
+
+      case 'reports':
+        return <Reports />;
+
+      case 'sync':
+        return <GlobalSyncManager />;
+
+      case 'guide':
+        return <UserGuide />;
+
+      case 'settings':
+        return <Settings />;
+
+      case 'about':
+        return <About />;
+
+      default:
+        return null;
     }
   };
 
@@ -451,15 +699,12 @@ const [isLoggedIn, setIsLoggedIn] = useState<boolean>(() => {
       appSubtitle={t('appSubtitleMain') || 'النسخة المتقدمة'}
     >
       {renderContent()}
-      
-      {/* 🎙️ 2. زراعة الكبسولة وتمرير مفاتيح التنقل لها */}
+
       <VoiceAssistant onNavigate={handleNavigate} />
-      
     </AppLayout>
   );
 };
 
-// 🌟 Wrap the app with BOTH Context Providers
 const App: React.FC = () => (
   <ThemeProvider>
     <AppProvider>
