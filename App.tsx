@@ -622,116 +622,83 @@ const AppContent: React.FC = () => {
           />
         );
 
-      case 'games':
-         return (
--          <TeacherGameQuestionsManager
--            schoolCode={
--              localStorage.getItem('rased_admin_school_code') ||
--              (teacherInfo as any)?.schoolCode ||
--              teacherInfo?.school ||
--              'default_school'
--            }
--            teacherId={teacherInfo?.civilId || localStorage.getItem('rased_teacher_civil_id') || 'default_teacher'}
--            teacherName={teacherInfo?.name || ''}
--            defaultSubject={teacherInfo?.subject || ''}
--            defaultGrade=""
--            classOptions={classes || []}
--            subjectOptions={
--              teacherInfo?.subject
--                ? [teacherInfo.subject]
--                : [
--                    'الدراسات الاجتماعية',
--                    'العلوم',
--                    'الرياضيات',
--                    'اللغة العربية',
--                    'اللغة الإنجليزية'
--                  ]
--            }
--            gradeOptions={[
--              'الخامس',
--              'السادس',
--              'السابع',
--              'الثامن',
--              'التاسع',
--              'العاشر'
--            ]}
--            onPublish={handlePublishGameQuestions}
--          />
-+          <div className="space-y-4">
-+            <div className="bg-bgCard border border-borderColor rounded-3xl p-2 shadow-sm flex gap-2">
-+              <button
-+                type="button"
-+                onClick={() => setGamesView('questions')}
-+                className={`flex-1 h-11 rounded-2xl font-black text-sm transition-all active:scale-95 ${
-+                  gamesView === 'questions'
-+                    ? 'bg-primary text-white shadow-sm'
-+                    : 'bg-bgSoft text-textSecondary hover:text-primary'
-+                }`}
-+              >
-+                الأسئلة
-+              </button>
-+
-+              <button
-+                type="button"
-+                onClick={() => setGamesView('results')}
-+                className={`flex-1 h-11 rounded-2xl font-black text-sm transition-all active:scale-95 ${
-+                  gamesView === 'results'
-+                    ? 'bg-primary text-white shadow-sm'
-+                    : 'bg-bgSoft text-textSecondary hover:text-primary'
-+                }`}
-+              >
-+                النتائج
-+              </button>
-+            </div>
-+
-+            {gamesView === 'questions' ? (
-+              <TeacherGameQuestionsManager
-+                schoolCode={
-+                  localStorage.getItem('rased_admin_school_code') ||
-+                  (teacherInfo as any)?.schoolCode ||
-+                  teacherInfo?.school ||
-+                  'default_school'
-+                }
-+                teacherId={teacherInfo?.civilId || localStorage.getItem('rased_teacher_civil_id') || 'default_teacher'}
-+                teacherName={teacherInfo?.name || ''}
-+                defaultSubject={teacherInfo?.subject || ''}
-+                defaultGrade=""
-+                classOptions={classes || []}
-+                subjectOptions={
-+                  teacherInfo?.subject
-+                    ? [teacherInfo.subject]
-+                    : [
-+                        'الدراسات الاجتماعية',
-+                        'العلوم',
-+                        'الرياضيات',
-+                        'اللغة العربية',
-+                        'اللغة الإنجليزية'
-+                      ]
-+                }
-+                gradeOptions={[
-+                  'الخامس',
-+                  'السادس',
-+                  'السابع',
-+                  'الثامن',
-+                  'التاسع',
-+                  'العاشر'
-+                ]}
-+                onPublish={handlePublishGameQuestions}
-+              />
-+            ) : (
-+              <TeacherGameResultsDashboard
-+                students={students}
-+                teacherId={teacherInfo?.civilId || localStorage.getItem('rased_teacher_civil_id') || 'default_teacher'}
-+                schoolCode={
-+                  localStorage.getItem('rased_admin_school_code') ||
-+                  (teacherInfo as any)?.schoolCode ||
-+                  teacherInfo?.school ||
-+                  'default_school'
-+                }
-+              />
-+            )}
-+          </div>
-         );
+case 'games':
+        return (
+          <div className="space-y-4">
+            <div className="bg-bgCard border border-borderColor rounded-3xl p-2 shadow-sm flex gap-2">
+              <button
+                type="button"
+                onClick={() => setGamesView('questions')}
+                className={`flex-1 h-11 rounded-2xl font-black text-sm transition-all active:scale-95 ${
+                  gamesView === 'questions'
+                    ? 'bg-primary text-white shadow-sm'
+                    : 'bg-bgSoft text-textSecondary hover:text-primary'
+                }`}
+              >
+                الأسئلة
+              </button>
+
+              <button
+                type="button"
+                onClick={() => setGamesView('results')}
+                className={`flex-1 h-11 rounded-2xl font-black text-sm transition-all active:scale-95 ${
+                  gamesView === 'results'
+                    ? 'bg-primary text-white shadow-sm'
+                    : 'bg-bgSoft text-textSecondary hover:text-primary'
+                }`}
+              >
+                النتائج
+              </button>
+            </div>
+
+            {gamesView === 'questions' ? (
+              <TeacherGameQuestionsManager
+                schoolCode={
+                  localStorage.getItem('rased_admin_school_code') ||
+                  (teacherInfo as any)?.schoolCode ||
+                  teacherInfo?.school ||
+                  'default_school'
+                }
+                teacherId={teacherInfo?.civilId || localStorage.getItem('rased_teacher_civil_id') || 'default_teacher'}
+                teacherName={teacherInfo?.name || ''}
+                defaultSubject={teacherInfo?.subject || ''}
+                defaultGrade=""
+                classOptions={classes || []}
+                subjectOptions={
+                  teacherInfo?.subject
+                    ? [teacherInfo.subject]
+                    : [
+                        'الدراسات الاجتماعية',
+                        'العلوم',
+                        'الرياضيات',
+                        'اللغة العربية',
+                        'اللغة الإنجليزية'
+                      ]
+                }
+                gradeOptions={[
+                  'الخامس',
+                  'السادس',
+                  'السابع',
+                  'الثامن',
+                  'التاسع',
+                  'العاشر'
+                ]}
+                onPublish={handlePublishGameQuestions}
+              />
+            ) : (
+              <TeacherGameResultsDashboard
+                students={students}
+                teacherId={teacherInfo?.civilId || localStorage.getItem('rased_teacher_civil_id') || 'default_teacher'}
+                schoolCode={
+                  localStorage.getItem('rased_admin_school_code') ||
+                  (teacherInfo as any)?.schoolCode ||
+                  teacherInfo?.school ||
+                  'default_school'
+                }
+              />
+            )}
+          </div>
+        );
 
       case 'leaderboard':
         return (
