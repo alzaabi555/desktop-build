@@ -666,8 +666,8 @@ const fetchGameResults = async () => {
 
 case 'games':
         return (
-          <div className="space-y-4">
-            <div className="bg-bgCard border border-borderColor rounded-3xl p-2 shadow-sm flex gap-2">
+           <div className="h-full min-h-0 overflow-y-auto overscroll-contain custom-scrollbar space-y-4 pb-24 pr-1"> 
+             <div className="bg-bgCard border border-borderColor rounded-3xl p-2 shadow-sm flex gap-2">
               <button
                 type="button"
                 onClick={() => setGamesView('questions')}
