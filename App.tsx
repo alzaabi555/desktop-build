@@ -3,7 +3,7 @@ import React, { useState, useEffect } from 'react';
 import './theme/tokens.css';
 
 // 💉 2. حقن ملف الستايل الأساسي للمعلم
-import './index.css'; 
+import './index.css';
 
 import { AppProvider, useApp } from './context/AppContext';
 import { ThemeProvider } from './theme/ThemeProvider';
@@ -50,8 +50,8 @@ import BrandLogo from './components/BrandLogo';
 import WelcomeScreen from './components/WelcomeScreen';
 import StudentGroups from './components/StudentGroups';
 import TeacherLibrary from './components/TeacherLibrary';
-import GlobalSyncManager from './components/GlobalSyncManager'; 
-import SeniorDashboard from './components/SeniorDashboard'; 
+import GlobalSyncManager from './components/GlobalSyncManager';
+import SeniorDashboard from './components/SeniorDashboard';
 import VoiceAssistant from './components/VoiceAssistant';
 
 // 🎮 بنك أسئلة الألعاب التعليمية
@@ -376,8 +376,9 @@ const AppContent: React.FC = () => {
   const [activeTab, setActiveTab] = useState('dashboard');
   const [gamesView, setGamesView] = useState<'questions' | 'results'>('questions');
   const [gameResults, setGameResults] = useState<TeacherGameResultLogEntry[]>([]);
-const [isLoadingGameResults, setIsLoadingGameResults] = useState(false);
+  const [isLoadingGameResults, setIsLoadingGameResults] = useState(false);
   const [appVersion, setAppVersion] = useState('4.4.1');
+
   const [isLoggedIn, setIsLoggedIn] = useState<boolean>(() => {
     const lockReady = localStorage.getItem('rased_teacher_lock_ready') === 'true';
     const civilId = localStorage.getItem('rased_teacher_civil_id');
@@ -400,7 +401,7 @@ const [isLoadingGameResults, setIsLoadingGameResults] = useState(false);
           setAppVersion(info.version);
         }
       } catch (error) {
-        console.error("Version error", error);
+        console.error('Version error', error);
       }
     };
 
@@ -432,47 +433,7 @@ const [isLoadingGameResults, setIsLoadingGameResults] = useState(false);
       alert('لا توجد أسئلة ألعاب صالحة للنشر.');
       return;
     }
-const fetchGameResults = async () => {
-  setIsLoadingGameResults(true);
 
-  try {
-    const response = await fetch(STUDENT_APP_URL, {
-      method: 'POST',
-      body: JSON.stringify({
-        action: 'getGameResults',
-        schoolCode:
-          localStorage.getItem('rased_admin_school_code') ||
-          (teacherInfo as any)?.schoolCode ||
-          teacherInfo?.school ||
-          'default_school',
-        teacherId:
-          teacherInfo?.civilId ||
-          localStorage.getItem('rased_teacher_civil_id') ||
-          'default_teacher'
-      })
-    });
-
-    const result = await response.json();
-
-    const results = Array.isArray(result?.data)
-      ? result.data
-      : Array.isArray(result?.results)
-        ? result.results
-        : [];
-
-    setGameResults(results);
-  } catch (error) {
-    console.error('Failed to fetch game results', error);
-    setGameResults([]);
-  } finally {
-    setIsLoadingGameResults(false);
-  }
-};
-    useEffect(() => {
-  if (activeTab === 'games' && gamesView === 'results') {
-    fetchGameResults();
-  }
-}, [activeTab, gamesView]);
     const studentGameQuestions = sanitizeGameQuestionsForStudent(payload.questions);
 
     localStorage.setItem(
@@ -513,6 +474,49 @@ const fetchGameResults = async () => {
       // بعض نشرات Apps Script قد لا ترجع JSON بشكل متوقع، لذلك لا نفشل إذا وصل الطلب.
     }
   };
+
+  const fetchGameResults = async () => {
+    setIsLoadingGameResults(true);
+
+    try {
+      const response = await fetch(STUDENT_APP_URL, {
+        method: 'POST',
+        body: JSON.stringify({
+          action: 'getGameResults',
+          schoolCode:
+            localStorage.getItem('rased_admin_school_code') ||
+            (teacherInfo as any)?.schoolCode ||
+            teacherInfo?.school ||
+            'default_school',
+          teacherId:
+            teacherInfo?.civilId ||
+            localStorage.getItem('rased_teacher_civil_id') ||
+            'default_teacher'
+        })
+      });
+
+      const result = await response.json();
+
+      const results = Array.isArray(result?.data)
+        ? result.data
+        : Array.isArray(result?.results)
+          ? result.results
+          : [];
+
+      setGameResults(results);
+    } catch (error) {
+      console.error('Failed to fetch game results', error);
+      setGameResults([]);
+    } finally {
+      setIsLoadingGameResults(false);
+    }
+  };
+
+  useEffect(() => {
+    if (activeTab === 'games' && gamesView === 'results') {
+      fetchGameResults();
+    }
+  }, [activeTab, gamesView]);
 
   const mobileNavItems = [
     { id: 'dashboard', label: t('navDashboard') || (dir === 'rtl' ? 'الرئيسية' : 'Dashboard'), IconComponent: LayoutDashboard },
@@ -664,10 +668,10 @@ const fetchGameResults = async () => {
           />
         );
 
-case 'games':
+      case 'games':
         return (
-           <div className="h-full min-h-0 overflow-y-auto overscroll-contain custom-scrollbar space-y-4 pb-24 pr-1"> 
-             <div className="bg-bgCard border border-borderColor rounded-3xl p-2 shadow-sm flex gap-2">
+          <div className="h-full min-h-0 overflow-y-auto overscroll-contain custom-scrollbar space-y-4 pb-24 pr-1">
+            <div className="bg-bgCard border border-borderColor rounded-3xl p-2 shadow-sm flex gap-2">
               <button
                 type="button"
                 onClick={() => setGamesView('questions')}
@@ -682,7 +686,10 @@ case 'games':
 
               <button
                 type="button"
-                onClick={() => setGamesView('results')}
+                onClick={() => {
+                  setGamesView('results');
+                  fetchGameResults();
+                }}
                 className={`flex-1 h-11 rounded-2xl font-black text-sm transition-all active:scale-95 ${
                   gamesView === 'results'
                     ? 'bg-primary text-white shadow-sm'
@@ -729,19 +736,19 @@ case 'games':
               />
             ) : (
               <TeacherGameResultsDashboard
-  results={gameResults}
-  students={students}
-  isLoading={isLoadingGameResults}
-  onRefresh={fetchGameResults}
-  readLocalStorageFallback={false}
-  teacherId={teacherInfo?.civilId || localStorage.getItem('rased_teacher_civil_id') || 'default_teacher'}
-  schoolCode={
-    localStorage.getItem('rased_admin_school_code') ||
-    (teacherInfo as any)?.schoolCode ||
-    teacherInfo?.school ||
-    'default_school'
-  }
-/>
+                results={gameResults}
+                students={students}
+                isLoading={isLoadingGameResults}
+                onRefresh={fetchGameResults}
+                readLocalStorageFallback={false}
+                teacherId={teacherInfo?.civilId || localStorage.getItem('rased_teacher_civil_id') || 'default_teacher'}
+                schoolCode={
+                  localStorage.getItem('rased_admin_school_code') ||
+                  (teacherInfo as any)?.schoolCode ||
+                  teacherInfo?.school ||
+                  'default_school'
+                }
+              />
             )}
           </div>
         );
