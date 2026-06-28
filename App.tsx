@@ -373,13 +373,13 @@ const AppContent: React.FC = () => {
     dir
   } = useApp();
 
-  const [activeTab, setActiveTab] = useState('dashboard');
-  const [studentManagementView, setStudentManagementView] = useState<'students' | 'groups' | 'attendance'>('students');
+   const [activeTab, setActiveTab] = useState('dashboard');
+  const [studentManagementView, setStudentManagementView] = useState<'students' | 'attendance' | 'groups'>('students');
   const [learningView, setLearningView] = useState<'grades' | 'tasks' | 'library'>('grades');
   const [gamesView, setGamesView] = useState<'questions' | 'results'>('questions');
   const [reportsView, setReportsView] = useState<'reports' | 'leaderboard'>('reports');
   const [adminView, setAdminView] = useState<'sync'>('sync');
-  const [helpView, setHelpView] = useState<'guide' | 'settings' | 'about'>('guide');
+  const [helpView, setHelpView] = useState<'settings' | 'guide' | 'about'>('guide');
   const [gameResults, setGameResults] = useState<TeacherGameResultLogEntry[]>([]);
   const [isLoadingGameResults, setIsLoadingGameResults] = useState(false);
   const [appVersion, setAppVersion] = useState('4.4.1');
