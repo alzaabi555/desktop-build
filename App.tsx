@@ -374,7 +374,12 @@ const AppContent: React.FC = () => {
   } = useApp();
 
   const [activeTab, setActiveTab] = useState('dashboard');
+  const [studentManagementView, setStudentManagementView] = useState<'students' | 'groups' | 'attendance'>('students');
+  const [learningView, setLearningView] = useState<'grades' | 'tasks' | 'library'>('grades');
   const [gamesView, setGamesView] = useState<'questions' | 'results'>('questions');
+  const [reportsView, setReportsView] = useState<'reports' | 'leaderboard'>('reports');
+  const [adminView, setAdminView] = useState<'sync'>('sync');
+  const [helpView, setHelpView] = useState<'guide' | 'settings' | 'about'>('guide');
   const [gameResults, setGameResults] = useState<TeacherGameResultLogEntry[]>([]);
   const [isLoadingGameResults, setIsLoadingGameResults] = useState(false);
   const [appVersion, setAppVersion] = useState('4.4.1');
@@ -521,29 +526,22 @@ const AppContent: React.FC = () => {
   const mobileNavItems = [
     { id: 'dashboard', label: t('navDashboard') || (dir === 'rtl' ? 'الرئيسية' : 'Dashboard'), IconComponent: LayoutDashboard },
     ...(teacherInfo?.role === 'senior' ? [{ id: 'senior_dashboard', label: dir === 'rtl' ? 'القيادة' : 'Leader', IconComponent: ShieldCheck }] : []),
-    { id: 'attendance', label: t('navAttendance') || (dir === 'rtl' ? 'الغياب' : 'Attendance'), IconComponent: CalendarCheck },
-    { id: 'students', label: t('navStudents') || (dir === 'rtl' ? 'الطلاب' : 'Students'), IconComponent: Users },
-    { id: 'grades', label: t('navGrades') || (dir === 'rtl' ? 'الدرجات' : 'Grades'), IconComponent: BarChart3 },
-    { id: 'tasks', label: t('navTasks') || t('tasks') || (dir === 'rtl' ? 'المهام' : 'Tasks'), IconComponent: CheckSquare },
-    { id: 'games', label: dir === 'rtl' ? 'الألعاب' : 'Games', IconComponent: Gamepad2 }
+    { id: 'student_management', label: dir === 'rtl' ? 'الطلاب' : 'Students', IconComponent: Users },
+    { id: 'learning_evaluation', label: dir === 'rtl' ? 'التعليم' : 'Learning', IconComponent: BookOpen },
+    { id: 'games', label: dir === 'rtl' ? 'الألعاب' : 'Games', IconComponent: Gamepad2 },
+    { id: 'reports_analysis', label: dir === 'rtl' ? 'التقارير' : 'Reports', IconComponent: BarChart3 },
+    { id: 'help_settings', label: dir === 'rtl' ? 'المزيد' : 'More', IconComponent: SettingsIcon }
   ];
 
   const desktopNavItems = [
     { id: 'dashboard', label: t('navDashboard') || (dir === 'rtl' ? 'الرئيسية' : 'Dashboard'), icon: LayoutDashboard },
     ...(teacherInfo?.role === 'senior' ? [{ id: 'senior_dashboard', label: dir === 'rtl' ? 'إدارة القسم' : 'Dept. Admin', icon: ShieldCheck }] : []),
-    { id: 'attendance', label: t('navAttendance') || (dir === 'rtl' ? 'الغياب' : 'Attendance'), icon: CalendarCheck },
-    { id: 'students', label: t('navStudents') || (dir === 'rtl' ? 'الطلاب' : 'Students'), icon: Users },
-    { id: 'groups', label: t('navGroups') || (dir === 'rtl' ? 'المجموعات' : 'Groups'), icon: Users },
-    { id: 'grades', label: t('navGrades') || (dir === 'rtl' ? 'الدرجات' : 'Grades'), icon: BarChart3 },
-    { id: 'tasks', label: t('navTasks') || t('tasks') || (dir === 'rtl' ? 'المهام' : 'Tasks'), icon: CheckSquare },
-    { id: 'library', label: t('navLibrary') || t('library') || (dir === 'rtl' ? 'المكتبة' : 'Library'), icon: Library },
+    { id: 'student_management', label: dir === 'rtl' ? 'إدارة الطلاب' : 'Student Management', icon: Users },
+    { id: 'learning_evaluation', label: dir === 'rtl' ? 'التعليم والتقييم' : 'Learning & Evaluation', icon: BookOpen },
     { id: 'games', label: dir === 'rtl' ? 'الألعاب التعليمية' : 'Educational Games', icon: Gamepad2 },
-    { id: 'leaderboard', label: t('navKnights') || (dir === 'rtl' ? 'الفرسان' : 'Leaderboard'), icon: Medal },
-    { id: 'reports', label: t('navReports') || (dir === 'rtl' ? 'التقارير' : 'Reports'), icon: FileText },
-    { id: 'sync', label: t('navSync') || (dir === 'rtl' ? 'مزامنة السحابة' : 'Cloud Sync'), icon: CloudSync },
-    { id: 'guide', label: t('navGuide') || (dir === 'rtl' ? 'الدليل' : 'Guide'), icon: BookOpen },
-    { id: 'settings', label: t('navSettings') || (dir === 'rtl' ? 'الإعدادات' : 'Settings'), icon: SettingsIcon },
-    { id: 'about', label: t('navAbout') || (dir === 'rtl' ? 'حول' : 'About'), icon: Info }
+    { id: 'reports_analysis', label: dir === 'rtl' ? 'التقارير والتحليل' : 'Reports & Analytics', icon: BarChart3 },
+    { id: 'admin_sync', label: dir === 'rtl' ? 'الإدارة والمزامنة' : 'Admin & Sync', icon: CloudSync },
+    { id: 'help_settings', label: dir === 'rtl' ? 'المساعدة والإعدادات' : 'Help & Settings', icon: SettingsIcon }
   ];
 
   if (!isDataLoaded) {
@@ -570,7 +568,184 @@ const AppContent: React.FC = () => {
   if (showWelcome) return <WelcomeScreen onFinish={handleFinishWelcome} />;
 
   const handleNavigate = (tab: string) => {
+    if (tab === 'attendance') {
+      setStudentManagementView('attendance');
+      setActiveTab('student_management');
+      return;
+    }
+
+    if (tab === 'students') {
+      setStudentManagementView('students');
+      setActiveTab('student_management');
+      return;
+    }
+
+    if (tab === 'groups') {
+      setStudentManagementView('groups');
+      setActiveTab('student_management');
+      return;
+    }
+
+    if (tab === 'grades') {
+      setLearningView('grades');
+      setActiveTab('learning_evaluation');
+      return;
+    }
+
+    if (tab === 'tasks') {
+      setLearningView('tasks');
+      setActiveTab('learning_evaluation');
+      return;
+    }
+
+    if (tab === 'library') {
+      setLearningView('library');
+      setActiveTab('learning_evaluation');
+      return;
+    }
+
+    if (tab === 'leaderboard') {
+      setReportsView('leaderboard');
+      setActiveTab('reports_analysis');
+      return;
+    }
+
+    if (tab === 'reports') {
+      setReportsView('reports');
+      setActiveTab('reports_analysis');
+      return;
+    }
+
+    if (tab === 'sync') {
+      setAdminView('sync');
+      setActiveTab('admin_sync');
+      return;
+    }
+
+    if (tab === 'guide') {
+      setHelpView('guide');
+      setActiveTab('help_settings');
+      return;
+    }
+
+    if (tab === 'settings') {
+      setHelpView('settings');
+      setActiveTab('help_settings');
+      return;
+    }
+
+    if (tab === 'about') {
+      setHelpView('about');
+      setActiveTab('help_settings');
+      return;
+    }
+
     setActiveTab(tab);
+  };
+
+  const renderHubTabs = <T extends string>(
+    items: { id: T; label: string; icon?: React.ElementType }[],
+    value: T,
+    onChange: (value: T) => void
+  ) => (
+    <div className="bg-bgCard border border-borderColor rounded-3xl p-2 shadow-sm flex flex-wrap gap-2">
+      {items.map(item => {
+        const Icon = item.icon;
+        const active = value === item.id;
+
+        return (
+          <button
+            key={item.id}
+            type="button"
+            onClick={() => onChange(item.id)}
+            className={`flex-1 min-w-[120px] h-11 rounded-2xl font-black text-sm transition-all active:scale-95 flex items-center justify-center gap-2 ${
+              active
+                ? 'bg-primary text-white shadow-sm'
+                : 'bg-bgSoft text-textSecondary hover:text-primary'
+            }`}
+          >
+            {Icon && <Icon className="w-4 h-4" />}
+            {item.label}
+          </button>
+        );
+      })}
+    </div>
+  );
+
+  const renderStudentManagementContent = () => {
+    if (studentManagementView === 'attendance') {
+      return (
+        <AttendanceTracker
+          students={students}
+          classes={classes}
+          setStudents={setStudents}
+        />
+      );
+    }
+
+    if (studentManagementView === 'groups') {
+      return <StudentGroups />;
+    }
+
+    return (
+      <StudentList
+        students={students}
+        classes={classes}
+        onAddClass={(n) => setClasses(p => [...p, n])}
+        onAddStudentManually={(n, c, p, a, g, cid) =>
+          setStudents(prev => [
+            ...prev,
+            {
+              id: Math.random().toString(36).substr(2, 9),
+              name: n,
+              classes: [c],
+              attendance: [],
+              behaviors: [],
+              grades: [],
+              grade: '',
+              parentPhone: p,
+              avatar: a,
+              gender: g || 'male',
+              parentCode: cid
+            }
+          ])
+        }
+        onBatchAddStudents={(newS) => setStudents(prev => [...prev, ...newS])}
+        onUpdateStudent={(u) => setStudents(p => p.map(s => s.id === u.id ? u : s))}
+        onDeleteStudent={(id) => setStudents(p => p.filter(s => s.id !== id))}
+        onViewReport={() => {}}
+        currentSemester={currentSemester}
+        onSemesterChange={setCurrentSemester}
+        onDeleteClass={(cn) => setClasses(p => p.filter(c => c !== cn))}
+      />
+    );
+  };
+
+  const renderLearningContent = () => {
+    if (learningView === 'tasks') {
+      return (
+        <TeacherTasks
+          students={students}
+          teacherSubject={teacherInfo?.subject || 'عام'}
+        />
+      );
+    }
+
+    if (learningView === 'library') {
+      return <TeacherLibrary />;
+    }
+
+    return (
+      <GradeBook
+        students={students}
+        classes={classes}
+        onUpdateStudent={(u) => setStudents(p => p.map(s => s.id === u.id ? u : s))}
+        setStudents={setStudents}
+        currentSemester={currentSemester}
+        onSemesterChange={setCurrentSemester}
+        teacherInfo={teacherInfo}
+      />
+    );
   };
 
   const renderContent = () => {
@@ -585,7 +760,10 @@ const AppContent: React.FC = () => {
             onUpdateSchedule={setSchedule}
             onSelectStudent={() => {}}
             onNavigate={handleNavigate}
-            onOpenSettings={() => setActiveTab('settings')}
+            onOpenSettings={() => {
+              setHelpView('settings');
+              setActiveTab('help_settings');
+            }}
             periodTimes={periodTimes}
             setPeriodTimes={setPeriodTimes}
             notificationsEnabled={notificationsEnabled}
@@ -598,74 +776,36 @@ const AppContent: React.FC = () => {
       case 'senior_dashboard':
         return <SeniorDashboard />;
 
-      case 'tasks':
+      case 'student_management':
         return (
-          <TeacherTasks
-            students={students}
-            teacherSubject={teacherInfo?.subject || 'عام'}
-          />
+          <div className="h-full min-h-0 overflow-y-auto overscroll-contain custom-scrollbar space-y-4 pb-24 pr-1">
+            {renderHubTabs(
+              [
+                { id: 'students', label: 'الطلاب', icon: Users },
+                { id: 'groups', label: 'المجموعات', icon: Users },
+                { id: 'attendance', label: 'الحضور', icon: CalendarCheck }
+              ],
+              studentManagementView,
+              setStudentManagementView
+            )}
+            {renderStudentManagementContent()}
+          </div>
         );
 
-      case 'library':
-        return <TeacherLibrary />;
-
-      case 'attendance':
+      case 'learning_evaluation':
         return (
-          <AttendanceTracker
-            students={students}
-            classes={classes}
-            setStudents={setStudents}
-          />
-        );
-
-      case 'students':
-        return (
-          <StudentList
-            students={students}
-            classes={classes}
-            onAddClass={(n) => setClasses(p => [...p, n])}
-            onAddStudentManually={(n, c, p, a, g, cid) =>
-              setStudents(prev => [
-                ...prev,
-                {
-                  id: Math.random().toString(36).substr(2, 9),
-                  name: n,
-                  classes: [c],
-                  attendance: [],
-                  behaviors: [],
-                  grades: [],
-                  grade: '',
-                  parentPhone: p,
-                  avatar: a,
-                  gender: g || 'male',
-                  parentCode: cid
-                }
-              ])
-            }
-            onBatchAddStudents={(newS) => setStudents(prev => [...prev, ...newS])}
-            onUpdateStudent={(u) => setStudents(p => p.map(s => s.id === u.id ? u : s))}
-            onDeleteStudent={(id) => setStudents(p => p.filter(s => s.id !== id))}
-            onViewReport={() => {}}
-            currentSemester={currentSemester}
-            onSemesterChange={setCurrentSemester}
-            onDeleteClass={(cn) => setClasses(p => p.filter(c => c !== cn))}
-          />
-        );
-
-      case 'groups':
-        return <StudentGroups />;
-
-      case 'grades':
-        return (
-          <GradeBook
-            students={students}
-            classes={classes}
-            onUpdateStudent={(u) => setStudents(p => p.map(s => s.id === u.id ? u : s))}
-            setStudents={setStudents}
-            currentSemester={currentSemester}
-            onSemesterChange={setCurrentSemester}
-            teacherInfo={teacherInfo}
-          />
+          <div className="h-full min-h-0 overflow-y-auto overscroll-contain custom-scrollbar space-y-4 pb-24 pr-1">
+            {renderHubTabs(
+              [
+                { id: 'grades', label: 'الدرجات', icon: BarChart3 },
+                { id: 'tasks', label: 'المهام', icon: CheckSquare },
+                { id: 'library', label: 'المكتبة', icon: Library }
+              ],
+              learningView,
+              setLearningView
+            )}
+            {renderLearningContent()}
+          </div>
         );
 
       case 'games':
@@ -753,30 +893,65 @@ const AppContent: React.FC = () => {
           </div>
         );
 
-      case 'leaderboard':
+      case 'reports_analysis':
         return (
-          <Leaderboard
-            students={students}
-            classes={classes}
-            onUpdateStudent={(u) => setStudents(p => p.map(s => s.id === u.id ? u : s))}
-            teacherInfo={teacherInfo}
-          />
+          <div className="h-full min-h-0 overflow-y-auto overscroll-contain custom-scrollbar space-y-4 pb-24 pr-1">
+            {renderHubTabs(
+              [
+                { id: 'reports', label: 'التقارير', icon: FileText },
+                { id: 'leaderboard', label: 'الفرسان', icon: Medal }
+              ],
+              reportsView,
+              setReportsView
+            )}
+            {reportsView === 'leaderboard' ? (
+              <Leaderboard
+                students={students}
+                classes={classes}
+                onUpdateStudent={(u) => setStudents(p => p.map(s => s.id === u.id ? u : s))}
+                teacherInfo={teacherInfo}
+              />
+            ) : (
+              <Reports />
+            )}
+          </div>
         );
 
-      case 'reports':
-        return <Reports />;
+      case 'admin_sync':
+        return (
+          <div className="h-full min-h-0 overflow-y-auto overscroll-contain custom-scrollbar space-y-4 pb-24 pr-1">
+            {renderHubTabs(
+              [
+                { id: 'sync', label: 'مزامنة السحابة', icon: CloudSync }
+              ],
+              adminView,
+              setAdminView
+            )}
+            <GlobalSyncManager />
+          </div>
+        );
 
-      case 'sync':
-        return <GlobalSyncManager />;
-
-      case 'guide':
-        return <UserGuide />;
-
-      case 'settings':
-        return <Settings />;
-
-      case 'about':
-        return <About />;
+      case 'help_settings':
+        return (
+          <div className="h-full min-h-0 overflow-y-auto overscroll-contain custom-scrollbar space-y-4 pb-24 pr-1">
+            {renderHubTabs(
+              [
+                { id: 'guide', label: 'دليل الاستخدام', icon: BookOpen },
+                { id: 'settings', label: 'الإعدادات', icon: SettingsIcon },
+                { id: 'about', label: 'عن التطبيق', icon: Info }
+              ],
+              helpView,
+              setHelpView
+            )}
+            {helpView === 'settings' ? (
+              <Settings />
+            ) : helpView === 'about' ? (
+              <About />
+            ) : (
+              <UserGuide />
+            )}
+          </div>
+        );
 
       default:
         return null;
