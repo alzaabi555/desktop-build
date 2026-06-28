@@ -74,6 +74,8 @@ interface TeacherGameResultsDashboardProps {
   schoolCode?: string;
   className?: string;
   readLocalStorageFallback?: boolean;
+  isLoading?: boolean;
+  onRefresh?: () => void | Promise<void>;
 }
 
 type CompletionFilter = 'all' | 'completed' | 'not_completed';
@@ -231,7 +233,9 @@ const TeacherGameResultsDashboard: React.FC<TeacherGameResultsDashboardProps> = 
   results,
   students = [],
   className = '',
-  readLocalStorageFallback = true
+  readLocalStorageFallback = true,
+  isLoading = false,
+  onRefresh
 }) => {
   const [query, setQuery] = useState('');
   const [gameFilter, setGameFilter] = useState<string>('all');
@@ -324,11 +328,17 @@ const TeacherGameResultsDashboard: React.FC<TeacherGameResultsDashboardProps> = 
           <div className="flex items-center gap-2">
             <button
               type="button"
-              onClick={() => setRefreshToken(prev => prev + 1)}
+              onClick={() => {
+                if (onRefresh) {
+                  onRefresh();
+                  return;
+                }
+                setRefreshToken(prev => prev + 1);
+              }}
               className="h-10 px-3 rounded-2xl bg-bgSoft border border-borderColor text-textSecondary hover:text-primary font-black text-xs flex items-center gap-2 active:scale-95"
             >
-              <RotateCcw className="w-4 h-4" />
-              تحديث
+              <RotateCcw className={`w-4 h-4 ${isLoading ? 'animate-spin' : ''}`} />
+              {isLoading ? 'جاري التحديث' : 'تحديث'}
             </button>
             <button
               type="button"
