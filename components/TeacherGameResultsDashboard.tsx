@@ -80,6 +80,21 @@ interface TeacherGameResultsDashboardProps {
 
 type CompletionFilter = 'all' | 'completed' | 'not_completed';
 
+interface GroupedStudentResult {
+  studentId: string;
+  studentName: string;
+  className: string;
+  grade?: string;
+  totalScore: number;
+  totalCorrect: number;
+  totalWrong: number;
+  totalWeakQuestions: number;
+  attempts: number;
+  completedAttempts: number;
+  latestPlayedAt: string;
+  games: TeacherGameResultLogEntry[];
+}
+
 const GAME_LABELS: Record<string, string> = {
   snake_ladder: 'السلم والثعبان',
   knowledge_race: 'سباق المعرفة',
@@ -239,9 +254,11 @@ const TeacherGameResultsDashboard: React.FC<TeacherGameResultsDashboardProps> = 
 }) => {
   const [query, setQuery] = useState('');
   const [gameFilter, setGameFilter] = useState<string>('all');
+  const [classFilter, setClassFilter] = useState<string>('all');
   const [completionFilter, setCompletionFilter] = useState<CompletionFilter>('all');
   const [syncFilter, setSyncFilter] = useState<string>('all');
   const [refreshToken, setRefreshToken] = useState(0);
+  const [expandedStudent, setExpandedStudent] = useState<string | null>(null);
 
   const studentsMap = useMemo(() => {
     const map = new Map<string, TeacherGameResultsStudent>();
@@ -266,38 +283,87 @@ const TeacherGameResultsDashboard: React.FC<TeacherGameResultsDashboardProps> = 
     return Array.from(new Set(allResults.map(result => result.gameType))).filter(Boolean);
   }, [allResults]);
 
+  const classOptions = useMemo(() => {
+    return Array.from(new Set(allResults.map(result => getStudentClassName(result, studentsMap)).filter(Boolean))).sort();
+  }, [allResults, studentsMap]);
+
   const filteredResults = useMemo(() => {
     const normalizedQuery = query.trim().toLowerCase();
 
     return allResults.filter(result => {
       const studentName = getStudentDisplayName(result, studentsMap).toLowerCase();
-      const studentClassName = getStudentClassName(result, studentsMap).toLowerCase();
+      const studentClassName = getStudentClassName(result, studentsMap);
+      const normalizedStudentClassName = studentClassName.toLowerCase();
       const gameLabel = getGameLabel(result.gameType).toLowerCase();
       const matchesQuery =
         !normalizedQuery ||
         studentName.includes(normalizedQuery) ||
-        studentClassName.includes(normalizedQuery) ||
+        normalizedStudentClassName.includes(normalizedQuery) ||
         gameLabel.includes(normalizedQuery) ||
         result.studentId.toLowerCase().includes(normalizedQuery);
 
       const matchesGame = gameFilter === 'all' || result.gameType === gameFilter;
+      const matchesClass = classFilter === 'all' || studentClassName === classFilter;
       const matchesCompletion =
         completionFilter === 'all' ||
         (completionFilter === 'completed' && result.completed) ||
         (completionFilter === 'not_completed' && !result.completed);
       const matchesSync = syncFilter === 'all' || (result.syncStatus || 'local_only') === syncFilter;
 
-      return matchesQuery && matchesGame && matchesCompletion && matchesSync;
+      return matchesQuery && matchesGame && matchesClass && matchesCompletion && matchesSync;
     });
-  }, [allResults, studentsMap, query, gameFilter, completionFilter, syncFilter]);
+  }, [allResults, studentsMap, query, gameFilter, classFilter, completionFilter, syncFilter]);
+
+  const groupedResults = useMemo<GroupedStudentResult[]>(() => {
+    const map = new Map<string, GroupedStudentResult>();
+
+    filteredResults.forEach(result => {
+      const key = result.studentId || result.id;
+      const studentName = getStudentDisplayName(result, studentsMap);
+      const studentClassName = getStudentClassName(result, studentsMap);
+      const existing = map.get(key);
+
+      if (!existing) {
+        map.set(key, {
+          studentId: result.studentId,
+          studentName,
+          className: studentClassName,
+          grade: result.grade,
+          totalScore: result.score,
+          totalCorrect: result.correct,
+          totalWrong: result.wrong,
+          totalWeakQuestions: result.weakQuestionIds.length,
+          attempts: 1,
+          completedAttempts: result.completed ? 1 : 0,
+          latestPlayedAt: result.playedAt,
+          games: [result]
+        });
+        return;
+      }
+
+      existing.totalScore += result.score;
+      existing.totalCorrect += result.correct;
+      existing.totalWrong += result.wrong;
+      existing.totalWeakQuestions += result.weakQuestionIds.length;
+      existing.attempts += 1;
+      existing.completedAttempts += result.completed ? 1 : 0;
+      existing.games.push(result);
+
+      if (new Date(result.playedAt).getTime() > new Date(existing.latestPlayedAt).getTime()) {
+        existing.latestPlayedAt = result.playedAt;
+      }
+    });
+
+    return Array.from(map.values()).sort((a, b) => b.totalScore - a.totalScore);
+  }, [filteredResults, studentsMap]);
 
   const summary = useMemo(() => {
     const totalAttempts = filteredResults.length;
-    const uniqueStudents = new Set(filteredResults.map(result => result.studentId)).size;
+    const uniqueStudents = groupedResults.length;
     const totalScore = filteredResults.reduce((sum, result) => sum + result.score, 0);
     const completedAttempts = filteredResults.filter(result => result.completed).length;
     const totalWeakQuestions = filteredResults.reduce((sum, result) => sum + result.weakQuestionIds.length, 0);
-    const averageScore = totalAttempts > 0 ? Math.round(totalScore / totalAttempts) : 0;
+    const averageScore = uniqueStudents > 0 ? Math.round(totalScore / uniqueStudents) : 0;
 
     return {
       totalAttempts,
@@ -306,7 +372,7 @@ const TeacherGameResultsDashboard: React.FC<TeacherGameResultsDashboardProps> = 
       totalWeakQuestions,
       averageScore
     };
-  }, [filteredResults]);
+  }, [filteredResults, groupedResults]);
 
   return (
     <div className={`rased-teacher-light bg-bgMain text-textPrimary rounded-3xl ${className}`} dir="rtl">
@@ -379,7 +445,7 @@ const TeacherGameResultsDashboard: React.FC<TeacherGameResultsDashboardProps> = 
           <div className="w-9 h-9 rounded-2xl bg-warning/10 text-warning border border-warning/20 flex items-center justify-center mb-2">
             <Trophy className="w-5 h-5" />
           </div>
-          <p className="text-[9px] font-black text-textSecondary mb-1">متوسط النقاط</p>
+          <p className="text-[9px] font-black text-textSecondary mb-1">متوسط نقاط الطالب</p>
           <p className="text-xl font-black text-warning">{summary.averageScore}</p>
         </div>
         <div className="bg-bgCard border border-borderColor rounded-3xl p-3 shadow-sm col-span-2 lg:col-span-1">
@@ -392,7 +458,7 @@ const TeacherGameResultsDashboard: React.FC<TeacherGameResultsDashboardProps> = 
       </section>
 
       <section className="bg-bgCard border border-borderColor rounded-3xl p-4 shadow-sm mb-4">
-        <div className="grid grid-cols-1 md:grid-cols-[1fr_180px_160px_170px] gap-3">
+        <div className="grid grid-cols-1 md:grid-cols-[1fr_170px_170px_150px_170px] gap-3">
           <label className="relative block">
             <Search className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-textSecondary" />
             <input
@@ -418,6 +484,17 @@ const TeacherGameResultsDashboard: React.FC<TeacherGameResultsDashboardProps> = 
           </label>
 
           <select
+            value={classFilter}
+            onChange={event => setClassFilter(event.target.value)}
+            className="w-full h-11 rounded-2xl bg-bgSoft border border-borderColor px-3 text-xs font-black text-textPrimary focus:outline-none focus:border-primary/40"
+          >
+            <option value="all">كل الصفوف والشعب</option>
+            {classOptions.map(option => (
+              <option key={option} value={option}>{option}</option>
+            ))}
+          </select>
+
+          <select
             value={completionFilter}
             onChange={event => setCompletionFilter(event.target.value as CompletionFilter)}
             className="w-full h-11 rounded-2xl bg-bgSoft border border-borderColor px-3 text-xs font-black text-textPrimary focus:outline-none focus:border-primary/40"
@@ -441,7 +518,7 @@ const TeacherGameResultsDashboard: React.FC<TeacherGameResultsDashboardProps> = 
       </section>
 
       <section className="space-y-3">
-        {filteredResults.length === 0 ? (
+        {groupedResults.length === 0 ? (
           <div className="bg-bgCard border border-borderColor rounded-3xl p-6 text-center shadow-sm">
             <WifiOff className="w-12 h-12 mx-auto text-textMuted mb-3" />
             <h3 className="text-base font-black text-textPrimary mb-1">لا توجد نتائج بعد</h3>
@@ -450,67 +527,117 @@ const TeacherGameResultsDashboard: React.FC<TeacherGameResultsDashboardProps> = 
             </p>
           </div>
         ) : (
-          filteredResults.map(result => {
-            const completed = result.completed;
-            const syncStatus = result.syncStatus || 'local_only';
+          groupedResults.map(student => {
+            const isExpanded = expandedStudent === student.studentId;
+            const allCompleted = student.completedAttempts === student.attempts;
+
             return (
-              <article key={result.id} className="bg-bgCard border border-borderColor rounded-3xl p-4 shadow-sm hover:shadow-card transition-all">
-                <div className="flex flex-col lg:flex-row lg:items-center gap-4">
-                  <div className="flex items-start gap-3 flex-1 min-w-0">
-                    <div className={`w-12 h-12 rounded-2xl border flex items-center justify-center shrink-0 ${completed ? 'bg-success/10 text-success border-success/20' : 'bg-warning/10 text-warning border-warning/20'}`}>
-                      {completed ? <CheckCircle2 className="w-6 h-6" /> : <XCircle className="w-6 h-6" />}
+              <article key={student.studentId} className="bg-bgCard border border-borderColor rounded-3xl p-4 shadow-sm hover:shadow-card transition-all">
+                <button
+                  type="button"
+                  onClick={() => setExpandedStudent(prev => (prev === student.studentId ? null : student.studentId))}
+                  className="w-full text-start"
+                >
+                  <div className="flex flex-col lg:flex-row lg:items-center gap-4">
+                    <div className="flex items-start gap-3 flex-1 min-w-0">
+                      <div className={`w-12 h-12 rounded-2xl border flex items-center justify-center shrink-0 ${allCompleted ? 'bg-success/10 text-success border-success/20' : 'bg-warning/10 text-warning border-warning/20'}`}>
+                        {allCompleted ? <CheckCircle2 className="w-6 h-6" /> : <XCircle className="w-6 h-6" />}
+                      </div>
+                      <div className="min-w-0">
+                        <h3 className="text-sm font-black text-textPrimary truncate">{student.studentName}</h3>
+                        <div className="flex flex-wrap items-center gap-2 mt-1">
+                          <span className="text-[9px] font-black bg-bgSoft border border-borderColor text-textSecondary px-2 py-0.5 rounded-full">
+                            {student.className}
+                          </span>
+                          <span className="text-[9px] font-black bg-primary/10 border border-primary/20 text-primary px-2 py-0.5 rounded-full">
+                            {student.attempts} محاولة
+                          </span>
+                          <span className="text-[9px] font-black bg-bgSoft border border-borderColor text-textSecondary px-2 py-0.5 rounded-full flex items-center gap-1">
+                            <CalendarDays className="w-3 h-3" />
+                            آخر لعب: {formatDateTime(student.latestPlayedAt)}
+                          </span>
+                        </div>
+                      </div>
                     </div>
-                    <div className="min-w-0">
-                      <h3 className="text-sm font-black text-textPrimary truncate">
-                        {getStudentDisplayName(result, studentsMap)}
-                      </h3>
-                      <div className="flex flex-wrap items-center gap-2 mt-1">
-                        <span className="text-[9px] font-black bg-bgSoft border border-borderColor text-textSecondary px-2 py-0.5 rounded-full">
-                          {getStudentClassName(result, studentsMap)}
-                        </span>
-                        <span className="text-[9px] font-black bg-primary/10 border border-primary/20 text-primary px-2 py-0.5 rounded-full">
-                          {getGameLabel(result.gameType)}
-                        </span>
-                        <span className="text-[9px] font-black bg-bgSoft border border-borderColor text-textSecondary px-2 py-0.5 rounded-full flex items-center gap-1">
-                          <CalendarDays className="w-3 h-3" />
-                          {formatDateTime(result.playedAt)}
-                        </span>
+
+                    <div className="grid grid-cols-4 lg:grid-cols-5 gap-2 lg:min-w-[520px]">
+                      <div className="rounded-2xl bg-bgSoft border border-borderColor p-2 text-center">
+                        <p className="text-[8px] font-bold text-textSecondary mb-0.5">المجموع</p>
+                        <p className="text-sm font-black text-warning">{student.totalScore}</p>
+                      </div>
+                      <div className="rounded-2xl bg-bgSoft border border-borderColor p-2 text-center">
+                        <p className="text-[8px] font-bold text-textSecondary mb-0.5">صحيح</p>
+                        <p className="text-sm font-black text-success">{student.totalCorrect}</p>
+                      </div>
+                      <div className="rounded-2xl bg-bgSoft border border-borderColor p-2 text-center">
+                        <p className="text-[8px] font-bold text-textSecondary mb-0.5">خطأ</p>
+                        <p className="text-sm font-black text-danger">{student.totalWrong}</p>
+                      </div>
+                      <div className="rounded-2xl bg-bgSoft border border-borderColor p-2 text-center">
+                        <p className="text-[8px] font-bold text-textSecondary mb-0.5">ضعف</p>
+                        <p className="text-sm font-black text-danger">{student.totalWeakQuestions}</p>
+                      </div>
+                      <div className="rounded-2xl bg-bgSoft border border-borderColor p-2 text-center col-span-4 lg:col-span-1">
+                        <p className="text-[8px] font-bold text-textSecondary mb-0.5">التفاصيل</p>
+                        <p className="text-[10px] font-black text-primary">{isExpanded ? 'إخفاء' : 'عرض'}</p>
                       </div>
                     </div>
                   </div>
+                </button>
 
-                  <div className="grid grid-cols-4 lg:grid-cols-5 gap-2 lg:min-w-[520px]">
-                    <div className="rounded-2xl bg-bgSoft border border-borderColor p-2 text-center">
-                      <p className="text-[8px] font-bold text-textSecondary mb-0.5">النقاط</p>
-                      <p className="text-sm font-black text-warning">{result.score}</p>
-                    </div>
-                    <div className="rounded-2xl bg-bgSoft border border-borderColor p-2 text-center">
-                      <p className="text-[8px] font-bold text-textSecondary mb-0.5">صحيح</p>
-                      <p className="text-sm font-black text-success">{result.correct}</p>
-                    </div>
-                    <div className="rounded-2xl bg-bgSoft border border-borderColor p-2 text-center">
-                      <p className="text-[8px] font-bold text-textSecondary mb-0.5">خطأ</p>
-                      <p className="text-sm font-black text-danger">{result.wrong}</p>
-                    </div>
-                    <div className="rounded-2xl bg-bgSoft border border-borderColor p-2 text-center">
-                      <p className="text-[8px] font-bold text-textSecondary mb-0.5">ضعف</p>
-                      <p className="text-sm font-black text-danger">{result.weakQuestionIds.length}</p>
-                    </div>
-                    <div className="rounded-2xl bg-bgSoft border border-borderColor p-2 text-center col-span-4 lg:col-span-1">
-                      <p className="text-[8px] font-bold text-textSecondary mb-0.5">المزامنة</p>
-                      <p className={`text-[10px] font-black ${syncStatus === 'synced' ? 'text-success' : syncStatus === 'pending_sync' ? 'text-warning' : 'text-textSecondary'}`}>
-                        {SYNC_LABELS[syncStatus] || 'غير محدد'}
-                      </p>
-                    </div>
-                  </div>
-                </div>
+                {isExpanded && (
+                  <div className="mt-4 pt-4 border-t border-borderColor space-y-3">
+                    {student.games.map(game => {
+                      const syncStatus = game.syncStatus || 'local_only';
 
-                {result.weakQuestionIds.length > 0 && (
-                  <div className="mt-3 rounded-2xl bg-danger/5 border border-danger/15 p-3">
-                    <p className="text-[10px] font-black text-danger mb-1">معرّفات الأسئلة التي تحتاج مراجعة:</p>
-                    <p className="text-[10px] font-bold text-textSecondary leading-5 break-words">
-                      {result.weakQuestionIds.join('، ')}
-                    </p>
+                      return (
+                        <div key={game.id} className="bg-bgSoft border border-borderColor rounded-2xl p-3">
+                          <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-2">
+                            <div className="flex flex-wrap items-center gap-2">
+                              <span className="text-xs font-black text-primary">{getGameLabel(game.gameType)}</span>
+                              <span className="text-[9px] font-black bg-bgCard border border-borderColor text-textSecondary px-2 py-0.5 rounded-full">
+                                {formatDateTime(game.playedAt)}
+                              </span>
+                              <span className={`text-[9px] font-black px-2 py-0.5 rounded-full border ${syncStatus === 'synced' ? 'bg-success/10 text-success border-success/20' : syncStatus === 'pending_sync' ? 'bg-warning/10 text-warning border-warning/20' : 'bg-bgCard text-textSecondary border-borderColor'}`}>
+                                {SYNC_LABELS[syncStatus] || 'غير محدد'}
+                              </span>
+                            </div>
+
+                            <span className={`text-[9px] font-black px-2 py-0.5 rounded-full border ${game.completed ? 'bg-success/10 text-success border-success/20' : 'bg-warning/10 text-warning border-warning/20'}`}>
+                              {game.completed ? 'مكتمل' : 'غير مكتمل'}
+                            </span>
+                          </div>
+
+                          <div className="grid grid-cols-4 gap-2 mt-3 text-center">
+                            <div className="rounded-xl bg-bgCard border border-borderColor p-2">
+                              <p className="text-[8px] text-textSecondary mb-0.5">النقاط</p>
+                              <p className="font-black text-warning">{game.score}</p>
+                            </div>
+                            <div className="rounded-xl bg-bgCard border border-borderColor p-2">
+                              <p className="text-[8px] text-textSecondary mb-0.5">صحيح</p>
+                              <p className="font-black text-success">{game.correct}</p>
+                            </div>
+                            <div className="rounded-xl bg-bgCard border border-borderColor p-2">
+                              <p className="text-[8px] text-textSecondary mb-0.5">خطأ</p>
+                              <p className="font-black text-danger">{game.wrong}</p>
+                            </div>
+                            <div className="rounded-xl bg-bgCard border border-borderColor p-2">
+                              <p className="text-[8px] text-textSecondary mb-0.5">ضعف</p>
+                              <p className="font-black text-danger">{game.weakQuestionIds.length}</p>
+                            </div>
+                          </div>
+
+                          {game.weakQuestionIds.length > 0 && (
+                            <div className="mt-3 rounded-2xl bg-danger/5 border border-danger/15 p-3">
+                              <p className="text-[10px] font-black text-danger mb-1">معرّفات الأسئلة التي تحتاج مراجعة:</p>
+                              <p className="text-[10px] font-bold text-textSecondary leading-5 break-words">
+                                {game.weakQuestionIds.join('، ')}
+                              </p>
+                            </div>
+                          )}
+                        </div>
+                      );
+                    })}
                   </div>
                 )}
               </article>
