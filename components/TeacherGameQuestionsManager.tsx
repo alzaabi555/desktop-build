@@ -4,11 +4,9 @@ import {
   Trash2,
   Save,
   CloudUpload,
-  CheckCircle2,
   AlertTriangle,
   Gamepad2,
   HelpCircle,
-  BookOpen,
   ListChecks,
   Eye,
   EyeOff,
@@ -33,8 +31,7 @@ export type GameQuestionType =
   | 'multiple_choice'
   | 'true_false'
   | 'matching'
-  | 'sequence'
-  | 'hints';
+  | 'sequence';
 
 export type GameDifficulty = 'easy' | 'medium' | 'hard';
 
@@ -48,9 +45,7 @@ export type EducationalGameType =
   | 'matching'
   | 'match_cards'
   | 'sequence'
-  | 'order'
-  | 'hints'
-  | 'who_am_i';
+  | 'order';
 
 export interface TeacherGameQuestion {
   id: string;
@@ -70,7 +65,6 @@ export interface TeacherGameQuestion {
   correctAnswerText?: string;
   pairs?: { left: string; right: string }[];
   sequence?: string[];
-  hints?: string[];
   explanation: string;
   difficulty: GameDifficulty;
   skill?: string;
@@ -153,12 +147,6 @@ const GAME_OPTIONS: {
     label: 'رتّب الأحداث',
     hint: 'مناسب للأحداث والخطوات',
     accepts: ['sequence']
-  },
-  {
-    id: 'who_am_i',
-    label: 'من أنا؟',
-    hint: 'مناسب للتلميحات والشخصيات والمفاهيم',
-    accepts: ['hints']
   }
 ];
 
@@ -166,8 +154,7 @@ const QUESTION_TYPES: { id: GameQuestionType; label: string; hint: string }[] = 
   { id: 'multiple_choice', label: 'اختيار من متعدد', hint: 'سؤال مع عدة اختيارات' },
   { id: 'true_false', label: 'صح أم خطأ', hint: 'عبارة يحدد الطالب صحتها' },
   { id: 'matching', label: 'مطابقة', hint: 'مصطلح وتعريف' },
-  { id: 'sequence', label: 'ترتيب', hint: 'ترتيب أحداث أو خطوات' },
-  { id: 'hints', label: 'تلميحات', hint: 'من أنا؟ أو ما المفهوم؟' }
+  { id: 'sequence', label: 'ترتيب', hint: 'ترتيب أحداث أو خطوات' }
 ];
 
 const DIFFICULTY_OPTIONS: { id: GameDifficulty; label: string }[] = [
@@ -211,7 +198,6 @@ const getInitialQuestion = (
       { left: '', right: '' }
     ],
     sequence: ['', '', ''],
-    hints: ['', '', ''],
     explanation: '',
     difficulty: 'easy',
     skill: 'فهم',
@@ -224,7 +210,6 @@ const getInitialQuestion = (
 
 const validateQuestion = (question: TeacherGameQuestion): QuestionValidation => {
   if (!question.subject.trim()) return { ok: false, message: 'اختر المادة.' };
-  if (!question.grade.trim()) return { ok: false, message: 'اختر الصف.' };
   if (question.classes.length === 0) return { ok: false, message: 'اختر فصلًا واحدًا على الأقل.' };
   if (!question.unit.trim()) return { ok: false, message: 'أدخل الوحدة.' };
   if (!question.lesson.trim()) return { ok: false, message: 'أدخل الدرس.' };
@@ -254,12 +239,6 @@ const validateQuestion = (question: TeacherGameQuestion): QuestionValidation => 
     if (validSequence.length < 3) return { ok: false, message: 'أدخل 3 عناصر على الأقل للترتيب.' };
   }
 
-  if (question.questionType === 'hints') {
-    const validHints = (question.hints || []).filter(item => item.trim());
-    if (validHints.length < 2) return { ok: false, message: 'أدخل تلميحين على الأقل.' };
-    if (!question.correctAnswerText?.trim()) return { ok: false, message: 'أدخل الإجابة النهائية للتلميحات.' };
-  }
-
   if (!question.explanation.trim()) return { ok: false, message: 'أدخل تفسير الإجابة ليستفيد الطالب بعد اللعب.' };
 
   return { ok: true };
@@ -287,7 +266,6 @@ const sanitizeForStudent = (question: TeacherGameQuestion) => {
     correctAnswerText: question.correctAnswerText,
     pairs: question.pairs?.filter(pair => pair.left.trim() && pair.right.trim()),
     sequence: question.sequence?.filter(item => item.trim()),
-    hints: question.hints?.filter(item => item.trim()),
     explanation: question.explanation,
     difficulty: question.difficulty,
     skill: question.skill,
@@ -304,7 +282,6 @@ const TeacherGameQuestionsManager: React.FC<TeacherGameQuestionsManagerProps> = 
   defaultGrade = '',
   classOptions = [],
   subjectOptions = [],
-  gradeOptions = [],
   onPublish
 }) => {
   const draftKey = `rased_teacher_game_questions_${schoolCode}_${teacherId}`;
@@ -429,14 +406,6 @@ const TeacherGameQuestionsManager: React.FC<TeacherGameQuestionsManagerProps> = 
       const sequence = [...(prev.sequence || [])];
       sequence[index] = value;
       return { ...prev, sequence, updatedAt: new Date().toISOString() };
-    });
-  };
-
-  const updateHint = (index: number, value: string) => {
-    setCurrentQuestion(prev => {
-      const hints = [...(prev.hints || [])];
-      hints[index] = value;
-      return { ...prev, hints, updatedAt: new Date().toISOString() };
     });
   };
 
@@ -581,13 +550,15 @@ const TeacherGameQuestionsManager: React.FC<TeacherGameQuestionsManagerProps> = 
 
       setQuestions(prev => [
         ...prev,
-        ...importedQuestions.map((question: TeacherGameQuestion) => ({
-          ...question,
-          id: question.id || createId(),
-          schoolCode,
-          teacherId,
-          updatedAt: new Date().toISOString()
-        }))
+        ...importedQuestions
+          .filter((question: TeacherGameQuestion) => question.questionType !== 'hints')
+          .map((question: TeacherGameQuestion) => ({
+            ...question,
+            id: question.id || createId(),
+            schoolCode,
+            teacherId,
+            updatedAt: new Date().toISOString()
+          }))
       ]);
 
       showToast('success', 'تم استيراد الأسئلة.');
@@ -703,33 +674,7 @@ const TeacherGameQuestionsManager: React.FC<TeacherGameQuestionsManagerProps> = 
       );
     }
 
-    return (
-      <div className="space-y-3">
-        <label className="text-xs font-black text-textPrimary">التلميحات</label>
-        {(currentQuestion.hints || []).map((hint, index) => (
-          <input
-            key={index}
-            value={hint}
-            onChange={event => updateHint(index, event.target.value)}
-            placeholder={`التلميح ${index + 1}`}
-            className="w-full h-11 rounded-2xl bg-bgSoft border border-borderColor px-3 text-sm font-bold outline-none focus:border-primary"
-          />
-        ))}
-        <input
-          value={currentQuestion.correctAnswerText || ''}
-          onChange={event => setField('correctAnswerText', event.target.value)}
-          placeholder="الإجابة النهائية"
-          className="w-full h-11 rounded-2xl bg-bgSoft border border-borderColor px-3 text-sm font-bold outline-none focus:border-primary"
-        />
-        <button
-          type="button"
-          onClick={() => setField('hints', [...(currentQuestion.hints || []), ''])}
-          className="h-10 px-4 rounded-2xl bg-primary/10 text-primary border border-primary/20 text-xs font-black"
-        >
-          إضافة تلميح
-        </button>
-      </div>
-    );
+    return null;
   };
 
   const studentPreview = useMemo(() => validQuestions.map(sanitizeForStudent), [validQuestions]);
@@ -814,7 +759,7 @@ const TeacherGameQuestionsManager: React.FC<TeacherGameQuestionsManagerProps> = 
             )}
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
             <div>
               <label className="text-[10px] font-black text-textSecondary block mb-1">المادة</label>
               <input
@@ -826,20 +771,6 @@ const TeacherGameQuestionsManager: React.FC<TeacherGameQuestionsManagerProps> = 
               />
               <datalist id="subject-options">
                 {subjectOptions.map(subject => <option key={subject} value={subject} />)}
-              </datalist>
-            </div>
-
-            <div>
-              <label className="text-[10px] font-black text-textSecondary block mb-1">الصف</label>
-              <input
-                list="grade-options"
-                value={currentQuestion.grade}
-                onChange={event => setField('grade', event.target.value)}
-                placeholder="مثال: السادس"
-                className="w-full h-11 rounded-2xl bg-bgSoft border border-borderColor px-3 text-sm font-bold outline-none focus:border-primary"
-              />
-              <datalist id="grade-options">
-                {gradeOptions.map(grade => <option key={grade} value={grade} />)}
               </datalist>
             </div>
 
