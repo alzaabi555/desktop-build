@@ -32,10 +32,16 @@ contextBridge.exposeInMainWorld('electron', {
   close: () => ipcRenderer.send('close'),
 
   /**
-   * فتح صفحة Chrome Voice Bridge
-   * هذه الصفحة تعمل كميكروفون خارجي وترسل النص إلى تطبيق راصد
+   * فتح صفحة Chrome Voice Bridge كمربع Chrome صغير
+   * main.js يستقبل open-voice-bridge ويفتح Chrome عبر --app
    */
   openVoiceBridge: () => ipcRenderer.invoke('open-voice-bridge'),
+
+  /**
+   * إغلاق نافذة Chrome Voice Bridge
+   * مهم حتى يستطيع زر المايك في واجهة راصد إيقاف النافذة الخارجية
+   */
+  closeVoiceBridge: () => ipcRenderer.invoke('close-voice-bridge'),
 
   /**
    * استقبال الأمر الصوتي القادم من Chrome Voice Bridge
@@ -44,7 +50,7 @@ contextBridge.exposeInMainWorld('electron', {
   onVoiceCommand: (callback) => {
     const handler = (_event, text) => {
       if (typeof callback === 'function') {
-        callback(text);
+        callback(String(text || ''));
       }
     };
 
