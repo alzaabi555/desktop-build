@@ -38,6 +38,7 @@ const getInitialPosition = (): WidgetPosition => {
 
   try {
     const saved = JSON.parse(localStorage.getItem(POSITION_KEY) || 'null');
+
     if (
       saved &&
       typeof saved.x === 'number' &&
@@ -87,7 +88,7 @@ const VoiceAssistant: React.FC<VoiceAssistantProps> = ({ onNavigate }) => {
   const [transcript, setTranscript] = useState('');
   const [typedCommand, setTypedCommand] = useState('');
   const [showTypedInput, setShowTypedInput] = useState(!voiceBridgeSupported);
-  const [isPanelOpen, setIsPanelOpen] = useState(false);
+  const [isPanelOpen, setIsPanelOpen] = useState(!voiceBridgeSupported);
   const [position, setPosition] = useState<WidgetPosition>(() => getInitialPosition());
   const [feedback, setFeedback] = useState<{ message: string; type: FeedbackType }>({
     message: voiceBridgeSupported
@@ -102,6 +103,7 @@ const VoiceAssistant: React.FC<VoiceAssistantProps> = ({ onNavigate }) => {
 
   const feedbackTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const confirmationTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
   const dragStateRef = useRef<{
     dragging: boolean;
     startX: number;
@@ -459,19 +461,22 @@ const VoiceAssistant: React.FC<VoiceAssistantProps> = ({ onNavigate }) => {
     setIsPanelOpen(true);
   }, []);
 
-  const handlePointerDown = useCallback((event: React.PointerEvent<HTMLButtonElement>) => {
-    if (event.button !== 0) return;
+  const handlePointerDown = useCallback(
+    (event: React.PointerEvent<HTMLButtonElement>) => {
+      if (event.button !== 0) return;
 
-    dragStateRef.current = {
-      dragging: true,
-      startX: event.clientX,
-      startY: event.clientY,
-      originX: position.x,
-      originY: position.y
-    };
+      dragStateRef.current = {
+        dragging: true,
+        startX: event.clientX,
+        startY: event.clientY,
+        originX: position.x,
+        originY: position.y
+      };
 
-    event.currentTarget.setPointerCapture(event.pointerId);
-  }, [position.x, position.y]);
+      event.currentTarget.setPointerCapture(event.pointerId);
+    },
+    [position.x, position.y]
+  );
 
   const handlePointerMove = useCallback((event: React.PointerEvent<HTMLButtonElement>) => {
     const drag = dragStateRef.current;
@@ -500,7 +505,6 @@ const VoiceAssistant: React.FC<VoiceAssistantProps> = ({ onNavigate }) => {
     }
   }, []);
 
-  const isActive = isListening;
   const shouldShowPanel = isPanelOpen && (transcript || feedback.message || showTypedInput);
 
   return (
@@ -516,7 +520,7 @@ const VoiceAssistant: React.FC<VoiceAssistantProps> = ({ onNavigate }) => {
         <div className="mb-2 w-[19rem] max-w-[calc(100vw-2rem)] bg-white/95 backdrop-blur-xl border border-gray-200 shadow-xl rounded-2xl p-3 pointer-events-auto animate-in slide-in-from-bottom-2 fade-in shadow-indigo-500/10">
           <div className="flex items-center justify-between gap-2 mb-2">
             <div className="flex items-center gap-2 min-w-0">
-              {isActive ? (
+              {isListening ? (
                 <div className="flex items-center gap-1.5 bg-indigo-100 text-indigo-700 px-2.5 py-1 rounded-full text-[10px] font-bold animate-pulse tracking-wide">
                   <div className="w-1.5 h-1.5 bg-indigo-600 rounded-full animate-ping" />
                   وضع Chrome الصوتي نشط
@@ -587,18 +591,18 @@ const VoiceAssistant: React.FC<VoiceAssistantProps> = ({ onNavigate }) => {
           type="button"
           onClick={toggleListening}
           className={`flex items-center justify-center w-12 h-12 rounded-full shadow-xl transition-all duration-300 active:scale-90 border ${
-            isActive
+            isListening
               ? 'bg-indigo-600 text-white shadow-indigo-500/30 ring-4 ring-indigo-500/15 border-indigo-500'
               : voiceBridgeSupported
                 ? 'bg-slate-800 text-white hover:bg-slate-700 border-slate-700'
                 : 'bg-slate-500 text-white border-slate-500'
           }`}
-          aria-label={isActive ? 'إيقاف وضع Chrome الصوتي' : 'فتح وضع Chrome الصوتي'}
-          title={isActive ? 'إيقاف وضع Chrome الصوتي' : 'فتح وضع Chrome الصوتي'}
+          aria-label={isListening ? 'إيقاف وضع Chrome الصوتي' : 'فتح وضع Chrome الصوتي'}
+          title={isListening ? 'إيقاف وضع Chrome الصوتي' : 'فتح وضع Chrome الصوتي'}
         >
           {isProcessing ? (
             <Loader2 className="w-5 h-5 animate-spin" />
-          ) : isActive ? (
+          ) : isListening ? (
             <Mic className="w-5 h-5" />
           ) : (
             <MicOff className="w-5 h-5" />
