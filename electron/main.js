@@ -7,6 +7,8 @@
 const { app, BrowserWindow, shell, ipcMain, dialog, session } = require('electron');
 const path = require('path');
 const http = require('http');
+const { spawn } = require('child_process');
+const fs = require('fs');
 const { autoUpdater } = require('electron-updater');
 
 // ---------------------------------------------------------
@@ -72,6 +74,17 @@ let mainWindow;
 // ---------------------------------------------------------
 const VOICE_BRIDGE_PORT = 37654;
 let voiceBridgeServer = null;
+let voiceBridgeProcess = null;
+
+function findChromePath() {
+  const possiblePaths = [
+    'C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe',
+    'C:\\Program Files (x86)\\Google\\Chrome\\Application\\chrome.exe',
+    path.join(process.env.LOCALAPPDATA || '', 'Google\\Chrome\\Application\\chrome.exe')
+  ];
+
+  return possiblePaths.find(filePath => filePath && fs.existsSync(filePath)) || null;
+}
 
 function getVoiceBridgeHtml() {
   return `
@@ -81,6 +94,10 @@ function getVoiceBridgeHtml() {
   <meta charset="UTF-8" />
   <title>راصد - وضع الحصة الصوتي</title>
   <style>
+    * {
+      box-sizing: border-box;
+    }
+
     body {
       margin: 0;
       min-height: 100vh;
@@ -91,55 +108,58 @@ function getVoiceBridgeHtml() {
       align-items: center;
       justify-content: center;
       text-align: center;
+      overflow: hidden;
+      padding: 12px;
     }
 
     .card {
-      width: min(520px, calc(100vw - 32px));
+      width: min(360px, calc(100vw - 28px));
       background: rgba(255,255,255,0.08);
       border: 1px solid rgba(255,255,255,0.18);
-      border-radius: 28px;
-      padding: 28px;
-      box-shadow: 0 25px 80px rgba(0,0,0,0.35);
+      border-radius: 22px;
+      padding: 16px;
+      box-shadow: 0 18px 48px rgba(0,0,0,0.32);
       backdrop-filter: blur(16px);
     }
 
     .badge {
       display: inline-flex;
-      gap: 8px;
+      gap: 7px;
       align-items: center;
-      padding: 8px 14px;
+      padding: 6px 11px;
       border-radius: 999px;
       background: rgba(99,102,241,0.22);
       color: #c7d2fe;
       font-weight: 800;
-      font-size: 12px;
-      margin-bottom: 16px;
+      font-size: 11px;
+      margin-bottom: 10px;
     }
 
     h1 {
-      margin: 0 0 8px;
-      font-size: 26px;
+      margin: 0 0 6px;
+      font-size: 18px;
       font-weight: 900;
     }
 
     p {
-      margin: 8px 0;
+      margin: 6px 0;
       color: #cbd5e1;
-      font-size: 14px;
-      line-height: 1.7;
+      font-size: 11px;
+      line-height: 1.65;
+      font-weight: 700;
     }
 
     button {
-      margin-top: 20px;
+      margin-top: 12px;
       border: 0;
-      border-radius: 18px;
-      padding: 16px 22px;
-      font-size: 16px;
+      border-radius: 15px;
+      padding: 12px 16px;
+      font-size: 13px;
       font-weight: 900;
       cursor: pointer;
       color: white;
       background: #4f46e5;
-      box-shadow: 0 14px 35px rgba(79,70,229,0.35);
+      box-shadow: 0 12px 28px rgba(79,70,229,0.32);
       transition: transform 0.15s ease, background 0.15s ease;
     }
 
@@ -149,33 +169,36 @@ function getVoiceBridgeHtml() {
 
     button.stop {
       background: #e11d48;
-      box-shadow: 0 14px 35px rgba(225,29,72,0.3);
+      box-shadow: 0 12px 28px rgba(225,29,72,0.26);
     }
 
     .transcript {
-      margin-top: 20px;
-      min-height: 48px;
+      margin-top: 13px;
+      min-height: 43px;
       background: rgba(15,23,42,0.55);
       border: 1px solid rgba(255,255,255,0.12);
-      border-radius: 18px;
-      padding: 14px;
-      font-size: 18px;
-      font-weight: 800;
+      border-radius: 16px;
+      padding: 11px;
+      font-size: 14px;
+      font-weight: 850;
       color: #f8fafc;
       word-break: break-word;
+      line-height: 1.65;
     }
 
     .status {
-      margin-top: 12px;
-      font-size: 12px;
+      margin-top: 10px;
+      font-size: 10px;
       color: #94a3b8;
-      min-height: 20px;
+      min-height: 18px;
+      font-weight: 700;
     }
 
     .hint {
-      margin-top: 16px;
-      font-size: 12px;
+      margin-top: 10px;
+      font-size: 10px;
       color: #a5b4fc;
+      font-weight: 700;
     }
   </style>
 </head>
@@ -188,8 +211,8 @@ function getVoiceBridgeHtml() {
     </div>
 
     <h1>وضع الحصة الصوتي</h1>
-    <p>هذه الصفحة تستخدم Chrome للاستماع فقط، وترسل الأوامر إلى تطبيق راصد في ويندوز.</p>
-    <p>اضغط تشغيل مرة واحدة، ثم قل مثلًا: سجل غياب محمد، قرعة عشوائية، تعزيز الفائز.</p>
+    <p>هذه النافذة الصغيرة تستخدم Chrome للاستماع فقط، وترسل الأوامر إلى تطبيق راصد.</p>
+    <p>مثال: سجل غياب محمد، افتح الطلاب، قرعة عشوائية.</p>
 
     <button id="toggleBtn">تشغيل الاستماع</button>
 
@@ -470,9 +493,55 @@ function openVoiceBridgeInChrome() {
 
   const url = 'http://127.0.0.1:' + VOICE_BRIDGE_PORT + '/';
 
-  shell.openExternal(url).catch(error => {
-    console.error('Failed to open voice bridge:', error);
+  if (voiceBridgeProcess) {
+    return;
+  }
+
+  const chromePath = findChromePath();
+
+  if (!chromePath) {
+    shell.openExternal(url).catch(error => {
+      console.error('Failed to open voice bridge:', error);
+    });
+    return;
+  }
+
+  const userDataDir = path.join(app.getPath('userData'), 'rased-voice-bridge-chrome-profile');
+
+  voiceBridgeProcess = spawn(chromePath, [
+    '--app=' + url,
+    '--window-size=390,260',
+    '--window-position=80,120',
+    '--user-data-dir=' + userDataDir,
+    '--no-first-run',
+    '--disable-extensions',
+    '--autoplay-policy=no-user-gesture-required'
+  ], {
+    detached: false,
+    stdio: 'ignore'
   });
+
+  voiceBridgeProcess.on('exit', () => {
+    voiceBridgeProcess = null;
+  });
+
+  voiceBridgeProcess.on('error', error => {
+    console.error('Failed to open Chrome Voice Bridge:', error);
+    voiceBridgeProcess = null;
+    shell.openExternal(url).catch(console.error);
+  });
+}
+
+function closeVoiceBridgeInChrome() {
+  if (!voiceBridgeProcess) return;
+
+  try {
+    voiceBridgeProcess.kill();
+  } catch (error) {
+    console.error('Failed to close Chrome Voice Bridge:', error);
+  }
+
+  voiceBridgeProcess = null;
 }
 
 // ---------------------------------------------------------
@@ -594,6 +663,11 @@ ipcMain.handle('get-app-version', () => app.getVersion());
 
 ipcMain.handle('open-voice-bridge', () => {
   openVoiceBridgeInChrome();
+  return true;
+});
+
+ipcMain.handle('close-voice-bridge', () => {
+  closeVoiceBridgeInChrome();
   return true;
 });
 
@@ -723,6 +797,8 @@ autoUpdater.on('update-downloaded', () => {
 });
 
 app.on('window-all-closed', () => {
+  closeVoiceBridgeInChrome();
+
   if (voiceBridgeServer) {
     try {
       voiceBridgeServer.close();
