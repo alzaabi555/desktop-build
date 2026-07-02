@@ -56,7 +56,7 @@
   "build": {
     "publish": null,
     "appId": "com.madrasati.app",
-    "productName": "تطبيق راصد",
+    "productName": "تطبيق راصد المعلم ",
     "npmRebuild": false,
     "directories": {
       "output": "dist"
