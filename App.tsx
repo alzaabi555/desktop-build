@@ -671,6 +671,39 @@ const AppContent: React.FC = () => {
       })}
     </div>
   );
+const normalizeArabicNameForRased = (value: string) => {
+  return String(value || '')
+    .trim()
+    .replace(/[أإآ]/g, 'ا')
+    .replace(/[ؤئء]/g, '')
+    .replace(/ة/g, 'ه')
+    .replace(/ى/g, 'ي')
+    .replace(/[ًٌٍَُِّْـ]/g, '')
+    .replace(/\s+/g, ' ')
+    .toLowerCase();
+};
+
+const normalizeArabicDigitsForRased = (value: string) => {
+  const arabicDigits: Record<string, string> = {
+    '٠': '0',
+    '١': '1',
+    '٢': '2',
+    '٣': '3',
+    '٤': '4',
+    '٥': '5',
+    '٦': '6',
+    '٧': '7',
+    '٨': '8',
+    '٩': '9',
+    '۰': '0',
+    '۱': '1',
+    '۲': '2',
+    '۳': '3',
+    '۴': '4',
+    '۵': '5',
+    '۶': '6',
+    '۷': '7',
+    '۸': '8',
 
   const renderStudentManagementContent = () => {
     if (studentManagementView === 'attendance') {
