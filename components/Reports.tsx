@@ -12,8 +12,10 @@ import PageLayout from '../components/PageLayout';
 
 import * as pdfjsLib from 'pdfjs-dist';
 
-pdfjsLib.GlobalWorkerOptions.workerSrc =
-  `${import.meta.env.BASE_URL}pdf.worker.mjs`;
+pdfjsLib.GlobalWorkerOptions.workerSrc = new URL(
+  'pdf.worker.mjs',
+  window.location.href
+).toString();
 
 // =================================================================================
 // ✅ الثوابت (تصنيفات الدرجات)
