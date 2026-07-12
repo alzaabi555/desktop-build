@@ -18,8 +18,25 @@ jobs:
           node-version: 18
 
       - name: Install Dependencies
-        run: npm install --no-optional
+        run: npm install
+       - name: Prepare Shared PDF.js Worker
+        run: |
+          echo "Preparing PDF.js worker for Web, Android, iOS and Windows..."
 
+          mkdir -p public
+
+          if [ -f "node_modules/pdfjs-dist/build/pdf.worker.mjs" ]; then
+            cp node_modules/pdfjs-dist/build/pdf.worker.mjs public/pdf.worker.mjs
+          elif [ -f "node_modules/pdfjs-dist/build/pdf.worker.min.mjs" ]; then
+            cp node_modules/pdfjs-dist/build/pdf.worker.min.mjs public/pdf.worker.mjs
+          else
+            echo "PDF.js worker was not found."
+            find node_modules/pdfjs-dist -maxdepth 3 -type f -name "pdf.worker*" -print
+            exit 1
+          fi
+
+          test -s public/pdf.worker.mjs
+          echo "PDF.js worker prepared successfully."
       - name: Build Electron App
         run: npm run electron:dist -- --publish never
         # 💉 تم حقن التصريح الأمني هنا لكي لا يعترض المجمع
