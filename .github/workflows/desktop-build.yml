@@ -18,58 +18,9 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: 22
-       
 
       - name: Install Dependencies
         run: npm install --legacy-peer-deps
-
-      - name: Prepare Shared PDF.js Worker
-        shell: pwsh
-        run: |
-          Write-Host "Preparing PDF.js worker for Windows..."
-
-          New-Item -ItemType Directory -Force -Path "public" | Out-Null
-
-          $normalWorker = "node_modules/pdfjs-dist/build/pdf.worker.mjs"
-          $minifiedWorker = "node_modules/pdfjs-dist/build/pdf.worker.min.mjs"
-          $targetWorker = "public/pdf.worker.mjs"
-
-          if (Test-Path $normalWorker) {
-              Copy-Item $normalWorker $targetWorker -Force
-              Write-Host "Copied pdf.worker.mjs"
-          }
-          elseif (Test-Path $minifiedWorker) {
-              Copy-Item $minifiedWorker $targetWorker -Force
-              Write-Host "Copied pdf.worker.min.mjs as pdf.worker.mjs"
-          }
-          else {
-              Write-Error "PDF.js worker was not found."
-
-              Get-ChildItem `
-                -Path "node_modules/pdfjs-dist" `
-                -Recurse `
-                -File `
-                -Filter "pdf.worker*" `
-                -ErrorAction SilentlyContinue |
-                Select-Object -ExpandProperty FullName
-
-              exit 1
-          }
-
-          if (-not (Test-Path $targetWorker)) {
-              Write-Error "The PDF.js worker was not copied to public."
-              exit 1
-          }
-
-          $workerFile = Get-Item $targetWorker
-
-          if ($workerFile.Length -le 0) {
-              Write-Error "The copied PDF.js worker is empty."
-              exit 1
-          }
-
-          Write-Host "PDF.js worker prepared successfully."
-          Write-Host "Worker size: $($workerFile.Length) bytes"
 
       - name: Build Electron App
         run: npm run electron:dist -- --publish never
@@ -87,8 +38,12 @@ jobs:
               Write-Error "No Windows EXE installer was found in the dist directory."
 
               if (Test-Path "dist") {
+                  Write-Host "Files found inside dist:"
                   Get-ChildItem -Path "dist" -Recurse |
                   Select-Object -ExpandProperty FullName
+              }
+              else {
+                  Write-Host "The dist directory does not exist."
               }
 
               exit 1
@@ -99,7 +54,7 @@ jobs:
               Write-Host "$($_.Name) - $($_.Length) bytes"
           }
 
-      - name: Upload Windows Apps
+      - name: Upload Windows App
         uses: actions/upload-artifact@v4
         with:
           name: Rased-Teacher-Windows-Setup
