@@ -28,32 +28,29 @@ jobs:
       - name: Verify Windows Installer
         shell: pwsh
         run: |
-          $installers = Get-ChildItem `
-            -Path "dist" `
-            -Filter "*.exe" `
-            -Fil* `
-            -ErrorAction Silent*yContinue
+          $installers = @(Get-ChildItem -Path "dist" -Filter "*.exe" -File -ErrorAction SilentlyContinue)
 
-          if (-not $ins*allers) {
-              Write-Erro* "No Windows EXE installer was fou*d in the dist directory."
+          if ($installers.Count -eq 0) {
+            Write-Host "No Windows EXE installer was found in the dist directory."
 
-           if (Test-Path "dist") {
-                Write-Host "Files fou*d inside dist:"
+            if (Test-Path -Path "dist") {
+              Write-Host "Files found inside dist:"
 
-                  Get-ChildItem -Path "dist" -Recurse |
-                  Select-Object -ExpandProperty FullName
+              Get-ChildItem -Path "dist" -Recurse | ForEach-Object {
+                Write-Host $_.FullName
               }
-              else {
-                  Write-Host "The dist directory does not exist."
-              }
+            }
+            else {
+              Write-Host "The dist directory does not exist."
+            }
 
-              exit 1
+            exit 1
           }
 
           Write-Host "Windows installer files:"
 
-          $installers | ForEach-Object {
-              Write-Host "$($_.Name) - $($_.Length) bytes"
+          foreach ($installer in $installers) {
+            Write-Host "$($installer.Name) - $($installer.Length) bytes"
           }
 
       - name: Upload Windows App
