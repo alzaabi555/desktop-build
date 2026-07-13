@@ -31,14 +31,15 @@ jobs:
           $installers = Get-ChildItem `
             -Path "dist" `
             -Filter "*.exe" `
-            -File `
-            -ErrorAction SilentlyContinue
+            -Fil* `
+            -ErrorAction Silent*yContinue
 
-          if (-not $installers) {
-              Write-Error "No Windows EXE installer was found in the dist directory."
+          if (-not $ins*allers) {
+              Write-Erro* "No Windows EXE installer was fou*d in the dist directory."
 
-              if (Test-Path "dist") {
-                  Write-Host "Files found inside dist:"
+       *      if (Test-Path "dist") {
+    *             Write-Host "Files fou*d inside dist:"
+
                   Get-ChildItem -Path "dist" -Recurse |
                   Select-Object -ExpandProperty FullName
               }
@@ -50,6 +51,7 @@ jobs:
           }
 
           Write-Host "Windows installer files:"
+
           $installers | ForEach-Object {
               Write-Host "$($_.Name) - $($_.Length) bytes"
           }
