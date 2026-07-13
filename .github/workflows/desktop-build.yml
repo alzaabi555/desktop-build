@@ -37,8 +37,8 @@ jobs:
           if (-not $ins*allers) {
               Write-Erro* "No Windows EXE installer was fou*d in the dist directory."
 
-       *      if (Test-Path "dist") {
-    *             Write-Host "Files fou*d inside dist:"
+           if (Test-Path "dist") {
+                Write-Host "Files fou*d inside dist:"
 
                   Get-ChildItem -Path "dist" -Recurse |
                   Select-Object -ExpandProperty FullName
