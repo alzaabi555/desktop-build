@@ -55,6 +55,7 @@ import GlobalSyncManager from './components/GlobalSyncManager';
 import SeniorDashboard from './components/SeniorDashboard';
 import VoiceAssistant from './components/VoiceAssistant';
 import TeacherMailbox from './components/TeacherMailbox';
+import { useAndroidScheduleWidgetSync } from './hooks/useAndroidScheduleWidgetSync';
 
 // 🎮 بنك أسئلة الألعاب التعليمية
 import TeacherGameQuestionsManager from './components/TeacherGameQuestionsManager';
@@ -564,7 +565,7 @@ const handleToggleNotifications = () => {
   if (showWelcome) return <WelcomeScreen onFinish={handleFinishWelcome} />;
 
   const handleNavigate = (tab: string) => {
-    if (tab === 'dashboard' || tab === 'home' || tab === 'term_plan' || tab === 'assessment_plan') {
+    if (tab === 'dashboard' || tab === 'home') {
       setActiveTab('dashboard');
       return;
     }
@@ -587,7 +588,7 @@ const handleToggleNotifications = () => {
       setActiveTab('student_management');
       return;
     }
-    if (tab === 'mailbox' || tab === 'messages' || tab === 'inbox' || tab === 'sent_messages' || tab === 'compose_message') {
+    if (tab === 'mailbox' || tab === 'messages' || tab === 'inbox') {
       setActiveTab('mailbox');
       return;
     }
@@ -611,7 +612,7 @@ const handleToggleNotifications = () => {
       setActiveTab('games');
       return;
     }
-    if (tab === 'game_results' || tab === 'results' || tab === 'game_non_participants') {
+    if (tab === 'game_results' || tab === 'results') {
       setGamesView('results');
       setActiveTab('games');
       return;
@@ -621,7 +622,7 @@ const handleToggleNotifications = () => {
       setActiveTab('reports_analysis');
       return;
     }
-    if (tab === 'reports' || tab === 'analytics' || tab === 'reports_analysis' || tab === 'certificates' || tab === 'student_report' || tab === 'parent_cards' || tab === 'summon') {
+    if (tab === 'reports' || tab === 'analytics' || tab === 'reports_analysis') {
       setReportsView('reports');
       setActiveTab('reports_analysis');
       return;
@@ -1203,7 +1204,7 @@ const handleToggleNotifications = () => {
       appSubtitle={t('appSubtitleMain') || 'النسخة المتقدمة'}
     >
       {renderContent()}
-          <VoiceAssistant onNavigate={handleNavigate} />
+      <VoiceAssistant onNavigate={handleNavigate} />
     </AppLayout>
   );
 };
