@@ -56,7 +56,6 @@ import SeniorDashboard from './components/SeniorDashboard';
 import VoiceAssistant from './components/VoiceAssistant';
 import TeacherMailbox from './components/TeacherMailbox';
 
-
 // 🎮 بنك أسئلة الألعاب التعليمية
 import TeacherGameQuestionsManager from './components/TeacherGameQuestionsManager';
 import TeacherGameResultsDashboard from './components/TeacherGameResultsDashboard';
@@ -413,6 +412,8 @@ const AppContent: React.FC = () => {
   }, []);
 
 useSchoolBell(periodTimes, schedule, notificationsEnabled);
+
+
 const handleToggleNotifications = () => {
   setNotificationsEnabled(prev => {
     const newState = !prev;
@@ -557,7 +558,7 @@ const handleToggleNotifications = () => {
   if (showWelcome) return <WelcomeScreen onFinish={handleFinishWelcome} />;
 
   const handleNavigate = (tab: string) => {
-    if (tab === 'dashboard' || tab === 'home') {
+    if (tab === 'dashboard' || tab === 'home' || tab === 'term_plan' || tab === 'assessment_plan') {
       setActiveTab('dashboard');
       return;
     }
@@ -580,7 +581,7 @@ const handleToggleNotifications = () => {
       setActiveTab('student_management');
       return;
     }
-    if (tab === 'mailbox' || tab === 'messages' || tab === 'inbox') {
+    if (tab === 'mailbox' || tab === 'messages' || tab === 'inbox' || tab === 'sent_messages' || tab === 'compose_message') {
       setActiveTab('mailbox');
       return;
     }
@@ -604,7 +605,7 @@ const handleToggleNotifications = () => {
       setActiveTab('games');
       return;
     }
-    if (tab === 'game_results' || tab === 'results') {
+    if (tab === 'game_results' || tab === 'results' || tab === 'game_non_participants') {
       setGamesView('results');
       setActiveTab('games');
       return;
@@ -614,7 +615,7 @@ const handleToggleNotifications = () => {
       setActiveTab('reports_analysis');
       return;
     }
-    if (tab === 'reports' || tab === 'analytics' || tab === 'reports_analysis') {
+    if (tab === 'reports' || tab === 'analytics' || tab === 'reports_analysis' || tab === 'certificates' || tab === 'student_report' || tab === 'parent_cards' || tab === 'summon') {
       setReportsView('reports');
       setActiveTab('reports_analysis');
       return;
