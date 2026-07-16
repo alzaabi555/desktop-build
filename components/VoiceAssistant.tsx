@@ -257,6 +257,15 @@ const VoiceAssistant: React.FC<VoiceAssistantProps> = ({ onNavigate }) => {
   const { dir, language, students, setStudents, currentSemester } = useApp();
   const activeLanguage: SupportedLanguage = language === 'en' ? 'en' : 'ar';
   const copy = UI_COPY[activeLanguage];
+  const electronVoiceApi = typeof window !== 'undefined'
+    ? (window as any).electron
+    : null;
+  const isElectronVoiceBridgeAvailable = Boolean(
+    electronVoiceApi &&
+    typeof electronVoiceApi.openVoiceBridge === 'function' &&
+    typeof electronVoiceApi.closeVoiceBridge === 'function' &&
+    typeof electronVoiceApi.onVoiceCommand === 'function'
+  );
 
   const [isListening, setIsListening] = useState(false);
   const [transcript, setTranscript] = useState('');
@@ -527,7 +536,35 @@ const VoiceAssistant: React.FC<VoiceAssistantProps> = ({ onNavigate }) => {
   }, [activeLanguage, appendCommandHistory, clearConfirmationTimer, copy, displayFeedback, findNavigationCommand, onNavigate, runTasks, speak, undoLastAction]);
 
   useEffect(() => {
-    if (!SpeechRecognitionCtor) return;
+    if (!isElectronVoiceBridgeAvailable) return;
+
+    const unsubscribe = electronVoiceApi.onVoiceCommand((payload: any) => {
+      const receivedText = typeof payload === 'string'
+        ? payload
+        : String(payload?.text || '');
+      const receivedConfidence = typeof payload === 'object' && payload !== null
+        ? Number(payload.confidence)
+        : NaN;
+      const safeConfidence = Number.isFinite(receivedConfidence)
+        ? receivedConfidence
+        : null;
+
+      if (!receivedText.trim()) return;
+
+      setTranscript(receivedText.trim());
+      setRecognizedConfidence(safeConfidence);
+      setIsPanelVisible(true);
+      processCommand(receivedText.trim(), safeConfidence);
+      setTimeout(() => setTranscript(''), 1800);
+    });
+
+    return () => {
+      if (typeof unsubscribe === 'function') unsubscribe();
+    };
+  }, [electronVoiceApi, isElectronVoiceBridgeAvailable, processCommand]);
+
+  useEffect(() => {
+    if (isElectronVoiceBridgeAvailable || !SpeechRecognitionCtor) return;
     try {
       const recognition = new SpeechRecognitionCtor();
       recognition.continuous = true;
@@ -626,16 +663,59 @@ const VoiceAssistant: React.FC<VoiceAssistantProps> = ({ onNavigate }) => {
     } catch {
       displayFeedback(UI_COPY[activeLanguage].recognitionFailed, 'error');
     }
-  }, [activeLanguage, clearConfirmationTimer, displayFeedback, processCommand, restartRecognition]);
+  }, [activeLanguage, clearConfirmationTimer, displayFeedback, isElectronVoiceBridgeAvailable, processCommand, restartRecognition]);
 
   useEffect(() => () => {
     if (feedbackTimerRef.current) clearTimeout(feedbackTimerRef.current);
     if (restartTimerRef.current) clearTimeout(restartTimerRef.current);
     clearConfirmationTimer();
     if (typeof window !== 'undefined' && 'speechSynthesis' in window) window.speechSynthesis.cancel();
-  }, [clearConfirmationTimer]);
+    if (isElectronVoiceBridgeAvailable) {
+      Promise.resolve(electronVoiceApi.closeVoiceBridge()).catch(() => undefined);
+    }
+  }, [clearConfirmationTimer, electronVoiceApi, isElectronVoiceBridgeAvailable]);
 
-  const toggleListening = useCallback(() => {
+  const toggleListening = useCallback(async () => {
+    if (isElectronVoiceBridgeAvailable) {
+      if (shouldListenRef.current) {
+        manualStopRef.current = true;
+        shouldListenRef.current = false;
+        restartAttemptsRef.current = 0;
+        pendingConfirmationRef.current = null;
+        clearConfirmationTimer();
+        try {
+          await electronVoiceApi.closeVoiceBridge();
+        } catch {
+          // إغلاق نافذة الجسر لا يجب أن يعطل التطبيق.
+        }
+        setIsListening(false);
+        setRecognizedConfidence(null);
+        setIsHistoryVisible(false);
+        displayFeedback(copy.stopped, null);
+        return;
+      }
+
+      manualStopRef.current = false;
+      shouldListenRef.current = true;
+      restartAttemptsRef.current = 0;
+      setIsListening(true);
+      setIsPanelVisible(true);
+      displayFeedback(copy.lessonModeActive, 'info');
+
+      try {
+        const opened = await electronVoiceApi.openVoiceBridge({
+          language: activeLanguage === 'ar' ? 'ar-OM' : 'en-US'
+        });
+        if (!opened) throw new Error('VOICE_BRIDGE_NOT_OPENED');
+      } catch (error) {
+        console.error('[RASED_VOICE_BRIDGE_OPEN_ERROR]', error);
+        shouldListenRef.current = false;
+        setIsListening(false);
+        displayFeedback(copy.recognitionFailed, 'error');
+      }
+      return;
+    }
+
     if (!SpeechRecognitionCtor) {
       setIsPanelVisible(true);
       displayFeedback(copy.unsupported, 'error');
@@ -668,7 +748,7 @@ const VoiceAssistant: React.FC<VoiceAssistantProps> = ({ onNavigate }) => {
     } catch {
       restartRecognition(300);
     }
-  }, [clearConfirmationTimer, copy, displayFeedback, restartRecognition]);
+  }, [activeLanguage, clearConfirmationTimer, copy, displayFeedback, electronVoiceApi, isElectronVoiceBridgeAvailable, restartRecognition]);
 
   const isActive = isListening || shouldListenRef.current;
   const shouldShowPanel = (isPanelVisible && Boolean(transcript || feedback.message)) || isHistoryVisible;
@@ -769,7 +849,7 @@ const VoiceAssistant: React.FC<VoiceAssistantProps> = ({ onNavigate }) => {
         className={`pointer-events-auto flex items-center justify-center w-12 h-12 md:w-14 md:h-14 rounded-full shadow-xl transition-all duration-300 active:scale-90 border ${
           isActive
             ? 'bg-indigo-600 text-white shadow-indigo-500/30 ring-4 ring-indigo-500/15 border-indigo-500'
-            : SpeechRecognitionCtor
+            : (SpeechRecognitionCtor || isElectronVoiceBridgeAvailable)
               ? 'bg-slate-800 text-white hover:bg-slate-700 border-slate-700'
               : 'bg-slate-300 text-slate-500 border-slate-300'
         }`}
