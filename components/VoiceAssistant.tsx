@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { Mic, MicOff, CheckCircle, XCircle, Bot, AlertCircle, HelpCircle, History, Trash2, ShieldCheck } from 'lucide-react';
+import { Mic, MicOff, CheckCircle, XCircle, Bot, AlertCircle, HelpCircle } from 'lucide-react';
 import { useApp } from '../context/AppContext';
 import { Student } from '../types';
 import { VoiceTask, FeedbackType } from '../voice-agent/types';
@@ -47,18 +47,6 @@ const SpeechRecognitionCtor =
 
 const MAX_RESTART_ATTEMPTS = 5;
 const CONFIRMATION_TIMEOUT_MS = 10000;
-const COMMAND_HISTORY_KEY = 'rased_voice_command_history';
-const MAX_COMMAND_HISTORY = 30;
-const LOW_CONFIDENCE_THRESHOLD = 0.18;
-
-interface VoiceCommandHistoryItem {
-  id: string;
-  text: string;
-  language: SupportedLanguage;
-  confidence: number | null;
-  createdAt: string;
-}
-
 
 const UI_COPY = {
   ar: {
@@ -89,16 +77,7 @@ const UI_COPY = {
     helpTitle: 'يمكنك قول: افتح الطلاب، اذهب إلى الحضور، افتح المجموعات، افتح الدرجات، افتح التقارير، افتح المزامنة، أو تراجع.',
     commandNotRecognized: 'لم أفهم الأمر. جرّب قول: افتح الطلاب أو اذهب إلى الحضور.',
     alreadyListening: 'الوكيل الصوتي يستمع الآن.',
-    languageChanged: 'تم تحديث لغة التعرف الصوتي.',
-    historyTitle: 'سجل الأوامر الصوتية',
-    historyEmpty: 'لا توجد أوامر صوتية محفوظة بعد.',
-    clearHistory: 'مسح السجل',
-    confidenceLabel: 'دقة التعرف',
-    lowConfidence: 'لم أسمع الأمر بوضوح. أعد المحاولة بصوت واضح.',
-    blockedSensitive: 'لن أنفذ هذا الإجراء الحساس صوتيًا. افتح الصفحة وأكّد الإجراء يدويًا.',
-    closeHistory: 'إغلاق سجل الأوامر',
-    openHistory: 'فتح سجل الأوامر',
-    privacyNote: 'يُحفظ نص آخر الأوامر محليًا فقط ولا يُحفظ التسجيل الصوتي.'
+    languageChanged: 'تم تحديث لغة التعرف الصوتي.'
   },
   en: {
     lessonModeActive: 'Class mode is active... the assistant is listening',
@@ -128,16 +107,7 @@ const UI_COPY = {
     helpTitle: 'Try saying: open students, go to attendance, open groups, open grades, open reports, open sync, or undo.',
     commandNotRecognized: 'Command not recognized. Try saying: open students or go to attendance.',
     alreadyListening: 'The voice assistant is listening now.',
-    languageChanged: 'Speech recognition language has been updated.',
-    historyTitle: 'Voice Command History',
-    historyEmpty: 'No voice commands have been saved yet.',
-    clearHistory: 'Clear History',
-    confidenceLabel: 'Recognition confidence',
-    lowConfidence: 'The command was not heard clearly. Please try again in a clear voice.',
-    blockedSensitive: 'This sensitive action will not be executed by voice. Open the page and confirm it manually.',
-    closeHistory: 'Close command history',
-    openHistory: 'Open command history',
-    privacyNote: 'Only recent command text is stored locally. Voice recordings are never stored.'
+    languageChanged: 'Speech recognition language has been updated.'
   }
 } as const;
 
@@ -263,17 +233,6 @@ const VoiceAssistant: React.FC<VoiceAssistantProps> = ({ onNavigate }) => {
   const [feedback, setFeedback] = useState<{ message: string; type: FeedbackType }>({ message: '', type: null });
   const [isProcessing, setIsProcessing] = useState(false);
   const [isPanelVisible, setIsPanelVisible] = useState(false);
-  const [recognizedConfidence, setRecognizedConfidence] = useState<number | null>(null);
-  const [isHistoryVisible, setIsHistoryVisible] = useState(false);
-  const [commandHistory, setCommandHistory] = useState<VoiceCommandHistoryItem[]>(() => {
-    try {
-      const saved = localStorage.getItem(COMMAND_HISTORY_KEY);
-      const parsed = saved ? JSON.parse(saved) : [];
-      return Array.isArray(parsed) ? parsed.slice(0, MAX_COMMAND_HISTORY) : [];
-    } catch {
-      return [];
-    }
-  });
 
   const recognitionRef = useRef<any>(null);
   const shouldListenRef = useRef(false);
@@ -292,35 +251,6 @@ const VoiceAssistant: React.FC<VoiceAssistantProps> = ({ onNavigate }) => {
   useEffect(() => {
     studentsRef.current = students;
   }, [students]);
-  useEffect(() => {
-    try {
-      localStorage.setItem(COMMAND_HISTORY_KEY, JSON.stringify(commandHistory.slice(0, MAX_COMMAND_HISTORY)));
-    } catch {
-      // تجاهل فشل التخزين المحلي؛ لا يؤثر على تنفيذ الأوامر.
-    }
-  }, [commandHistory]);
-
-  const appendCommandHistory = useCallback((text: string, confidence: number | null) => {
-    const item: VoiceCommandHistoryItem = {
-      id: typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function'
-        ? crypto.randomUUID()
-        : `${Date.now()}-${Math.random().toString(36).slice(2)}`,
-      text,
-      language: activeLanguage,
-      confidence,
-      createdAt: new Date().toISOString()
-    };
-    setCommandHistory(previous => [item, ...previous].slice(0, MAX_COMMAND_HISTORY));
-  }, [activeLanguage]);
-
-  const clearCommandHistory = useCallback(() => {
-    setCommandHistory([]);
-    try {
-      localStorage.removeItem(COMMAND_HISTORY_KEY);
-    } catch {
-      // تجاهل
-    }
-  }, []);
 
   const clearConfirmationTimer = useCallback(() => {
     if (confirmationTimerRef.current) {
@@ -415,7 +345,6 @@ const VoiceAssistant: React.FC<VoiceAssistantProps> = ({ onNavigate }) => {
         continue;
       }
       executeTask(task, {
-        students: studentsRef.current,
         setStudents,
         currentSemester,
         onNavigate,
@@ -436,7 +365,7 @@ const VoiceAssistant: React.FC<VoiceAssistantProps> = ({ onNavigate }) => {
     return null;
   }, [activeLanguage]);
 
-  const processCommand = useCallback((command: string, confidence: number | null = null) => {
+  const processCommand = useCallback((command: string) => {
     const originalText = command.trim();
     if (!originalText) return;
     const normalized = normalizeText(originalText);
@@ -445,24 +374,11 @@ const VoiceAssistant: React.FC<VoiceAssistantProps> = ({ onNavigate }) => {
     if (normalized === lastProcessedRef.current.text && now - lastProcessedRef.current.time < 1200) return;
     lastProcessedRef.current = { text: normalized, time: now };
     memoryRef.current.setLastCommand(originalText);
-    setRecognizedConfidence(confidence);
-    appendCommandHistory(originalText, confidence);
     setIsProcessing(true);
     setIsPanelVisible(true);
     setFeedback({ message: copy.analyzing, type: 'info' });
 
     try {
-      const ultraSensitivePattern = /(حذف كل|حذف جميع|اعاده ضبط المصنع|إعاده ضبط المصنع|استعاده نسخه|استرجاع نسخه|مسح البيانات|delete all|factory reset|restore backup|wipe data)/i;
-      if (ultraSensitivePattern.test(normalizedForMatching)) {
-        displayFeedback(copy.blockedSensitive, 'error');
-        return;
-      }
-
-      if (confidence !== null && confidence > 0 && confidence < LOW_CONFIDENCE_THRESHOLD) {
-        displayFeedback(copy.lowConfidence, 'error');
-        return;
-      }
-
       if (pendingConfirmationRef.current) {
         const yesPattern = /^(نعم|ايوا|ايوه|اكد|أكد|موافق|نفذ|yes|confirm|proceed|do it)$/i;
         const noPattern = /^(لا|الغ|الغي|تراجع|وقف|إلغاء|الغاء|no|cancel|stop)$/i;
@@ -524,7 +440,7 @@ const VoiceAssistant: React.FC<VoiceAssistantProps> = ({ onNavigate }) => {
     } finally {
       setIsProcessing(false);
     }
-  }, [activeLanguage, appendCommandHistory, clearConfirmationTimer, copy, displayFeedback, findNavigationCommand, onNavigate, runTasks, speak, undoLastAction]);
+  }, [activeLanguage, clearConfirmationTimer, copy, displayFeedback, findNavigationCommand, onNavigate, runTasks, speak, undoLastAction]);
 
   useEffect(() => {
     if (!SpeechRecognitionCtor) return;
@@ -542,33 +458,16 @@ const VoiceAssistant: React.FC<VoiceAssistantProps> = ({ onNavigate }) => {
         setFeedback({ message: UI_COPY[activeLanguage].lessonModeActive, type: 'info' });
       };
       recognition.onresult = (event: any) => {
-        let bestText = '';
-        let bestConfidence: number | null = null;
-
+        let finalText = '';
         for (let i = event.resultIndex; i < event.results.length; i++) {
-          const result = event.results[i];
-          if (!result.isFinal) continue;
-
-          for (let alternativeIndex = 0; alternativeIndex < result.length; alternativeIndex++) {
-            const alternative = result[alternativeIndex];
-            const candidateText = String(alternative?.transcript || '').trim();
-            const candidateConfidence = Number(alternative?.confidence);
-            const safeConfidence = Number.isFinite(candidateConfidence) ? candidateConfidence : 0;
-
-            if (!candidateText) continue;
-            if (!bestText || safeConfidence > (bestConfidence ?? -1)) {
-              bestText = candidateText;
-              bestConfidence = safeConfidence;
-            }
-          }
+          if (event.results[i].isFinal) finalText += event.results[i][0].transcript;
         }
-
-        if (!bestText) return;
-        setTranscript(bestText);
-        setRecognizedConfidence(bestConfidence);
+        finalText = finalText.trim();
+        if (!finalText) return;
+        setTranscript(finalText);
         setIsPanelVisible(true);
-        processCommand(bestText, bestConfidence);
-        setTimeout(() => setTranscript(''), 1800);
+        processCommand(finalText);
+        setTimeout(() => setTranscript(''), 1400);
         restartRecognition(350);
       };
       recognition.onend = () => {
@@ -654,8 +553,6 @@ const VoiceAssistant: React.FC<VoiceAssistantProps> = ({ onNavigate }) => {
         // تجاهل
       }
       setIsListening(false);
-      setRecognizedConfidence(null);
-      setIsHistoryVisible(false);
       displayFeedback(copy.stopped, null);
       return;
     }
@@ -671,7 +568,7 @@ const VoiceAssistant: React.FC<VoiceAssistantProps> = ({ onNavigate }) => {
   }, [clearConfirmationTimer, copy, displayFeedback, restartRecognition]);
 
   const isActive = isListening || shouldListenRef.current;
-  const shouldShowPanel = (isPanelVisible && Boolean(transcript || feedback.message)) || isHistoryVisible;
+  const shouldShowPanel = isPanelVisible && Boolean(transcript || feedback.message);
   const statusIcon = useMemo(() => {
     if (isActive) return null;
     if (feedback.type === 'success') return <CheckCircle className="w-3.5 h-3.5" />;
@@ -703,66 +600,8 @@ const VoiceAssistant: React.FC<VoiceAssistantProps> = ({ onNavigate }) => {
           <p className="text-xs font-bold text-slate-800 leading-relaxed min-h-[1.25rem]">
             {transcript || feedback.message}
           </p>
-          {recognizedConfidence !== null && recognizedConfidence > 0 && (
-            <div className="mt-2 flex items-center gap-2 text-[9px] font-bold text-slate-500">
-              <ShieldCheck className="w-3 h-3" />
-              <span>{copy.confidenceLabel}: {Math.round(recognizedConfidence * 100)}%</span>
-            </div>
-          )}
-
-          {isHistoryVisible && (
-            <div className="mt-3 border-t border-slate-200 pt-3">
-              <div className="flex items-center justify-between gap-2 mb-2">
-                <div className="flex items-center gap-1.5 text-[10px] font-black text-slate-700">
-                  <History className="w-3.5 h-3.5" />
-                  {copy.historyTitle}
-                </div>
-                {commandHistory.length > 0 && (
-                  <button
-                    type="button"
-                    onClick={clearCommandHistory}
-                    className="flex items-center gap-1 text-[9px] font-bold text-rose-600 hover:text-rose-700"
-                  >
-                    <Trash2 className="w-3 h-3" />
-                    {copy.clearHistory}
-                  </button>
-                )}
-              </div>
-
-              {commandHistory.length === 0 ? (
-                <p className="text-[10px] text-slate-500">{copy.historyEmpty}</p>
-              ) : (
-                <div className="max-h-36 overflow-y-auto custom-scrollbar space-y-1.5">
-                  {commandHistory.slice(0, 8).map(item => (
-                    <div key={item.id} className="rounded-xl bg-slate-50 border border-slate-100 px-2.5 py-2">
-                      <p className="text-[10px] font-bold text-slate-700 leading-4">{item.text}</p>
-                      <p className="mt-0.5 text-[8px] text-slate-400" dir="ltr">
-                        {new Date(item.createdAt).toLocaleTimeString(item.language === 'ar' ? 'ar-OM' : 'en-US', { hour: '2-digit', minute: '2-digit' })}
-                        {item.confidence !== null && item.confidence > 0 ? ` • ${Math.round(item.confidence * 100)}%` : ''}
-                      </p>
-                    </div>
-                  ))}
-                </div>
-              )}
-              <p className="mt-2 text-[8px] leading-4 text-slate-400">{copy.privacyNote}</p>
-            </div>
-          )}
         </div>
       )}
-      <div className="flex items-center gap-2 pointer-events-auto">
-        <button
-          type="button"
-          onClick={() => {
-            setIsHistoryVisible(previous => !previous);
-            setIsPanelVisible(true);
-          }}
-          className="flex items-center justify-center w-10 h-10 rounded-full bg-white text-slate-700 border border-slate-200 shadow-lg hover:bg-slate-50 active:scale-90 transition-all"
-          aria-label={isHistoryVisible ? copy.closeHistory : copy.openHistory}
-          title={isHistoryVisible ? copy.closeHistory : copy.openHistory}
-        >
-          <History className="w-4 h-4" />
-        </button>
-
       <button
         type="button"
         onClick={toggleListening}
@@ -778,7 +617,6 @@ const VoiceAssistant: React.FC<VoiceAssistantProps> = ({ onNavigate }) => {
       >
         {isProcessing ? <Bot className="w-5 h-5 animate-pulse" /> : isActive ? <Mic className="w-5 h-5" /> : <MicOff className="w-5 h-5" />}
       </button>
-      </div>
     </div>
   );
 };
