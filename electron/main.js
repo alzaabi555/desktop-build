@@ -220,19 +220,38 @@ function startVoiceBridgeServer() {
       return;
     }
 
-    if (req.method === 'GET' && (req.url === '/' || req.url === '/index.html')) {
-      res.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8' });
+    let requestUrl;
+    try {
+      requestUrl = new URL(
+        req.url || '/',
+        `http://127.0.0.1:${VOICE_BRIDGE_PORT}`
+      );
+    } catch (error) {
+      res.writeHead(400, { 'Content-Type': 'application/json; charset=utf-8' });
+      res.end(JSON.stringify({ status: 'error', message: 'Invalid URL' }));
+      return;
+    }
+
+    const pathname = requestUrl.pathname;
+
+    if (req.method === 'GET' && (pathname === '/' || pathname === '/index.html')) {
+      res.writeHead(200, {
+        'Content-Type': 'text/html; charset=utf-8',
+        'Cache-Control': 'no-store, no-cache, must-revalidate',
+        Pragma: 'no-cache',
+        Expires: '0'
+      });
       res.end(getVoiceBridgeHtml());
       return;
     }
 
-    if (req.method === 'GET' && req.url === '/health') {
+    if (req.method === 'GET' && pathname === '/health') {
       res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8' });
       res.end(JSON.stringify({ status: 'ok', service: 'rased-voice-bridge' }));
       return;
     }
 
-    if (req.method === 'POST' && req.url === '/voice-command') {
+    if (req.method === 'POST' && pathname === '/voice-command') {
       let body = '';
       req.on('data', (chunk) => {
         body += chunk;
