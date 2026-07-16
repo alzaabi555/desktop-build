@@ -413,14 +413,6 @@ const AppContent: React.FC = () => {
   }, []);
 
 useSchoolBell(periodTimes, schedule, notificationsEnabled);
-
-// 📱 مزامنة ويدجيت أندرويد: جدول الحصص الحالي والقادم
-useAndroidScheduleWidgetSync({
-  schedule,
-  periodTimes,
-  teacherInfo
-});
-
 const handleToggleNotifications = () => {
   setNotificationsEnabled(prev => {
     const newState = !prev;
