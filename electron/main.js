@@ -69,19 +69,139 @@ function getVoiceBridgeHtml() {
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Rased Voice Bridge</title>
   <style>
-    body { margin: 0; font-family: Arial, sans-serif; background: #0f172a; color: #fff; }
-    main { padding: 18px; }
-    h1 { margin: 0 0 8px; font-size: 18px; }
+    * { box-sizing: border-box; }
+    body { margin: 0; font-family: "Segoe UI", Arial, sans-serif; background: linear-gradient(145deg, #0f172a, #1e1b4b); color: #fff; min-height: 100vh; }
+    main { min-height: 100vh; padding: 18px; display: flex; flex-direction: column; justify-content: center; }
+    .brand { display: flex; align-items: center; gap: 10px; margin-bottom: 12px; }
+    .orb { width: 42px; height: 42px; border-radius: 50%; background: #4f46e5; display: grid; place-items: center; box-shadow: 0 0 0 8px rgba(99,102,241,.15); }
+    h1 { margin: 0; font-size: 18px; }
     p { margin: 0; line-height: 1.7; color: #cbd5e1; font-size: 13px; }
-    .status { margin-top: 14px; padding: 10px 12px; border-radius: 12px; background: #1e293b; }
+    .status { margin-top: 14px; padding: 12px; border-radius: 14px; background: rgba(30,41,59,.92); border: 1px solid rgba(148,163,184,.2); min-height: 48px; }
+    .transcript { margin-top: 10px; padding: 12px; border-radius: 14px; background: rgba(255,255,255,.08); min-height: 48px; font-weight: 700; line-height: 1.6; }
+    .actions { display: flex; gap: 8px; margin-top: 12px; }
+    button { flex: 1; border: 0; border-radius: 12px; padding: 11px 12px; font-weight: 800; cursor: pointer; }
+    #start { background: #4f46e5; color: #fff; }
+    #stop { background: #334155; color: #fff; }
+    .listening .orb { animation: pulse 1.25s infinite; background: #ef4444; }
+    @keyframes pulse { 0%,100% { transform: scale(1); box-shadow: 0 0 0 8px rgba(239,68,68,.15); } 50% { transform: scale(1.08); box-shadow: 0 0 0 15px rgba(239,68,68,.05); } }
   </style>
 </head>
 <body>
-  <main>
-    <h1>راصد - جسر الأوامر الصوتية</h1>
-    <p>اترك هذه النافذة مفتوحة عند استخدام التعرف الصوتي في نسخة Windows.</p>
-    <div class="status">Voice bridge is ready.</div>
+  <main id="app">
+    <div class="brand">
+      <div class="orb">🎙️</div>
+      <div><h1 id="title">راصد - الأوامر الصوتية</h1><p id="subtitle">انطق الأمر بوضوح، وسيتم إرساله إلى التطبيق.</p></div>
+    </div>
+    <div id="status" class="status">جاري تجهيز الميكروفون...</div>
+    <div id="transcript" class="transcript">...</div>
+    <div class="actions"><button id="start">بدء الاستماع</button><button id="stop">إيقاف</button></div>
   </main>
+<script>
+(function () {
+  var params = new URLSearchParams(location.search);
+  var language = String(params.get('lang') || 'ar-OM');
+  var isEnglish = language.toLowerCase().indexOf('en') === 0;
+  document.documentElement.lang = isEnglish ? 'en' : 'ar';
+  document.documentElement.dir = isEnglish ? 'ltr' : 'rtl';
+  var copy = isEnglish ? {
+    title: 'Rased Voice Commands', subtitle: 'Speak clearly and the command will be sent to the app.',
+    preparing: 'Preparing microphone...', listening: 'Listening...', stopped: 'Listening stopped.',
+    unsupported: 'Speech recognition is not supported. Use Google Chrome.', denied: 'Microphone permission was denied.',
+    sent: 'Command sent to Rased.', start: 'Start Listening', stop: 'Stop', retry: 'Try again...'
+  } : {
+    title: 'راصد - الأوامر الصوتية', subtitle: 'انطق الأمر بوضوح، وسيتم إرساله إلى التطبيق.',
+    preparing: 'جاري تجهيز الميكروفون...', listening: 'جاري الاستماع...', stopped: 'تم إيقاف الاستماع.',
+    unsupported: 'التعرف الصوتي غير مدعوم. استخدم Google Chrome.', denied: 'تم رفض صلاحية الميكروفون.',
+    sent: 'تم إرسال الأمر إلى راصد.', start: 'بدء الاستماع', stop: 'إيقاف', retry: 'حاول مرة أخرى...'
+  };
+  var app = document.getElementById('app');
+  var status = document.getElementById('status');
+  var transcript = document.getElementById('transcript');
+  var startButton = document.getElementById('start');
+  var stopButton = document.getElementById('stop');
+  document.getElementById('title').textContent = copy.title;
+  document.getElementById('subtitle').textContent = copy.subtitle;
+  startButton.textContent = copy.start;
+  stopButton.textContent = copy.stop;
+  status.textContent = copy.preparing;
+
+  var Recognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+  var recognition = null;
+  var shouldListen = true;
+  var starting = false;
+
+  function sendCommand(text, confidence) {
+    return fetch('/voice-command', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ text: text, confidence: confidence, language: language })
+    }).then(function (response) { return response.json(); });
+  }
+
+  function startListening() {
+    if (!recognition || starting) return;
+    shouldListen = true;
+    try { starting = true; recognition.start(); } catch (error) { starting = false; }
+  }
+
+  function stopListening() {
+    shouldListen = false;
+    if (recognition) { try { recognition.stop(); } catch (error) {} }
+    app.classList.remove('listening');
+    status.textContent = copy.stopped;
+  }
+
+  if (!Recognition) {
+    status.textContent = copy.unsupported;
+    startButton.disabled = true;
+    return;
+  }
+
+  recognition = new Recognition();
+  recognition.lang = language;
+  recognition.continuous = true;
+  recognition.interimResults = true;
+  recognition.maxAlternatives = 3;
+  recognition.onstart = function () { starting = false; app.classList.add('listening'); status.textContent = copy.listening; };
+  recognition.onresult = function (event) {
+    var finalText = '';
+    var partialText = '';
+    var confidence = null;
+    for (var i = event.resultIndex; i < event.results.length; i++) {
+      var result = event.results[i];
+      var alt = result[0];
+      if (!alt) continue;
+      if (result.isFinal) { finalText += String(alt.transcript || ''); confidence = Number.isFinite(Number(alt.confidence)) ? Number(alt.confidence) : null; }
+      else { partialText += String(alt.transcript || ''); }
+    }
+    transcript.textContent = finalText || partialText || '...';
+    if (finalText.trim()) {
+      sendCommand(finalText.trim(), confidence).then(function () {
+        status.textContent = copy.sent;
+      }).catch(function () {
+        status.textContent = copy.retry;
+      });
+    }
+  };
+  recognition.onerror = function (event) {
+    starting = false;
+    app.classList.remove('listening');
+    if (event.error === 'not-allowed' || event.error === 'service-not-allowed') {
+      shouldListen = false; status.textContent = copy.denied; return;
+    }
+    status.textContent = copy.retry;
+  };
+  recognition.onend = function () {
+    starting = false;
+    app.classList.remove('listening');
+    if (shouldListen) setTimeout(startListening, 350);
+    else status.textContent = copy.stopped;
+  };
+  startButton.addEventListener('click', startListening);
+  stopButton.addEventListener('click', stopListening);
+  window.addEventListener('beforeunload', stopListening);
+  setTimeout(startListening, 400);
+})();
+</script>
 </body>
 </html>`;
 }
@@ -112,6 +232,39 @@ function startVoiceBridgeServer() {
       return;
     }
 
+    if (req.method === 'POST' && req.url === '/voice-command') {
+      let body = '';
+      req.on('data', (chunk) => {
+        body += chunk;
+        if (body.length > 65536) req.destroy();
+      });
+      req.on('end', () => {
+        try {
+          const payload = JSON.parse(body || '{}');
+          const text = String(payload.text || '').trim();
+          if (!text) {
+            res.writeHead(400, { 'Content-Type': 'application/json; charset=utf-8' });
+            res.end(JSON.stringify({ status: 'error', message: 'Empty command' }));
+            return;
+          }
+          if (mainWindow && !mainWindow.isDestroyed()) {
+            mainWindow.webContents.send('voice-command', {
+              text,
+              confidence: Number.isFinite(Number(payload.confidence)) ? Number(payload.confidence) : null,
+              language: String(payload.language || '')
+            });
+          }
+          res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8' });
+          res.end(JSON.stringify({ status: 'success' }));
+        } catch (error) {
+          appendRendererLog('voice-bridge', error && error.stack ? error.stack : String(error), '/voice-command', 0);
+          res.writeHead(400, { 'Content-Type': 'application/json; charset=utf-8' });
+          res.end(JSON.stringify({ status: 'error', message: 'Invalid payload' }));
+        }
+      });
+      return;
+    }
+
     res.writeHead(404, { 'Content-Type': 'application/json; charset=utf-8' });
     res.end(JSON.stringify({ status: 'error', message: 'Not found' }));
   });
@@ -126,10 +279,12 @@ function startVoiceBridgeServer() {
   });
 }
 
-function openVoiceBridgeInChrome() {
+function openVoiceBridgeInChrome(options = {}) {
   startVoiceBridgeServer();
 
-  const url = `http://127.0.0.1:${VOICE_BRIDGE_PORT}/`;
+  const requestedLanguage = String(options.language || 'ar-OM');
+  const language = requestedLanguage.toLowerCase().startsWith('en') ? 'en-US' : 'ar-OM';
+  const url = `http://127.0.0.1:${VOICE_BRIDGE_PORT}/?lang=${encodeURIComponent(language)}`;
 
   if (voiceBridgeProcess && !voiceBridgeProcess.killed) return true;
 
@@ -232,6 +387,7 @@ function createWindow() {
     backgroundColor: themeBgColor,
     frame: false,
     webPreferences: {
+      preload: path.join(__dirname, 'preload.js'),
       contextIsolation: true,
       nodeIntegration: false,
       sandbox: false,
@@ -305,7 +461,7 @@ function createWindow() {
 }
 
 ipcMain.handle('get-app-version', () => app.getVersion());
-ipcMain.handle('open-voice-bridge', () => openVoiceBridgeInChrome());
+ipcMain.handle('open-voice-bridge', (_event, options) => openVoiceBridgeInChrome(options || {}));
 ipcMain.handle('close-voice-bridge', () => {
   closeVoiceBridgeInChrome();
   return true;
