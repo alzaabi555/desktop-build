@@ -55,7 +55,6 @@ import GlobalSyncManager from './components/GlobalSyncManager';
 import SeniorDashboard from './components/SeniorDashboard';
 import VoiceAssistant from './components/VoiceAssistant';
 import TeacherMailbox from './components/TeacherMailbox';
-import { useAndroidScheduleWidgetSync } from './hooks/useAndroidScheduleWidgetSync';
 
 // 🎮 بنك أسئلة الألعاب التعليمية
 import TeacherGameQuestionsManager from './components/TeacherGameQuestionsManager';
