@@ -35,7 +35,7 @@ contextBridge.exposeInMainWorld('electron', {
    * فتح صفحة Chrome Voice Bridge كمربع Chrome صغير
    * main.js يستقبل open-voice-bridge ويفتح Chrome عبر --app
    */
-  openVoiceBridge: () => ipcRenderer.invoke('open-voice-bridge'),
+  openVoiceBridge: (options = {}) => ipcRenderer.invoke('open-voice-bridge', options),
 
   /**
    * إغلاق نافذة Chrome Voice Bridge
@@ -50,7 +50,7 @@ contextBridge.exposeInMainWorld('electron', {
   onVoiceCommand: (callback) => {
     const handler = (_event, text) => {
       if (typeof callback === 'function') {
-        callback(String(text || ''));
+        callback(text);
       }
     };
 
