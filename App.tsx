@@ -1203,7 +1203,13 @@ const handleToggleNotifications = () => {
       appSubtitle={t('appSubtitleMain') || 'النسخة المتقدمة'}
     >
       {renderContent()}
-      <VoiceAssistant onNavigate={handleNavigate} />
+    {false && (
+  <VoiceAssistant
+    students={students}
+    setStudents={setStudents}
+    onNavigate={handleNavigate}
+  />
+)}
     </AppLayout>
   );
 };
