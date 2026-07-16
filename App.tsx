@@ -53,7 +53,7 @@ import StudentGroups from './components/StudentGroups';
 import TeacherLibrary from './components/TeacherLibrary';
 import GlobalSyncManager from './components/GlobalSyncManager';
 import SeniorDashboard from './components/SeniorDashboard';
-//import VoiceAssistant from './components/VoiceAssistant';
+import VoiceAssistant from './components/VoiceAssistant';
 import TeacherMailbox from './components/TeacherMailbox';
 
 // 🎮 بنك أسئلة الألعاب التعليمية
