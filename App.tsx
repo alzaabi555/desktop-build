@@ -372,7 +372,7 @@ const AppContent: React.FC = () => {
   } = useApp();
 
   const [activeTab, setActiveTab] = useState('dashboard');
-  const [studentManagementView, setStudentManagementView] = useState<'students' | 'attendance' | 'groups'>('students');
+  const [studentManagementView, setStudentManagementView] = useState<'students' | 'attendance' | 'leaderboard' | 'groups'>('students');
   const [learningView, setLearningView] = useState<'grades' | 'tasks' | 'library'>('grades');
   const [gamesView, setGamesView] = useState<'questions' | 'results'>('questions');
   const [reportsView, setReportsView] = useState<'reports' | 'leaderboard'>('reports');
@@ -512,26 +512,26 @@ const handleToggleNotifications = () => {
   }, [activeTab, gamesView]);
 
   const mobileNavItems = [
-    { id: 'dashboard', label: t('navDashboard') || (dir === 'rtl' ? 'الرئيسية' : 'Dashboard'), IconComponent: LayoutDashboard },
-    ...(teacherInfo?.role === 'senior' ? [{ id: 'senior_dashboard', label: dir === 'rtl' ? 'القيادة' : 'Leader', IconComponent: ShieldCheck }] : []),
-    { id: 'student_management', label: dir === 'rtl' ? 'الطلاب' : 'Students', IconComponent: Users },
-    { id: 'mailbox', label: dir === 'rtl' ? 'البريد' : 'Mail', IconComponent: Mail },
-    { id: 'learning_evaluation', label: dir === 'rtl' ? 'التعليم' : 'Learning', IconComponent: BookOpen },
-    { id: 'games', label: dir === 'rtl' ? 'الألعاب' : 'Games', IconComponent: Gamepad2 },
-    { id: 'reports_analysis', label: dir === 'rtl' ? 'التقارير' : 'Reports', IconComponent: BarChart3 },
-    { id: 'help_settings', label: dir === 'rtl' ? 'المزيد' : 'More', IconComponent: SettingsIcon }
+    { id: 'dashboard', label: t('navDashboard'), IconComponent: LayoutDashboard },
+    ...(teacherInfo?.role === 'senior' ? [{ id: 'senior_dashboard', label: t('navDepartmentManagement'), IconComponent: ShieldCheck }] : []),
+    { id: 'student_management', label: t('navStudentsShort'), IconComponent: Users },
+    { id: 'learning_evaluation', label: t('navLearningShort'), IconComponent: BookOpen },
+    { id: 'mailbox', label: t('navMailboxShort'), IconComponent: Mail },
+    { id: 'games', label: t('navGamesShort'), IconComponent: Gamepad2 },
+    { id: 'reports_analysis', label: t('navReports'), IconComponent: BarChart3 },
+    { id: 'help_settings', label: t('navMore'), IconComponent: SettingsIcon }
   ];
 
   const desktopNavItems = [
-    { id: 'dashboard', label: t('navDashboard') || (dir === 'rtl' ? 'الرئيسية' : 'Dashboard'), icon: LayoutDashboard },
-    ...(teacherInfo?.role === 'senior' ? [{ id: 'senior_dashboard', label: dir === 'rtl' ? 'إدارة القسم' : 'Dept. Admin', icon: ShieldCheck }] : []),
-    { id: 'student_management', label: dir === 'rtl' ? 'إدارة الطلاب' : 'Student Management', icon: Users },
-    { id: 'mailbox', label: dir === 'rtl' ? 'المراسلات' : 'Mailbox', icon: Mail },
-    { id: 'learning_evaluation', label: dir === 'rtl' ? 'التعليم والتقييم' : 'Learning & Evaluation', icon: BookOpen },
-    { id: 'games', label: dir === 'rtl' ? 'الألعاب التعليمية' : 'Educational Games', icon: Gamepad2 },
-    { id: 'reports_analysis', label: dir === 'rtl' ? 'التقارير والتحليل' : 'Reports & Analytics', icon: BarChart3 },
-    { id: 'admin_sync', label: dir === 'rtl' ? 'الإدارة والمزامنة' : 'Admin & Sync', icon: CloudSync },
-    { id: 'help_settings', label: dir === 'rtl' ? 'المساعدة والإعدادات' : 'Help & Settings', icon: SettingsIcon }
+    { id: 'dashboard', label: t('navDashboard'), icon: LayoutDashboard },
+    ...(teacherInfo?.role === 'senior' ? [{ id: 'senior_dashboard', label: t('navDepartmentManagement'), icon: ShieldCheck }] : []),
+    { id: 'student_management', label: t('navStudentManagement'), icon: Users },
+    { id: 'learning_evaluation', label: t('navLearningAssessment'), icon: BookOpen },
+    { id: 'mailbox', label: t('navMailboxMain'), icon: Mail },
+    { id: 'games', label: t('navEducationalGames'), icon: Gamepad2 },
+    { id: 'reports_analysis', label: t('navReportsStandalone'), icon: BarChart3 },
+    { id: 'admin_sync', label: t('navCentralSync'), icon: CloudSync },
+    { id: 'help_settings', label: t('navSettingsHelp'), icon: SettingsIcon }
   ];
 
   if (!isDataLoaded) {
@@ -611,8 +611,8 @@ const handleToggleNotifications = () => {
       return;
     }
     if (tab === 'leaderboard' || tab === 'knights') {
-      setReportsView('leaderboard');
-      setActiveTab('reports_analysis');
+      setStudentManagementView('leaderboard');
+      setActiveTab('student_management');
       return;
     }
     if (tab === 'reports' || tab === 'analytics' || tab === 'reports_analysis' || tab === 'certificates' || tab === 'student_report' || tab === 'parent_cards' || tab === 'summon') {
@@ -965,6 +965,16 @@ const handleToggleNotifications = () => {
     if (studentManagementView === 'attendance') {
       return <AttendanceTracker students={students} classes={classes} setStudents={setStudents} />;
     }
+    if (studentManagementView === 'leaderboard') {
+      return (
+        <Leaderboard
+          students={students}
+          classes={classes}
+          onUpdateStudent={(u) => setStudents(p => p.map(s => s.id === u.id ? u : s))}
+          teacherInfo={teacherInfo}
+        />
+      );
+    }
     if (studentManagementView === 'groups') return <StudentGroups />;
     return (
       <StudentList
@@ -1045,9 +1055,10 @@ const handleToggleNotifications = () => {
           <div className="h-full min-h-0 overflow-y-auto overscroll-contain custom-scrollbar space-y-4 pb-24 pr-1">
             {renderHubTabs(
               [
-                { id: 'students', label: 'الطلاب', icon: Users },
-                { id: 'groups', label: 'المجموعات', icon: Users },
-                { id: 'attendance', label: 'الحضور', icon: CalendarCheck }
+                { id: 'students', label: t('tabStudents'), icon: Users },
+                { id: 'attendance', label: t('tabAttendance'), icon: CalendarCheck },
+                { id: 'leaderboard', label: t('tabLeaderboard'), icon: Medal },
+                { id: 'groups', label: t('tabGroups'), icon: Users }
               ],
               studentManagementView,
               setStudentManagementView
@@ -1061,9 +1072,9 @@ const handleToggleNotifications = () => {
           <div className="h-full min-h-0 overflow-y-auto overscroll-contain custom-scrollbar space-y-4 pb-24 pr-1">
             {renderHubTabs(
               [
-                { id: 'grades', label: 'الدرجات', icon: BarChart3 },
-                { id: 'tasks', label: 'المهام', icon: CheckSquare },
-                { id: 'library', label: 'المكتبة', icon: Library }
+                { id: 'grades', label: t('tabGrades'), icon: BarChart3 },
+                { id: 'tasks', label: t('tabTasks'), icon: CheckSquare },
+                { id: 'library', label: t('tabLibrary'), icon: Library }
               ],
               learningView,
               setLearningView
@@ -1085,7 +1096,7 @@ const handleToggleNotifications = () => {
                     : 'bg-bgSoft text-textSecondary hover:text-primary'
                 }`}
               >
-                الأسئلة
+                {t('tabQuestions')}
               </button>
               <button
                 type="button"
@@ -1099,7 +1110,7 @@ const handleToggleNotifications = () => {
                     : 'bg-bgSoft text-textSecondary hover:text-primary'
                 }`}
               >
-                النتائج
+                {t('tabResults')}
               </button>
             </div>
             {gamesView === 'questions' ? (
@@ -1131,24 +1142,7 @@ const handleToggleNotifications = () => {
       case 'reports_analysis':
         return (
           <div className="h-full min-h-0 overflow-y-auto overscroll-contain custom-scrollbar space-y-4 pb-24 pr-1">
-            {renderHubTabs(
-              [
-                { id: 'reports', label: 'التقارير', icon: FileText },
-                { id: 'leaderboard', label: 'الفرسان', icon: Medal }
-              ],
-              reportsView,
-              setReportsView
-            )}
-            {reportsView === 'leaderboard' ? (
-              <Leaderboard
-                students={students}
-                classes={classes}
-                onUpdateStudent={(u) => setStudents(p => p.map(s => s.id === u.id ? u : s))}
-                teacherInfo={teacherInfo}
-              />
-            ) : (
-              <Reports />
-            )}
+            <Reports />
           </div>
         );
 
@@ -1156,7 +1150,7 @@ const handleToggleNotifications = () => {
         return (
           <div className="h-full min-h-0 overflow-y-auto overscroll-contain custom-scrollbar space-y-4 pb-24 pr-1">
             {renderHubTabs(
-              [{ id: 'sync', label: 'مزامنة السحابة', icon: CloudSync }],
+              [{ id: 'sync', label: t('tabCentralSync'), icon: CloudSync }],
               adminView,
               setAdminView
             )}
@@ -1169,9 +1163,9 @@ const handleToggleNotifications = () => {
           <div className="h-full min-h-0 overflow-y-auto overscroll-contain custom-scrollbar space-y-4 pb-24 pr-1">
             {renderHubTabs(
               [
-                { id: 'guide', label: 'دليل الاستخدام', icon: BookOpen },
-                { id: 'settings', label: 'الإعدادات', icon: SettingsIcon },
-                { id: 'about', label: 'عن التطبيق', icon: Info }
+                { id: 'settings', label: t('tabSettings'), icon: SettingsIcon },
+                { id: 'guide', label: t('tabUserGuide'), icon: BookOpen },
+                { id: 'about', label: t('tabAboutApp'), icon: Info }
               ],
               helpView,
               setHelpView
