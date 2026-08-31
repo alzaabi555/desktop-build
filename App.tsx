@@ -86,6 +86,8 @@ const sanitizeGameQuestionsForStudent = (questions: any[]) => {
     })
     .map(q => ({
       id: q.id,
+      publishBatchId: q.publishBatchId || '',
+      subjectId: q.subjectId || '',
       subject: q.subject,
       grade: q.grade,
       className: q.classes?.[0] || q.className || '',
@@ -446,6 +448,8 @@ const handleToggleNotifications = () => {
       action: 'gameQuestions',
       schoolCode: payload.schoolCode,
       teacherId: payload.teacherId,
+      publishBatchId: payload.publishBatchId,
+      subjectId: (payload as any).subjectId || '',
       subject: payload.subject,
       grade: payload.grade,
       classes: payload.classes,
@@ -1153,7 +1157,10 @@ const handleToggleNotifications = () => {
                 schoolCode={localStorage.getItem('rased_admin_school_code') || (teacherInfo as any)?.schoolCode || teacherInfo?.school || 'default_school'}
               />
             ) : (
-              <TeacherExamsManager />
+              <TeacherExamsManager
+                classOptions={classes || []}
+                students={students || []}
+              />
             )}
           </div>
         );
