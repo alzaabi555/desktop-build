@@ -13,7 +13,7 @@ import * as XLSX from 'xlsx';
 import { LocalNotifications } from '@capacitor/local-notifications';
 import { Capacitor } from '@capacitor/core';
 import alarmSound from '../assets/alarm.mp3';
-import { Drawer as DrawerSheet } from '../components/ui/Drawer';
+import { Drawer as DrawerSheet } from './ui/Drawer';
 import PageLayout from '../components/PageLayout'; // 💉 استدعاء الغلاف الشامل
 
 const DefaultAvatarSVG = ({ gender }: { gender: string }) => (
