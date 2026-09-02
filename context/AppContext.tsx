@@ -1,1881 +1,1168 @@
-import React, { useState, useEffect, useRef } from 'react';
-import { ScheduleDay, PeriodTime } from '../types';
-import { 
-    Bell, Clock, Settings, Edit3,
-    School, Download, Loader2, 
-    PlayCircle, AlarmClock, ChevronLeft, User, Check, Camera,
-    X, Calendar, BellOff, Save, CalendarDays, CheckCircle2,
-    AlertTriangle, Award, Heart, Plus, Trash2, RefreshCcw,
-    BookOpen, MapPin
-} from 'lucide-react';
-import { useApp } from '../context/AppContext';
-import * as XLSX from 'xlsx';
-import { LocalNotifications } from '@capacitor/local-notifications';
+import React, {
+  createContext,
+  useContext,
+  useEffect,
+  useRef,
+  useState
+} from 'react';
+import type {
+  AssessmentTool,
+  CertificateSettings,
+  GradeSettings,
+  Group,
+  GroupCategorization,
+  PeriodTime,
+  RasedBackupPayload,
+  RasedExtendedStorageSnapshot,
+  ScheduleDay,
+  Student
+} from '../types';
+import { Filesystem, Directory, Encoding } from '@capacitor/filesystem';
 import { Capacitor } from '@capacitor/core';
-import alarmSound from '../assets/alarm.mp3';
-import { Drawer as DrawerSheet } from '../components/ui/Drawer';
-import PageLayout from '../components/PageLayout'; // 💉 استدعاء الغلاف الشامل
+import { translations } from './translations';
 
-const DefaultAvatarSVG = ({ gender }: { gender: string }) => (
-    <svg viewBox="0 0 100 100" className="w-full h-full bg-bgSoft" xmlns="http://www.w3.org/2000/svg">
-        <circle cx="50" cy="40" r="15" fill={gender === 'female' ? '#f472b6' : '#60a5fa'} opacity="0.8"/>
-        <path d="M20 90 C20 70 35 60 50 60 C65 60 80 70 80 90" fill={gender === 'female' ? '#f472b6' : '#60a5fa'} opacity="0.6"/>
-    </svg>
-);
+export type Language = 'ar' | 'en';
 
-interface DashboardProps {
-    students: any[];
-    teacherInfo: { name: string; school: string; subject: string; governorate: string; avatar?: string; stamp?: string; ministryLogo?: string; academicYear?: string; gender?: 'male' | 'female' };
-    onUpdateTeacherInfo: (info: any) => void;
-    schedule: ScheduleDay[];
-    onUpdateSchedule: (schedule: ScheduleDay[]) => void;
-    onSelectStudent: (student: any) => void;
-    onNavigate: (tab: string) => void;
-    onOpenSettings: () => void;
-    periodTimes: PeriodTime[];
-    setPeriodTimes: React.Dispatch<React.SetStateAction<PeriodTime[]>>;
-    notificationsEnabled: boolean;
-    onToggleNotifications: () => void;
-    currentSemester: '1' | '2';
-    onSemesterChange: (sem: '1' | '2') => void;
+export interface TeacherInfo {
+  name: string;
+  school: string;
+  subject: string;
+  governorate: string;
+  avatar?: string;
+  stamp?: string;
+  ministryLogo?: string;
+  academicYear?: string;
+  gender?: 'male' | 'female';
+  civilId?: string;
+  role?: 'teacher' | 'senior';
+  departmentName?: string;
 }
 
-const BELL_SOUND_URL = alarmSound;
-const TERM_PLAN_STORAGE_KEY = 'rased_term_plan';
-const ASSESSMENT_PLAN_STORAGE_KEY = 'rased_assessment_plan';
-
-interface AssessmentMonth {
-    id: string;
-    monthIndex: number;
-    monthName: string;
-    tasks: string[];
+export interface RestoreBackupOptions {
+  saveToDeviceFile?: boolean;
+  reloadAfterRestore?: boolean;
 }
 
-// ================= الخطة الفصلية المرنة =================// ================= الخطة الفصلية المر
-interface TermWeekPlan {
-    id: string;
-    name: string;
-    start: string;
-    end: string;
-    unit: string;
-    lesson: string;
-    defaultTopic: string;
+interface AppContextType {
+  students: Student[];
+  setStudents: React.Dispatch<React.SetStateAction<Student[]>>;
+  classes: string[];
+  setClasses: React.Dispatch<React.SetStateAction<string[]>>;
+  hiddenClasses: string[];
+  setHiddenClasses: React.Dispatch<React.SetStateAction<string[]>>;
+  groups: Group[];
+  setGroups: React.Dispatch<React.SetStateAction<Group[]>>;
+  schedule: ScheduleDay[];
+  setSchedule: React.Dispatch<React.SetStateAction<ScheduleDay[]>>;
+  periodTimes: PeriodTime[];
+  setPeriodTimes: React.Dispatch<React.SetStateAction<PeriodTime[]>>;
+  teacherInfo: TeacherInfo;
+  setTeacherInfo: React.Dispatch<React.SetStateAction<TeacherInfo>>;
+  currentSemester: '1' | '2';
+  setCurrentSemester: React.Dispatch<React.SetStateAction<'1' | '2'>>;
+  assessmentTools: AssessmentTool[];
+  setAssessmentTools: React.Dispatch<React.SetStateAction<AssessmentTool[]>>;
+  gradeSettings: GradeSettings;
+  setGradeSettings: React.Dispatch<React.SetStateAction<GradeSettings>>;
+  certificateSettings: CertificateSettings;
+  setCertificateSettings: React.Dispatch<React.SetStateAction<CertificateSettings>>;
+  isDataLoaded: boolean;
+  defaultStudentGender: 'male' | 'female';
+  setDefaultStudentGender: React.Dispatch<React.SetStateAction<'male' | 'female'>>;
+  categorizations: GroupCategorization[];
+  setCategorizations: React.Dispatch<React.SetStateAction<GroupCategorization[]>>;
+  language: Language;
+  setLanguage: React.Dispatch<React.SetStateAction<Language>>;
+  t: (key: keyof typeof translations['ar'] | string) => string;
+  dir: 'rtl' | 'ltr';
+  createBackupPayload: () => RasedBackupPayload;
+  restoreBackupPayload: (
+    rawBackup: unknown,
+    options?: RestoreBackupOptions
+  ) => Promise<RasedBackupPayload>;
 }
 
-const getArabicWeekName = (index: number) => {
-    const names = [
-        'الأسبوع الأول',
-        'الأسبوع الثاني',
-        'الأسبوع الثالث',
-        'الأسبوع الرابع',
-        'الأسبوع الخامس',
-        'الأسبوع السادس',
-        'الأسبوع السابع',
-        'الأسبوع الثامن',
-        'الأسبوع التاسع',
-        'الأسبوع العاشر',
-        'الأسبوع 11',
-        'الأسبوع 12',
-        'الأسبوع 13',
-        'الأسبوع 14',
-        'الأسبوع 15',
-        'الأسبوع 16',
-        'الأسبوع 17',
-        'الأسبوع 18'
-    ];
+const AppContext = createContext<AppContextType | undefined>(undefined);
 
-    return names[index] || `الأسبوع ${index + 1}`;
+export const RASED_DB_FILENAME = 'teacher_raseddatabasev2.json';
+export const RASED_BACKUP_SCHEMA_VERSION = 5;
+export const RASED_APP_DATA_VERSION = '5.0.0';
+
+const CORE_STORAGE_KEYS = {
+  students: 'teacher_studentData',
+  classes: 'teacher_classesData',
+  hiddenClasses: 'teacher_hiddenClasses',
+  groups: 'teacher_groupsData',
+  categorizations: 'teacher_categorizationsData',
+  schedule: 'teacher_scheduleData',
+  periodTimes: 'teacher_periodTimes',
+  assessmentTools: 'teacher_assessmentTools',
+  gradeSettings: 'teacher_gradeSettings',
+  certificateSettings: 'teacher_certificateSettings',
+  currentSemester: 'teacher_currentSemester',
+  defaultStudentGender: 'teacher_defaultStudentGender',
+  language: 'teacher_appLanguage'
+} as const;
+
+const EXTENDED_STORAGE_KEYS = {
+  termPlan: 'rased_term_plan',
+  assessmentPlan: 'rased_assessment_plan',
+  tasks: 'rased_teacher_tasks',
+  libraryArchive: 'rased_library_archive',
+  sentMessagesLocal: 'rased_teacher_sent_messages_local',
+  gradingSettings: 'rased_grading_settings'
+} as const;
+
+const GAME_STORAGE_EXACT_KEYS = ['rased_game_questions'] as const;
+const GAME_STORAGE_PREFIXES = [
+  'rased_teacher_game_questions_',
+  'rased_student_game_results_log_',
+  'rased_student_latest_game_result_'
+] as const;
+
+const DEFAULT_GRADE_SETTINGS: GradeSettings = {
+  totalScore: 100,
+  finalExamScore: 40,
+  finalExamName: 'الامتحان النهائي'
 };
 
-const createEmptyTermWeeks = (count: number = 18): TermWeekPlan[] => {
-    return Array.from({ length: count }).map((_, index) => ({
-        id: `week_${Date.now()}_${index}`,
-        name: getArabicWeekName(index),
-        start: '',
-        end: '',
-        unit: '',
-        lesson: '',
-        defaultTopic: ''
-    }));
+const DEFAULT_EXTENDED_GRADING_SETTINGS = {
+  totalScore: 100,
+  finalExamWeight: 40,
+  finalExamName: 'الامتحان النهائي'
 };
 
-const getCurrentWeekId = (weeks: TermWeekPlan[]) => {
-    const now = new Date();
+const normalizeGradeSettings = (value: unknown): GradeSettings => {
+  let source: any = value;
 
-    for (const week of weeks) {
-        if (!week.start || !week.end) continue;
-
-        const weekStart = new Date(`${week.start}T00:00:00`);
-        const weekEnd = new Date(`${week.end}T23:59:59`);
-
-        if (now >= weekStart && now <= weekEnd) {
-            return week.id;
-        }
-    }
-
-    return null;
-};
-
-const parseExcelDateToISO = (value: any): string => {
-    if (!value) return '';
-
-    if (typeof value === 'number') {
-        const excelEpoch = new Date(Date.UTC(1899, 11, 30));
-        const date = new Date(excelEpoch.getTime() + value * 86400000);
-        return date.toISOString().split('T')[0];
-    }
-
-    const str = String(value).trim();
-
-    if (/^\d{4}-\d{2}-\d{2}$/.test(str)) {
-        return str;
-    }
-
-    const dateMatch = str.match(/^(\d{1,2})[\/\-](\d{1,2})[\/\-](\d{4})$/);
-    if (dateMatch) {
-        const day = dateMatch[1].padStart(2, '0');
-        const month = dateMatch[2].padStart(2, '0');
-        const year = dateMatch[3];
-        return `${year}-${month}-${day}`;
-    }
-
-    return '';
-};
-
-const safeText = (value: any) => {
-    return String(value || '').trim();
-};
-
-// ================= انتهاء تعريف الخطة الفصلية المرنة =================
-
-
-const Dashboard: React.FC<DashboardProps> = ({
-    students, 
-    teacherInfo,
-    onUpdateTeacherInfo,
-    schedule,
-    onUpdateSchedule,
-    onSelectStudent,
-    onNavigate,
-    onOpenSettings,
-    periodTimes,
-    setPeriodTimes,
-    notificationsEnabled,
-    onToggleNotifications,
-    currentSemester,
-    onSemesterChange
-}) => {
-    const { classes, setSelectedClass, t, dir } = useApp();
-const fileInputRef = useRef<HTMLInputElement>(null);
-    const stampInputRef = useRef<HTMLInputElement>(null); 
-    const ministryLogoInputRef = useRef<HTMLInputElement>(null); 
-    const modalScheduleFileInputRef = useRef<HTMLInputElement>(null);
-    const scheduleFileInputRef = useRef<HTMLInputElement>(null);
-
-    // ================= حالات الخطة الفصلية المرنة =================
-
-const termExcelInputRef = useRef<HTMLInputElement>(null);
-const [showTermPlanModal, setShowTermPlanModal] = useState(false);
-
-const [termPlan, setTermPlan] = useState<TermWeekPlan[]>(() => {
+  if (typeof source === 'string') {
     try {
-        const saved = localStorage.getItem(TERM_PLAN_STORAGE_KEY);
-
-        if (saved) {
-            const parsed = JSON.parse(saved);
-
-            if (Array.isArray(parsed)) {
-                return parsed;
-            }
-        }
-    } catch (e) {
-        console.error(e);
+      source = JSON.parse(source);
+    } catch {
+      source = null;
     }
+  }
 
-    return createEmptyTermWeeks(18);
+  if (!source || typeof source !== 'object' || Array.isArray(source)) {
+    return { ...DEFAULT_GRADE_SETTINGS };
+  }
+
+  const totalScore = Number(source.totalScore);
+  const finalExamScore = Number(
+    source.finalExamScore ?? source.finalExamWeight
+  );
+  const safeTotalScore =
+    Number.isFinite(totalScore) && totalScore > 0
+      ? totalScore
+      : DEFAULT_GRADE_SETTINGS.totalScore;
+  const safeFinalExamScore =
+    Number.isFinite(finalExamScore) &&
+    finalExamScore >= 0 &&
+    finalExamScore <= safeTotalScore
+      ? finalExamScore
+      : DEFAULT_GRADE_SETTINGS.finalExamScore;
+
+  return {
+    ...DEFAULT_GRADE_SETTINGS,
+    ...source,
+    totalScore: safeTotalScore,
+    finalExamScore: safeFinalExamScore,
+    finalExamName:
+      String(source.finalExamName || '').trim() ||
+      DEFAULT_GRADE_SETTINGS.finalExamName
+  };
+};
+
+const normalizeExtendedGradingSettings = (value: unknown) => {
+  let source: any = value;
+
+  if (typeof source === 'string') {
+    try {
+      source = JSON.parse(source);
+    } catch {
+      source = null;
+    }
+  }
+
+  if (!source || typeof source !== 'object' || Array.isArray(source)) {
+    return { ...DEFAULT_EXTENDED_GRADING_SETTINGS };
+  }
+
+  const totalScore = Number(source.totalScore);
+  const finalExamWeight = Number(
+    source.finalExamWeight ?? source.finalExamScore
+  );
+  const safeTotalScore =
+    Number.isFinite(totalScore) && totalScore > 0
+      ? totalScore
+      : DEFAULT_EXTENDED_GRADING_SETTINGS.totalScore;
+  const safeFinalExamWeight =
+    Number.isFinite(finalExamWeight) &&
+    finalExamWeight >= 0 &&
+    finalExamWeight <= safeTotalScore
+      ? finalExamWeight
+      : DEFAULT_EXTENDED_GRADING_SETTINGS.finalExamWeight;
+
+  return {
+    ...DEFAULT_EXTENDED_GRADING_SETTINGS,
+    ...source,
+    totalScore: safeTotalScore,
+    finalExamWeight: safeFinalExamWeight,
+    finalExamName:
+      String(source.finalExamName || '').trim() ||
+      DEFAULT_EXTENDED_GRADING_SETTINGS.finalExamName
+  };
+};
+
+const DEFAULT_GROUPS: Group[] = [
+  { id: 'g1', name: 'الصقور', color: 'emerald' },
+  { id: 'g2', name: 'النمور', color: 'orange' },
+  { id: 'g3', name: 'النجوم', color: 'purple' },
+  { id: 'g4', name: 'الرواد', color: 'blue' }
+];
+
+const DEFAULT_SCHEDULE: ScheduleDay[] = [
+  { dayName: 'الأحد', periods: Array(8).fill('') },
+  { dayName: 'الاثنين', periods: Array(8).fill('') },
+  { dayName: 'الثلاثاء', periods: Array(8).fill('') },
+  { dayName: 'الأربعاء', periods: Array(8).fill('') },
+  { dayName: 'الخميس', periods: Array(8).fill('') }
+];
+
+const createDefaultPeriodTimes = (): PeriodTime[] =>
+  Array.from({ length: 8 }, (_, index) => ({
+    periodNumber: index + 1,
+    startTime: '',
+    endTime: ''
+  }));
+
+const safeJsonParse = <T,>(raw: string | null, fallback: T): T => {
+  if (!raw) return fallback;
+  try {
+    return JSON.parse(raw) as T;
+  } catch {
+    return fallback;
+  }
+};
+
+const readStorageJson = <T,>(key: string, fallback: T): T =>
+  safeJsonParse<T>(localStorage.getItem(key), fallback);
+
+const writeStorageJson = (key: string, value: unknown) => {
+  localStorage.setItem(key, JSON.stringify(value));
+};
+
+const collectGameStorage = (): Record<string, unknown> => {
+  const collected: Record<string, unknown> = {};
+
+  try {
+    for (let index = 0; index < localStorage.length; index += 1) {
+      const key = localStorage.key(index);
+      if (!key) continue;
+
+      const isExactKey = GAME_STORAGE_EXACT_KEYS.includes(
+        key as (typeof GAME_STORAGE_EXACT_KEYS)[number]
+      );
+      const hasKnownPrefix = GAME_STORAGE_PREFIXES.some(prefix =>
+        key.startsWith(prefix)
+      );
+
+      if (!isExactKey && !hasKnownPrefix) continue;
+
+      const rawValue = localStorage.getItem(key);
+      if (rawValue === null) continue;
+      collected[key] = safeJsonParse<unknown>(rawValue, rawValue);
+    }
+  } catch (error) {
+    console.warn('Unable to collect game storage.', error);
+  }
+
+  return collected;
+};
+
+export const readRasedExtendedStorage = (): RasedExtendedStorageSnapshot => ({
+  termPlan: readStorageJson(EXTENDED_STORAGE_KEYS.termPlan, []),
+  assessmentPlan: readStorageJson(EXTENDED_STORAGE_KEYS.assessmentPlan, []),
+  tasks: readStorageJson(EXTENDED_STORAGE_KEYS.tasks, []),
+  libraryArchive: readStorageJson(EXTENDED_STORAGE_KEYS.libraryArchive, []),
+  sentMessagesLocal: readStorageJson(
+    EXTENDED_STORAGE_KEYS.sentMessagesLocal,
+    []
+  ),
+  gradingSettings: normalizeExtendedGradingSettings(
+    localStorage.getItem(EXTENDED_STORAGE_KEYS.gradingSettings)
+  ),
+  gameStorage: collectGameStorage()
 });
 
-const [tempTermPlan, setTempTermPlan] = useState<TermWeekPlan[]>([]);
-
-const currentWeekId = getCurrentWeekId(termPlan);
-const currentWeekPlan = termPlan.find(w => w.id === currentWeekId);
-
-const isTermPlanReady = Boolean(
-    currentWeekPlan &&
-    currentWeekPlan.unit?.trim() &&
-    currentWeekPlan.lesson?.trim()
-);
-
-// ================= انتهاء حالات الخطة الفصلية المرنة =================
-
-    const [isImportingPeriods, setIsImportingPeriods] = useState(false);
-    const [isImportingSchedule, setIsImportingSchedule] = useState(false);
-    const [currentTime, setCurrentTime] = useState(new Date());
-    const [showSettingsDropdown, setShowSettingsDropdown] = useState(false);
-
-    const [showEditModal, setShowEditModal] = useState(false);
-    const [editName, setEditName] = useState(teacherInfo?.name || '');
-    const [editSchool, setEditSchool] = useState(teacherInfo?.school || '');
-    const [editSubject, setEditSubject] = useState(teacherInfo?.subject || '');
-    const [editGovernorate, setEditGovernorate] = useState(teacherInfo?.governorate || '');
-    const [editAvatar, setEditAvatar] = useState(teacherInfo?.avatar);
-    const [editStamp, setEditStamp] = useState(teacherInfo?.stamp);
-    const [editMinistryLogo, setEditMinistryLogo] = useState(teacherInfo?.ministryLogo);
-    const [editAcademicYear, setEditAcademicYear] = useState(teacherInfo?.academicYear || '');
-    const [editGender, setEditGender] = useState<'male' | 'female'>(teacherInfo?.gender || 'male');
-    const [editSemester, setEditSemester] = useState<'1' | '2'>(currentSemester || '1');
-
-    const [showScheduleModal, setShowScheduleModal] = useState(false);
-    const [scheduleTab, setScheduleTab] = useState<'timing' | 'classes'>('timing');
-    const [editingDayIndex, setEditingDayIndex] = useState(0); 
-    const [tempPeriodTimes, setTempPeriodTimes] = useState<PeriodTime[]>([]);
-    const [tempSchedule, setTempSchedule] = useState<ScheduleDay[]>([]);
-
-    const [showAlertBar, setShowAlertBar] = useState(true);
-    const [occasionGreeting, setOccasionGreeting] = useState<'ramadan' | 'eid' | 'teacher' | null>(null);
-    const [cloudMessage, setCloudMessage] = useState<any>(null);
-
-    const weekDayKeys = ['sunday', 'monday', 'tuesday', 'wednesday', 'thursday'] as const;
-
-    const [assessmentPlan, setAssessmentPlan] = useState<AssessmentMonth[]>(() => {
-        try {
-            const saved = localStorage.getItem(ASSESSMENT_PLAN_STORAGE_KEY);
-            if (saved) return JSON.parse(saved);
-        } catch (e) { console.error(e); }
-        
-        return [
-            { id: 'm1', monthIndex: 2, monthName: t('mar'), tasks: [t('oralStart'), t('reportStart'), t('shortQ1'), t('shortQuiz1')] },
-            { id: 'm2', monthIndex: 3, monthName: t('apr'), tasks: [t('oralCont'), t('reportCont'), t('shortQ2')] },
-            { id: 'm3', monthIndex: 4, monthName: t('may'), tasks: [t('oralSubmit'), t('reportSubmit'), t('shortQuiz2')] }
-        ];
-    });
-
-    const [showPlanSettingsModal, setShowPlanSettingsModal] = useState(false);
-    const [tempPlan, setTempPlan] = useState<AssessmentMonth[]>([]);
-    // حفظ دائم للخطتين عند كل تغيير معتمد، بما في ذلك الإغلاق السريع للتطبيق.
-    useEffect(() => {
-        try { localStorage.setItem(TERM_PLAN_STORAGE_KEY, JSON.stringify(termPlan)); }
-        catch (error) { console.error('Failed to persist term plan', error); }
-    }, [termPlan]);
-    useEffect(() => {
-        try { localStorage.setItem(ASSESSMENT_PLAN_STORAGE_KEY, JSON.stringify(assessmentPlan)); }
-        catch (error) { console.error('Failed to persist assessment plan', error); }
-    }, [assessmentPlan]);
-
-    useEffect(() => {
-        const checkAnnouncements = async () => {
-            try {
-                const CLOUD_JSON_URL = "https://raw.githubusercontent.com/alzaabi555/desktop-build/refs/heads/main/message.json";
-                const response = await fetch(CLOUD_JSON_URL + "?t=" + new Date().getTime());
-                if (response.ok) {
-                    const data = await response.json();
-                    if (data && data.active && data.id) {
-                        const cloudStorageKey = `rased_cloud_msg_${data.id}`;
-                        const hasSeenCloud = localStorage.getItem(cloudStorageKey);
-                        if (!hasSeenCloud) {
-                            setCloudMessage(data);
-                            return; 
-                        }
-                    }
-                }
-            } catch (error) {}
-
-            const today = new Date();
-            const todayString = today.toISOString().split('T')[0];
-            const storageKey = `rased_greeting_${todayString}`;
-            const hasSeen = localStorage.getItem(storageKey);
-
-            if (hasSeen) return;
-
-            if (today.getMonth() === 1 && today.getDate() === 24) {
-                setOccasionGreeting('teacher');
-                localStorage.setItem(storageKey, 'true');
-                return;
-            }
-
-            try {
-                const hijriFormatter = new Intl.DateTimeFormat('en-TN-u-ca-islamic', { day: 'numeric', month: 'numeric' });
-                const parts = hijriFormatter.formatToParts(today);
-                const hMonth = parseInt(parts.find(p => p.type === 'month')?.value || '0');
-                const hDay = parseInt(parts.find(p => p.type === 'day')?.value || '0');
-
-                if (hMonth === 9 && hDay <= 3) {
-                    setOccasionGreeting('ramadan');
-                    localStorage.setItem(storageKey, 'true');
-                    return;
-                }
-                if (hMonth === 10 && hDay <= 3) {
-                    setOccasionGreeting('eid');
-                    localStorage.setItem(storageKey, 'true');
-                    return;
-                }
-            } catch (e) {}
-        };
-
-        const timer = setTimeout(checkAnnouncements, 1500);
-        return () => clearTimeout(timer);
-    }, []);
-
-    useEffect(() => {
-        if(showEditModal) {
-            setEditName(teacherInfo.name || '');
-            setEditSchool(teacherInfo.school || '');
-            setEditSubject(teacherInfo.subject || '');
-            setEditGovernorate(teacherInfo.governorate || '');
-            setEditAvatar(teacherInfo.avatar);
-            setEditStamp(teacherInfo.stamp);
-            setEditMinistryLogo(teacherInfo.ministryLogo);
-            setEditAcademicYear(teacherInfo.academicYear || '');
-            setEditGender(teacherInfo.gender || 'male');
-            setEditSemester(currentSemester);
-        }
-    }, [showEditModal, teacherInfo, currentSemester]); 
-
-    useEffect(() => {
-        const timer = setInterval(() => setCurrentTime(new Date()), 60000);
-        return () => clearInterval(timer);
-    }, []);
-
-    useEffect(() => {
-        if (showScheduleModal) {
-            setTempPeriodTimes(JSON.parse(JSON.stringify(periodTimes || [])));
-            const currentSchedule = schedule && schedule.length ? schedule : [
-                { dayName: t('sunday'), periods: Array(8).fill('') },
-                { dayName: t('monday'), periods: Array(8).fill('') },
-                { dayName: t('tuesday'), periods: Array(8).fill('') },
-                { dayName: t('wednesday'), periods: Array(8).fill('') },
-                { dayName: t('thursday'), periods: Array(8).fill('') },
-            ];
-            setTempSchedule(JSON.parse(JSON.stringify(currentSchedule)));
-        }
-    }, [showScheduleModal, periodTimes, schedule, t]);
-
-    useEffect(() => {
-        if (showPlanSettingsModal) {
-            setTempPlan(JSON.parse(JSON.stringify(assessmentPlan)));
-        }
-    }, [showPlanSettingsModal, assessmentPlan]);
-
-    // ================= تأثير الخطة الفصلية المرنة =================
-
-useEffect(() => {
-    if (showTermPlanModal) {
-        setTempTermPlan(JSON.parse(JSON.stringify(termPlan)));
-    }
-}, [showTermPlanModal, termPlan]);
-
-// ================= انتهاء تأثير الخطة الفصلية المرنة =================
-
-    const getDisplayImage = (avatar: string | undefined, gender: string | undefined) => {
-        if (avatar && avatar.length > 50) return avatar;
-        return null;
-    };
-
-    const getSubjectIcon = (subjectName: string) => {
-        if (!subjectName) return null;
-        const name = subjectName.trim().toLowerCase();
-        const cleanName = name.replace(/[^\u0600-\u06FFa-z0-9\s]/g, '');
-        if (cleanName.match(/اسلام|قران|قرآن|دين|توحيد|فقه|تربية اسلامية|حديث|تفسير/)) return <span className="text-2xl">🕌</span>;
-        if (cleanName.match(/عربي|لغتي|نحو|ادب|أدب|لغة عربية|بلاغة|عروض/)) return <span className="text-2xl">📜</span>;
-        if (cleanName.match(/رياضيات|حساب|جبر|هندسة|رياضة|math/)) return <span className="text-2xl">📐</span>;
-        if (cleanName.match(/علوم|فيزياء|كيمياء|احياء|أحياء|biology|science/)) return <span className="text-2xl">🧪</span>;
-        if (cleanName.match(/انجليزي|انقليزي|english|لغة انجليزية/)) return <span className="text-2xl">🅰️</span>;
-        if (cleanName.match(/حاسوب|تقنية|رقمية|برمجة|كمبيوتر|computer/)) return <span className="text-2xl">💻</span>;
-        if (cleanName.match(/اجتماعيات|تاريخ|جغرافيا|جغرافية|وطنية|دراسات|social/)) return <span className="text-2xl">🌍</span>;
-        if (cleanName.match(/رياضة|بدنية|تربية بدنية|sport/)) return <span className="text-2xl">⚽</span>;
-        if (cleanName.match(/فن|فنون|رسم|تربية فنية|موسيقى|موسيقي/)) return <span className="text-2xl">🎨</span>;
-        if (cleanName.match(/تفكير|ناقد|منطق/)) return <span className="text-2xl">🧠</span>;
-        if (cleanName.match(/مهارات|حياتية|مهارة/)) return <span className="text-2xl">🤝</span>;
-        return <span className="text-xl opacity-50">📚</span>;
-    };
-
-    const handleSaveInfo = () => {
-        const updatedInfo = {
-            name: editName.trim(),
-            school: editSchool.trim(),
-            subject: editSubject.trim(),
-            governorate: editGovernorate.trim(),
-            academicYear: editAcademicYear.trim(),
-            avatar: editAvatar,
-            stamp: editStamp,
-            ministryLogo: editMinistryLogo,
-            gender: editGender
-        };
-        onUpdateTeacherInfo(updatedInfo);
-        onSemesterChange(editSemester);
-        setShowEditModal(false);
-        alert(t('alertProfileSaved'));
-    };
-
-    const handleSaveScheduleSettings = () => {
-        setPeriodTimes(tempPeriodTimes);
-        onUpdateSchedule(tempSchedule);
-        setShowScheduleModal(false);
-    };
-
-    const handleSavePlanSettings = () => {
-        const committedPlan = JSON.parse(JSON.stringify(tempPlan)) as AssessmentMonth[];
-        setAssessmentPlan(committedPlan);
-        localStorage.setItem(ASSESSMENT_PLAN_STORAGE_KEY, JSON.stringify(committedPlan));
-        setShowPlanSettingsModal(false);
-    };
-
-    // ================= دوال الخطة الفصلية المرنة =================
-
-const updateWeekData = (
-    idx: number,
-    field: keyof TermWeekPlan,
-    value: string
+export const writeRasedExtendedStorage = (
+  snapshot?: Partial<RasedExtendedStorageSnapshot> | null
 ) => {
-    setTempTermPlan(prev => {
-        const updated = [...prev];
+  if (!snapshot) return;
 
-        if (!updated[idx]) return prev;
+  if (Array.isArray(snapshot.termPlan)) {
+    writeStorageJson(EXTENDED_STORAGE_KEYS.termPlan, snapshot.termPlan);
+  }
+  if (Array.isArray(snapshot.assessmentPlan)) {
+    writeStorageJson(
+      EXTENDED_STORAGE_KEYS.assessmentPlan,
+      snapshot.assessmentPlan
+    );
+  }
+  if (Array.isArray(snapshot.tasks)) {
+    writeStorageJson(EXTENDED_STORAGE_KEYS.tasks, snapshot.tasks);
+  }
+  if (Array.isArray(snapshot.libraryArchive)) {
+    writeStorageJson(
+      EXTENDED_STORAGE_KEYS.libraryArchive,
+      snapshot.libraryArchive
+    );
+  }
+  if (Array.isArray(snapshot.sentMessagesLocal)) {
+    writeStorageJson(
+      EXTENDED_STORAGE_KEYS.sentMessagesLocal,
+      snapshot.sentMessagesLocal.slice(0, 100)
+    );
+  }
+  if (snapshot.gradingSettings !== undefined) {
+    writeStorageJson(
+      EXTENDED_STORAGE_KEYS.gradingSettings,
+      normalizeExtendedGradingSettings(snapshot.gradingSettings)
+    );
+  }
 
-        updated[idx] = {
-            ...updated[idx],
-            [field]: value
-        };
-
-        return updated;
+  if (snapshot.gameStorage && typeof snapshot.gameStorage === 'object') {
+    Object.entries(snapshot.gameStorage).forEach(([key, value]) => {
+      const isExactKey = GAME_STORAGE_EXACT_KEYS.includes(
+        key as (typeof GAME_STORAGE_EXACT_KEYS)[number]
+      );
+      const hasKnownPrefix = GAME_STORAGE_PREFIXES.some(prefix =>
+        key.startsWith(prefix)
+      );
+      if (!isExactKey && !hasKnownPrefix) return;
+      writeStorageJson(key, value);
     });
-};
-const validateTermPlan = (plan: TermWeekPlan[]) => {
-    for (const week of plan) {
-        if ((week.start && !week.end) || (!week.start && week.end)) {
-            alert(`${t('completeWeekDatesAlert')} ${week.name}`);
-            return false;
-        }
-
-        if (week.start && week.end) {
-            const start = new Date(`${week.start}T00:00:00`);
-            const end = new Date(`${week.end}T23:59:59`);
-
-            if (end < start) {
-                alert(`${t('weekEndAfterStartAlert')} ${week.name}`);
-                return false;
-            }
-        }
-    }
-
-    return true;
+  }
 };
 
-const handleSaveTermPlan = () => {
-    if (!validateTermPlan(tempTermPlan)) return;
+const normalizeArabicName = (name: string) =>
+  String(name || '')
+    .trim()
+    .replace(/[أإآ]/g, 'ا')
+    .replace(/[ؤئء]/g, '')
+    .replace(/ة/g, 'ه')
+    .replace(/ى/g, 'ي')
+    .replace(/[ًٌٍَُِّْـ]/g, '')
+    .replace(/\s+/g, ' ')
+    .toLowerCase();
 
-    const committedPlan = JSON.parse(JSON.stringify(tempTermPlan)) as TermWeekPlan[];
-    setTermPlan(committedPlan);
-    localStorage.setItem(TERM_PLAN_STORAGE_KEY, JSON.stringify(committedPlan));
-    setShowTermPlanModal(false);
+const normalizeArabicDigits = (value: string) => {
+  const arabicDigits: Record<string, string> = {
+    '٠': '0',
+    '١': '1',
+    '٢': '2',
+    '٣': '3',
+    '٤': '4',
+    '٥': '5',
+    '٦': '6',
+    '٧': '7',
+    '٨': '8',
+    '٩': '9',
+    '۰': '0',
+    '۱': '1',
+    '۲': '2',
+    '۳': '3',
+    '۴': '4',
+    '۵': '5',
+    '۶': '6',
+    '۷': '7',
+    '۸': '8',
+    '۹': '9'
+  };
 
-    alert(t('alertTermPlanSaved'));
+  return String(value || '').replace(
+    /[٠-٩۰-۹]/g,
+    digit => arabicDigits[digit] || digit
+  );
 };
 
-const handleAddTermWeek = () => {
-    setTempTermPlan(prev => [
-        ...prev,
-        {
-            id: `week_${Date.now()}`,
-            name: getArabicWeekName(prev.length),
-            start: '',
-            end: '',
-            unit: '',
-            lesson: '',
-            defaultTopic: ''
-        }
-    ]);
+const normalizeClassName = (className: string) =>
+  normalizeArabicDigits(className)
+    .trim()
+    .replace(/\s+/g, '')
+    .replace(/الصف/g, '')
+    .replace(/صف/g, '')
+    .replace(/الفصل/g, '')
+    .replace(/الشعبة/g, '')
+    .replace(/شعبة/g, '')
+    .replace(/\\/g, '/')
+    .replace(/-/g, '/')
+    .replace(/الأول|اول/g, '1')
+    .replace(/الثاني|ثاني/g, '2')
+    .replace(/الثالث|ثالث/g, '3')
+    .replace(/الرابع|رابع/g, '4')
+    .replace(/الخامس|خامس/g, '5')
+    .replace(/السادس|سادس/g, '6')
+    .replace(/السابع|سابع/g, '7')
+    .replace(/الثامن|ثامن/g, '8')
+    .replace(/التاسع|تاسع/g, '9')
+    .replace(/العاشر|عاشر/g, '10')
+    .replace(/الحاديعشر|حاديعشر/g, '11')
+    .replace(/الثانيعشر|ثانيعشر/g, '12')
+    .toLowerCase();
+
+const getStudentClassValue = (student: any) =>
+  String(
+    student?.classes?.[0] || student?.className || student?.class || ''
+  ).trim();
+
+const getExistingRasedCodeFromStudent = (student: any) => {
+  const possibleCode = String(
+    student?.rasedId ||
+      student?.rasedID ||
+      student?.secretCode ||
+      student?.parentCode ||
+      student?.civilID ||
+      student?.civilId ||
+      ''
+  )
+    .trim()
+    .toUpperCase();
+
+  return possibleCode.startsWith('RSD-') ? possibleCode : '';
 };
 
-const handleDeleteTermWeek = (idx: number) => {
-    const weekName = tempTermPlan[idx]?.name || t('thisWeek');
-
-    if (!window.confirm(`${t('confirmDeleteWeekPrefix')} ${weekName}${t('questionMark')}`)) return;
-
-    setTempTermPlan(prev => prev.filter((_, index) => index !== idx));
+const makeStudentIdentityKey = (
+  schoolName: string,
+  name: string,
+  className: string
+) => {
+  const normalizedSchool = String(schoolName || '')
+    .trim()
+    .replace(/\s+/g, '')
+    .toLowerCase();
+  const normalizedName = normalizeArabicName(name).replace(/\s+/g, '');
+  const normalizedClass = normalizeClassName(className);
+  return `${normalizedSchool}_${normalizedName}_${normalizedClass}`;
 };
 
-const handleResetTermPlan = () => {
-    if (!window.confirm(t('confirmResetTermPlan'))) {
-        return;
-    }
+const hashToRasedCode = (value: string) => {
+  let hash = 5381;
+  for (let index = 0; index < value.length; index += 1) {
+    hash = hash * 33 ^ value.charCodeAt(index);
+  }
 
-    setTempTermPlan(createEmptyTermWeeks(18));
+  const code = Math.abs(hash)
+    .toString(36)
+    .toUpperCase()
+    .replace(/[^A-Z0-9]/g, '')
+    .padStart(6, '0')
+    .substring(0, 6);
+
+  return `RSD-${code}`;
 };
 
-const handleImportTermPlanExcel = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
+const generateRasedId = (
+  name: string,
+  className: string,
+  schoolName = ''
+) => {
+  if (!name || !className) {
+    return `RSD-${Math.random().toString(36).slice(2, 8).toUpperCase()}`;
+  }
 
-    try {
-        const data = await file.arrayBuffer();
-        const workbook = XLSX.read(data, { type: 'array' });
-        const worksheet = workbook.Sheets[workbook.SheetNames[0]];
-        const jsonData = XLSX.utils.sheet_to_json(worksheet, { header: 1 }) as any[][];
-
-        const importedPlan: TermWeekPlan[] = [];
-
-        jsonData.forEach((row, index) => {
-            if (index === 0) return;
-            if (!row || row.length === 0) return;
-
-            const weekNumber = parseInt(String(row[0] || '').replace(/[^\d]/g, ''));
-            const weekNameFromExcel = safeText(row[1]);
-            const start = parseExcelDateToISO(row[2]);
-            const end = parseExcelDateToISO(row[3]);
-            const unit = safeText(row[4]);
-            const lesson = safeText(row[5]);
-            const defaultTopic = safeText(row[6]);
-
-            if (!weekNumber && !weekNameFromExcel && !start && !end && !unit && !lesson && !defaultTopic) {
-                return;
-            }
-
-            importedPlan.push({
-                id: `imported_week_${Date.now()}_${index}`,
-                name: weekNameFromExcel || (weekNumber ? getArabicWeekName(weekNumber - 1) : `الأسبوع ${index}`),
-                start,
-                end,
-                unit,
-                lesson,
-                defaultTopic
-            });
-        });
-
-        if (importedPlan.length === 0) {
-            alert(t('noValidTermPlanExcelData'));
-            return;
-        }
-
-        if (!validateTermPlan(importedPlan)) return;
-
-        setTempTermPlan(importedPlan);
-        alert(t('alertTermPlanImported'));
-    } catch (error) {
-        console.error(error);
-        alert(t('alertExcelFormatError'));
-    } finally {
-        if (e.target) e.target.value = '';
-    }
+  return hashToRasedCode(
+    makeStudentIdentityKey(schoolName, name, className)
+  );
 };
 
-// ================= انتهاء دوال الخطة الفصلية المرنة =================
-    const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>, setter: (val: string | undefined) => void) => {
-        const file = e.target.files?.[0];
-        if (!file) return;
-        const reader = new FileReader();
-        reader.onloadend = () => {
-            const img = new Image();
-            img.onload = () => {
-                const canvas = document.createElement('canvas');
-                const ctx = canvas.getContext('2d');
-                if (!ctx) return;
-                const MAX_SIZE = 400;
-                let width = img.width;
-                let height = img.height;
-                if (width > height) { if (width > MAX_SIZE) { height = (height * MAX_SIZE) / width; width = MAX_SIZE; } } 
-                else { if (height > MAX_SIZE) { width = (width * MAX_SIZE) / height; height = MAX_SIZE; } }
-                canvas.width = width; canvas.height = height;
-                ctx.drawImage(img, 0, 0, width, height);
-                const compressedBase64 = canvas.toDataURL('image/png');
-                setter(compressedBase64);
-            };
-            img.src = reader.result as string;
-        };
-        reader.readAsDataURL(file);
-        e.target.value = '';
-    };
+const mergeStudentArrays = (oldList: any[] = [], newList: any[] = []) => {
+  const map = new Map<string, any>();
+  [...oldList, ...newList].forEach(item => {
+    if (!item) return;
+    const id = String(item.id || item.date || JSON.stringify(item));
+    if (!map.has(id)) map.set(id, item);
+  });
+  return Array.from(map.values());
+};
 
-    const parseExcelTime = (value: any): string => {
-        if (!value) return '';
-        if (typeof value === 'number') {
-            const totalSeconds = Math.round(value * 86400);
-            const hours = Math.floor(totalSeconds / 3600);
-            const minutes = Math.floor((totalSeconds % 3600) / 60);
-            return `${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}`;
-        }
-        const str = String(value).trim();
-        const match = str.match(/(\d{1,2}):(\d{2})/);
-        return match ? `${String(match[1]).padStart(2, '0')}:${match[2]}` : '';
-    };
+const migrateAndDedupeStudents = (
+  rawStudents: any[],
+  schoolName: string
+): Student[] => {
+  const identityMap = new Map<string, any>();
 
-    const handleImportSchedule = async (e: React.ChangeEvent<HTMLInputElement>) => {
-        const file = e.target.files?.[0];
-        if (!file) return;
-        setIsImportingSchedule(true);
-        try {
-            const data = await file.arrayBuffer();
-            const workbook = XLSX.read(data, { type: 'array' });
-            const worksheet = workbook.Sheets[workbook.SheetNames[0]];
-            const jsonData = XLSX.utils.sheet_to_json(worksheet, { header: 1 }) as any[][];
-            const newSchedule: ScheduleDay[] = [
-                { dayName: t('sunday'), periods: Array(8).fill('') }, { dayName: t('monday'), periods: Array(8).fill('') },
-                { dayName: t('tuesday'), periods: Array(8).fill('') }, { dayName: t('wednesday'), periods: Array(8).fill('') },
-                { dayName: t('thursday'), periods: Array(8).fill('') }
-            ];
-            jsonData.forEach(row => {
-                if (row.length < 2) return;
-                const firstCell = String(row[0]).trim();
-                const dayIndex = newSchedule.findIndex(d => d.dayName === firstCell || firstCell.includes(d.dayName));
-                if (dayIndex !== -1) {
-                    for (let i = 1; i <= 8; i++) { if (row[i]) newSchedule[dayIndex].periods[i-1] = String(row[i]).trim(); }
-                }
-            });
-            onUpdateSchedule(newSchedule);
-            alert(t('alertScheduleImported'));
-        } catch (error) { alert(t('alertScheduleImportError')); } 
-        finally { setIsImportingSchedule(false); if (e.target) e.target.value = ''; setShowSettingsDropdown(false); }
-    };
+  rawStudents.forEach(rawStudent => {
+    if (!rawStudent) return;
 
-    const handleImportPeriodTimes = async (e: React.ChangeEvent<HTMLInputElement>) => {
-        const file = e.target.files?.[0];
-        if (!file) return;
-        setIsImportingPeriods(true);
-        try {
-            const data = await file.arrayBuffer();
-            const workbook = XLSX.read(data, { type: 'array' });
-            const worksheet = workbook.Sheets[workbook.SheetNames[0]];
-            const jsonData = XLSX.utils.sheet_to_json(worksheet, { header: 1 }) as any[][];
-            
-            let newPeriodTimes = tempPeriodTimes.map(pt => ({ ...pt }));
-            if (newPeriodTimes.length === 0) {
-                newPeriodTimes = Array(8).fill(null).map(() => ({ startTime: '', endTime: '' }));
-            }
-
-            let updatesCount = 0;
-            jsonData.forEach((row) => {
-                if (row.length < 2) return;
-                const firstCol = String(row[0] || '').trim();
-                let pIndex = -1;
-                const periodNumMatch = firstCol.match(/\d+/);
-                
-                if (periodNumMatch) {
-                    pIndex = parseInt(periodNumMatch[0]) - 1;
-                } else {
-                    const words = ['اول', 'ثاني', 'ثالث', 'رابع', 'خامس', 'سادس', 'سابع', 'ثامن'];
-                    const cleanStr = firstCol.replace(/أ/g, 'ا').replace(/ة/g, '').replace(/ي/g, 'ي').toLowerCase();
-                    const foundWordIndex = words.findIndex(w => cleanStr.includes(w));
-                    if (foundWordIndex !== -1) pIndex = foundWordIndex;
-                }
-
-                if (pIndex >= 0 && pIndex < 8) {
-                    if (!newPeriodTimes[pIndex]) newPeriodTimes[pIndex] = { startTime: '', endTime: '' };
-                    const parsedStart = parseExcelTime(row[1]);
-                    const parsedEnd = parseExcelTime(row[2]);
-                    if (parsedStart) newPeriodTimes[pIndex].startTime = parsedStart;
-                    if (parsedEnd) newPeriodTimes[pIndex].endTime = parsedEnd;
-                    if(parsedStart || parsedEnd) updatesCount++;
-                }
-            });
-
-            if (updatesCount > 0) { 
-                setTempPeriodTimes(newPeriodTimes); 
-                alert(`${t('alertPeriodsImported_part1')} ${updatesCount} ${t('alertPeriodsImported_part2')}`); 
-            } else {
-                alert(t('alertNoValidTimes'));
-            }
-        } catch (error) { 
-            alert(t('alertExcelReadError')); 
-        } finally { 
-            setIsImportingPeriods(false); 
-            if (e.target) e.target.value = ''; 
-        }
-    };
-
-    const checkActivePeriod = (start: string, end: string) => {
-        if (!start || !end) return false;
-        const now = new Date();
-        const currentMinutes = now.getHours() * 60 + now.getMinutes();
-        const [sh, sm] = start.split(':').map(Number);
-        const [eh, em] = end.split(':').map(Number);
-        return currentMinutes >= (sh * 60 + sm) && currentMinutes < (eh * 60 + em);
-    };
-
-    const handleTestNotification = async () => {
-        const audio = new Audio(BELL_SOUND_URL);
-        audio.play().catch(() => {});
-        if (Capacitor.isNativePlatform()) {
-            await LocalNotifications.schedule({
-                notifications: [{ id: 99999, title: '🔔', body: t('testBell'), schedule: { at: new Date(Date.now() + 1000) }, sound: 'beep.wav' }]
-            });
-        }
-    };
-
-    const handleCloseCloudMessage = () => {
-        if (cloudMessage && cloudMessage.id) {
-            localStorage.setItem(`rased_cloud_msg_${cloudMessage.id}`, 'true');
-        }
-        setCloudMessage(null);
-    };
-
-    const todayRaw = new Date().getDay();
-    const dayIndex = (todayRaw === 5 || todayRaw === 6) ? 0 : todayRaw;
-    const todaySchedule = schedule && schedule.length > dayIndex ? schedule[dayIndex] : { dayName: t('todaySchedule'), periods: [] };
-    const isToday = todayRaw === dayIndex;
-
-   const currentMonthIndex = new Date().getMonth();
-const currentAssessmentPlan = assessmentPlan.find(p => p.monthIndex === currentMonthIndex);
-
-const monthNames = [t('jan'), t('feb'), t('mar'), t('apr'), t('may'), t('jun'), t('jul'), t('aug'), t('sep'), t('oct'), t('nov'), t('dec')];
-    if (!teacherInfo) {
-    return (
-        <div className="flex items-center justify-center h-screen text-textPrimary">
-            {t('dashboardLoading')}
-        </div>
+    const studentClass = getStudentClassValue(rawStudent) || 'غير محدد';
+    const identityKey = makeStudentIdentityKey(
+      schoolName,
+      rawStudent.name || '',
+      studentClass
     );
-}
-// ================= Dashboard Smart Helpers =================
+    const existingCode = getExistingRasedCodeFromStudent(rawStudent);
+    const rasedId =
+      existingCode ||
+      generateRasedId(rawStudent.name || '', studentClass, schoolName);
 
-const minutesFromTime = (value?: string): number | null => {
-    if (!value || !value.includes(':')) return null;
-    const [h, m] = value.split(':').map(Number);
-    if (Number.isNaN(h) || Number.isNaN(m)) return null;
-    return h * 60 + m;
-};
+    const {
+      civilID,
+      civilId,
+      parentCode,
+      secretCode,
+      rasedID,
+      ...cleanStudent
+    } = rawStudent;
 
-type PeriodStatus = 'active' | 'upcoming' | 'completed' | 'unknown';
+    const normalizedStudent = {
+      ...cleanStudent,
+      id: cleanStudent.id || rawStudent.id || rasedId,
+      rasedId,
+      name: rawStudent.name || '',
+      classes:
+        Array.isArray(rawStudent.classes) && rawStudent.classes.length > 0
+          ? rawStudent.classes
+          : [studentClass],
+      grade: rawStudent.grade || '',
+      parentPhone: rawStudent.parentPhone || '',
+      gender: rawStudent.gender || 'male',
+      avatar: rawStudent.avatar,
+      behaviors: Array.isArray(rawStudent.behaviors)
+        ? rawStudent.behaviors
+        : [],
+      grades: Array.isArray(rawStudent.grades) ? rawStudent.grades : [],
+      attendance: Array.isArray(rawStudent.attendance)
+        ? rawStudent.attendance
+        : [],
+      examPapers: Array.isArray(rawStudent.examPapers)
+        ? rawStudent.examPapers
+        : []
+    };
 
-const getPeriodStatus = (start?: string, end?: string): PeriodStatus => {
-    if (!start || !end) return 'unknown';
-
-    // إذا كنا نعرض جدول الأحد في عطلة {t('weekEndLabel')}، لا نحسبها مكتملة أو نشطة
-    if (!isToday) return 'upcoming';
-
-    const nowMinutes = currentTime.getHours() * 60 + currentTime.getMinutes();
-    const startMinutes = minutesFromTime(start);
-    const endMinutes = minutesFromTime(end);
-
-    if (startMinutes === null || endMinutes === null) return 'unknown';
-
-    if (nowMinutes >= startMinutes && nowMinutes < endMinutes) return 'active';
-    if (nowMinutes < startMinutes) return 'upcoming';
-    return 'completed';
-};
-
-const todayPeriods = todaySchedule.periods?.filter(Boolean) || [];
-const todayPeriodsCount = todayPeriods.length;
-
-const completedPeriodsCount = todaySchedule.periods?.filter((subject: string, idx: number) => {
-    if (!subject) return false;
-    const time = periodTimes[idx];
-    return getPeriodStatus(time?.startTime, time?.endTime) === 'completed';
-}).length || 0;
-
-const dayProgress = todayPeriodsCount > 0
-    ? Math.round((completedPeriodsCount / todayPeriodsCount) * 100)
-    : 0;
-
-const getSmartNextPeriod = () => {
-    if (!todaySchedule.periods || todaySchedule.periods.length === 0) return null;
-
-    // الأولوية للحصة الجارية
-    for (let i = 0; i < todaySchedule.periods.length; i++) {
-        const subject = todaySchedule.periods[i];
-        if (!subject) continue;
-
-        const time = periodTimes[i] || { startTime: '', endTime: '' };
-        const status = getPeriodStatus(time.startTime, time.endTime);
-
-        if (status === 'active') {
-            return {
-                index: i,
-                subject,
-                startTime: time.startTime,
-                endTime: time.endTime,
-                status
-            };
-        }
+    const existing = identityMap.get(identityKey);
+    if (!existing) {
+      identityMap.set(identityKey, normalizedStudent);
+      return;
     }
 
-    // ثم الحصة القادمة
-    for (let i = 0; i < todaySchedule.periods.length; i++) {
-        const subject = todaySchedule.periods[i];
-        if (!subject) continue;
+    identityMap.set(identityKey, {
+      ...existing,
+      ...normalizedStudent,
+      rasedId: existing.rasedId || normalizedStudent.rasedId,
+      parentPhone:
+        normalizedStudent.parentPhone || existing.parentPhone,
+      gender: normalizedStudent.gender || existing.gender,
+      avatar: normalizedStudent.avatar || existing.avatar,
+      behaviors: mergeStudentArrays(
+        existing.behaviors,
+        normalizedStudent.behaviors
+      ),
+      grades: mergeStudentArrays(existing.grades, normalizedStudent.grades),
+      attendance: mergeStudentArrays(
+        existing.attendance,
+        normalizedStudent.attendance
+      ),
+      examPapers: mergeStudentArrays(
+        existing.examPapers,
+        normalizedStudent.examPapers
+      )
+    });
+  });
 
-        const time = periodTimes[i] || { startTime: '', endTime: '' };
-        const status = getPeriodStatus(time.startTime, time.endTime);
+  return Array.from(identityMap.values());
+};
 
-        if (status === 'upcoming') {
-            return {
-                index: i,
-                subject,
-                startTime: time.startTime,
-                endTime: time.endTime,
-                status
-            };
-        }
+const normalizeLegacyBackup = (
+  rawBackup: any,
+  fallback: RasedBackupPayload
+): RasedBackupPayload => {
+  const source = rawBackup?.core
+    ? {
+        ...rawBackup,
+        ...rawBackup.core,
+        extendedStorage:
+          rawBackup.extendedStorage ||
+          rawBackup.teaching ||
+          rawBackup.dashboard ||
+          {}
+      }
+    : rawBackup || {};
+
+  const legacyExtended = source.extendedStorage || {};
+
+  return {
+    schemaVersion:
+      Number(source.schemaVersion) || RASED_BACKUP_SCHEMA_VERSION,
+    version: String(source.version || RASED_APP_DATA_VERSION),
+    timestamp: String(
+      source.timestamp || source.exportedAt || new Date().toISOString()
+    ),
+    students: Array.isArray(source.students)
+      ? source.students
+      : fallback.students,
+    classes: Array.isArray(source.classes) ? source.classes : fallback.classes,
+    hiddenClasses: Array.isArray(source.hiddenClasses)
+      ? source.hiddenClasses
+      : fallback.hiddenClasses,
+    groups: Array.isArray(source.groups) ? source.groups : fallback.groups,
+    categorizations: Array.isArray(source.categorizations)
+      ? source.categorizations
+      : fallback.categorizations,
+    schedule: Array.isArray(source.schedule)
+      ? source.schedule
+      : fallback.schedule,
+    periodTimes: Array.isArray(source.periodTimes)
+      ? source.periodTimes
+      : fallback.periodTimes,
+    teacherInfo:
+      source.teacherInfo && typeof source.teacherInfo === 'object'
+        ? source.teacherInfo
+        : fallback.teacherInfo,
+    currentSemester:
+      source.currentSemester === '2' ? '2' : source.currentSemester === '1'
+        ? '1'
+        : fallback.currentSemester,
+    assessmentTools: Array.isArray(source.assessmentTools)
+      ? source.assessmentTools
+      : fallback.assessmentTools,
+    gradeSettings: normalizeGradeSettings(
+      source.gradeSettings ?? fallback.gradeSettings
+    ),
+    certificateSettings:
+      source.certificateSettings &&
+      typeof source.certificateSettings === 'object'
+        ? { ...fallback.certificateSettings, ...source.certificateSettings }
+        : fallback.certificateSettings,
+    defaultStudentGender:
+      source.defaultStudentGender === 'female' ? 'female' : 'male',
+    language: source.language === 'en' ? 'en' : fallback.language,
+    extendedStorage: {
+      termPlan: Array.isArray(legacyExtended.termPlan)
+        ? legacyExtended.termPlan
+        : Array.isArray(source.termPlan)
+          ? source.termPlan
+          : fallback.extendedStorage.termPlan,
+      assessmentPlan: Array.isArray(legacyExtended.assessmentPlan)
+        ? legacyExtended.assessmentPlan
+        : Array.isArray(source.assessmentPlan)
+          ? source.assessmentPlan
+          : fallback.extendedStorage.assessmentPlan,
+      tasks: Array.isArray(legacyExtended.tasks)
+        ? legacyExtended.tasks
+        : Array.isArray(source.tasks)
+          ? source.tasks
+          : fallback.extendedStorage.tasks,
+      libraryArchive: Array.isArray(legacyExtended.libraryArchive)
+        ? legacyExtended.libraryArchive
+        : Array.isArray(source.libraryArchive)
+          ? source.libraryArchive
+          : Array.isArray(source.library)
+            ? source.library
+            : fallback.extendedStorage.libraryArchive,
+      sentMessagesLocal: Array.isArray(legacyExtended.sentMessagesLocal)
+        ? legacyExtended.sentMessagesLocal
+        : Array.isArray(source.sentMessagesLocal)
+          ? source.sentMessagesLocal
+          : fallback.extendedStorage.sentMessagesLocal,
+      gradingSettings: normalizeExtendedGradingSettings(
+        legacyExtended.gradingSettings !== undefined
+          ? legacyExtended.gradingSettings
+          : source.gradingSettings !== undefined
+            ? source.gradingSettings
+            : fallback.extendedStorage.gradingSettings
+      ),
+      gameStorage:
+        legacyExtended.gameStorage &&
+        typeof legacyExtended.gameStorage === 'object'
+          ? legacyExtended.gameStorage
+          : source.gameStorage && typeof source.gameStorage === 'object'
+            ? source.gameStorage
+            : fallback.extendedStorage.gameStorage
     }
-
-    return null;
+  };
 };
 
-const smartNextPeriod = getSmartNextPeriod();
-
-const isAssessmentReady = Boolean(
-    currentAssessmentPlan &&
-    currentAssessmentPlan.tasks &&
-    currentAssessmentPlan.tasks.length > 0
-);
-
-const handleStartAttendance = (className?: string) => {
-    if (className && setSelectedClass) setSelectedClass(className);
-    onNavigate('attendance');
-};
-
-const statusMeta = {
-    active: {
-        label: t('currentNowStatus'),
-        className: 'bg-success text-white',
-        cardClass: 'bg-primary border-primary shadow-lg scale-[1.01]',
-        textClass: 'text-white',
-        subTextClass: 'text-white/80'
-    },
-    upcoming: {
-        label: t('upcomingStatus'),
-        className: 'bg-info/10 text-info border border-info/20',
-        cardClass: 'glass-card border-borderColor hover:shadow-md',
-        textClass: 'text-textPrimary',
-        subTextClass: 'text-textSecondary'
-    },
-    completed: {
-        label: t('completedStatus'),
-        className: 'bg-success/10 text-success border border-success/20',
-        cardClass: 'glass-card border-borderColor opacity-80',
-        textClass: 'text-textPrimary',
-        subTextClass: 'text-textSecondary'
-    },
-    unknown: {
-        label: t('unknownStatus'),
-        className: 'bg-bgSoft text-textSecondary border border-borderColor',
-        cardClass: 'glass-card border-borderColor',
-        textClass: 'text-textPrimary',
-        subTextClass: 'text-textSecondary'
-    }
-};
-
-const EmptyActionCard = ({
-    icon,
-    title,
-    description,
-    actionLabel,
-    onAction,
-    color = 'primary'
-}: {
-    icon: React.ReactNode;
-    title: string;
-    description: string;
-    actionLabel: string;
-    onAction: () => void;
-    color?: 'primary' | 'info' | 'warning' | 'success';
-}) => (
-    <div className="p-4 md:p-5 rounded-2xl border border-dashed border-borderColor bg-bgSoft text-center">
-        <div className={`w-11 h-11 mx-auto mb-3 rounded-2xl flex items-center justify-center ${
-            color === 'info' ? 'bg-info/10 text-info' :
-            color === 'warning' ? 'bg-warning/10 text-warning' :
-            color === 'success' ? 'bg-success/10 text-success' :
-            'bg-primary/10 text-primary'
-        }`}>
-            {icon}
-        </div>
-        <h4 className="text-sm font-black text-textPrimary">{title}</h4>
-        <p className="text-xs font-bold text-textSecondary mt-1 leading-relaxed">{description}</p>
-        <button
-            onClick={onAction}
-            className={`mt-4 px-4 py-2 rounded-xl text-white text-xs font-black shadow-sm active:scale-95 transition-all ${
-                color === 'info' ? 'bg-info hover:bg-info/80' :
-                color === 'warning' ? 'bg-warning hover:bg-warning/80' :
-                color === 'success' ? 'bg-success hover:bg-success/80' :
-                'bg-primary hover:bg-primary/80'
-            }`}
-        >
-            {actionLabel}
-        </button>
-    </div>
-);
-    return (
-        <>
-        {/* 💉 الغلاف الشامل PageLayout للداشبورد */}
-        <PageLayout
-            title={teacherInfo?.name || t('welcome')}
-            subtitle={teacherInfo?.school || t('schoolFallback')}
-            
-            // 💉 أيقونة المعلم في الهيدر
-            icon={
-                <div className="w-10 h-10 md:w-12 md:h-12 rounded-xl bg-bgSoft border border-borderColor flex items-center justify-center overflow-hidden shadow-inner">
-                    {getDisplayImage(teacherInfo?.avatar, teacherInfo?.gender) ? (
-                        <img src={teacherInfo.avatar} className="w-full h-full object-cover" alt="Teacher" onError={(e) => e.currentTarget.style.display='none'} />
-                    ) : <DefaultAvatarSVG gender={teacherInfo?.gender || 'male'} />}
-                </div>
-            }
-
-            // 💉 بيانات المعلم الإضافية (تظهر بذكاء تحت العنوان وتختفي عند التمرير)
-            leftActions={
-                <div className="flex flex-wrap items-center gap-2 pb-1" style={{ WebkitAppRegion: 'no-drag' } as any}>
-                    <span className={`text-[9px] md:text-[10px] px-2 py-1 rounded-md font-bold border bg-bgSoft border-borderColor text-textSecondary shrink-0`}>
-                        {currentSemester === '1' ? t('semester1') : t('semester2')}
-                    </span>
-                    {teacherInfo?.subject && (
-                        <span className="text-[9px] md:text-[10px] font-bold text-primary flex items-center gap-1 bg-primary/10 border border-primary/20 px-2 py-1 rounded-md truncate">
-                            <BookOpen size={12} className="shrink-0"/> <span className="truncate">{teacherInfo.subject}</span>
-                        </span>
-                    )}
-                    {teacherInfo?.governorate && (
-                        <span className="text-[9px] md:text-[10px] font-bold text-emerald-500 flex items-center gap-1 bg-emerald-500/10 border border-emerald-500/20 px-2 py-1 rounded-md truncate">
-                            <MapPin size={12} className="shrink-0"/> <span className="truncate">{teacherInfo.governorate}</span>
-                        </span>
-                    )}
-                    {teacherInfo?.academicYear && (
-                        <span className="text-[9px] md:text-[10px] font-bold text-amber-500 flex items-center gap-1 bg-amber-500/10 border border-amber-500/20 px-2 py-1 rounded-md shrink-0">
-                            <Calendar size={12} /> {teacherInfo.academicYear}
-                        </span>
-                    )}
-                </div>
-            }
-
-            // 💉 الأزرار العلوية (ثيم، إعدادات، إشعارات) تم تصغيرها لتناسب الهواتف
-            rightActions={
-                <div className="flex gap-1.5 md:gap-2 items-center" style={{ WebkitAppRegion: 'no-drag' } as any}>
-                    <div className="relative z-[50]">
-                        <button onClick={() => setShowSettingsDropdown(!showSettingsDropdown)} className={`w-8 h-8 md:w-10 md:h-10 bg-bgSoft hover:bg-bgCard border border-borderColor text-textSecondary hover:text-textPrimary rounded-xl flex items-center justify-center transition-all shadow-sm`}>
-                            <User size={16} />
-                        </button>
-                        {showSettingsDropdown && (
-                            <>
-                                <div className="fixed inset-0 z-40" onClick={() => setShowSettingsDropdown(false)}></div>
-                                <div className={`absolute ${dir === 'rtl' ? 'left-0' : 'right-0'} top-full mt-2 w-56 rounded-2xl shadow-xl border border-borderColor z-50 overflow-hidden animate-in zoom-in-95 origin-top-left bg-bgCard text-textPrimary`}>
-                                    <button onClick={() => { setShowEditModal(true); setShowSettingsDropdown(false); }} className={`flex items-center gap-3 px-4 py-3 w-full ${dir === 'rtl' ? 'text-right' : 'text-left'} border-b border-borderColor transition-colors hover:bg-bgSoft`}>
-                                        <div className={`p-1.5 rounded-lg bg-primary/10`}><Edit3 size={16} className="text-primary"/></div>
-                                        <span className="text-xs font-bold text-textPrimary">{t('editIdentity')}</span>
-                                    </button>
-
-                                    <button onClick={handleTestNotification} className={`flex items-center gap-3 px-4 py-3 w-full ${dir === 'rtl' ? 'text-right' : 'text-left'} transition-colors hover:bg-bgSoft`}>
-                                        <div className={`p-1.5 rounded-lg bg-warning/10`}><PlayCircle size={16} className="text-warning"/></div>
-                                        <span className="text-xs font-bold text-textPrimary">{t('testBell')}</span>
-                                    </button>
-                                </div>
-                            </>
-                        )}
-                    </div>
-
-                    <button onClick={onToggleNotifications} className={`w-8 h-8 md:w-10 md:h-10 rounded-xl flex items-center justify-center border transition-all shadow-sm ${notificationsEnabled ? 'bg-warning/10 border-warning/30 text-warning' : 'bg-bgSoft border-borderColor text-textSecondary hover:bg-bgCard hover:text-textPrimary'}`}>
-                        {notificationsEnabled ? <Bell size={16} className="animate-pulse" /> : <BellOff size={16} />}
-                    </button>
-                </div>
-            }
-        >
-            
-     {/* ⬇️ محتوى الداشبورد الرئيسي - النسخة الاحترافية ⬇️ */}
-<div className="space-y-4 md:space-y-6 animate-in fade-in duration-500 pt-2 pb-8 px-2 md:px-0">
-
-    {/* رسالة السحابة */}
-    {cloudMessage && (
-        <div className="relative animate-in fade-in slide-in-from-top-4">
-            <div className={`relative p-3 md:p-4 rounded-2xl border shadow-md overflow-hidden ${
-                cloudMessage.type === 'warning' ? 'bg-danger/10 border-danger/30' :
-                cloudMessage.type === 'success' ? 'bg-success/10 border-success/30' :
-                'bg-info/10 border-info/30'
-            }`}>
-                <div className="flex justify-between items-start">
-                    <div className="flex items-start gap-3">
-                        <div className={`p-2 rounded-xl mt-0.5 ${
-                            cloudMessage.type === 'warning' ? 'bg-danger/20 text-danger' :
-                            cloudMessage.type === 'success' ? 'bg-success/20 text-success' :
-                            'bg-info/20 text-info'
-                        }`}>
-                            <Bell size={20} className="animate-pulse" />
-                        </div>
-                        <div>
-                            <h3 className="font-black text-sm text-textPrimary">{cloudMessage.title}</h3>
-                            <p className="text-xs font-bold mt-1 leading-relaxed text-textSecondary">{cloudMessage.body}</p>
-                        </div>
-                    </div>
-                    <button
-                        onClick={handleCloseCloudMessage}
-                        className="p-1.5 rounded-lg transition-colors shrink-0 text-textSecondary hover:bg-bgSoft hover:text-textPrimary"
-                    >
-                        <X size={16} />
-                    </button>
-                </div>
-            </div>
-        </div>
-    )}
-
-    {/* بطاقات الملخص الذكي */}
-    <div className="grid grid-cols-2 xl:grid-cols-4 gap-2 md:gap-3">
-        <div className="glass-card border border-borderColor rounded-2xl p-3 md:p-4 shadow-sm">
-            <div className="flex items-center justify-between gap-3">
-                <div className="w-10 h-10 rounded-2xl bg-primary/10 text-primary flex items-center justify-center">
-                    <Clock size={19} />
-                </div>
-                <div className={dir === 'rtl' ? 'text-left' : 'text-right'}>
-                    <div className="text-xl md:text-2xl font-black text-textPrimary">{todayPeriodsCount}</div>
-                    <div className="text-[10px] md:text-xs font-bold text-textSecondary">{t('todayPeriodsCount')}</div>
-                </div>
-            </div>
-        </div>
-
-        <div className="glass-card border border-borderColor rounded-2xl p-3 md:p-4 shadow-sm">
-            <div className="flex items-center justify-between gap-3">
-                <div className="w-10 h-10 rounded-2xl bg-info/10 text-info flex items-center justify-center">
-                    <AlarmClock size={19} />
-                </div>
-                <div className={dir === 'rtl' ? 'text-left' : 'text-right'}>
-                    <div className="text-base md:text-xl font-black text-textPrimary font-mono">
-                        {smartNextPeriod?.startTime || '--:--'}
-                    </div>
-                    <div className="text-[10px] md:text-xs font-bold text-textSecondary">
-                        {smartNextPeriod?.status === 'active' ? t('currentPeriodLabel') : t('nextPeriodLabel')}
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <div className="glass-card border border-borderColor rounded-2xl p-3 md:p-4 shadow-sm">
-            <div className="flex items-center justify-between gap-3">
-                <div className="w-10 h-10 rounded-2xl bg-success/10 text-success flex items-center justify-center">
-                    <User size={19} />
-                </div>
-                <div className={dir === 'rtl' ? 'text-left' : 'text-right'}>
-                    <div className="text-xl md:text-2xl font-black text-textPrimary">{students?.length || 0}</div>
-                    <div className="text-[10px] md:text-xs font-bold text-textSecondary">{t('studentSingular')}</div>
-                </div>
-            </div>
-        </div>
-
-        <div className="glass-card border border-borderColor rounded-2xl p-3 md:p-4 shadow-sm">
-            <div className="flex items-center justify-between gap-3">
-                <div className={`w-10 h-10 rounded-2xl flex items-center justify-center ${
-                    notificationsEnabled ? 'bg-warning/10 text-warning' : 'bg-bgSoft text-textSecondary'
-                }`}>
-                    {notificationsEnabled ? <Bell size={19} /> : <BellOff size={19} />}
-                </div>
-                <div className={dir === 'rtl' ? 'text-left' : 'text-right'}>
-                    <div className="text-sm md:text-base font-black text-textPrimary">
-                        {notificationsEnabled ? t('enabled') : t('pausedStatus')}
-                    </div>
-                    <div className="text-[10px] md:text-xs font-bold text-textSecondary">{t('notifications')}</div>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    {/* تخطيط احترافي للكمبيوتر */}
-    <div className="grid grid-cols-1 xl:grid-cols-12 gap-4 md:gap-6">
-
-        {/* العمود الرئيسي */}
-        <div className="xl:col-span-8 space-y-4 md:space-y-6">
-
-            {/* بطاقة الحصة الحالية/القادمة */}
-            <div className="rounded-3xl border border-borderColor glass-panel shadow-sm overflow-hidden">
-                {smartNextPeriod ? (
-                    <div className={`relative p-4 md:p-5 ${
-                        smartNextPeriod.status === 'active'
-                            ? 'bg-primary text-white'
-                            : 'bg-primary/10'
-                    }`}>
-                        <div className={`absolute inset-y-0 ${dir === 'rtl' ? 'right-0' : 'left-0'} w-1.5 ${
-                            smartNextPeriod.status === 'active' ? 'bg-white/70' : 'bg-primary'
-                        }`} />
-
-                        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-                            <div className="flex items-start gap-3">
-                                <div className={`w-12 h-12 rounded-2xl flex items-center justify-center shrink-0 ${
-                                    smartNextPeriod.status === 'active'
-                                        ? 'bg-white/20 text-white'
-                                        : 'bg-primary text-white'
-                                }`}>
-                                    <Clock size={22} />
-                                </div>
-
-                                <div>
-                                    <div className={`text-[10px] font-black mb-1 ${
-                                        smartNextPeriod.status === 'active'
-                                            ? 'text-white/80'
-                                            : 'text-primary'
-                                    }`}>
-                                        {smartNextPeriod.status === 'active' ? t('currentPeriodRunning') : t('nextPeriodLabel')}
-                                    </div>
-
-                                    <h3 className={`text-lg md:text-xl font-black ${
-                                        smartNextPeriod.status === 'active'
-                                            ? 'text-white'
-                                            : 'text-textPrimary'
-                                    }`}>
-                                        {smartNextPeriod.subject}
-                                    </h3>
-
-                                    <p className={`text-xs font-bold mt-1 ${
-                                        smartNextPeriod.status === 'active'
-                                            ? 'text-white/80'
-                                            : 'text-textSecondary'
-                                    }`}>
-                                        {t('period')} {smartNextPeriod.index + 1} · {smartNextPeriod.startTime || '--:--'} - {smartNextPeriod.endTime || '--:--'}
-                                    </p>
-                                </div>
-                            </div>
-
-                            <button
-                                onClick={() => handleStartAttendance(smartNextPeriod.subject)}
-                                className={`px-4 py-2.5 rounded-2xl text-xs font-black shadow-lg active:scale-95 transition-all flex items-center justify-center gap-2 ${
-                                    smartNextPeriod.status === 'active'
-                                        ? 'bg-white text-primary hover:bg-white/90'
-                                        : 'bg-primary text-white hover:bg-primary/80'
-                                }`}
-                            >
-                                <CheckCircle2 size={16} />
-                                {smartNextPeriod.status === 'active' ? t('startAttendanceRecording') : t('prepareForPeriod')}
-                            </button>
-                        </div>
-                    </div>
-                ) : (
-                    <div className="p-4 md:p-5">
-                        <div className="flex items-center gap-3">
-                            <div className="w-12 h-12 rounded-2xl bg-success/10 text-success flex items-center justify-center">
-                                <CheckCircle2 size={22} />
-                            </div>
-                            <div>
-                                <h3 className="font-black text-textPrimary text-sm md:text-base">
-                                    {t('noUpcomingPeriods')}
-                                </h3>
-                                <p className="text-xs text-textSecondary font-bold mt-1">
-                                    {t('noRemainingPeriodsToday')}
-                                </p>
-                            </div>
-                        </div>
-                    </div>
-                )}
-            </div>
-
-            {/* تقدم اليوم الدراسي */}
-            <div className="rounded-3xl border border-borderColor glass-panel p-4 md:p-5 shadow-sm">
-                <div className="flex justify-between items-center mb-3">
-                    <div>
-                        <h3 className="text-sm md:text-base font-black text-textPrimary">{t('schoolDayProgress')}</h3>
-                        <p className="text-xs font-bold text-textSecondary mt-1">
-                            {t('completedPeriodsPrefix')} {completedPeriodsCount} {t('ofWord')} {todayPeriodsCount} {t('periodsWord')}
-                        </p>
-                    </div>
-                    <span className="text-xl md:text-2xl font-black text-primary">{dayProgress}%</span>
-                </div>
-
-                <div className="w-full h-2.5 rounded-full bg-bgSoft overflow-hidden">
-                    <div
-                        className="h-full bg-primary rounded-full transition-all duration-500"
-                        style={{ width: `${dayProgress}%` }}
-                    />
-                </div>
-            </div>
-
-            {/* جدول اليوم */}
-            <div className="relative z-10">
-                <div className="flex justify-between items-center mb-3">
-                    <h2 className="text-sm md:text-lg font-black flex items-center gap-2 text-textPrimary">
-                        {t('todaySchedule')}
-                        <span className="text-[10px] md:text-xs font-bold px-2 py-1 rounded-lg bg-bgSoft text-textSecondary">
-                            {t(weekDayKeys[dayIndex]) || todaySchedule.dayName}
-                        </span>
-                    </h2>
-
-                    <button
-                        onClick={() => setShowScheduleModal(true)}
-                        className="p-2 rounded-xl shadow-sm border active:scale-95 transition-transform bg-bgSoft border-borderColor text-textSecondary hover:bg-bgCard hover:text-textPrimary"
-                    >
-                        <Clock size={16} className="md:w-5 md:h-5" />
-                    </button>
-                </div>
-
-                {todayPeriodsCount > 0 ? (
-                    <div className="grid grid-cols-1 sm:grid-cols-2 2xl:grid-cols-4 gap-3">
-                        {todaySchedule.periods && todaySchedule.periods.map((subject: string, idx: number) => {
-                            if (!subject) return null;
-
-                            const time = periodTimes[idx] || { startTime: '00:00', endTime: '00:00' };
-                            const displaySubject = teacherInfo?.subject && teacherInfo.subject.trim().length > 0
-                                ? teacherInfo.subject
-                                : subject;
-
-                            const status = getPeriodStatus(time.startTime, time.endTime);
-                            const meta = statusMeta[status];
-
-                            return (
-                                <div
-                                    key={idx}
-                                    className={`relative flex flex-col justify-between p-3 md:p-4 rounded-2xl border transition-all duration-300 gap-3 ${meta.cardClass}`}
-                                >
-                                    <div className="flex items-start justify-between gap-2">
-                                        <div className="flex items-start gap-2 min-w-0">
-                                            <div className={`w-9 h-9 md:w-10 md:h-10 rounded-xl flex items-center justify-center font-black shrink-0 ${
-                                                status === 'active'
-                                                    ? 'bg-white/20 text-white'
-                                                    : 'bg-bgSoft text-textSecondary'
-                                            }`}>
-                                                {getSubjectIcon(displaySubject) || getSubjectIcon(subject) || (idx + 1)}
-                                            </div>
-
-                                            <div className="min-w-0">
-                                                <h4 className={`font-black text-sm truncate ${meta.textClass}`}>
-                                                    {subject}
-                                                </h4>
-                                                <p className={`text-[11px] font-bold mt-1 ${meta.subTextClass}`}>
-                                                    {t('period')} {idx + 1}
-                                                </p>
-                                            </div>
-                                        </div>
-
-                                        <span className={`text-[9px] font-black px-2 py-1 rounded-lg shrink-0 ${meta.className}`}>
-                                            {meta.label}
-                                        </span>
-                                    </div>
-
-                                    <div className="flex items-center justify-between mt-auto">
-                                        <div className="flex flex-col">
-                                            <span className={`text-[10px] font-bold ${meta.subTextClass}`}>{t('timeLabelNoColon')}</span>
-                                            <span className={`text-xs md:text-sm font-black font-mono ${meta.textClass}`}>
-                                                {time.startTime}-{time.endTime}
-                                            </span>
-                                        </div>
-
-                                        {status === 'active' ? (
-                                            <button
-                                                onClick={() => handleStartAttendance(subject)}
-                                                className="px-3 py-2 rounded-xl font-black text-[10px] shadow-md flex items-center gap-1 active:scale-95 bg-white text-primary"
-                                            >
-                                                <CheckCircle2 size={14} />
-                                                {t('attendanceShort')}
-                                            </button>
-                                        ) : status === 'completed' ? (
-                                            <button
-                                                onClick={() => handleStartAttendance(subject)}
-                                                className="px-3 py-2 rounded-xl font-black text-[10px] border border-success/20 bg-success/10 text-success active:scale-95"
-                                            >
-                                                {t('reviewAction')}
-                                            </button>
-                                        ) : (
-                                            <button
-                                                onClick={() => {
-                                                    if (setSelectedClass) setSelectedClass(subject);
-                                                }}
-                                                className="px-3 py-2 rounded-xl font-black text-[10px] border border-borderColor bg-bgSoft text-textSecondary active:scale-95"
-                                            >
-                                                {t('detailsAction')}
-                                            </button>
-                                        )}
-                                    </div>
-                                </div>
-                            );
-                        })}
-                    </div>
-                ) : (
-                    <EmptyActionCard
-                        icon={<Clock size={22} />}
-                        title={t('noPeriodsTodayTitle')}
-                        description={t('noPeriodsTodayDescription')}
-                        actionLabel={t('configureSchedule')}
-                        onAction={() => setShowScheduleModal(true)}
-                        color="primary"
-                    />
-                )}
-            </div>
-        </div>
-
-        {/* العمود الجانبي */}
-        <div className="xl:col-span-4 space-y-4 md:space-y-6">
-            
-{/* 📖 الخطة الفصلية */}
-<div className="relative z-10">
-    <div className="rounded-3xl p-4 md:p-5 shadow-sm border glass-panel border-borderColor">
-        <div className="flex justify-between items-center mb-3 md:mb-4">
-            <div className="flex items-center gap-2 md:gap-3">
-                <div className="p-1.5 md:p-2 rounded-xl bg-info/10 text-info">
-                    <BookOpen size={16} className="md:w-5 md:h-5" />
-                </div>
-
-                <div>
-                    <h2 className="text-sm md:text-base font-black text-textPrimary">
-                        {t('termPlanTitle')}
-                    </h2>
-
-                    {currentWeekPlan ? (
-                        <p className="text-[10px] font-bold text-textSecondary mt-0.5">
-                            {currentWeekPlan.name}
-                        </p>
-                    ) : (
-                        <p className="text-[10px] font-bold text-textSecondary mt-0.5">
-                            {t('noMatchingWeekToday')}
-                        </p>
-                    )}
-                </div>
-            </div>
-
-            <button
-                onClick={() => setShowTermPlanModal(true)}
-                className="p-1.5 md:p-2 rounded-xl transition-colors bg-bgSoft text-textSecondary hover:bg-bgCard hover:text-textPrimary"
-                title={t('customizeTermPlan')}
-            >
-                <Settings size={16} className="md:w-5 md:h-5" />
-            </button>
-        </div>
-
-        {currentWeekPlan ? (
-            <div
-                className={`p-3 md:p-4 rounded-2xl border transition-all ${
-                    isTermPlanReady
-                        ? 'bg-info/10 border-info/30'
-                        : 'bg-warning/10 border-warning/30'
-                }`}
-            >
-                <div className="flex justify-between items-center mb-3 gap-2">
-                    <span
-                        className={`text-[10px] md:text-xs font-black ${
-                            isTermPlanReady ? 'text-info' : 'text-warning'
-                        }`}
-                    >
-                        {currentWeekPlan.start || t('noDate')} - {currentWeekPlan.end || t('noDate')}
-                    </span>
-
-                    <span
-                        className={`text-[8px] font-bold px-2 py-0.5 rounded-lg shadow-sm shrink-0 ${
-                            isTermPlanReady ? 'bg-info text-white' : 'bg-warning text-white'
-                        }`}
-                    >
-                        {isTermPlanReady ? t('readyFeminine') : t('needsCompletion')}
-                    </span>
-                </div>
-
-                <div className="space-y-2">
-                    <div className="flex items-start gap-2 text-xs font-bold text-textPrimary">
-                        <div
-                            className={`w-1.5 h-1.5 rounded-full mt-1.5 shrink-0 ${
-                                isTermPlanReady ? 'bg-info' : 'bg-warning'
-                            }`}
-                        />
-                        <span>
-                            <span className={isTermPlanReady ? 'text-info' : 'text-warning'}>
-                                {t('unitLabel')}
-                            </span>{' '}
-                            {currentWeekPlan.unit || t('notSpecified')}
-                        </span>
-                    </div>
-
-                    <div className="flex items-start gap-2 text-xs font-bold text-textPrimary">
-                        <div
-                            className={`w-1.5 h-1.5 rounded-full mt-1.5 shrink-0 ${
-                                isTermPlanReady ? 'bg-info' : 'bg-warning'
-                            }`}
-                        />
-                        <span>
-                            <span className={isTermPlanReady ? 'text-info' : 'text-warning'}>
-                                {t('lessonLabel')}
-                            </span>{' '}
-                            {currentWeekPlan.lesson || currentWeekPlan.defaultTopic || t('notSpecified')}
-                        </span>
-                    </div>
-                </div>
-
-                {!isTermPlanReady && (
-                    <button
-                        onClick={() => setShowTermPlanModal(true)}
-                        className="mt-4 w-full py-2.5 rounded-xl bg-warning text-white text-xs font-black active:scale-95 transition-all"
-                    >
-                        {t('completePlanData')}
-                    </button>
-                )}
-            </div>
-        ) : (
-            <div className="p-4 md:p-5 rounded-2xl border border-dashed border-borderColor bg-bgSoft text-center">
-                <div className="w-11 h-11 mx-auto mb-3 rounded-2xl bg-info/10 text-info flex items-center justify-center">
-                    <Calendar size={22} />
-                </div>
-
-                <h4 className="text-sm font-black text-textPrimary">
-                    {t('noPlanForCurrentWeek')}
-                </h4>
-
-                <p className="text-xs font-bold text-textSecondary mt-1 leading-relaxed">
-                    {t('termPlanEmptyDescription')}
-                </p>
-
-                <button
-                    onClick={() => setShowTermPlanModal(true)}
-                    className="mt-4 px-4 py-2 rounded-xl bg-info text-white text-xs font-black shadow-sm active:scale-95 transition-all"
-                >
-                    {t('configurePlan')}
-                </button>
-            </div>
-        )}
-    </div>
-</div>
-
-            {/* التقويم المستمر */}
-            <div className="relative z-10">
-                <div className="rounded-3xl p-4 md:p-5 shadow-sm border glass-panel border-borderColor">
-                    <div className="flex justify-between items-center mb-3 md:mb-4">
-                        <div className="flex items-center gap-2 md:gap-3">
-                            <div className="p-1.5 md:p-2 rounded-xl bg-warning/10 text-warning">
-                                <CalendarDays size={16} className="md:w-5 md:h-5" />
-                            </div>
-                            <div>
-                                <h2 className="text-sm md:text-base font-black text-textPrimary">
-                                    {t('continuousAssessmentPlan')}
-                                </h2>
-                                <p className="text-[10px] font-bold text-textSecondary mt-0.5">
-                                    {currentAssessmentPlan ? `${t('monthPrefix')} ${currentAssessmentPlan.monthName}` : t('currentMonthFallback')}
-                                </p>
-                            </div>
-                        </div>
-
-                        <button
-                            onClick={() => setShowPlanSettingsModal(true)}
-                            className="p-1.5 md:p-2 rounded-xl transition-colors bg-bgSoft text-textSecondary hover:bg-bgCard hover:text-textPrimary"
-                        >
-                            <Settings size={16} className="md:w-5 md:h-5" />
-                        </button>
-                    </div>
-
-                    {isAssessmentReady && currentAssessmentPlan ? (
-                        <div className="p-3 md:p-4 rounded-2xl border transition-all bg-primary/10 border-primary/30">
-                            <div className="flex justify-between items-center mb-3">
-                                <span className="text-[10px] md:text-xs font-black text-primary">
-                                    {t('monthPrefix')} {currentAssessmentPlan.monthName}
-                                </span>
-                                <span className="text-[8px] font-bold px-2 py-0.5 rounded-lg bg-primary text-white shadow-sm">
-                                    {t('currentMonthLabel')}
-                                </span>
-                            </div>
-
-                            <ul className="space-y-2">
-                                {currentAssessmentPlan.tasks.map((task, idx) => (
-                                    <li
-                                        key={idx}
-                                        className="flex items-start gap-2 text-[11px] md:text-xs font-bold text-textPrimary"
-                                    >
-                                        <CheckCircle2 size={13} className="text-primary mt-0.5 shrink-0" />
-                                        <span>{task}</span>
-                                    </li>
-                                ))}
-                            </ul>
-                        </div>
-                    ) : (
-                        <EmptyActionCard
-                            icon={<CalendarDays size={22} />}
-                            title={t('noAssessmentPlanThisMonth')}
-                            description={t('assessmentPlanEmptyDescription')}
-                            actionLabel={t('createAssessmentPlan')}
-                            onAction={() => setShowPlanSettingsModal(true)}
-                            color="warning"
-                        />
-                    )}
-                </div>
-            </div>
-        </div>
-    </div>
-</div>
-        </PageLayout>
-
-        {/* ================= النوافذ (Drawers) - لم تُمس أبداً ================= */}
-
-        {/* 🆕 نافذة إعدادات الخطة الفصلية المرنة */}
-<DrawerSheet isOpen={showTermPlanModal} onClose={() => setShowTermPlanModal(false)} dir={dir}>
-    <div className="flex flex-col h-full w-full">
-        <div className="flex justify-between items-start gap-3 mb-4 pb-3 border-b border-borderColor">
-            <div>
-                <h3 className="font-black text-lg text-textPrimary">
-                    {t('customizeTermPlan')}
-                </h3>
-
-                <p className="text-[11px] font-bold text-textSecondary mt-1 leading-relaxed">
-                    {t('termPlanEditorDescription')}
-                </p>
-            </div>
-
-            <div className="flex gap-2 shrink-0">
-                <button
-                    onClick={handleAddTermWeek}
-                    className="flex items-center gap-1 px-3 py-1.5 rounded-lg text-[10px] font-bold transition-colors bg-primary/10 text-primary hover:bg-primary/20"
-                >
-                    <Plus size={14} />
-                    {t('weekWord')}
-                </button>
-
-                <button
-                    onClick={() => termExcelInputRef.current?.click()}
-                    className="flex items-center gap-1 px-3 py-1.5 rounded-lg text-[10px] font-bold transition-colors bg-success/10 text-success hover:bg-success/20"
-                >
-                    <Download size={14} />
-                    Excel
-                </button>
-
-                <input
-                    type="file"
-                    ref={termExcelInputRef}
-                    onChange={handleImportTermPlanExcel}
-                    className="hidden"
-                    accept=".xlsx,.xls"
-                />
-            </div>
-        </div>
-
-        <div className="flex items-center justify-between gap-2 mb-3">
-            <div className="text-[11px] font-bold text-textSecondary">
-                {t('weeksCountLabel')} {tempTermPlan.length}
-            </div>
-
-            <button
-                onClick={handleResetTermPlan}
-                className="flex items-center gap-1 px-3 py-1.5 rounded-lg text-[10px] font-bold transition-colors bg-danger/10 text-danger hover:bg-danger/20"
-            >
-                <RefreshCcw size={14} />
-                {t('resetInitialization')}
-            </button>
-        </div>
-
-        <div className="flex-1 overflow-y-auto custom-scrollbar p-1 space-y-3">
-            {tempTermPlan.map((week, idx) => {
-                const isCurrent = week.id === currentWeekId;
-
-                return (
-                    <div
-                        key={week.id}
-                        className={`p-4 rounded-2xl border transition-all ${
-                            isCurrent
-                                ? 'bg-info/10 border-info shadow-sm'
-                                : 'bg-bgCard border-borderColor'
-                        }`}
-                    >
-                        <div className="flex justify-between items-center mb-3 gap-2">
-                            <div className="flex-1">
-                                <label className="block text-[10px] font-bold text-textSecondary mb-1">
-                                    {t('weekNameLabel')}
-                                </label>
-
-                                <input
-                                    value={week.name}
-                                    onChange={(e) => updateWeekData(idx, 'name', e.target.value)}
-                                    placeholder={t('weekNamePlaceholder')}
-                                    className="w-full p-2 rounded-lg text-xs font-black outline-none border transition-colors bg-bgSoft border-borderColor text-textPrimary focus:border-info"
-                                />
-                            </div>
-
-                            <button
-                                onClick={() => handleDeleteTermWeek(idx)}
-                                className="mt-5 p-2 rounded-lg transition-colors bg-danger/10 text-danger hover:bg-danger/20 shrink-0"
-                                title={t('deleteWeekTitle')}
-                            >
-                                <Trash2 size={15} />
-                            </button>
-                        </div>
-
-                        <div className="grid grid-cols-2 gap-2 mb-3">
-                            <div>
-                                <label className="block text-[10px] font-bold text-textSecondary mb-1">
-                                    {t('weekStartLabel')}
-                                </label>
-
-                                <input
-                                    type="date"
-                                    value={week.start}
-                                    onChange={(e) => updateWeekData(idx, 'start', e.target.value)}
-                                    className="w-full p-2 rounded-lg text-xs font-bold outline-none border transition-colors bg-bgSoft border-borderColor text-textPrimary focus:border-info"
-                                />
-                            </div>
-
-                            <div>
-                                <label className="block text-[10px] font-bold text-textSecondary mb-1">
-                                    {t('weekEndLabel')}
-                                </label>
-
-                                <input
-                                    type="date"
-                                    value={week.end}
-                                    onChange={(e) => updateWeekData(idx, 'end', e.target.value)}
-                                    className="w-full p-2 rounded-lg text-xs font-bold outline-none border transition-colors bg-bgSoft border-borderColor text-textPrimary focus:border-info"
-                                />
-                            </div>
-                        </div>
-
-                        <div className="space-y-2">
-                            <input
-                                value={week.unit}
-                                onChange={(e) => updateWeekData(idx, 'unit', e.target.value)}
-                                placeholder={t('unitNameDetailedPlaceholder')}
-                                className="w-full p-2 rounded-lg text-xs font-bold outline-none border transition-colors bg-bgSoft border-borderColor text-textPrimary focus:border-info"
-                            />
-
-                            <input
-                                value={week.lesson}
-                                onChange={(e) => updateWeekData(idx, 'lesson', e.target.value)}
-                                placeholder={t('lessonNameDetailedPlaceholder')}
-                                className="w-full p-2 rounded-lg text-xs font-bold outline-none border transition-colors bg-bgSoft border-borderColor text-textPrimary focus:border-info"
-                            />
-
-                            <input
-                                value={week.defaultTopic}
-                                onChange={(e) => updateWeekData(idx, 'defaultTopic', e.target.value)}
-                                placeholder={t('defaultTopicPlaceholder')}
-                                className="w-full p-2 rounded-lg text-xs font-bold outline-none border transition-colors bg-bgSoft border-borderColor text-textPrimary focus:border-info"
-                            />
-                        </div>
-
-                        {isCurrent && (
-                            <div className="mt-3 text-[10px] font-bold text-info bg-info/10 border border-info/20 rounded-lg px-3 py-2">
-                                {t('currentWeekByDateNote')}
-                            </div>
-                        )}
-                    </div>
-                );
-            })}
-
-            {tempTermPlan.length === 0 && (
-                <div className="p-6 rounded-2xl border border-dashed border-borderColor bg-bgSoft text-center">
-                    <BookOpen size={28} className="mx-auto text-textSecondary mb-2" />
-
-                    <h4 className="text-sm font-black text-textPrimary">
-                        {t('noWeeksAdded')}
-                    </h4>
-
-                    <p className="text-xs font-bold text-textSecondary mt-1">
-                        {t('addWeeksOrImport')}
-                    </p>
-
-                    <button
-                        onClick={handleAddTermWeek}
-                        className="mt-4 px-4 py-2 rounded-xl bg-primary text-white text-xs font-black"
-                    >
-                        {t('addWeek')}
-                    </button>
-                </div>
-            )}
-        </div>
-
-        <div className="pt-4 mt-auto border-t border-borderColor">
-            <button
-                onClick={handleSaveTermPlan}
-                className="w-full py-3 text-white rounded-xl font-bold text-xs shadow-lg flex items-center justify-center gap-2 active:scale-95 transition-all bg-primary hover:bg-primary/80"
-            >
-                <Save size={16} />
-                {t('saveChanges')}
-            </button>
-        </div>
-    </div>
-</DrawerSheet>
-        {/* المودالز الأصلية لم تُمس إطلاقاً 👇 */}
-        <DrawerSheet isOpen={showPlanSettingsModal} onClose={() => setShowPlanSettingsModal(false)} dir={dir}>
-            <div className="flex flex-col h-full w-full">
-                <div className={`flex justify-between items-center mb-4 pb-2 border-b border-borderColor`}>
-                    <h3 className="font-black text-lg text-textPrimary">{t('customizeAssessmentPlan')}</h3>
-                    <div className="flex gap-2">
-                        <button 
-                            onClick={() => {
-                                if(window.confirm(t('confirmRestoreDefaultPlan'))) {
-                                    setTempPlan([
-                                        { id: 'm1', monthIndex: 2, monthName: t('mar'), tasks: [t('oralStart'), t('reportStart'), t('shortQ1'), t('shortQuiz1')] },
-                                        { id: 'm2', monthIndex: 3, monthName: t('apr'), tasks: [t('oralCont'), t('reportCont'), t('shortQ2')] },
-                                        { id: 'm3', monthIndex: 4, monthName: t('may'), tasks: [t('oralSubmit'), t('reportSubmit'), t('shortQuiz2')] }
-                                    ]);
-                                }
-                            }}
-                            className={`p-2 rounded-lg transition-colors bg-bgSoft text-textSecondary hover:bg-bgCard hover:text-textPrimary`}
-                            title={t('restoreDefault')}
-                        >
-                            <RefreshCcw size={16} />
-                        </button>
-                        <button 
-                            onClick={() => setTempPlan([...tempPlan, { id: `new_${Date.now()}`, monthIndex: new Date().getMonth(), monthName: t('newMonth'), tasks: [] }])}
-                            className={`flex items-center gap-1 px-3 py-1.5 rounded-lg text-[10px] font-bold transition-colors bg-primary/10 text-primary hover:bg-primary/20`}
-                        >
-                            <Plus size={14}/> {t('addMonth')}
-                        </button>
-                    </div>
-                </div>
-
-                <div className="flex-1 overflow-y-auto custom-scrollbar space-y-2 p-1">
-                    {tempPlan.map((month, idx) => (
-                        <div key={month.id} className={`rounded-xl p-3 border bg-bgCard border-borderColor`}>
-                            <div className="flex gap-2 mb-3">
-                                <select 
-                                    value={month.monthIndex} 
-                                    onChange={(e) => {
-                                        const n = [...tempPlan];
-                                        n[idx].monthIndex = parseInt(e.target.value);
-                                        n[idx].monthName = monthNames[parseInt(e.target.value)];
-                                        setTempPlan(n);
-                                    }}
-                                    className={`rounded-lg text-xs font-bold p-2 outline-none flex-1 border transition-colors bg-bgSoft border-borderColor text-textPrimary focus:border-primary`}
-                                >
-                                    {monthNames.map((m, i) => <option key={i} value={i} className="bg-bgCard text-textPrimary">{m}</option>)}
-                                </select>
-                                <button 
-                                    onClick={() => {
-                                        if(window.confirm(t('confirmDeleteMonth'))) {
-                                            setTempPlan(tempPlan.filter((_, i) => i !== idx));
-                                        }
-                                    }}
-                                    className={`p-2 rounded-lg transition-colors bg-danger/10 text-danger hover:bg-danger/20`}
-                                >
-                                    <Trash2 size={16} />
-                                </button>
-                            </div>
-                            
-                            <div className="space-y-2">
-                                {month.tasks.map((task, tIdx) => (
-                                    <div key={tIdx} className="flex gap-2">
-                                        <input 
-                                            value={task} 
-                                            onChange={(e) => {
-                                                const n = [...tempPlan];
-                                                n[idx].tasks[tIdx] = e.target.value;
-                                                setTempPlan(n);
-                                            }}
-                                            className={`flex-1 border rounded-lg px-3 py-2 text-xs font-bold outline-none transition-colors bg-bgSoft border-borderColor text-textPrimary focus:border-primary`}
-                                        />
-                                        <button 
-                                            onClick={() => {
-                                                const n = [...tempPlan];
-                                                n[idx].tasks = n[idx].tasks.filter((_, ti) => ti !== tIdx);
-                                                setTempPlan(n);
-                                            }}
-                                            className={`transition-colors text-danger hover:text-danger/80`}
-                                        >
-                                            <X size={14} />
-                                        </button>
-                                    </div>
-                                ))}
-                                <button 
-                                    onClick={() => {
-                                        const n = [...tempPlan];
-                                        n[idx].tasks.push(t('newTask'));
-                                        setTempPlan(n);
-                                    }}
-                                    className={`w-full py-2 border border-dashed rounded-lg text-xs font-bold transition-colors bg-transparent border-borderColor text-textSecondary hover:bg-bgSoft hover:text-textPrimary`}
-                                >
-                                    {t('addTask')}
-                                </button>
-                            </div>
-                        </div>
-                    ))}
-                </div>
-
-                <div className={`pt-4 mt-auto border-t border-borderColor`}>
-                    <button onClick={handleSavePlanSettings} className={`w-full py-3 text-white rounded-xl font-bold text-xs shadow-lg flex items-center justify-center gap-2 active:scale-95 transition-all bg-primary hover:bg-primary/80`}><Save size={16} /> {t('saveChanges')}</button>
-                </div>
-            </div>
-        </DrawerSheet>
-
-        <DrawerSheet isOpen={showEditModal} onClose={() => setShowEditModal(false)} dir={dir}>
-            <div className="flex flex-col h-full w-full text-center">
-                <h3 className="font-black text-lg mb-4 text-textPrimary">{t('officialIdentity')}</h3>
-                <div className="w-24 h-24 mx-auto mb-4 relative group shrink-0">
-                    {editAvatar ? (
-                        <img src={editAvatar} className={`w-full h-full rounded-2xl object-cover border-4 shadow-md border-bgCard`} alt="Profile" onError={(e) => { e.currentTarget.style.display='none'; }}/>
-                    ) : (
-                        <div className={`w-full h-full rounded-2xl border-4 flex items-center justify-center bg-bgSoft border-bgCard`}><DefaultAvatarSVG gender={editGender}/></div>
-                    )}
-                    <button onClick={() => setEditAvatar(undefined)} className={`absolute -bottom-2 ${dir === 'rtl' ? '-right-2' : '-left-2'} bg-danger text-white p-1.5 rounded-full shadow-lg border-2 border-bgCard hover:bg-danger/80 transition-colors`}>
-                        <X size={14}/>
-                    </button>
-                </div>
-
-                <div className={`space-y-3 ${dir === 'rtl' ? 'text-right' : 'text-left'}`}>
-                    <div className="grid grid-cols-2 gap-3">
-                        <input value={editName} onChange={e => setEditName(e.target.value)} placeholder={t('namePlaceholder')} className={`p-3 border rounded-xl text-xs font-bold w-full outline-none transition-colors bg-bgCard border-borderColor focus:border-primary text-textPrimary`} />
-                        <input value={editSchool} onChange={e => setEditSchool(e.target.value)} placeholder={t('schoolPlaceholder')} className={`p-3 border rounded-xl text-xs font-bold w-full outline-none transition-colors bg-bgCard border-borderColor focus:border-primary text-textPrimary`} />
-                    </div>
-                    <input value={editSubject} onChange={e => setEditSubject(e.target.value)} placeholder={t('subjectExample')} className={`p-3 border rounded-xl text-xs font-bold w-full outline-none transition-colors bg-bgCard border-borderColor focus:border-primary text-textPrimary`} />
-                    <div className="grid grid-cols-2 gap-3">
-                        <input value={editGovernorate} onChange={e => setEditGovernorate(e.target.value)} placeholder={t('governoratePlaceholder')} className={`p-3 border rounded-xl text-xs font-bold w-full outline-none transition-colors bg-bgCard border-borderColor focus:border-primary text-textPrimary`} />
-                        <input value={editAcademicYear} onChange={e => setEditAcademicYear(e.target.value)} placeholder={t('academicYearPlaceholder')} className={`p-3 border rounded-xl text-xs font-bold w-full outline-none transition-colors bg-bgCard border-borderColor focus:border-primary text-textPrimary`} />
-                    </div>
-
-                    <div className={`p-1 rounded-xl flex gap-1 bg-bgSoft`}>
-                        <button onClick={() => setEditSemester('1')} className={`flex-1 py-2 rounded-lg text-xs font-bold transition-all ${editSemester === '1' ? 'bg-primary text-white shadow-md' : 'text-textSecondary hover:text-textPrimary'}`}>{t('sem1')}</button>
-                        <button onClick={() => setEditSemester('2')} className={`flex-1 py-2 rounded-lg text-xs font-bold transition-all ${editSemester === '2' ? 'bg-primary text-white shadow-md' : 'text-textSecondary hover:text-textPrimary'}`}>{t('sem2')}</button>
-                    </div>
-
-                    <div className="flex gap-2 pt-2">
-                        <button onClick={() => fileInputRef.current?.click()} className={`flex-1 py-3 rounded-xl text-[10px] font-bold flex flex-col items-center gap-1 border transition-colors bg-bgSoft text-textSecondary border-borderColor hover:bg-bgCard hover:text-textPrimary`}><Camera size={16}/> {t('yourPhoto')}</button>
-                        <button onClick={() => stampInputRef.current?.click()} className={`flex-1 py-3 rounded-xl text-[10px] font-bold flex flex-col items-center gap-1 border transition-colors bg-bgSoft text-textSecondary border-borderColor hover:bg-bgCard hover:text-textPrimary`}><Check size={16}/> {t('stamp')}</button>
-                        <button onClick={() => ministryLogoInputRef.current?.click()} className={`flex-1 py-3 rounded-xl text-[10px] font-bold flex flex-col items-center gap-1 border transition-colors bg-bgSoft text-textSecondary border-borderColor hover:bg-bgCard hover:text-textPrimary`}><School size={16}/> {t('logo')}</button>
-                    </div>
-                    <input type="file" ref={fileInputRef} onChange={(e) => handleFileUpload(e, setEditAvatar)} className="hidden" accept="image/*"/>
-                    <input type="file" ref={stampInputRef} onChange={(e) => handleFileUpload(e, setEditStamp)} className="hidden" accept="image/*"/>
-                    <input type="file" ref={ministryLogoInputRef} onChange={(e) => handleFileUpload(e, setEditMinistryLogo)} className="hidden" accept="image/*"/>
-                </div>
-
-                <div className="pt-4 mt-auto">
-                    <button onClick={handleSaveInfo} className={`w-full py-3 text-white rounded-xl font-bold text-xs shadow-lg active:scale-95 transition-all bg-primary hover:bg-primary/80`}>{t('saveChanges')}</button>
-                </div>
-            </div>
-        </DrawerSheet>
-
-        <DrawerSheet isOpen={showScheduleModal} onClose={() => setShowScheduleModal(false)} dir={dir}>
-            <div className="flex flex-col h-full w-full">
-                
-                <div className={`flex justify-between items-center mb-4 pb-2 border-b shrink-0 border-borderColor`}>
-                    <h3 className="font-black text-lg text-textPrimary">{t('manageSchedule')}</h3>
-                    <div className="flex flex-wrap items-center justify-end gap-2" style={{ WebkitAppRegion: 'no-drag' } as any}>
-                        <button type="button" onClick={() => scheduleFileInputRef.current?.click()} disabled={isImportingSchedule}
-                            className="cursor-pointer relative z-50 flex items-center gap-1.5 px-3 py-2 rounded-lg text-[10px] font-black transition-colors bg-info/10 text-info hover:bg-info/20 disabled:opacity-60"
-                            title="استيراد توزيع الحصص على أيام الأسبوع">
-                            {isImportingSchedule ? <Loader2 size={14} className="animate-spin" /> : <CalendarDays size={14} />}
-                            استيراد الجدول
-                        </button>
-                        <button type="button" onClick={() => modalScheduleFileInputRef.current?.click()} disabled={isImportingPeriods}
-                            className="cursor-pointer relative z-50 flex items-center gap-1.5 px-3 py-2 rounded-lg text-[10px] font-black transition-colors bg-success/10 text-success hover:bg-success/20 disabled:opacity-60"
-                            title="استيراد أوقات بداية ونهاية الحصص">
-                            {isImportingPeriods ? <Loader2 size={14} className="animate-spin" /> : <Clock size={14} />}
-                            استيراد التوقيت
-                        </button>
-                        <input type="file" ref={scheduleFileInputRef} onChange={handleImportSchedule} accept=".xlsx,.xls" className="hidden" />
-                        <input type="file" ref={modalScheduleFileInputRef} onChange={handleImportPeriodTimes} accept=".xlsx,.xls" className="hidden" />
-                    </div>
-                </div>
-
-                <div className={`flex p-1 rounded-xl mb-4 shrink-0 bg-bgSoft`}>
-                    <button onClick={() => setScheduleTab('timing')} className={`flex-1 py-2 rounded-lg text-xs font-bold transition-all ${scheduleTab === 'timing' ? 'bg-bgCard shadow text-textPrimary' : 'text-textSecondary hover:text-textPrimary'}`}>{t('timing')}</button>
-                    <button onClick={() => setScheduleTab('classes')} className={`flex-1 py-2 rounded-lg text-xs font-bold transition-all ${scheduleTab === 'classes' ? 'bg-bgCard shadow text-textPrimary' : 'text-textSecondary hover:text-textPrimary'}`}>{t('classesTab')}</button>
-                </div>
-
-                <div className="flex-1 overflow-y-auto custom-scrollbar p-1">
-                  {scheduleTab === 'timing' ? (
-                        <div className="space-y-2">
-                            {tempPeriodTimes.map((pt, idx) => (
-                                <div key={idx} className={`flex items-center gap-2 p-2 rounded-xl border bg-bgCard border-borderColor`}>
-                                    <span className={`text-[10px] font-bold w-8 text-center text-textSecondary`}>{idx+1}</span>
-                                    <input type="time" value={pt.startTime} onChange={(e) => {const n=[...tempPeriodTimes]; if(n[idx]) n[idx].startTime=e.target.value; setTempPeriodTimes(n)}} className={`flex-1 rounded-lg px-2 py-1 text-xs font-bold border text-center transition-colors bg-bgSoft border-borderColor text-textPrimary`}/>
-                                    <span className={'text-textSecondary'}>-</span>
-                                    <input type="time" value={pt.endTime} onChange={(e) => {const n=[...tempPeriodTimes]; if(n[idx]) n[idx].endTime=e.target.value; setTempPeriodTimes(n)}} className={`flex-1 rounded-lg px-2 py-1 text-xs font-bold border text-center transition-colors bg-bgSoft border-borderColor text-textPrimary`}/>
-                                </div>
-                            ))}
-                        </div>
-                    ) : (
-                        <div className="space-y-4">
-                            <div className="flex gap-2 overflow-x-auto pb-2 no-scrollbar">
-                                {tempSchedule.map((day, idx) => (
-                                    <button key={idx} onClick={() => setEditingDayIndex(idx)} className={`px-4 py-2 rounded-xl text-xs font-bold whitespace-nowrap border transition-all ${editingDayIndex === idx ? 'bg-primary text-white border-primary shadow-sm' : 'bg-bgSoft text-textSecondary border-borderColor hover:bg-bgCard hover:text-textPrimary'}`}>
-                                        {t(weekDayKeys[idx]) || day.dayName}
-                                    </button>
-                                ))}
-                            </div>
-                            <div className="space-y-2">
-                                {tempSchedule[editingDayIndex]?.periods.map((cls: string, pIdx: number) => (
-                                    <div key={pIdx} className={`flex items-center gap-3 p-2 rounded-xl border bg-bgCard border-borderColor`}>
-                                        <span className={`text-[10px] font-bold w-8 text-center text-textSecondary`}>{pIdx + 1}</span>
-                                        <input value={cls} onChange={(e) => {const n=[...tempSchedule]; if(n[editingDayIndex]?.periods) n[editingDayIndex].periods[pIdx]=e.target.value; setTempSchedule(n)}} placeholder={t('subjectNamePlaceholder')} className={`flex-1 border rounded-lg px-3 py-2 text-xs font-bold outline-none transition-colors bg-bgSoft border-borderColor text-textPrimary focus:border-primary placeholder:text-textSecondary`} />
-                                    </div>
-                                ))}
-                            </div>
-                        </div>
-                    )}
-                </div>
-
-                <div className={`pt-4 mt-auto border-t shrink-0 border-borderColor`}>
-                    <button onClick={handleSaveScheduleSettings} className={`w-full py-3 text-white rounded-xl font-bold text-xs shadow-lg flex items-center justify-center gap-2 active:scale-95 transition-all bg-primary hover:bg-primary/80`}><Save size={16} /> {t('saveChanges')}</button>
-                </div>
-            </div>
-        </DrawerSheet>
-
-        </>
+export const AppProvider: React.FC<{ children: React.ReactNode }> = ({
+  children
+}) => {
+  const [isDataLoaded, setIsDataLoaded] = useState(false);
+  const [language, setLanguage] = useState<Language>(() => {
+    const storedLanguage = localStorage.getItem(CORE_STORAGE_KEYS.language);
+    return storedLanguage === 'en' ? 'en' : 'ar';
+  });
+
+  const currentMonth = new Date().getMonth();
+  const defaultSemester: '1' | '2' =
+    currentMonth >= 1 && currentMonth <= 7 ? '2' : '1';
+
+  const [currentSemester, setCurrentSemester] = useState<'1' | '2'>(
+    defaultSemester
+  );
+  const [students, setStudents] = useState<Student[]>([]);
+  const [classes, setClasses] = useState<string[]>([]);
+  const [hiddenClasses, setHiddenClasses] = useState<string[]>([]);
+  const [groups, setGroups] = useState<Group[]>(DEFAULT_GROUPS);
+  const [categorizations, setCategorizations] = useState<
+    GroupCategorization[]
+  >([]);
+  const [schedule, setSchedule] = useState<ScheduleDay[]>(DEFAULT_SCHEDULE);
+  const [periodTimes, setPeriodTimes] = useState<PeriodTime[]>(
+    createDefaultPeriodTimes()
+  );
+
+  const now = new Date();
+  const defaultAcademicYear =
+    now.getMonth() >= 7
+      ? `${now.getFullYear()} / ${now.getFullYear() + 1}`
+      : `${now.getFullYear() - 1} / ${now.getFullYear()}`;
+
+  const [teacherInfo, setTeacherInfo] = useState<TeacherInfo>({
+    name: '',
+    school: '',
+    subject: '',
+    governorate: '',
+    avatar: '',
+    stamp: '',
+    ministryLogo: '',
+    academicYear: defaultAcademicYear,
+    gender: 'male',
+    civilId: '',
+    role: 'teacher',
+    departmentName: ''
+  });
+
+  const [assessmentTools, setAssessmentTools] = useState<AssessmentTool[]>([]);
+  const [gradeSettings, setGradeSettingsState] = useState<GradeSettings>(() =>
+    normalizeGradeSettings(
+      localStorage.getItem(CORE_STORAGE_KEYS.gradeSettings)
+    )
+  );
+  const setGradeSettings: React.Dispatch<
+    React.SetStateAction<GradeSettings>
+  > = valueOrUpdater => {
+    setGradeSettingsState(previousValue => {
+      const nextValue =
+        typeof valueOrUpdater === 'function'
+          ? valueOrUpdater(normalizeGradeSettings(previousValue))
+          : valueOrUpdater;
+      return normalizeGradeSettings(nextValue);
+    });
+  };
+  const [certificateSettings, setCertificateSettings] =
+    useState<CertificateSettings>({
+      title: 'شهادة تفوق دراسي',
+      bodyText:
+        'تتشرف إدارة المدرسة بمنح الطالب هذه الشهادة نظير تفوقه وتميزه في المادة',
+      showDefaultDesign: true
+    });
+  const [defaultStudentGender, setDefaultStudentGender] = useState<
+    'male' | 'female'
+  >('male');
+
+  const isInitialLoad = useRef(true);
+  const saveTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  const isHeavyEnvironment = () =>
+    Capacitor.isNativePlatform() || (window as any).electron !== undefined;
+
+  const createBackupPayload = (): RasedBackupPayload => ({
+    schemaVersion: RASED_BACKUP_SCHEMA_VERSION,
+    version: RASED_APP_DATA_VERSION,
+    timestamp: new Date().toISOString(),
+    students,
+    classes,
+    hiddenClasses,
+    groups,
+    categorizations,
+    schedule,
+    periodTimes,
+    teacherInfo,
+    currentSemester,
+    assessmentTools,
+    gradeSettings: normalizeGradeSettings(gradeSettings),
+    certificateSettings,
+    defaultStudentGender,
+    language,
+    extendedStorage: readRasedExtendedStorage()
+  });
+
+  const persistCoreToLocalStorage = (payload: RasedBackupPayload) => {
+    writeStorageJson(CORE_STORAGE_KEYS.students, payload.students);
+    writeStorageJson(CORE_STORAGE_KEYS.classes, payload.classes);
+    writeStorageJson(CORE_STORAGE_KEYS.hiddenClasses, payload.hiddenClasses);
+    writeStorageJson(CORE_STORAGE_KEYS.groups, payload.groups);
+    writeStorageJson(
+      CORE_STORAGE_KEYS.categorizations,
+      payload.categorizations
     );
+    writeStorageJson(CORE_STORAGE_KEYS.schedule, payload.schedule);
+    writeStorageJson(CORE_STORAGE_KEYS.periodTimes, payload.periodTimes);
+    writeStorageJson(
+      CORE_STORAGE_KEYS.assessmentTools,
+      payload.assessmentTools
+    );
+    writeStorageJson(
+      CORE_STORAGE_KEYS.gradeSettings,
+      normalizeGradeSettings(payload.gradeSettings)
+    );
+    writeStorageJson(
+      CORE_STORAGE_KEYS.certificateSettings,
+      payload.certificateSettings
+    );
+
+    localStorage.setItem(
+      CORE_STORAGE_KEYS.currentSemester,
+      payload.currentSemester
+    );
+    localStorage.setItem(
+      CORE_STORAGE_KEYS.defaultStudentGender,
+      payload.defaultStudentGender
+    );
+    localStorage.setItem(CORE_STORAGE_KEYS.language, payload.language);
+
+    localStorage.setItem('teacher_teacherName', teacherInfo.name || '');
+    localStorage.setItem('teacher_schoolName', teacherInfo.school || '');
+    localStorage.setItem('teacher_subjectName', teacherInfo.subject || '');
+    localStorage.setItem(
+      'teacher_governorate',
+      teacherInfo.governorate || ''
+    );
+    localStorage.setItem('teacher_teacherAvatar', teacherInfo.avatar || '');
+    localStorage.setItem('teacher_teacherStamp', teacherInfo.stamp || '');
+    localStorage.setItem(
+      'teacher_ministryLogo',
+      teacherInfo.ministryLogo || ''
+    );
+    localStorage.setItem(
+      'teacher_academicYear',
+      teacherInfo.academicYear || ''
+    );
+    localStorage.setItem(
+      'teacher_teacherGender',
+      teacherInfo.gender || 'male'
+    );
+    localStorage.setItem('teacher_civilId', teacherInfo.civilId || '');
+    localStorage.setItem('teacher_role', teacherInfo.role || 'teacher');
+    localStorage.setItem(
+      'teacher_departmentName',
+      teacherInfo.departmentName || ''
+    );
+    localStorage.setItem('teacher_lastLocalUpdate', Date.now().toString());
+
+    writeRasedExtendedStorage(payload.extendedStorage);
+  };
+
+  const restoreBackupPayload = async (
+    rawBackup: unknown,
+    options: RestoreBackupOptions = {}
+  ): Promise<RasedBackupPayload> => {
+    if (!rawBackup || typeof rawBackup !== 'object') {
+      throw new Error('INVALID_BACKUP_PAYLOAD');
+    }
+
+    const fallback = createBackupPayload();
+    const normalized = normalizeLegacyBackup(rawBackup as any, fallback);
+
+    if (!Array.isArray(normalized.students)) {
+      throw new Error('INVALID_STUDENTS_DATA');
+    }
+
+    const migratedStudents = migrateAndDedupeStudents(
+      normalized.students,
+      String((normalized.teacherInfo as TeacherInfo)?.school || '')
+    );
+    const safeTeacherInfo = {
+      ...teacherInfo,
+      ...(normalized.teacherInfo as TeacherInfo)
+    };
+    const finalPayload: RasedBackupPayload = {
+      ...normalized,
+      students: migratedStudents,
+      teacherInfo: safeTeacherInfo
+    };
+
+    setStudents(finalPayload.students);
+    setClasses(finalPayload.classes);
+    setHiddenClasses(finalPayload.hiddenClasses);
+    setGroups(finalPayload.groups);
+    setCategorizations(finalPayload.categorizations);
+    setSchedule(finalPayload.schedule);
+    setPeriodTimes(finalPayload.periodTimes);
+    setTeacherInfo(safeTeacherInfo);
+    setCurrentSemester(finalPayload.currentSemester);
+    setAssessmentTools(finalPayload.assessmentTools);
+    setGradeSettings(normalizeGradeSettings(finalPayload.gradeSettings));
+    setCertificateSettings(finalPayload.certificateSettings);
+    setDefaultStudentGender(finalPayload.defaultStudentGender);
+    setLanguage(finalPayload.language);
+
+    persistCoreToLocalStorage(finalPayload);
+
+    if (options.saveToDeviceFile !== false && isHeavyEnvironment()) {
+      await Filesystem.writeFile({
+        path: RASED_DB_FILENAME,
+        data: JSON.stringify(finalPayload),
+        directory: Directory.Data,
+        encoding: Encoding.UTF8
+      });
+    }
+
+    if (options.reloadAfterRestore) {
+      window.setTimeout(() => window.location.reload(), 400);
+    }
+
+    return finalPayload;
+  };
+
+  useEffect(() => {
+    const loadData = async () => {
+      try {
+        let data: any = null;
+
+        if (isHeavyEnvironment()) {
+          try {
+            const result = await Filesystem.readFile({
+              path: RASED_DB_FILENAME,
+              directory: Directory.Data,
+              encoding: Encoding.UTF8
+            });
+            if (result.data) data = JSON.parse(result.data as string);
+          } catch {
+            console.log('No local database file yet; checking localStorage.');
+          }
+        }
+
+        if (!data) {
+          const storedStudents = localStorage.getItem(
+            CORE_STORAGE_KEYS.students
+          );
+          if (storedStudents) {
+            data = {
+              students: safeJsonParse(storedStudents, []),
+              classes: readStorageJson(CORE_STORAGE_KEYS.classes, []),
+              hiddenClasses: readStorageJson(
+                CORE_STORAGE_KEYS.hiddenClasses,
+                []
+              ),
+              groups: readStorageJson(CORE_STORAGE_KEYS.groups, DEFAULT_GROUPS),
+              categorizations: readStorageJson(
+                CORE_STORAGE_KEYS.categorizations,
+                []
+              ),
+              schedule: readStorageJson(
+                CORE_STORAGE_KEYS.schedule,
+                DEFAULT_SCHEDULE
+              ),
+              periodTimes: readStorageJson(
+                CORE_STORAGE_KEYS.periodTimes,
+                createDefaultPeriodTimes()
+              ),
+              assessmentTools: readStorageJson(
+                CORE_STORAGE_KEYS.assessmentTools,
+                []
+              ),
+              gradeSettings: normalizeGradeSettings(
+                localStorage.getItem(CORE_STORAGE_KEYS.gradeSettings)
+              ),
+              certificateSettings: readStorageJson(
+                CORE_STORAGE_KEYS.certificateSettings,
+                null
+              ),
+              currentSemester: localStorage.getItem(
+                CORE_STORAGE_KEYS.currentSemester
+              ),
+              defaultStudentGender: localStorage.getItem(
+                CORE_STORAGE_KEYS.defaultStudentGender
+              ),
+              language: localStorage.getItem(CORE_STORAGE_KEYS.language),
+              teacherInfo: {
+                name: localStorage.getItem('teacher_teacherName') || '',
+                school: localStorage.getItem('teacher_schoolName') || '',
+                subject: localStorage.getItem('teacher_subjectName') || '',
+                governorate:
+                  localStorage.getItem('teacher_governorate') || '',
+                avatar: localStorage.getItem('teacher_teacherAvatar') || '',
+                stamp: localStorage.getItem('teacher_teacherStamp') || '',
+                ministryLogo:
+                  localStorage.getItem('teacher_ministryLogo') || '',
+                academicYear:
+                  localStorage.getItem('teacher_academicYear') ||
+                  defaultAcademicYear,
+                gender:
+                  localStorage.getItem('teacher_teacherGender') || 'male',
+                civilId: localStorage.getItem('teacher_civilId') || '',
+                role: localStorage.getItem('teacher_role') || 'teacher',
+                departmentName:
+                  localStorage.getItem('teacher_departmentName') || ''
+              },
+              extendedStorage: readRasedExtendedStorage()
+            };
+          }
+        }
+
+        if (data) {
+          const fallback = createBackupPayload();
+          const normalized = normalizeLegacyBackup(data, fallback);
+          const loadedTeacherInfo = normalized.teacherInfo as TeacherInfo;
+          const activeSchoolName =
+            loadedTeacherInfo?.school ||
+            localStorage.getItem('teacher_schoolName') ||
+            '';
+
+          setStudents(
+            migrateAndDedupeStudents(normalized.students, activeSchoolName)
+          );
+          setClasses(normalized.classes);
+          setHiddenClasses(normalized.hiddenClasses);
+          setGroups(normalized.groups);
+          setCategorizations(normalized.categorizations);
+          setSchedule(normalized.schedule);
+          setPeriodTimes(normalized.periodTimes);
+          setAssessmentTools(normalized.assessmentTools);
+          setGradeSettings(previous =>
+            normalizeGradeSettings({
+              ...previous,
+              ...normalized.gradeSettings
+            })
+          );
+          setCurrentSemester(normalized.currentSemester);
+          setTeacherInfo(previous => ({
+            ...previous,
+            ...loadedTeacherInfo
+          }));
+          setCertificateSettings(previous => ({
+            ...previous,
+            ...normalized.certificateSettings
+          }));
+          setDefaultStudentGender(normalized.defaultStudentGender);
+          setLanguage(normalized.language);
+          writeRasedExtendedStorage(normalized.extendedStorage);
+        }
+      } catch (error) {
+        console.error('Data loading error', error);
+      } finally {
+        setIsDataLoaded(true);
+        window.setTimeout(() => {
+          isInitialLoad.current = false;
+        }, 1000);
+      }
+    };
+
+    loadData();
+  }, []);
+
+  useEffect(() => {
+    if (isInitialLoad.current) return;
+    if (saveTimeoutRef.current) clearTimeout(saveTimeoutRef.current);
+
+    saveTimeoutRef.current = window.setTimeout(async () => {
+      const payload = createBackupPayload();
+
+      try {
+        persistCoreToLocalStorage(payload);
+      } catch (error) {
+        console.error('Unable to save localStorage data.', error);
+      }
+
+      if (isHeavyEnvironment()) {
+        try {
+          await Filesystem.writeFile({
+            path: RASED_DB_FILENAME,
+            data: JSON.stringify(payload),
+            directory: Directory.Data,
+            encoding: Encoding.UTF8
+          });
+        } catch (error) {
+          console.error('Unable to save local database file.', error);
+        }
+      }
+    }, 2000);
+
+    return () => {
+      if (saveTimeoutRef.current) clearTimeout(saveTimeoutRef.current);
+    };
+  }, [
+    students,
+    classes,
+    hiddenClasses,
+    groups,
+    schedule,
+    periodTimes,
+    teacherInfo,
+    currentSemester,
+    assessmentTools,
+    gradeSettings,
+    certificateSettings,
+    defaultStudentGender,
+    categorizations,
+    language
+  ]);
+
+  const t = (key: keyof typeof translations['ar'] | string): string => {
+    const currentDictionary = (translations?.[language] || {}) as Record<string, string>;
+    const arabicDictionary = (translations?.ar || {}) as Record<string, string>;
+    const englishDictionary = (translations?.en || {}) as Record<string, string>;
+
+    return (
+      currentDictionary[key] ??
+      arabicDictionary[key] ??
+      englishDictionary[key] ??
+      String(key)
+    );
+  };
+
+  const dir = language === 'ar' ? 'rtl' : 'ltr';
+
+  return (
+    <AppContext.Provider
+      value={{
+        students,
+        setStudents,
+        classes,
+        setClasses,
+        hiddenClasses,
+        setHiddenClasses,
+        groups,
+        setGroups,
+        schedule,
+        setSchedule,
+        periodTimes,
+        setPeriodTimes,
+        teacherInfo,
+        setTeacherInfo,
+        currentSemester,
+        setCurrentSemester,
+        assessmentTools,
+        setAssessmentTools,
+        gradeSettings,
+        setGradeSettings,
+        certificateSettings,
+        setCertificateSettings,
+        isDataLoaded,
+        defaultStudentGender,
+        setDefaultStudentGender,
+        categorizations,
+        setCategorizations,
+        language,
+        setLanguage,
+        t,
+        dir,
+        createBackupPayload,
+        restoreBackupPayload
+      }}
+    >
+      <div dir={dir} className="h-full w-full">
+        {children}
+      </div>
+    </AppContext.Provider>
+  );
 };
 
-export default Dashboard;
+export const useApp = () => {
+  const context = useContext(AppContext);
+  if (context === undefined) {
+    throw new Error('useApp must be used within an AppProvider');
+  }
+  return context;
+};
