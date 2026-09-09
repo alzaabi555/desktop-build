@@ -30,7 +30,8 @@ import {
   AlertCircle,
   Unlock,
   Gamepad2,
-  Mail
+  Mail,
+  BookMarked
 } from 'lucide-react';
 
 import { App as CapacitorApp } from '@capacitor/app';
@@ -54,6 +55,7 @@ import TeacherLibrary from './components/TeacherLibrary';
 import GlobalSyncManager from './components/GlobalSyncManager';
 import SeniorDashboard from './components/SeniorDashboard';
 import TeacherMailbox from './components/TeacherMailbox';
+import TeacherPreparations from './components/preparations/TeacherPreparations';
 
 // 🎮 بنك أسئلة الألعاب التعليمية
 import TeacherGameQuestionsManager from './components/TeacherGameQuestionsManager';
@@ -522,6 +524,7 @@ const handleToggleNotifications = () => {
     { id: 'learning_evaluation', label: t('navLearningShort'), IconComponent: BookOpen },
     { id: 'mailbox', label: t('navMailboxShort'), IconComponent: Mail },
     { id: 'games', label: 'الألعاب التعليمية والاختبارات', IconComponent: Gamepad2 },
+    { id: 'preparations', label: 'التحضير', IconComponent: BookMarked },
     { id: 'reports_analysis', label: t('navReports'), IconComponent: BarChart3 },
     { id: 'help_settings', label: t('navMore'), IconComponent: SettingsIcon }
   ];
@@ -533,6 +536,7 @@ const handleToggleNotifications = () => {
     { id: 'learning_evaluation', label: t('navLearningAssessment'), icon: BookOpen },
     { id: 'mailbox', label: t('navMailboxMain'), icon: Mail },
     { id: 'games', label: 'الألعاب التعليمية والاختبارات', icon: Gamepad2 },
+    { id: 'preparations', label: 'التحضير', icon: BookMarked },
     { id: 'reports_analysis', label: t('navReportsStandalone'), icon: BarChart3 },
     { id: 'admin_sync', label: t('navCentralSync'), icon: CloudSync },
     { id: 'help_settings', label: t('navSettingsHelp'), icon: SettingsIcon }
@@ -617,6 +621,10 @@ const handleToggleNotifications = () => {
     if (tab === 'exams' || tab === 'teacher_exams') {
       setGamesView('exams');
       setActiveTab('games');
+      return;
+    }
+    if (tab === 'preparations' || tab === 'teacher_preparations' || tab === 'lesson_preparation') {
+      setActiveTab('preparations');
       return;
     }
     if (tab === 'leaderboard' || tab === 'knights') {
@@ -1190,6 +1198,17 @@ const handleToggleNotifications = () => {
           </div>
         );
 
+      case 'preparations':
+        return (
+          <div className="h-full min-h-0 overflow-y-auto overscroll-contain custom-scrollbar pb-24 pr-1">
+            <TeacherPreparations
+              classes={classes || []}
+              teacherInfo={teacherInfo}
+              schedule={schedule}
+              periodTimes={periodTimes}
+            />
+          </div>
+        );
       case 'reports_analysis':
         return (
           <div className="h-full min-h-0 overflow-y-auto overscroll-contain custom-scrollbar space-y-4 pb-24 pr-1">
