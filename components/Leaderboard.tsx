@@ -420,7 +420,7 @@ const Leaderboard: React.FC<LeaderboardProps> = ({ students, classes, onUpdateSt
                         className="flex items-center gap-1 border rounded-lg text-[10px] px-2 py-1 outline-none font-bold cursor-pointer transition-colors border-borderColor text-textSecondary hover:bg-primary/10 hover:text-primary hover:border-primary/30"
                     >
                         <History size={14} />
-                        <span className="hidden sm:inline">{t('archive') || 'الأرشيف'}</span>
+                        <span className="hidden sm:inline">{t('الأرشيف') || 'archive'}</span>
                     </button>
 
                     <select 
