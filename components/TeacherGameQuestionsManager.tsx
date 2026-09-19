@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import {
   Plus,
   Trash2,
@@ -39,6 +39,7 @@ export interface TeacherGameQuestion {
   schoolCode: string;
   teacherId: string;
   subject: string;
+  subjectId?: string;
   grade: string;
   classes: string[];
   semester?: '1' | '2';
@@ -65,6 +66,8 @@ export interface TeacherGameQuestion {
 }
 
 export interface PublishGameQuestionsPayload {
+  publishBatchId: string;
+  subjectId?: string;
   schoolCode: string;
   teacherId: string;
   subject: string;
@@ -72,6 +75,7 @@ export interface PublishGameQuestionsPayload {
   classes: string[];
   questions: TeacherGameQuestion[];
   publishedAt: string;
+  activityDate: string;
 }
 
 interface TeacherGameQuestionsManagerProps {
@@ -116,6 +120,14 @@ const DIFFICULTY_OPTIONS: { id: GameDifficulty; labelKey: string }[] = [
 ];
 
 const createId = () => `gq_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;
+const createPublishBatchId = (schoolCode: string, teacherId: string) => {
+  const randomPart = typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function'
+    ? crypto.randomUUID().replace(/-/g, '').slice(0, 16)
+    : `${Date.now().toString(36)}${Math.random().toString(36).slice(2, 10)}`;
+  const schoolPart = String(schoolCode || 'school').replace(/[^a-zA-Z0-9_-]/g, '').slice(0, 16) || 'school';
+  const teacherPart = String(teacherId || 'teacher').replace(/[^a-zA-Z0-9_-]/g, '').slice(0, 16) || 'teacher';
+  return `gpb_${schoolPart}_${teacherPart}_${Date.now()}_${randomPart}`;
+};
 const todayIsoDate = () => new Date().toISOString().slice(0, 10);
 
 const getInitialQuestion = (
@@ -243,6 +255,7 @@ const normalizeTeacherGameQuestion = (
     schoolCode: String(raw?.schoolCode || schoolCode || ''),
     teacherId: String(raw?.teacherId || teacherId || ''),
     subject: String(raw?.subject || fallbackSubject || ''),
+    subjectId: raw?.subjectId ? String(raw.subjectId) : undefined,
     grade: String(raw?.grade || fallbackGrade || ''),
     classes: classes.length > 0 ? classes : fallbackClasses,
     semester: raw?.semester === '2' ? '2' : '1',
@@ -322,6 +335,7 @@ const sanitizeForStudent = (question: TeacherGameQuestion) => {
     schoolCode: question.schoolCode,
     teacherId: question.teacherId,
     subject: question.subject,
+    subjectId: question.subjectId,
     grade: question.grade,
     className: classes[0] || '',
     classes,
@@ -377,6 +391,7 @@ const TeacherGameQuestionsManager: React.FC<TeacherGameQuestionsManagerProps> = 
   const draftKey = `rased_teacher_game_questions_${schoolCode}_${teacherId}`;
   const activePublishedKey = `rased_teacher_game_questions_active_${schoolCode}_${teacherId}`;
   const archiveKey = `rased_teacher_game_questions_archive_${schoolCode}_${teacherId}`;
+  const publishedClearedKey = `rased_teacher_game_questions_editor_cleared_${schoolCode}_${teacherId}`;
 
   const [questions, setQuestions] = useState<TeacherGameQuestion[]>([]);
   const [currentQuestion, setCurrentQuestion] = useState<TeacherGameQuestion>(() =>
@@ -390,6 +405,7 @@ const TeacherGameQuestionsManager: React.FC<TeacherGameQuestionsManagerProps> = 
   const [localArchiveQuestions, setLocalArchiveQuestions] = useState<TeacherGameQuestion[]>([]);
   const [cloudArchiveQuestions, setCloudArchiveQuestions] = useState<TeacherGameQuestion[]>([]);
   const [isLoadingArchive, setIsLoadingArchive] = useState(false);
+  const editorFormRef = useRef<HTMLFormElement>(null);
 
   useEffect(() => {
     try {
@@ -403,6 +419,10 @@ const TeacherGameQuestionsManager: React.FC<TeacherGameQuestionsManagerProps> = 
         return;
       }
 
+      if (localStorage.getItem(publishedClearedKey) === 'true') {
+        setQuestions([]);
+        return;
+      }
       const activePublished = safeReadQuestions(activePublishedKey);
       setQuestions(
         activePublished
@@ -412,7 +432,7 @@ const TeacherGameQuestionsManager: React.FC<TeacherGameQuestionsManagerProps> = 
     } catch {
       setQuestions([]);
     }
-  }, [draftKey, activePublishedKey, schoolCode, teacherId, defaultSubject, defaultGrade, classOptions]);
+  }, [draftKey, activePublishedKey, publishedClearedKey, schoolCode, teacherId, defaultSubject, defaultGrade, classOptions]);
 
   useEffect(() => {
     localStorage.setItem(draftKey, JSON.stringify(questions));
@@ -600,14 +620,44 @@ const TeacherGameQuestionsManager: React.FC<TeacherGameQuestionsManagerProps> = 
     });
   };
 
-  const addQuestion = () => {
-    const normalizedCurrent = normalizeTeacherGameQuestion(currentQuestion, schoolCode, teacherId, defaultSubject, defaultGrade, classOptions);
+  const addQuestion = async (event?: React.FormEvent<HTMLFormElement> | React.MouseEvent<HTMLButtonElement>) => {
+    event?.preventDefault();
+    (document.activeElement as HTMLElement | null)?.blur?.();
+    await new Promise<void>(resolve => requestAnimationFrame(() => resolve()));
+
+    const formData = editorFormRef.current ? new FormData(editorFormRef.current) : null;
+    const readText = (name: string, fallback: string) => {
+      const value = formData?.get(name);
+      return value === null || value === undefined ? fallback : String(value);
+    };
+    const liveQuestion: TeacherGameQuestion = {
+      ...currentQuestion,
+      subject: readText('subject', currentQuestion.subject),
+      unit: readText('unit', currentQuestion.unit),
+      lesson: readText('lesson', currentQuestion.lesson),
+      question: readText('question', currentQuestion.question),
+      explanation: readText('explanation', currentQuestion.explanation),
+      skill: readText('skill', currentQuestion.skill || 'فهم'),
+      options: currentQuestion.questionType === 'multiple_choice'
+        ? currentQuestion.options.map((option, index) => readText(`option_${index}`, option))
+        : currentQuestion.options,
+      pairs: currentQuestion.questionType === 'matching'
+        ? (currentQuestion.pairs || []).map((pair, index) => ({ left: readText(`pair_left_${index}`, pair.left), right: readText(`pair_right_${index}`, pair.right) }))
+        : currentQuestion.pairs,
+      sequence: currentQuestion.questionType === 'sequence'
+        ? (currentQuestion.sequence || []).map((item, index) => readText(`sequence_${index}`, item))
+        : currentQuestion.sequence,
+      updatedAt: new Date().toISOString()
+    };
+    const normalizedCurrent = normalizeTeacherGameQuestion(liveQuestion, schoolCode, teacherId, defaultSubject, defaultGrade, classOptions);
     const validation = validateQuestion(normalizedCurrent, tr);
     if (!validation.ok) {
+      setCurrentQuestion(liveQuestion);
       showToast('warning', validation.message || tr('gameReviewQuestionData'));
       return;
     }
     const cleanQuestion: TeacherGameQuestion = { ...normalizedCurrent, status: 'active', active: normalizedCurrent.active !== false };
+    localStorage.removeItem(publishedClearedKey);
     if (editingId) {
       setQuestions(prev => prev.map(question => question.id === editingId ? { ...cleanQuestion, updatedAt: new Date().toISOString() } : question));
       showToast('success', tr('gameQuestionUpdated'));
@@ -674,35 +724,68 @@ const TeacherGameQuestionsManager: React.FC<TeacherGameQuestionsManagerProps> = 
     setQuestions(prev => prev.map(question => question.id === id ? { ...question, active: !question.active, updatedAt: new Date().toISOString() } : question));
   };
 
-  const buildPublishPayload = (): PublishGameQuestionsPayload => {
+  const buildPublishPayload = (publishBatchId: string, publishedAt: string): PublishGameQuestionsPayload => {
     const firstQuestion = validQuestions[0];
+    const batchSubject = firstQuestion?.subject || defaultSubject || '';
+    const mixedSubjects = validQuestions.some(question => String(question.subject || '').trim() !== String(batchSubject).trim());
+    if (mixedSubjects) throw new Error('PUBLISH_BATCH_MIXED_SUBJECTS');
+    const batchQuestions = validQuestions.map(question => ({
+      ...normalizeTeacherGameQuestion(question, schoolCode, teacherId, defaultSubject, defaultGrade, classOptions),
+      publishBatchId,
+      visibleFrom: question.visibleFrom || publishedAt.slice(0, 10),
+      status: 'active' as const,
+      active: question.active !== false,
+      updatedAt: publishedAt
+    }));
     return {
+      publishBatchId,
+      subjectId: firstQuestion?.subjectId,
       schoolCode,
       teacherId,
-      subject: firstQuestion?.subject || defaultSubject || '',
+      subject: batchSubject,
       grade: firstQuestion?.grade || defaultGrade || '',
       classes: Array.from(new Set(validQuestions.flatMap(question => Array.isArray(question.classes) ? question.classes : []))),
-      questions: validQuestions.map(question => ({
-        ...normalizeTeacherGameQuestion(question, schoolCode, teacherId, defaultSubject, defaultGrade, classOptions),
-        status: 'active',
-        active: question.active !== false
-      })),
-      publishedAt: new Date().toISOString()
+      questions: batchQuestions,
+      publishedAt,
+      activityDate: publishedAt.slice(0, 10)
     };
   };
-
   const publishQuestions = async () => {
     if (validQuestions.length === 0) {
       showToast('warning', tr('gameNoValidQuestions'));
       return;
     }
-    const payload = buildPublishPayload();
+    const publishedAt = new Date().toISOString();
+    const publishBatchId = createPublishBatchId(schoolCode, teacherId);
+    let payload: PublishGameQuestionsPayload;
+    try { payload = buildPublishPayload(publishBatchId, publishedAt); }
+    catch (error) {
+      if (error instanceof Error && error.message === 'PUBLISH_BATCH_MIXED_SUBJECTS') {
+        showToast('warning', 'يجب أن تحتوي كل دفعة نشر على مادة واحدة فقط. انشر أسئلة كل مادة في دفعة مستقلة.');
+        return;
+      }
+      throw error;
+    }
     try {
       setIsPublishing(true);
       if (onPublish) await onPublish(payload);
-      else localStorage.setItem('rased_game_questions', JSON.stringify(validQuestions.map(sanitizeForStudent)));
+      else localStorage.setItem('rased_game_questions', JSON.stringify(payload.questions.map(sanitizeForStudent)));
       archivePreviousActiveQuestionsLocally(payload.questions);
-      showToast('success', tr('gamePublishSuccess'));
+      const now = new Date().toISOString();
+      const publishedArchive = payload.questions.map(question => ({
+        ...question,
+        active: false,
+        status: 'archived' as const,
+        archivedAt: now,
+        updatedAt: now
+      }));
+      saveLocalArchive([...publishedArchive, ...localArchiveQuestions]);
+      localStorage.setItem(publishedClearedKey, 'true');
+      localStorage.setItem(draftKey, JSON.stringify([]));
+      setQuestions([]);
+      resetForm();
+      setQuestionsView('archive');
+      showToast('success', 'تم نشر الدفعة ونقل نسخة منها إلى الأرشيف، وأصبح المحرر جاهزًا لدفعة جديدة.');
     } catch (error) {
       console.error(error);
       showToast('danger', tr('gamePublishError'));
@@ -787,6 +870,7 @@ const TeacherGameQuestionsManager: React.FC<TeacherGameQuestionsManagerProps> = 
                 {index + 1}
               </button>
               <input
+                name={`option_${index}`}
                 value={option}
                 onChange={event => updateOption(index, event.target.value)}
                 placeholder={`${tr('gameChoice')} ${index + 1}`}
@@ -821,8 +905,8 @@ const TeacherGameQuestionsManager: React.FC<TeacherGameQuestionsManagerProps> = 
           <label className="text-xs font-black text-textPrimary">{tr('gameMatchingPairs')}</label>
           {(currentQuestion.pairs || []).map((pair, index) => (
             <div key={index} className="grid grid-cols-2 gap-2">
-              <input value={pair.left} onChange={event => updatePair(index, 'left', event.target.value)} placeholder={tr('gameTerm')} className="h-11 rounded-2xl bg-bgSoft border border-borderColor px-3 text-sm font-bold outline-none focus:border-primary" />
-              <input value={pair.right} onChange={event => updatePair(index, 'right', event.target.value)} placeholder={tr('gameDefinition')} className="h-11 rounded-2xl bg-bgSoft border border-borderColor px-3 text-sm font-bold outline-none focus:border-primary" />
+              <input name={`pair_left_${index}`} value={pair.left} onChange={event => updatePair(index, 'left', event.target.value)} placeholder={tr('gameTerm')} className="h-11 rounded-2xl bg-bgSoft border border-borderColor px-3 text-sm font-bold outline-none focus:border-primary" />
+              <input name={`pair_right_${index}`} value={pair.right} onChange={event => updatePair(index, 'right', event.target.value)} placeholder={tr('gameDefinition')} className="h-11 rounded-2xl bg-bgSoft border border-borderColor px-3 text-sm font-bold outline-none focus:border-primary" />
             </div>
           ))}
           <button type="button" onClick={() => setField('pairs', [...(currentQuestion.pairs || []), { left: '', right: '' }])} className="h-10 px-4 rounded-2xl bg-primary/10 text-primary border border-primary/20 text-xs font-black">
@@ -837,7 +921,7 @@ const TeacherGameQuestionsManager: React.FC<TeacherGameQuestionsManagerProps> = 
         <div className="space-y-3">
           <label className="text-xs font-black text-textPrimary">{tr('gameCorrectSequence')}</label>
           {(currentQuestion.sequence || []).map((item, index) => (
-            <input key={index} value={item} onChange={event => updateSequence(index, event.target.value)} placeholder={`${tr('gameItem')} ${index + 1}`} className="w-full h-11 rounded-2xl bg-bgSoft border border-borderColor px-3 text-sm font-bold outline-none focus:border-primary" />
+            <input key={index} name={`sequence_${index}`} value={item} onChange={event => updateSequence(index, event.target.value)} placeholder={`${tr('gameItem')} ${index + 1}`} className="w-full h-11 rounded-2xl bg-bgSoft border border-borderColor px-3 text-sm font-bold outline-none focus:border-primary" />
           ))}
           <button type="button" onClick={() => setField('sequence', [...(currentQuestion.sequence || []), ''])} className="h-10 px-4 rounded-2xl bg-primary/10 text-primary border border-primary/20 text-xs font-black">
             {tr('gameAddItem')}
@@ -899,7 +983,7 @@ const TeacherGameQuestionsManager: React.FC<TeacherGameQuestionsManagerProps> = 
               <div className="bg-bgCard border border-borderColor rounded-3xl p-4 shadow-sm"><p className="text-[10px] font-bold text-textSecondary mb-1">{tr('gameActiveQuestions')}</p><p className="text-2xl font-black text-warning">{questions.filter(question => question.active).length}</p></div>
             </section>
 
-            <section className="bg-bgCard border border-borderColor rounded-3xl p-4 shadow-sm space-y-4">
+            <form ref={editorFormRef} onSubmit={addQuestion} className="bg-bgCard border border-borderColor rounded-3xl p-4 shadow-sm space-y-4">
               <div className="flex items-center justify-between gap-2">
                 <h2 className="text-base font-black text-textPrimary flex items-center gap-2"><Plus className="w-4 h-4 text-primary" />{editingId ? tr('gameEditQuestion') : tr('gameAddNewQuestion')}</h2>
                 {editingId && <button type="button" onClick={resetForm} className="text-xs font-black text-danger">{tr('gameCancelEdit')}</button>}
@@ -908,7 +992,7 @@ const TeacherGameQuestionsManager: React.FC<TeacherGameQuestionsManagerProps> = 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                 <div>
                   <label className="text-[10px] font-black text-textSecondary block mb-1">{tr('subjectCol')}</label>
-                  <input list="subject-options" value={currentQuestion.subject} onChange={event => setField('subject', event.target.value)} placeholder={tr('gameSubjectExample')} className="w-full h-11 rounded-2xl bg-bgSoft border border-borderColor px-3 text-sm font-bold outline-none focus:border-primary" />
+                  <input name="subject" list="subject-options" value={currentQuestion.subject} onChange={event => setField('subject', event.target.value)} placeholder={tr('gameSubjectExample')} className="w-full h-11 rounded-2xl bg-bgSoft border border-borderColor px-3 text-sm font-bold outline-none focus:border-primary" />
                   <datalist id="subject-options">{subjectOptions.map(subject => <option key={subject} value={subject} />)}</datalist>
                 </div>
                 <div>
@@ -931,8 +1015,8 @@ const TeacherGameQuestionsManager: React.FC<TeacherGameQuestionsManagerProps> = 
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                <div><label className="text-[10px] font-black text-textSecondary block mb-1">{tr('unitLabel')}</label><input value={currentQuestion.unit} onChange={event => setField('unit', event.target.value)} placeholder="مثال: {tr('unitLabel')} الثانية" className="w-full h-11 rounded-2xl bg-bgSoft border border-borderColor px-3 text-sm font-bold outline-none focus:border-primary" /></div>
-                <div><label className="text-[10px] font-black text-textSecondary block mb-1">{tr('lessonLabel')}</label><input value={currentQuestion.lesson} onChange={event => setField('lesson', event.target.value)} placeholder={tr('gameLessonExample')} className="w-full h-11 rounded-2xl bg-bgSoft border border-borderColor px-3 text-sm font-bold outline-none focus:border-primary" /></div>
+                <div><label className="text-[10px] font-black text-textSecondary block mb-1">{tr('unitLabel')}</label><input name="unit" value={currentQuestion.unit} onChange={event => setField('unit', event.target.value)} placeholder="مثال: {tr('unitLabel')} الثانية" className="w-full h-11 rounded-2xl bg-bgSoft border border-borderColor px-3 text-sm font-bold outline-none focus:border-primary" /></div>
+                <div><label className="text-[10px] font-black text-textSecondary block mb-1">{tr('lessonLabel')}</label><input name="lesson" value={currentQuestion.lesson} onChange={event => setField('lesson', event.target.value)} placeholder={tr('gameLessonExample')} className="w-full h-11 rounded-2xl bg-bgSoft border border-borderColor px-3 text-sm font-bold outline-none focus:border-primary" /></div>
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
@@ -946,18 +1030,18 @@ const TeacherGameQuestionsManager: React.FC<TeacherGameQuestionsManagerProps> = 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-2">{compatibleGames.map(game => <button key={game.id} type="button" onClick={() => toggleGame(game.id)} className={`text-start rounded-2xl border p-3 ${currentQuestion.gameTypes.includes(game.id) ? 'bg-primary/10 border-primary/30 text-primary' : 'bg-bgSoft border-borderColor text-textSecondary'}`}><p className="text-xs font-black">{tr(game.labelKey)}</p><p className="text-[9px] font-bold opacity-80 mt-0.5">{tr(game.hintKey)}</p></button>)}</div>
               </div>
 
-              <div><label className="text-[10px] font-black text-textSecondary block mb-1">{tr('gameQuestionChallengeText')}</label><textarea value={currentQuestion.question} onChange={event => setField('question', event.target.value)} placeholder={tr('gameQuestionPlaceholder')} className="w-full min-h-[90px] rounded-2xl bg-bgSoft border border-borderColor p-3 text-sm font-bold outline-none focus:border-primary resize-none" /></div>
+              <div><label className="text-[10px] font-black text-textSecondary block mb-1">{tr('gameQuestionChallengeText')}</label><textarea name="question" value={currentQuestion.question} onChange={event => setField('question', event.target.value)} placeholder={tr('gameQuestionPlaceholder')} className="w-full min-h-[90px] rounded-2xl bg-bgSoft border border-borderColor p-3 text-sm font-bold outline-none focus:border-primary resize-none" /></div>
 
               {renderQuestionSpecificFields()}
 
-              <div><label className="text-[10px] font-black text-textSecondary block mb-1">{tr('gameExplanationForStudent')}</label><textarea value={currentQuestion.explanation} onChange={event => setField('explanation', event.target.value)} placeholder={tr('gameExplanationPlaceholder')} className="w-full min-h-[80px] rounded-2xl bg-bgSoft border border-borderColor p-3 text-sm font-bold outline-none focus:border-primary resize-none" /></div>
+              <div><label className="text-[10px] font-black text-textSecondary block mb-1">{tr('gameExplanationForStudent')}</label><textarea name="explanation" value={currentQuestion.explanation} onChange={event => setField('explanation', event.target.value)} placeholder={tr('gameExplanationPlaceholder')} className="w-full min-h-[80px] rounded-2xl bg-bgSoft border border-borderColor p-3 text-sm font-bold outline-none focus:border-primary resize-none" /></div>
 
               <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-                <input value={currentQuestion.skill || ''} onChange={event => setField('skill', event.target.value)} placeholder={tr('gameSkillPlaceholder')} className="h-11 rounded-2xl bg-bgSoft border border-borderColor px-3 text-sm font-bold outline-none focus:border-primary" />
+                <input name="skill" value={currentQuestion.skill || ''} onChange={event => setField('skill', event.target.value)} placeholder={tr('gameSkillPlaceholder')} className="h-11 rounded-2xl bg-bgSoft border border-borderColor px-3 text-sm font-bold outline-none focus:border-primary" />
                 <button type="button" onClick={() => setField('active', !currentQuestion.active)} className={`h-11 rounded-2xl border font-black text-xs flex items-center justify-center gap-2 ${currentQuestion.active ? 'bg-success/10 border-success/20 text-success' : 'bg-bgSoft border-borderColor text-textSecondary'}`}>{currentQuestion.active ? <Eye className="w-4 h-4" /> : <EyeOff className="w-4 h-4" />}{currentQuestion.active ? tr('gameEnabledForStudents') : tr('gameDisabled')}</button>
-                <button type="button" onClick={addQuestion} className="h-11 rounded-2xl bg-primary text-white font-black text-xs flex items-center justify-center gap-2 active:scale-95 transition-all"><Save className="w-4 h-4" />{editingId ? tr('gameSaveEdit') : tr('gameAddQuestion')}</button>
+                <button type="submit" className="h-11 rounded-2xl bg-primary text-white font-black text-xs flex items-center justify-center gap-2 active:scale-95 transition-all"><Save className="w-4 h-4" />{editingId ? tr('gameSaveEdit') : tr('gameAddQuestion')}</button>
               </div>
-            </section>
+            </form>
 
             <section className="bg-bgCard border border-borderColor rounded-3xl p-4 shadow-sm">
               <div className="flex items-center justify-between gap-3 mb-4">
