@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 // 💉 1. حقن ملف التوكنات الأصلي (الذي يحتوي على ألوان وهوية المعلم)
 import './theme/tokens.css';
 
@@ -53,6 +53,9 @@ import WelcomeScreen from './components/WelcomeScreen';
 import StudentGroups from './components/StudentGroups';
 import TeacherLibrary from './components/TeacherLibrary';
 import GlobalSyncManager from './components/GlobalSyncManager';
+import IdentityInspectionTool from './components/IdentityInspectionTool';
+import IdentityAdminDashboard from './components/IdentityAdminDashboard';
+import { inspectStudentsIdentity } from './services/schoolIdentityService';
 import SeniorDashboard from './components/SeniorDashboard';
 import TeacherMailbox from './components/TeacherMailbox';
 import TeacherPreparations from './components/preparations/TeacherPreparations';
@@ -356,6 +359,7 @@ const TeacherLoginScreen: React.FC<{
 // BUSINESS LOGIC & ROUTING ONLY
 // ------------------------------------------------------------------
 
+// نسخة سطح المكتب: لا تستورد ولا تشغّل ويدجيت أندرويد.
 const AppContent: React.FC = () => {
   const {
     isDataLoaded,
@@ -381,10 +385,11 @@ const AppContent: React.FC = () => {
   const [gamesView, setGamesView] = useState<'questions' | 'results' | 'exams'>('questions');
   const [reportsView, setReportsView] = useState<'reports' | 'leaderboard'>('reports');
   const [adminView, setAdminView] = useState<'sync'>('sync');
-  const [helpView, setHelpView] = useState<'settings' | 'guide' | 'about'>('guide');
+  const [helpView, setHelpView] = useState<'settings' | 'identity' | 'guide' | 'about'>('settings');
   const [gameResults, setGameResults] = useState<TeacherGameResultLogEntry[]>([]);
   const [isLoadingGameResults, setIsLoadingGameResults] = useState(false);
   const [appVersion, setAppVersion] = useState('4.4.1');
+  const adminTapRef = useRef<{ count: number; startedAt: number }>({ count: 0, startedAt: 0 });
 
   const [isLoggedIn, setIsLoggedIn] = useState<boolean>(() => {
     const lockReady = localStorage.getItem('rased_teacher_lock_ready') === 'true';
@@ -416,7 +421,6 @@ const AppContent: React.FC = () => {
   }, []);
 
 useSchoolBell(periodTimes, schedule, notificationsEnabled);
-
 
 const handleToggleNotifications = () => {
   setNotificationsEnabled(prev => {
@@ -642,6 +646,11 @@ const handleToggleNotifications = () => {
       setActiveTab('admin_sync');
       return;
     }
+    if (tab === 'identity' || tab === 'identity_inspection') {
+      setHelpView('identity');
+      setActiveTab('help_settings');
+      return;
+    }
     if (tab === 'guide' || tab === 'help') {
       setHelpView('guide');
       setActiveTab('help_settings');
@@ -857,9 +866,12 @@ const handleToggleNotifications = () => {
 
   const upsertStudentByIdentity = (previousStudents: any[], incomingStudent: any, schoolIdentity: string) => {
     const incomingClass = getStudentClassForRased(incomingStudent);
+    const incomingCentralId = String(incomingStudent?.centralStudentId || '').trim();
     const incomingKey = makeStudentIdentityKeyForRased(schoolIdentity, incomingStudent?.name || '', incomingClass);
 
     const existingIndex = previousStudents.findIndex(student => {
+      const existingCentralId = String(student?.centralStudentId || '').trim();
+      if (incomingCentralId && existingCentralId) return incomingCentralId === existingCentralId;
       const existingKey = makeStudentIdentityKeyForRased(schoolIdentity, student?.name || '', getStudentClassForRased(student));
       return existingKey === incomingKey;
     });
@@ -876,6 +888,15 @@ const handleToggleNotifications = () => {
       rasedId: existingCode || incomingCode || incomingStudent.rasedId,
       parentCode: existingCode || incomingCode || incomingStudent.parentCode,
       id: existingStudent.id || incomingStudent.id,
+      localStudentId: existingStudent.localStudentId || existingStudent.id || incomingStudent.localStudentId || incomingStudent.id,
+      centralStudentId: existingStudent.centralStudentId || incomingStudent.centralStudentId,
+      centralRasedId: existingStudent.centralRasedId || incomingStudent.centralRasedId,
+      schoolId: existingStudent.schoolId || incomingStudent.schoolId,
+      schoolCode: existingStudent.schoolCode || incomingStudent.schoolCode,
+      legacyRasedIds: Array.from(new Set([...(existingStudent.legacyRasedIds || []), ...(incomingStudent.legacyRasedIds || [])])),
+      identityStatus: incomingStudent.identityStatus || existingStudent.identityStatus,
+      identityUpdatedAt: incomingStudent.identityUpdatedAt || existingStudent.identityUpdatedAt,
+      identitySource: incomingStudent.identitySource || existingStudent.identitySource,
       parentPhone: incomingStudent.parentPhone || existingStudent.parentPhone,
       gender: incomingStudent.gender || existingStudent.gender,
       avatar: incomingStudent.avatar || existingStudent.avatar,
@@ -890,7 +911,7 @@ const handleToggleNotifications = () => {
     return nextStudents;
   };
 
-  const handleAddStudentManuallySafely = (
+  const handleAddStudentManuallySafely = async (
     name: string,
     className: string,
     parentPhone?: string,
@@ -931,10 +952,31 @@ const handleToggleNotifications = () => {
     }
 
     const incomingCode = String(existingCode || '').trim().toUpperCase();
-    const rasedId = incomingCode.startsWith('RSD-') ? incomingCode : generateStableRasedId(schoolIdentity, cleanName, cleanClass);
+    // لا ننشئ RSD محليًا للطلاب الجدد. الكود يأتي من خدمة الهوية فقط.
+    const rasedId = incomingCode.startsWith('RSD-') ? incomingCode : '';
 
+    const localId = `st_${Date.now()}_${Math.random().toString(36).slice(2, 7)}`;
+    let identityPatch: any = {
+      localStudentId: localId,
+      identityStatus: rasedId ? 'legacy' : 'pending',
+      identityUpdatedAt: new Date().toISOString(),
+      identitySource: 'local'
+    };
+    try {
+      const schoolCode = String(localStorage.getItem('rased_admin_school_code') || '').trim();
+      const actorId = String(teacherInfo?.civilId || localStorage.getItem('rased_teacher_civil_id') || 'teacher').trim();
+      const response = await inspectStudentsIdentity({ schoolCode, actorId, students: [{ localStudentId: localId, name: cleanName, classes: [cleanClass], rasedId: rasedId || undefined }] });
+      const result = response.results?.[0];
+      if (response.ok && result?.status === 'matched' && result.centralStudentId && result.rasedId) {
+        identityPatch = { localStudentId: localId, centralStudentId: result.centralStudentId, schoolId: result.schoolId, schoolCode, centralRasedId: result.rasedId, rasedId: result.rasedId, parentCode: result.rasedId, legacyRasedIds: result.legacyRasedIds || [], identityStatus: 'matched', identityUpdatedAt: new Date().toISOString(), identitySource: 'central' };
+      } else if (result) {
+        identityPatch = { ...identityPatch, identityStatus: result.status, identityConflictId: result.conflictId };
+      }
+    } catch (error) {
+      console.warn('Central identity lookup unavailable; student saved pending.', error);
+    }
     const newStudent: any = {
-      id: `st_${Date.now()}_${Math.random().toString(36).slice(2, 7)}`,
+      id: localId,
       name: cleanName,
       classes: [cleanClass],
       attendance: [],
@@ -944,8 +986,9 @@ const handleToggleNotifications = () => {
       parentPhone,
       avatar,
       gender: gender || 'male',
-      rasedId,
-      parentCode: rasedId
+      rasedId: identityPatch.rasedId || rasedId || undefined,
+      parentCode: identityPatch.parentCode || rasedId || undefined,
+      ...identityPatch
     };
 
     setStudents(prev => upsertStudentByIdentity(prev, newStudent, schoolIdentity));
@@ -960,17 +1003,25 @@ const handleToggleNotifications = () => {
         const studentClass = getStudentClassForRased(student);
         if (!studentName || !studentClass) return;
         const existingCode = getExistingRasedCode(student);
-        const stableCode = existingCode || generateStableRasedId(schoolIdentity, studentName, studentClass);
+        const centralStudentId = String(student?.centralStudentId || '').trim();
+        // لا يولّد التطبيق كودًا محليًا للطالب المرتبط مركزيًا.
+        const stableCode = centralStudentId
+          ? existingCode || String(student?.centralRasedId || '').trim()
+          : existingCode;
         const normalizedStudent = {
           ...student,
           id: student.id || `st_${Date.now()}_${Math.random().toString(36).slice(2, 7)}`,
+          localStudentId: student.localStudentId || student.id || `st_${Date.now()}_${Math.random().toString(36).slice(2, 7)}`,
           name: studentName,
           classes: Array.isArray(student.classes) && student.classes.length > 0 ? student.classes : [studentClass],
           attendance: Array.isArray(student.attendance) ? student.attendance : [],
           behaviors: Array.isArray(student.behaviors) ? student.behaviors : [],
           grades: Array.isArray(student.grades) ? student.grades : [],
-          rasedId: stableCode,
-          parentCode: stableCode
+          rasedId: stableCode || undefined,
+          parentCode: stableCode || undefined,
+          identityStatus: student.identityStatus || (centralStudentId ? 'matched' : 'pending'),
+          identityUpdatedAt: student.identityUpdatedAt || new Date().toISOString(),
+          identitySource: student.identitySource || (centralStudentId ? 'central' : 'local')
         };
         nextStudents = upsertStudentByIdentity(nextStudents, normalizedStudent, schoolIdentity);
       });
@@ -1054,8 +1105,27 @@ const handleToggleNotifications = () => {
     );
   };
 
+  const handleHiddenAdminGesture = () => {
+    const now = Date.now();
+    const state = adminTapRef.current;
+    if (!state.startedAt || now - state.startedAt > 5000) {
+      adminTapRef.current = { count: 1, startedAt: now };
+      return;
+    }
+    const nextCount = state.count + 1;
+    if (nextCount >= 7) {
+      adminTapRef.current = { count: 0, startedAt: 0 };
+      setActiveTab('identity_admin');
+      return;
+    }
+    adminTapRef.current = { count: nextCount, startedAt: state.startedAt };
+  };
+
   const renderContent = () => {
     switch (activeTab) {
+      case 'identity_admin':
+        return <IdentityAdminDashboard onClose={() => setActiveTab('dashboard')} />;
+
       case 'dashboard':
         return (
           <Dashboard
@@ -1234,13 +1304,22 @@ const handleToggleNotifications = () => {
             {renderHubTabs(
               [
                 { id: 'settings', label: t('tabSettings'), icon: SettingsIcon },
+                { id: 'identity', label: 'فحص الهوية', icon: ShieldCheck },
                 { id: 'guide', label: t('tabUserGuide'), icon: BookOpen },
                 { id: 'about', label: t('tabAboutApp'), icon: Info }
               ],
               helpView,
               setHelpView
             )}
-            {helpView === 'settings' ? <Settings /> : helpView === 'about' ? <About /> : <UserGuide />}
+            {helpView === 'settings' ? (
+              <Settings />
+            ) : helpView === 'identity' ? (
+              <IdentityInspectionTool />
+            ) : helpView === 'about' ? (
+              <About />
+            ) : (
+              <UserGuide />
+            )}
           </div>
         );
 
@@ -1256,7 +1335,16 @@ const handleToggleNotifications = () => {
       onNavigate={handleNavigate}
       desktopNavItems={desktopNavItems}
       mobileNavItems={mobileNavItems}
-      Logo={<BrandLogo style={{ width: '100%', height: '100%', objectFit: 'contain' }} showText={false} />}
+      Logo={
+        <button
+          type="button"
+          onClick={handleHiddenAdminGesture}
+          aria-label="شعار راصد"
+          className="h-full w-full"
+        >
+          <BrandLogo style={{ width: '100%', height: '100%', objectFit: 'contain' }} showText={false} />
+        </button>
+      }
       appName={t('appNameMain') || 'راصد'}
       appSubtitle={t('appSubtitleMain') || 'النسخة المتقدمة'}
     >
