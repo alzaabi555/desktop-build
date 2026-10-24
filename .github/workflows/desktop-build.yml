@@ -6,9 +6,8 @@ on:
 jobs:
   build:
     runs-on: windows-latest
-
     permissions:
-      contents: write
+      contents: read
 
     steps:
       - name: Checkout Code
@@ -18,37 +17,29 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: 22
+          cache: npm
 
       - name: Install Dependencies
-        run: npm install --legacy-peer-deps
+        run: npm ci --legacy-peer-deps
 
       - name: Build Electron App
-        run: npm run electron:dist -- --publish never
+        run: npm run electron:dist
 
       - name: Verify Windows Installer
         shell: pwsh
         run: |
           $installers = @(Get-ChildItem -Path "dist" -Filter "*.exe" -File -ErrorAction SilentlyContinue)
-
           if ($installers.Count -eq 0) {
             Write-Host "No Windows EXE installer was found in the dist directory."
-
             if (Test-Path -Path "dist") {
               Write-Host "Files found inside dist:"
-
               Get-ChildItem -Path "dist" -Recurse | ForEach-Object {
                 Write-Host $_.FullName
               }
             }
-            else {
-              Write-Host "The dist directory does not exist."
-            }
-
             exit 1
           }
-
           Write-Host "Windows installer files:"
-
           foreach ($installer in $installers) {
             Write-Host "$($installer.Name) - $($installer.Length) bytes"
           }
@@ -57,5 +48,8 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: Rased-Teacher-Windows-Setup
-          path: dist/*.exe
+          path: |
+            dist/*.exe
+            dist/*.appx
+            dist/*.blockmap
           if-no-files-found: error
