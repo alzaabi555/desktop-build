@@ -19,8 +19,8 @@ jobs:
           node-version: 22
           cache: npm
 
-      - name: Install Dependencies
-        run: npm ci --legacy-peer-deps
+      - name: Install Dependencies and refresh lock file
+        run: npm install --legacy-peer-deps --no-audit --no-fund
 
       - name: Build Electron App
         run: npm run electron:dist
