@@ -30,6 +30,9 @@ const CLOUD_PAYLOAD_CHUNK_SIZE = 30000;
 type SyncType = 'student' | 'parent' | 'backup' | 'restore' | 'admin';
 type SyncState = 'idle' | 'syncing' | 'success' | 'error';
 
+interface StudentGradeSyncDiagnostics { version:string; targetSheet:string; incomingStudents:number; incomingGrades:number; added:number; updated:number; unchanged:number; beforeRows:number; afterRows:number; linkedBySourceId?:number; linkedByLegacyFingerprint?:number; }
+
+
 interface CloudRecord {
   id: string;
   type: string;
@@ -125,6 +128,26 @@ const restoreFullBackupFromRecords = (
   return JSON.parse(serialized) as RasedBackupPayload;
 };
 
+const isCentralIdentityReady = (student: any) =>
+  Boolean(
+    student?.centralStudentId &&
+    student?.schoolId &&
+    student?.centralRasedId &&
+    ['matched', 'created'].includes(String(student?.identityStatus || ''))
+  );
+
+const toCentralIdentityEnvelope = (student: any) => ({
+  localStudentId: student.localStudentId || student.id || '',
+  centralStudentId: student.centralStudentId || '',
+  schoolId: student.schoolId || '',
+  schoolCode: student.schoolCode || '',
+  rasedId: student.rasedId || student.centralRasedId || '',
+  centralRasedId: student.centralRasedId || student.rasedId || '',
+  legacyRasedIds: Array.isArray(student.legacyRasedIds) ? student.legacyRasedIds : [],
+  identityStatus: student.identityStatus || '',
+  identityUpdatedAt: student.identityUpdatedAt || ''
+});
+
 const GlobalSyncManager: React.FC = () => {
   const {
     students,
@@ -163,6 +186,18 @@ const GlobalSyncManager: React.FC = () => {
     return response;
   };
 
+  const postStudentCloudVerified = async (body: unknown): Promise<StudentGradeSyncDiagnostics> => {
+    const response = await fetch(STUDENT_APP_URL, { method:'POST', headers:{'Content-Type':'text/plain;charset=utf-8'}, body:JSON.stringify(body) });
+    const raw = await response.text();
+    let result: any;
+    try { result = JSON.parse(raw); } catch { throw new Error(`استجابة سحابة الطالب غير صالحة: ${raw.slice(0,160)}`); }
+    if (!response.ok || result?.success !== true || result?.status !== 'success') throw new Error(result?.error || result?.message || `HTTP ${response.status}`);
+    const version = String(result?.data?.version || '');
+    const gradeSync = result?.data?.gradeSync as StudentGradeSyncDiagnostics | undefined;
+    if (version !== '3.9.0' || !gradeSync) throw new Error(`الإصدار المتوقع 3.9.0 والمستلم ${version || 'غير معروف'}.`);
+    return gradeSync;
+  };
+
   const syncStudentApp = async () => {
     setSyncMessage(t('syncingStudentMsg'));
     const tasks = safeJsonParse<any[]>(
@@ -178,13 +213,19 @@ const GlobalSyncManager: React.FC = () => {
       []
     );
 
-    await postJson(STUDENT_APP_URL, {
-      students,
-      tasks,
-      resources: libraryArchive,
-      gameQuestions,
-      className: 'الكل'
-    });
+    const publishableStudents = students
+      .filter(isCentralIdentityReady)
+      .map(student => ({ ...student, ...toCentralIdentityEnvelope(student) }));
+
+    if (publishableStudents.length === 0) {
+      throw new Error('لا يوجد طلاب مرتبطون بالهوية المركزية وجاهزون للمزامنة.');
+    }
+
+    const localIncomingGrades = publishableStudents.reduce((sum, student) => sum + (Array.isArray(student.grades) ? student.grades.length : 0), 0);
+    const gradeSync = await postStudentCloudVerified({ identitySchemaVersion:1, identityMode:'central_with_legacy_aliases', students:publishableStudents, tasks, resources:libraryArchive, gameQuestions, className:'الكل' });
+    if (gradeSync.incomingStudents !== publishableStudents.length) throw new Error(`السحابة استقبلت ${gradeSync.incomingStudents} طالبًا بدل ${publishableStudents.length}.`);
+    if (gradeSync.incomingGrades !== localIncomingGrades) throw new Error(`السحابة استقبلت ${gradeSync.incomingGrades} درجة بدل ${localIncomingGrades}.`);
+    setSyncMessage(`نجحت مزامنة الطالب v${gradeSync.version}: ${gradeSync.updated} تحديث، ${gradeSync.added} إضافة، ${gradeSync.unchanged} دون تغيير.`);
   };
 
   const syncParentApp = async () => {
@@ -194,7 +235,7 @@ const GlobalSyncManager: React.FC = () => {
     const currentYear = today.getFullYear();
 
     const parentPayload = students
-      .filter(student => student.rasedId?.trim())
+      .filter(isCentralIdentityReady)
       .map(student => {
         const monthlyPoints = (student.behaviors || [])
           .filter(behavior => {
@@ -207,7 +248,7 @@ const GlobalSyncManager: React.FC = () => {
           .reduce((sum, behavior) => sum + Number(behavior.points || 0), 0);
 
         return {
-          rasedId: student.rasedId,
+          ...toCentralIdentityEnvelope(student),
           name: student.name,
           className: student.classes?.[0] || '',
           subject: teacherInfo?.subject || t('unspecified'),
@@ -223,7 +264,16 @@ const GlobalSyncManager: React.FC = () => {
       throw new Error(t('syncNoStudentRasedCode'));
     }
 
-    await postJson(PARENT_APP_URL, parentPayload);
+    if (parentPayload.length === 0) {
+      throw new Error('لا يوجد طلاب مرتبطون بالهوية المركزية وجاهزون للمزامنة.');
+    }
+
+    await postJson(PARENT_APP_URL, {
+      identitySchemaVersion: 1,
+      identityMode: 'central_with_legacy_aliases',
+      students: parentPayload,
+      timestamp: new Date().toISOString()
+    });
   };
 
   const syncAdminApp = async () => {
