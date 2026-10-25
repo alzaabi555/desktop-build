@@ -2,7 +2,7 @@
   "name": "student-manager-app",
   "version": "1.0.4",
   "homepage": "./",
-  "description": "تطبيق راصد لإدارة حضور وغياب الطلاب - نسخة ويندوز",
+  "description": "تطبيق راصد لإدارة حضور وغياب الطلاب - نسخة االوندوز",
   "author": "Mohammed Al-Zaabi",
   "main": "electron/main.js",
   "repository": {
@@ -37,7 +37,6 @@
     "dompurify": "^3.0.8",
     "canvg": "^4.0.1",
     "react-to-print": "^3.0.0",
-    "electron-updater": "^6.1.7",
     "electron-log": "^5.0.0",
     "@capacitor/app-launcher": "^6.0.0"
   },
@@ -61,7 +60,6 @@
       "www/**/*",
       "electron/**/*",
       "icon.png",
-      "assets/**/*",
       "package.json"
     ],
     "win": {
