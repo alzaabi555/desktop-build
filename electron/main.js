@@ -10,7 +10,6 @@ const path = require('path');
 const http = require('http');
 const { spawn } = require('child_process');
 const fs = require('fs');
-const { autoUpdater } = require('electron-updater');
 
 const VOICE_BRIDGE_PORT = 37654;
 const ENABLE_DEVTOOLS = process.env.RASED_DEVTOOLS === '1';
@@ -381,9 +380,6 @@ if (!gotLock) {
   app.quit();
 }
 
-autoUpdater.autoDownload = true;
-autoUpdater.autoInstallOnAppQuit = true;
-
 function isAllowedExternalUrl(rawUrl) {
   try {
     const parsed = new URL(rawUrl);
@@ -548,11 +544,6 @@ app.whenReady().then(() => {
   startVoiceBridgeServer();
   createWindow();
 
-  if (app.isPackaged) {
-    autoUpdater.checkForUpdatesAndNotify().catch((error) => {
-      console.error('Update check failed:', error);
-    });
-  }
 });
 
 app.on('activate', () => {
@@ -570,30 +561,6 @@ app.on('second-instance', () => {
 
   mainWindow.show();
   mainWindow.focus();
-});
-
-autoUpdater.on('update-available', () => {
-  dialog.showMessageBox({
-    type: 'info',
-    title: 'تحديث جديد',
-    message: 'يوجد تحديث جديد، يتم تحميله الآن في الخلفية...',
-    buttons: ['حسناً']
-  }).catch(console.error);
-});
-
-autoUpdater.on('update-downloaded', () => {
-  dialog.showMessageBox({
-    type: 'question',
-    buttons: ['تثبيت الآن', 'لاحقاً'],
-    defaultId: 0,
-    cancelId: 1,
-    title: 'اكتمل التحميل',
-    message: 'تم تحميل التحديث. هل تريد إعادة التشغيل للتثبيت الآن؟'
-  }).then(({ response }) => {
-    if (response === 0) {
-      autoUpdater.quitAndInstall();
-    }
-  }).catch(console.error);
 });
 
 app.on('window-all-closed', () => {
