@@ -1335,16 +1335,7 @@ const handleToggleNotifications = () => {
       onNavigate={handleNavigate}
       desktopNavItems={desktopNavItems}
       mobileNavItems={mobileNavItems}
-      Logo={
-        <button
-          type="button"
-          onClick={handleHiddenAdminGesture}
-          aria-label="شعار راصد"
-          className="h-full w-full"
-        >
-          <BrandLogo style={{ width: '100%', height: '100%', objectFit: 'contain' }} showText={false} />
-        </button>
-      }
+      Logo={<BrandLogo style={{ width: '100%', height: '100%', objectFit: 'contain' }} showText={false} />}
       appName={t('appNameMain') || 'راصد'}
       appSubtitle={t('appSubtitleMain') || 'النسخة المتقدمة'}
     >
