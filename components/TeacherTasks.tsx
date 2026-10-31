@@ -8,9 +8,16 @@ import PageLayout from '../components/PageLayout'; // 💉 استدعاء الغ
 
 export interface Task {
   id: string;
+  sourceTaskId: string;
+  taskKey: string;
+  schemaVersion: '1.0.0';
+  schoolCode: string;
+  teacherId: string;
+  targetClasses: string[];
   title: string;
   subject: string;
   targetClass: string;
+  dueDate: string;
   createdAt: string;
 }
 
@@ -27,10 +34,39 @@ const TeacherTasks: React.FC<TeacherTasksProps> = ({ teacherSubject }) => {
   // 🧠 حالة الأرشيف (المهام المحفوظة)
   const [tasks, setTasks] = useState<Task[]>(() => {
     const saved = localStorage.getItem('rased_teacher_tasks');
-    return saved ? JSON.parse(saved) : [];
+    if (!saved) return [];
+    try {
+      const schoolCode = String(localStorage.getItem('rased_admin_school_code') || '').trim();
+      const teacherId = String(localStorage.getItem('rased_teacher_civil_id') || '').trim();
+      const parsed = JSON.parse(saved) as Array<Partial<Task>>;
+      return Array.isArray(parsed) ? parsed.map((task, index) => {
+        const sourceTaskId = String(task.sourceTaskId || task.id || `legacy_task_${index}`);
+        const targetClass = String(task.targetClass || '');
+        return {
+          ...task,
+          id: sourceTaskId,
+          sourceTaskId,
+          taskKey: String(task.taskKey || `${schoolCode}|${teacherId}|${sourceTaskId}`),
+          schemaVersion: '1.0.0',
+          schoolCode: String(task.schoolCode || schoolCode),
+          teacherId: String(task.teacherId || teacherId),
+          targetClasses: Array.isArray(task.targetClasses) ? task.targetClasses : targetClass.split(',').map(v => v.trim()).filter(Boolean),
+          dueDate: String(task.dueDate || task.createdAt || ''),
+        } as Task;
+      }) : [];
+    } catch {
+      return [];
+    }
   });
 
+  const getDefaultDueDate = () => {
+    const date = new Date();
+    date.setDate(date.getDate() + 1);
+    const local = new Date(date.getTime() - date.getTimezoneOffset() * 60000);
+    return local.toISOString().slice(0, 10);
+  };
   const [newTaskTitle, setNewTaskTitle] = useState('');
+  const [newTaskDueDate, setNewTaskDueDate] = useState(getDefaultDueDate);
   
   // 🧠 حالة التحديد المتعدد للفصول
   const [selectedClasses, setSelectedClasses] = useState<string[]>([]);
@@ -57,7 +93,7 @@ const TeacherTasks: React.FC<TeacherTasksProps> = ({ teacherSubject }) => {
 
   const handleAddTask = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!newTaskTitle.trim()) return;
+    if (!newTaskTitle.trim() || !newTaskDueDate) return;
     
     if (selectedClasses.length === 0) {
         alert(t('alertSelectOneClass') || 'الرجاء اختيار فصل واحد على الأقل من الشريط العلوي.');
@@ -68,16 +104,28 @@ const TeacherTasks: React.FC<TeacherTasksProps> = ({ teacherSubject }) => {
         ? (t('allClasses') || 'الكل') 
         : selectedClasses.join(' , ');
 
+    const sourceTaskId = `task_${Date.now()}_${Math.random().toString(36).slice(2, 10)}`;
+    const schoolCode = String(localStorage.getItem('rased_admin_school_code') || '').trim();
+    const teacherId = String(localStorage.getItem('rased_teacher_civil_id') || '').trim();
+    const targetClasses = selectedClasses.length === safeClasses.length ? ['الكل'] : [...selectedClasses];
     const newTask: Task = {
-      id: `T-${Date.now()}`,
+      id: sourceTaskId,
+      sourceTaskId,
+      taskKey: `${schoolCode}|${teacherId}|${sourceTaskId}`,
+      schemaVersion: '1.0.0',
+      schoolCode,
+      teacherId,
+      targetClasses,
       title: newTaskTitle.trim(),
       subject: teacherSubject || t('unspecified') || 'عام',
       targetClass: finalTargetClass,
+      dueDate: newTaskDueDate,
       createdAt: new Date().toISOString()
     };
 
     setTasks([newTask, ...tasks]);
-    setNewTaskTitle(''); 
+    setNewTaskTitle('');
+    setNewTaskDueDate(getDefaultDueDate());
     setSelectedClasses([]); 
   };
 
@@ -159,11 +207,25 @@ const TeacherTasks: React.FC<TeacherTasksProps> = ({ teacherSubject }) => {
               </div>
             </div>
 
+            <div className="space-y-1.5">
+              <label className="text-[10px] font-bold ml-1 text-textSecondary">
+                تاريخ التسليم
+              </label>
+              <input
+                required
+                type="date"
+                value={newTaskDueDate}
+                min={new Date(Date.now() - new Date().getTimezoneOffset() * 60000).toISOString().slice(0, 10)}
+                onChange={e => setNewTaskDueDate(e.target.value)}
+                className="w-full rounded-xl border border-borderColor bg-bgCard px-4 py-3.5 text-sm font-bold text-textPrimary outline-none transition-all focus:border-primary"
+              />
+            </div>
+
             {selectedClasses.length === 0 && <p className="text-[10px] text-danger font-bold text-center bg-danger/10 py-2 rounded-lg">{t('alertSelectOneClass') || 'يرجى اختيار فصل واحد على الأقل من الشريط العلوي 👆'}</p>}
 
             <button 
               type="submit" 
-              disabled={selectedClasses.length === 0 || !newTaskTitle.trim()}
+              disabled={selectedClasses.length === 0 || !newTaskTitle.trim() || !newTaskDueDate}
               className={`w-full py-4 mt-2 rounded-xl text-sm font-black shadow-lg active:scale-95 transition-all flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed bg-primary hover:bg-primary/80 text-white`}
             >
               <Plus size={18} /> {t('sendTaskBtn') || 'إضافة المهمة'}

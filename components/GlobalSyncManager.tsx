@@ -31,6 +31,7 @@ type SyncType = 'student' | 'parent' | 'backup' | 'restore' | 'admin';
 type SyncState = 'idle' | 'syncing' | 'success' | 'error';
 
 interface StudentGradeSyncDiagnostics { version:string; targetSheet:string; incomingStudents:number; incomingGrades:number; added:number; updated:number; unchanged:number; beforeRows:number; afterRows:number; linkedBySourceId?:number; linkedByLegacyFingerprint?:number; }
+interface ParentSubjectSyncDiagnostics { status:string; success:boolean; version:string; incoming:number; added:number; updated:number; unchanged:number; conflict:number; invalid:number; message?:string; errors?:Array<{ index?:number; student?:string; status?:string; missing?:string[]; message?:string }>; }
 
 
 interface CloudRecord {
@@ -153,6 +154,7 @@ const GlobalSyncManager: React.FC = () => {
     students,
     classes,
     teacherInfo,
+    currentSemester,
     assessmentTools,
     t,
     createBackupPayload,
@@ -194,10 +196,36 @@ const GlobalSyncManager: React.FC = () => {
     if (!response.ok || result?.success !== true || result?.status !== 'success') throw new Error(result?.error || result?.message || `HTTP ${response.status}`);
     const version = String(result?.data?.version || '');
     const gradeSync = result?.data?.gradeSync as StudentGradeSyncDiagnostics | undefined;
-    if (version !== '3.9.0' || !gradeSync) throw new Error(`الإصدار المتوقع 3.9.0 والمستلم ${version || 'غير معروف'}.`);
+    if (!version || !gradeSync) throw new Error(`استجابة المزامنة غير مكتملة، الإصدار المستلم ${version || 'غير معروف'}.`);
     return gradeSync;
   };
 
+  const postParentCloudVerified = async (body: unknown): Promise<ParentSubjectSyncDiagnostics> => {
+    const response = await fetch(PARENT_APP_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+      body: JSON.stringify(body)
+    });
+    const raw = await response.text();
+    let result: ParentSubjectSyncDiagnostics;
+    try {
+      result = JSON.parse(raw) as ParentSubjectSyncDiagnostics;
+    } catch {
+      throw new Error(`استجابة سحابة ولي الأمر غير صالحة: ${raw.slice(0, 180)}`);
+    }
+    if (!response.ok) throw new Error(result?.message || `HTTP ${response.status}`);
+    if (String(result?.version || '') !== '4.8.6') {
+      throw new Error(`إصدار خادم ولي الأمر غير صحيح: ${result?.version || 'غير معروف'}، المطلوب 4.8.6.`);
+    }
+    if (result?.success !== true || result?.status !== 'success' || result.invalid > 0 || result.conflict > 0) {
+      const details = (result?.errors || []).map(error => {
+        const missing = error.missing?.length ? ` [${error.missing.join('، ')}]` : '';
+        return `${error.student || `السجل ${Number(error.index || 0) + 1}`}: ${error.message || error.status || 'خطأ'}${missing}`;
+      }).join(' | ');
+      throw new Error(`${result?.message || 'فشلت مزامنة ولي الأمر'}${details ? ` - ${details}` : ''}`);
+    }
+    return result;
+  };
   const syncStudentApp = async () => {
     setSyncMessage(t('syncingStudentMsg'));
     const tasks = safeJsonParse<any[]>(
@@ -222,7 +250,16 @@ const GlobalSyncManager: React.FC = () => {
     }
 
     const localIncomingGrades = publishableStudents.reduce((sum, student) => sum + (Array.isArray(student.grades) ? student.grades.length : 0), 0);
-    const gradeSync = await postStudentCloudVerified({ identitySchemaVersion:1, identityMode:'central_with_legacy_aliases', students:publishableStudents, tasks, resources:libraryArchive, gameQuestions, className:'الكل' });
+    const teacherId = String(teacherInfo?.civilId || '').trim();
+    if (!teacherId) throw new Error('لا يمكن إنشاء روابط الطلاب دون الرقم المدني للمعلم.');
+    const subjectName = String(teacherInfo?.subject || 'عام').trim();
+    const subjectId = subjectName;
+    const studentTeacherLinks = publishableStudents.map(student => {
+      const className = String((student as any).className || (student as any).class || (student as any).classes?.[0] || '').trim();
+      const sourceLinkId = `link_${student.centralStudentId}_${teacherId}_${subjectName}_${className}_${currentSemester}`;
+      return { id:sourceLinkId, sourceLinkId, centralStudentId:student.centralStudentId, schoolId:student.schoolId || '', schoolCode:student.schoolCode || adminSchoolCode, teacherId, teacherName:teacherInfo?.name || 'المعلم', subjectId, subjectName, classId:className, className, semester:currentSemester };
+    });
+    const gradeSync = await postStudentCloudVerified({ identitySchemaVersion:1, identityMode:'central_with_legacy_aliases', schemaVersion:'1.0.0', schoolCode:adminSchoolCode, teacherId, subject:subjectName, semester:currentSemester, students:publishableStudents, studentTeacherLinks, tasks, resources:libraryArchive, gameQuestions, className:'الكل' });
     if (gradeSync.incomingStudents !== publishableStudents.length) throw new Error(`السحابة استقبلت ${gradeSync.incomingStudents} طالبًا بدل ${publishableStudents.length}.`);
     if (gradeSync.incomingGrades !== localIncomingGrades) throw new Error(`السحابة استقبلت ${gradeSync.incomingGrades} درجة بدل ${localIncomingGrades}.`);
     setSyncMessage(`نجحت مزامنة الطالب v${gradeSync.version}: ${gradeSync.updated} تحديث، ${gradeSync.added} إضافة، ${gradeSync.unchanged} دون تغيير.`);
@@ -230,29 +267,62 @@ const GlobalSyncManager: React.FC = () => {
 
   const syncParentApp = async () => {
     setSyncMessage(t('syncingParentMsg'));
+    const teacherId = String(teacherInfo?.civilId || '').trim();
+    const teacherName = String(teacherInfo?.name || 'المعلم').trim();
+    const subjectName = String(teacherInfo?.subject || t('unspecified')).trim();
+    const subjectId = String((teacherInfo as any)?.subjectId || subjectName).trim();
+    const schoolName = String(teacherInfo?.school || t('unspecified')).trim();
+    const firstCentralStudent = students.find(isCentralIdentityReady);
+    const schoolId = String(
+      (teacherInfo as any)?.schoolId ||
+      firstCentralStudent?.schoolId ||
+      ''
+    ).trim();
+    const schoolCode = String(
+      (teacherInfo as any)?.schoolCode ||
+      adminSchoolCode ||
+      firstCentralStudent?.schoolCode ||
+      ''
+    ).trim();
+    const semester = String(currentSemester || '').trim();
+
+    const missingTeacherContext = [
+      !teacherId && 'TeacherID',
+      !subjectId && 'SubjectID',
+      !schoolId && 'SchoolID',
+      !schoolCode && 'SchoolCode',
+      !semester && 'Semester'
+    ].filter(Boolean);
+    if (missingTeacherContext.length > 0) {
+      throw new Error(`بيانات سياق المادة ناقصة: ${missingTeacherContext.join('، ')}`);
+    }
+
     const today = new Date();
     const currentMonth = today.getMonth();
     const currentYear = today.getFullYear();
-
     const parentPayload = students
       .filter(isCentralIdentityReady)
       .map(student => {
+        const className = String(student.classes?.[0] || (student as any).className || (student as any).class || '').trim();
+        if (!className) throw new Error(`الفصل مفقود للطالب ${student.name || student.centralStudentId}`);
         const monthlyPoints = (student.behaviors || [])
           .filter(behavior => {
             const date = new Date(behavior.date);
-            return (
-              date.getMonth() === currentMonth &&
-              date.getFullYear() === currentYear
-            );
+            return date.getMonth() === currentMonth && date.getFullYear() === currentYear;
           })
           .reduce((sum, behavior) => sum + Number(behavior.points || 0), 0);
-
         return {
           ...toCentralIdentityEnvelope(student),
           name: student.name,
-          className: student.classes?.[0] || '',
-          subject: teacherInfo?.subject || t('unspecified'),
-          schoolName: teacherInfo?.school || t('unspecified'),
+          className,
+          subject: subjectName,
+          subjectId,
+          teacherId,
+          teacherName,
+          schoolName,
+          schoolId: String(student.schoolId || schoolId).trim(),
+          schoolCode: String(student.schoolCode || schoolCode).trim(),
+          semester,
           totalPoints: monthlyPoints,
           behaviors: student.behaviors || [],
           grades: student.grades || [],
@@ -261,19 +331,28 @@ const GlobalSyncManager: React.FC = () => {
       });
 
     if (parentPayload.length === 0) {
-      throw new Error(t('syncNoStudentRasedCode'));
-    }
-
-    if (parentPayload.length === 0) {
       throw new Error('لا يوجد طلاب مرتبطون بالهوية المركزية وجاهزون للمزامنة.');
     }
 
-    await postJson(PARENT_APP_URL, {
+    const result = await postParentCloudVerified({
+      action: 'syncStudents',
       identitySchemaVersion: 1,
       identityMode: 'central_with_legacy_aliases',
+      schoolId,
+      schoolCode,
+      schoolName,
+      teacherId,
+      teacherName,
+      subjectId,
+      subject: subjectName,
+      semester,
       students: parentPayload,
       timestamp: new Date().toISOString()
     });
+
+    setSyncMessage(
+      `نجحت مزامنة ولي الأمر v${result.version}: ${result.added} إضافة، ${result.updated} تحديث، ${result.unchanged} دون تغيير.`
+    );
   };
 
   const syncAdminApp = async () => {
